@@ -1,0 +1,2646 @@
+{
+  "source_sha256": "11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75",
+  "initialized_ram_sha256": "3638a3f3bf33c24207d26e60080106d29da388c6eb061cc9b9dcbbe07144bc7f",
+  "glyph_table": "0x20000fa0",
+  "glyph_height": 13,
+  "line_advance": 12,
+  "dialog_box": [
+    0,
+    0,
+    192,
+    60
+  ],
+  "sprite_origin": [
+    200,
+    7
+  ],
+  "texts": {
+    "105": {
+      "table": "0x801b804",
+      "languages": {
+        "EN": "www.zortrax.com/support",
+        "PL": "www.zortrax.com/support",
+        "FR": "www.zortrax.com/support",
+        "DE": "www.zortrax.com/support",
+        "ES": "www.zortrax.com/support"
+      }
+    },
+    "108": {
+      "table": "0x801b840",
+      "languages": {
+        "EN": "Please wait",
+        "PL": "Proszę czekać",
+        "FR": "Veuillez patienter",
+        "DE": "Bitte warten",
+        "ES": "Espere, por favor"
+      }
+    },
+    "123": {
+      "table": "0x801b96c",
+      "languages": {
+        "EN": "Heating the extruder\nPlease wait",
+        "PL": "Nagrzewanie ekstrudera\nProszę czekać",
+        "FR": "Chauffage de l’extrudeuse\nVeuillez patienter",
+        "DE": "Extruder wird vorgeheizt\nBitte warten",
+        "ES": "Calentamiento de la extrusora\nEspere"
+      }
+    },
+    "124": {
+      "table": "0x801b980",
+      "languages": {
+        "EN": "WARNING: Printhead will be hot\nduring calibration. Please wear\nsafety gloves.",
+        "PL": "UWAGA: Głowica będzie gorąca\npodczas poziomowania. Zalecamy\nużycie rękawic ochronnych",
+        "FR": "AVERTISSEMENT: L'extrudeur\nsera chaud pendant la calibration.\nLe port de gants est conseillé",
+        "DE": "ACHTUNG: Während der\nNivellierung wird der Kopf heiß.\nVerwendung von\nSchutzhandschuhen wird\nempfohlen",
+        "ES": "ADVERTENCIA: El cabezal estará\ncaliente durante la nivelación. Es\nrecomendable llevar guantes de\nprotección."
+      }
+    },
+    "125": {
+      "table": "0x801b994",
+      "languages": {
+        "EN": "Please tighten three calibration\nknobs at the bottom of the\nplatform and press the button",
+        "PL": "Dokręć trzy śruby kalibracyjne\npod platformą i naćiśnij przycisk",
+        "FR": "Serrez les 3 vis de calibration\nsous le plateau et appuyez le\nbouton",
+        "DE": "Drei Justierschrauben unter der\nPlattform festziehen und Taste\nbetätigen",
+        "ES": "Apriete tres tornillos de\ncalibración debajo de la\nplataforma y pulse el botón."
+      }
+    },
+    "126": {
+      "table": "0x801b9a8",
+      "languages": {
+        "EN": "Checking the points at the backside\nPlease wait",
+        "PL": "Sprawdzanie tyłu platformy\nProszę czekać",
+        "FR": "Vérification de l’arrière de la\nplate-forme. Veuillez patienter",
+        "DE": "Rückseite der Plattform wird\ngeprüft. Bitte warten",
+        "ES": "Verificación de la parte trasera\nde la plataforma. Espere"
+      }
+    },
+    "127": {
+      "table": "0x801b9bc",
+      "languages": {
+        "EN": "Checking the points at the frontside\nPlease wait",
+        "PL": "Sprawdzanie przodu platformy\nProszę czekać",
+        "FR": "Vérification du front de la\nplate-forme. Veuillez patienter",
+        "DE": "Vorderseite der Plattform wird\ngeprüft. Bitte warten",
+        "ES": "Verificación de la parte frontal\nde la plataforma. Espere"
+      }
+    },
+    "128": {
+      "table": "0x801b9d0",
+      "languages": {
+        "EN": "Checking the center point\nPlease wait",
+        "PL": "Sprawdzanie środka platformy\nProszę czekać",
+        "FR": "Vérification du milieu de la\nplate-forme Veuillez patienter",
+        "DE": "Mitte der Plattform wird geprüft\nBitte warten",
+        "ES": "Verificación del medio de la\nplataforma Espere"
+      }
+    },
+    "129": {
+      "table": "0x801b9e4",
+      "languages": {
+        "EN": "Front side is too low (%.2f mm).\nPlease loosen the front knob\nclockwise by about %.2f %s.",
+        "PL": "Przednia strona jest za nisko\n(%.2f mm). Odkręć przednią śrubę\no około %.2f %s",
+        "FR": "Côté avant est trop bas (%.2f mm).\nDévissez la vis situéeà l’avant\nd’environ d’un %.2f %s",
+        "DE": "Vordere Seite ist zu niedrig (%.2f mm).\nSchraube vorne etwa\n%.2f %s",
+        "ES": "El lado delantero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo en\naprox. %.2f %s"
+      }
+    },
+    "130": {
+      "table": "0x801b9f8",
+      "languages": {
+        "EN": "Front side is too high (%.2f mm).\nPlease tighten the front knob \ncounterclockwise by about\n%.2f %s.",
+        "PL": "Przednia strona jest za wysoko\n(%.2f mm). Dokręć przednią śrubę\no około %.2f %s",
+        "FR": "Côté avant est trop haut (%.2f mm).\nSerrez la vis située à l’avant\nd’environ d’un %.2f %s",
+        "DE": "Vordere Seite ist zu hoch (%.2f mm).\nVordere Schraube etwa\n%.2f %s",
+        "ES": "El lado delantero derecho está\ndemasiado alto (%.2f mm).\nEnrosque el tornillo delantero en\naprox. %.2f %s"
+      }
+    },
+    "131": {
+      "table": "0x801ba0c",
+      "languages": {
+        "EN": "Rear left side is too low.  (%.2f mm).\nPlease loosen the left knob\nclockwise by about %.2f %s.",
+        "PL": "Lewa tylna strona jest za nisko \n(%.2f mm).Odkręć lewą tylną śrubę\no około %.2f %s",
+        "FR": "Côté gauche arrière est trop bas\n(%.2f mm). Dévissez la vis gauche\narrière d’environ d’un \n%.2f %s",
+        "DE": "Linke Seite hinten ist zu niedrig \n(%.2f mm). Linke Schraube hinten\netwa %.2f %s",
+        "ES": "El lado trasero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo trasero\nizquierdo en aprox. %.2f %s"
+      }
+    },
+    "132": {
+      "table": "0x801ba20",
+      "languages": {
+        "EN": "Rear left side is too high (%.2f mm).\nPlease tighten the left knob\ncounterclockwise by about\n%.2f %s",
+        "PL": "Lewa tylna strona jest za wysoko\n(%.2f mm). Dokręć lewą tylną śrubę \no około %.2f %s",
+        "FR": "Côté arrière gauche est trop haut \n(%.2f mm). Serrez la vis du côté\ngauche arrière d’environ\nd’un %.2f %s",
+        "DE": "Linke Seite hinten ist zu hoch\n(%.2f mm). Linke Schraube hinten\netwa %.2f %s",
+        "ES": "El lado trasero izquierdo está\ndemasiado alto (%.2f mm). \nEnrosque el tornillo trasero izquierdo\nen aprox. %.2f %s"
+      }
+    },
+    "133": {
+      "table": "0x801ba34",
+      "languages": {
+        "EN": "Rear right side is too low (%.2f mm).\nPlease loosen the right knob clockwise\nby about %.2f %s.",
+        "PL": "Prawa tylna strona jest za nisko\n(%.2f mm). Odkręć prawą tylną śrubę\no około %.2f %s",
+        "FR": "Côté droit arrière est trop bas\n(%.2f mm).Dévissez la vis arrière\ndroite d’environ\nd’un %.2f %s",
+        "DE": "Rechte Seite hinten ist zu niedrig\n(%.2f mm). Rechte Schraube hinten\netwa %.2f %s",
+        "ES": "El lado trasero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo trasero\nderecho en aprox. %.2f %s"
+      }
+    },
+    "134": {
+      "table": "0x801ba48",
+      "languages": {
+        "EN": "Rear right side is too high (%.2f mm).\nPlease tighten the right knob \ncounterclockwise by about\n%.2f %s.",
+        "PL": "Prawa tylna strona jest za wysoko \n(%.2f mm). Dokręć prawą tylną śrubę\no około %.2f %s",
+        "FR": "Côté droit arrière est trop haut\n(%.2f mm). Serrez la vis arrière\ndroite d’environ\nde %.2f %s",
+        "DE": "Rechte Seite hinten ist zu hoch\n(%.2f mm). Rechte Schraube hinten\netwa %.2f %s",
+        "ES": "El lado trasero derecho está\ndemasiado alto (%.2f mm).\nEnrosque el tornillo trasero derecho\nen aprox. %.2f %s"
+      }
+    },
+    "135": {
+      "table": "0x801ba5c",
+      "languages": {
+        "EN": "Error #041\nCalibration failed",
+        "PL": "Błąd #041\nBłąd poziomowania",
+        "FR": "Erreur #041\nErreur de mise à niveau",
+        "DE": "Fehler #041\nFehler beim Nivellieren",
+        "ES": "Error #041\nError de nivelación"
+      }
+    },
+    "136": {
+      "table": "0x801ba70",
+      "languages": {
+        "EN": "Error #042 Pad probing failed.\nEnsure small platform connector is\ninserted and the print bed is free of\ndebris.",
+        "PL": "Błąd #042 Niepowodzenie\npróbkowania platformy. Upewnij się\nże mała wtyczka platformy jest\nwłożona prawidłowo a pole robocze\njest czyste",
+        "FR": "Erreur #042 de contact avec le\nplateau. S'assurer que le petit\nconnecteur est branché et que le\nplateau est propre.",
+        "DE": "Error #042 Kontaktflächen\nAbtastung fehlgeschlagen. Prüfen\nSie das kleine Verbindungskabel der\nPlattform und befreien Sie die\nDruckplatte von Schmutz.",
+        "ES": "Error #042 Pad falló el sondeo.\nGarantizar conector plataforma\npequeña se inserta y la cama de\nimpresión es libre de escombros."
+      }
+    },
+    "137": {
+      "table": "0x801ba84",
+      "languages": {
+        "EN": "Calibration done.\nPress the button to continue",
+        "PL": "Poziomowanie zakończone\nNaciśnij przycisk, aby zakończyć",
+        "FR": "Mise à niveau achevé. Appuyez le\nbouton pour terminer",
+        "DE": "Nivelliervorgang abgeschlossen\nTaste betätigen, um zu beenden",
+        "ES": "Nivelación terminada Pulse el\nbotón para terminar"
+      }
+    },
+    "138": {
+      "table": "0x801ba98",
+      "languages": {
+        "EN": "Center of the platform is bent.\nPlease follow maintenance\nprocedure and then repeat the\ncalibration.",
+        "PL": "Środek platformy jest\nwybrzuszony. Przeprowadź\nkonserwację platformy i powtórz\nkalibrację",
+        "FR": "Le milieu de la plate-forme est\ngonflé. Effectuez la maintenance\nde la plate-forme et répétez la\ncalibration",
+        "DE": "Mitte der Plattform ist\nausgebuchtet. Wartung der\nPlattform durchführen und\nKalibrierung wiederholen",
+        "ES": "El medio de la plataforma está\nabombado. Realice el\nmantenimiento de la plataforma y\nrepita la calibración."
+      }
+    },
+    "139": {
+      "table": "0x801baac",
+      "languages": {
+        "EN": "turn",
+        "PL": "obrót",
+        "FR": "tour",
+        "DE": "Umdrehung",
+        "ES": "giro"
+      }
+    },
+    "140": {
+      "table": "0x801bac0",
+      "languages": {
+        "EN": "turns",
+        "PL": "obroty",
+        "FR": "tours",
+        "DE": "Umdrehungen",
+        "ES": "giros"
+      }
+    },
+    "141": {
+      "table": "0x801bad4",
+      "languages": {
+        "EN": "of a turn",
+        "PL": "obrotu",
+        "FR": "tours",
+        "DE": "Umdrehungen",
+        "ES": "giros"
+      }
+    },
+    "142": {
+      "table": "0x801bae8",
+      "languages": {
+        "EN": "turns",
+        "PL": "obrotów",
+        "FR": "tours",
+        "DE": "der Umdrehungen",
+        "ES": "de giros"
+      }
+    }
+  },
+  "descriptors": {
+    "0x8021c60": {
+      "text_id": 108,
+      "flags": 0,
+      "sprite": "0x801c2b8"
+    },
+    "0x8021db0": {
+      "text_id": 124,
+      "flags": 0,
+      "sprite": "0x801c434"
+    },
+    "0x8021dbc": {
+      "text_id": 125,
+      "flags": 0,
+      "sprite": "0x801fe50"
+    },
+    "0x8021dc8": {
+      "text_id": 126,
+      "flags": 0,
+      "sprite": "0x801ca28"
+    },
+    "0x8021dd4": {
+      "text_id": 127,
+      "flags": 0,
+      "sprite": "0x801ca28"
+    },
+    "0x8021de0": {
+      "text_id": 128,
+      "flags": 0,
+      "sprite": "0x801ca28"
+    },
+    "0x8021dec": {
+      "text_id": 131,
+      "flags": 0,
+      "sprite": "0x801e90c"
+    },
+    "0x8021df8": {
+      "text_id": 133,
+      "flags": 0,
+      "sprite": "0x801ed14"
+    },
+    "0x8021e04": {
+      "text_id": 129,
+      "flags": 0,
+      "sprite": "0x801f0cc"
+    },
+    "0x8021e10": {
+      "text_id": 132,
+      "flags": 0,
+      "sprite": "0x801f4c0"
+    },
+    "0x8021e1c": {
+      "text_id": 134,
+      "flags": 0,
+      "sprite": "0x801f8b4"
+    },
+    "0x8021e28": {
+      "text_id": 130,
+      "flags": 0,
+      "sprite": "0x801fc6c"
+    },
+    "0x8021e34": {
+      "text_id": 135,
+      "flags": 256,
+      "sprite": "0x801fe34"
+    },
+    "0x8021e40": {
+      "text_id": 136,
+      "flags": 0,
+      "sprite": "0x801fe34"
+    },
+    "0x8021e4c": {
+      "text_id": 137,
+      "flags": 0,
+      "sprite": "0x801c024"
+    }
+  },
+  "glyphs": [
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022238",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022249",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802225a",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802226b",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802227c",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802228d",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802229e",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80222af",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80222c0",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80222d1",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80222e2",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80222f3",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022304",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022315",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022326",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022337",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022348",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022359",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802236a",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802237b",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802238c",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802239d",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80223ae",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80223bf",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80223d0",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80223e1",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80223f2",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022403",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022414",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022425",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022436",
+      "encoded": 0,
+      "width": 0,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022447",
+      "encoded": 32,
+      "width": 2,
+      "bitmap_b64": "AAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022458",
+      "encoded": 33,
+      "width": 1,
+      "bitmap_b64": "AAAAgICAgICAAIAAAA=="
+    },
+    {
+      "address": "0x8022469",
+      "encoded": 34,
+      "width": 3,
+      "bitmap_b64": "AACgoKAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x802247a",
+      "encoded": 35,
+      "width": 8,
+      "bitmap_b64": "AAAAJCT/JCT/JCQAAA=="
+    },
+    {
+      "address": "0x802248b",
+      "encoded": 36,
+      "width": 5,
+      "bitmap_b64": "AAAgcIiAcAgIiHAgAA=="
+    },
+    {
+      "address": "0x802249c",
+      "encoded": 37,
+      "width": 8,
+      "bitmap_b64": "AAAARKRICBASJSIAAA=="
+    },
+    {
+      "address": "0x80224ad",
+      "encoded": 38,
+      "width": 6,
+      "bitmap_b64": "AAAAcIiAdIiIiHQAAA=="
+    },
+    {
+      "address": "0x80224be",
+      "encoded": 39,
+      "width": 1,
+      "bitmap_b64": "AACAgIAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x80224cf",
+      "encoded": 40,
+      "width": 3,
+      "bitmap_b64": "ACBAQICAgICAQEAgAA=="
+    },
+    {
+      "address": "0x80224e0",
+      "encoded": 41,
+      "width": 3,
+      "bitmap_b64": "AIBAQCAgICAgQECAAA=="
+    },
+    {
+      "address": "0x80224f1",
+      "encoded": 42,
+      "width": 5,
+      "bitmap_b64": "AAAgqHCoIAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022502",
+      "encoded": 43,
+      "width": 3,
+      "bitmap_b64": "AAAAAAAAQOBAAAAAAA=="
+    },
+    {
+      "address": "0x8022513",
+      "encoded": 44,
+      "width": 2,
+      "bitmap_b64": "AAAAAAAAAAAAQECAAA=="
+    },
+    {
+      "address": "0x8022524",
+      "encoded": 45,
+      "width": 3,
+      "bitmap_b64": "AAAAAAAAAOAAAAAAAA=="
+    },
+    {
+      "address": "0x8022535",
+      "encoded": 46,
+      "width": 1,
+      "bitmap_b64": "AAAAAAAAAAAAAIAAAA=="
+    },
+    {
+      "address": "0x8022546",
+      "encoded": 47,
+      "width": 4,
+      "bitmap_b64": "AAAQECAgQECAgAAAAA=="
+    },
+    {
+      "address": "0x8022557",
+      "encoded": 48,
+      "width": 5,
+      "bitmap_b64": "AAAAcIiIiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8022568",
+      "encoded": 49,
+      "width": 3,
+      "bitmap_b64": "AAAAIGCgICAgICAAAA=="
+    },
+    {
+      "address": "0x8022579",
+      "encoded": 50,
+      "width": 5,
+      "bitmap_b64": "AAAAcIgICBAgQPgAAA=="
+    },
+    {
+      "address": "0x802258a",
+      "encoded": 51,
+      "width": 5,
+      "bitmap_b64": "AAAAcIgIMAgIiHAAAA=="
+    },
+    {
+      "address": "0x802259b",
+      "encoded": 52,
+      "width": 5,
+      "bitmap_b64": "AAAAEDBQkPgQEBAAAA=="
+    },
+    {
+      "address": "0x80225ac",
+      "encoded": 53,
+      "width": 5,
+      "bitmap_b64": "AAAA+ICA8AgIiHAAAA=="
+    },
+    {
+      "address": "0x80225bd",
+      "encoded": 54,
+      "width": 5,
+      "bitmap_b64": "AAAAcIiA8IiIiHAAAA=="
+    },
+    {
+      "address": "0x80225ce",
+      "encoded": 55,
+      "width": 5,
+      "bitmap_b64": "AAAA+AgQICBAQEAAAA=="
+    },
+    {
+      "address": "0x80225df",
+      "encoded": 56,
+      "width": 5,
+      "bitmap_b64": "AAAAcIiIcIiIiHAAAA=="
+    },
+    {
+      "address": "0x80225f0",
+      "encoded": 57,
+      "width": 5,
+      "bitmap_b64": "AAAAcIiIiHgIiHAAAA=="
+    },
+    {
+      "address": "0x8022601",
+      "encoded": 58,
+      "width": 1,
+      "bitmap_b64": "AAAAAIAAAAAAgAAAAA=="
+    },
+    {
+      "address": "0x8022612",
+      "encoded": 59,
+      "width": 2,
+      "bitmap_b64": "AAAAAEAAAAAAQECAAA=="
+    },
+    {
+      "address": "0x8022623",
+      "encoded": 60,
+      "width": 3,
+      "bitmap_b64": "AAAAACBAgEAgAAAAAA=="
+    },
+    {
+      "address": "0x8022634",
+      "encoded": 61,
+      "width": 5,
+      "bitmap_b64": "AAAAAAAA+AD4AAAAAA=="
+    },
+    {
+      "address": "0x8022645",
+      "encoded": 62,
+      "width": 3,
+      "bitmap_b64": "AAAAAIBAIECAAAAAAA=="
+    },
+    {
+      "address": "0x8022656",
+      "encoded": 63,
+      "width": 5,
+      "bitmap_b64": "AABwiAgQICAAIAAAAA=="
+    },
+    {
+      "address": "0x8022667",
+      "encoded": 64,
+      "width": 9,
+      "bitmap_b64": "AAA+QZyCnqKin0A+AABBBw0AAAAQECgoRHw="
+    },
+    {
+      "address": "0x8022678",
+      "encoded": 65,
+      "width": 7,
+      "bitmap_b64": "AAAAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022689",
+      "encoded": 66,
+      "width": 6,
+      "bitmap_b64": "AAAA+ISE+ISEhPgAAA=="
+    },
+    {
+      "address": "0x802269a",
+      "encoded": 67,
+      "width": 6,
+      "bitmap_b64": "AAAAOESAgICARDgAAA=="
+    },
+    {
+      "address": "0x80226ab",
+      "encoded": 68,
+      "width": 6,
+      "bitmap_b64": "AAAA8IiEhISEiPAAAA=="
+    },
+    {
+      "address": "0x80226bc",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x80226cd",
+      "encoded": 70,
+      "width": 6,
+      "bitmap_b64": "AAAA/ICA/ICAgIAAAA=="
+    },
+    {
+      "address": "0x80226de",
+      "encoded": 71,
+      "width": 7,
+      "bitmap_b64": "AAAAOESCgI6CRDgAAA=="
+    },
+    {
+      "address": "0x80226ef",
+      "encoded": 72,
+      "width": 6,
+      "bitmap_b64": "AAAAhISE/ISEhIQAAA=="
+    },
+    {
+      "address": "0x8022700",
+      "encoded": 73,
+      "width": 1,
+      "bitmap_b64": "AAAAgICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8022711",
+      "encoded": 74,
+      "width": 5,
+      "bitmap_b64": "AAAACAgICAiIiHAAAA=="
+    },
+    {
+      "address": "0x8022722",
+      "encoded": 75,
+      "width": 6,
+      "bitmap_b64": "AAAAhIiQoNCIhIQAAA=="
+    },
+    {
+      "address": "0x8022733",
+      "encoded": 76,
+      "width": 6,
+      "bitmap_b64": "AAAAgICAgICAgPwAAA=="
+    },
+    {
+      "address": "0x8022744",
+      "encoded": 77,
+      "width": 7,
+      "bitmap_b64": "AAAAgsaqkoKCgoIAAA=="
+    },
+    {
+      "address": "0x8022755",
+      "encoded": 78,
+      "width": 6,
+      "bitmap_b64": "AAAAhMSklIyEhIQAAA=="
+    },
+    {
+      "address": "0x8022766",
+      "encoded": 79,
+      "width": 7,
+      "bitmap_b64": "AAAAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022777",
+      "encoded": 80,
+      "width": 6,
+      "bitmap_b64": "AAAA+ISEhPiAgIAAAA=="
+    },
+    {
+      "address": "0x8022788",
+      "encoded": 81,
+      "width": 7,
+      "bitmap_b64": "AAAAOESCgoKKRDoAAA=="
+    },
+    {
+      "address": "0x8022799",
+      "encoded": 82,
+      "width": 6,
+      "bitmap_b64": "AAAA+ISE+ISEhIQAAA=="
+    },
+    {
+      "address": "0x80227aa",
+      "encoded": 83,
+      "width": 6,
+      "bitmap_b64": "AAAAeISAeAQEhHgAAA=="
+    },
+    {
+      "address": "0x80227bb",
+      "encoded": 84,
+      "width": 7,
+      "bitmap_b64": "AAAA/hAQEBAQEBAAAA=="
+    },
+    {
+      "address": "0x80227cc",
+      "encoded": 85,
+      "width": 7,
+      "bitmap_b64": "AAAAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x80227dd",
+      "encoded": 86,
+      "width": 7,
+      "bitmap_b64": "AAAAgoJERCgoEBAAAA=="
+    },
+    {
+      "address": "0x80227ee",
+      "encoded": 87,
+      "width": 7,
+      "bitmap_b64": "AAAAkpKSqqqqREQAAA=="
+    },
+    {
+      "address": "0x80227ff",
+      "encoded": 88,
+      "width": 7,
+      "bitmap_b64": "AAAAgkQoEBAoRIIAAA=="
+    },
+    {
+      "address": "0x8022810",
+      "encoded": 89,
+      "width": 7,
+      "bitmap_b64": "AAAAgkQoEBAQEBAAAA=="
+    },
+    {
+      "address": "0x8022821",
+      "encoded": 90,
+      "width": 6,
+      "bitmap_b64": "AAAA/AQIECBAgPwAAA=="
+    },
+    {
+      "address": "0x8022832",
+      "encoded": 91,
+      "width": 2,
+      "bitmap_b64": "AMCAgICAgICAgIDAAA=="
+    },
+    {
+      "address": "0x8022843",
+      "encoded": 92,
+      "width": 4,
+      "bitmap_b64": "AACAgEBAICAQEAAAAA=="
+    },
+    {
+      "address": "0x8022854",
+      "encoded": 93,
+      "width": 2,
+      "bitmap_b64": "AMBAQEBAQEBAQEDAAA=="
+    },
+    {
+      "address": "0x8022865",
+      "encoded": 94,
+      "width": 5,
+      "bitmap_b64": "AAAgUIgAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022876",
+      "encoded": 95,
+      "width": 6,
+      "bitmap_b64": "AAAAAAAAAAAAAAD8AA=="
+    },
+    {
+      "address": "0x8022887",
+      "encoded": 96,
+      "width": 2,
+      "bitmap_b64": "AIBAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022898",
+      "encoded": 97,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x80228a9",
+      "encoded": 98,
+      "width": 5,
+      "bitmap_b64": "AAAAgIDwiIiIiPAAAA=="
+    },
+    {
+      "address": "0x80228ba",
+      "encoded": 99,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiICAiHAAAA=="
+    },
+    {
+      "address": "0x80228cb",
+      "encoded": 100,
+      "width": 5,
+      "bitmap_b64": "AAAACAh4iIiIiHgAAA=="
+    },
+    {
+      "address": "0x80228dc",
+      "encoded": 101,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x80228ed",
+      "encoded": 102,
+      "width": 4,
+      "bitmap_b64": "AAAwQEDwQEBAQEAAAA=="
+    },
+    {
+      "address": "0x80228fe",
+      "encoded": 103,
+      "width": 5,
+      "bitmap_b64": "AAAAAAB4iIiIiHgIcA=="
+    },
+    {
+      "address": "0x802290f",
+      "encoded": 104,
+      "width": 5,
+      "bitmap_b64": "AAAAgIDwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x8022920",
+      "encoded": 105,
+      "width": 1,
+      "bitmap_b64": "AAAAgACAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8022931",
+      "encoded": 106,
+      "width": 2,
+      "bitmap_b64": "AAAAQABAQEBAQEBAgA=="
+    },
+    {
+      "address": "0x8022942",
+      "encoded": 107,
+      "width": 4,
+      "bitmap_b64": "AAAAgICQoMDAoJAAAA=="
+    },
+    {
+      "address": "0x8022953",
+      "encoded": 108,
+      "width": 1,
+      "bitmap_b64": "AAAAgICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8022964",
+      "encoded": 109,
+      "width": 7,
+      "bitmap_b64": "AAAAAADskpKSkpIAAA=="
+    },
+    {
+      "address": "0x8022975",
+      "encoded": 110,
+      "width": 5,
+      "bitmap_b64": "AAAAAADwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x8022986",
+      "encoded": 111,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8022997",
+      "encoded": 112,
+      "width": 5,
+      "bitmap_b64": "AAAAAADwiIiIiPCAgA=="
+    },
+    {
+      "address": "0x80229a8",
+      "encoded": 113,
+      "width": 5,
+      "bitmap_b64": "AAAAAAB4iIiIiHgICA=="
+    },
+    {
+      "address": "0x80229b9",
+      "encoded": 114,
+      "width": 4,
+      "bitmap_b64": "AAAAAACwwICAgIAAAA=="
+    },
+    {
+      "address": "0x80229ca",
+      "encoded": 115,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiGAQiHAAAA=="
+    },
+    {
+      "address": "0x80229db",
+      "encoded": 116,
+      "width": 4,
+      "bitmap_b64": "AAAAQEDwQEBAQDAAAA=="
+    },
+    {
+      "address": "0x80229ec",
+      "encoded": 117,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80229fd",
+      "encoded": 118,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIiFBQICAAAA=="
+    },
+    {
+      "address": "0x8022a0e",
+      "encoded": 119,
+      "width": 7,
+      "bitmap_b64": "AAAAAACSkqqqREQAAA=="
+    },
+    {
+      "address": "0x8022a1f",
+      "encoded": 120,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIUCAgUIgAAA=="
+    },
+    {
+      "address": "0x8022a30",
+      "encoded": 121,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIiFBQICAgQA=="
+    },
+    {
+      "address": "0x8022a41",
+      "encoded": 122,
+      "width": 5,
+      "bitmap_b64": "AAAAAAD4CBAgQPgAAA=="
+    },
+    {
+      "address": "0x8022a52",
+      "encoded": 123,
+      "width": 3,
+      "bitmap_b64": "ACBAQEBAgEBAQEAgAA=="
+    },
+    {
+      "address": "0x8022a63",
+      "encoded": 124,
+      "width": 1,
+      "bitmap_b64": "AICAgICAgICAgICAAA=="
+    },
+    {
+      "address": "0x8022a74",
+      "encoded": 125,
+      "width": 3,
+      "bitmap_b64": "AIBAQEBAIEBAQECAAA=="
+    },
+    {
+      "address": "0x8022a85",
+      "encoded": 126,
+      "width": 7,
+      "bitmap_b64": "AAAAAABgkgwAAAAAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022227",
+      "encoded": 69,
+      "width": 6,
+      "bitmap_b64": "AAAA/ISEhISEhPwAAA=="
+    },
+    {
+      "address": "0x8022a96",
+      "encoded": 161,
+      "width": 1,
+      "bitmap_b64": "AAAAAACAAICAgICAgA=="
+    },
+    {
+      "address": "0x8022aa7",
+      "encoded": 162,
+      "width": 5,
+      "bitmap_b64": "AAAAACBwiICAiHAgAA=="
+    },
+    {
+      "address": "0x8022ab8",
+      "encoded": 163,
+      "width": 6,
+      "bitmap_b64": "AAAAMEhAQPBAQPwAAA=="
+    },
+    {
+      "address": "0x8022ac9",
+      "encoded": 164,
+      "width": 7,
+      "bitmap_b64": "AAAAALpEgoKCRLoAAA=="
+    },
+    {
+      "address": "0x8022ada",
+      "encoded": 165,
+      "width": 7,
+      "bitmap_b64": "AAAAgkQoEP4QEBAAAA=="
+    },
+    {
+      "address": "0x8022aeb",
+      "encoded": 166,
+      "width": 1,
+      "bitmap_b64": "AACAgICAgACAgICAgA=="
+    },
+    {
+      "address": "0x8022afc",
+      "encoded": 167,
+      "width": 5,
+      "bitmap_b64": "AAAAcIiAcIhwCIhwAA=="
+    },
+    {
+      "address": "0x8022b0d",
+      "encoded": 168,
+      "width": 3,
+      "bitmap_b64": "AAAAoAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022b1e",
+      "encoded": 169,
+      "width": 10,
+      "bitmap_b64": "AAA/QJ6goKCgnkA/AAAAAIBAQEBAQECAAAA="
+    },
+    {
+      "address": "0x8022b3c",
+      "encoded": 170,
+      "width": 4,
+      "bitmap_b64": "AAAAYBBwkHAAAAAAAA=="
+    },
+    {
+      "address": "0x8022b4d",
+      "encoded": 171,
+      "width": 5,
+      "bitmap_b64": "AAAAAAAoUKBQKAAAAA=="
+    },
+    {
+      "address": "0x8022b5e",
+      "encoded": 172,
+      "width": 5,
+      "bitmap_b64": "AAAAAAAA+AgICAAAAA=="
+    },
+    {
+      "address": "0x8022b6f",
+      "encoded": 45,
+      "width": 2,
+      "bitmap_b64": "AAAAAAAAAMAAAAAAAA=="
+    },
+    {
+      "address": "0x8022b80",
+      "encoded": 174,
+      "width": 10,
+      "bitmap_b64": "AAA/QJySnJKSkkA/AAAAAIBAQEBAQECAAAA="
+    },
+    {
+      "address": "0x8022b9e",
+      "encoded": 175,
+      "width": 5,
+      "bitmap_b64": "APgAAAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022baf",
+      "encoded": 176,
+      "width": 4,
+      "bitmap_b64": "AAAAYJCQYAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022bc0",
+      "encoded": 177,
+      "width": 5,
+      "bitmap_b64": "AAAAICD4ICAA+AAAAA=="
+    },
+    {
+      "address": "0x8022bd1",
+      "encoded": 178,
+      "width": 4,
+      "bitmap_b64": "AAAAYJAQIEDwAAAAAA=="
+    },
+    {
+      "address": "0x8022be2",
+      "encoded": 179,
+      "width": 4,
+      "bitmap_b64": "AAAAYJAgEJBgAAAAAA=="
+    },
+    {
+      "address": "0x8022bf3",
+      "encoded": 180,
+      "width": 2,
+      "bitmap_b64": "AABAgAAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8022c04",
+      "encoded": 181,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIiIiIiPCAgA=="
+    },
+    {
+      "address": "0x8022c15",
+      "encoded": 182,
+      "width": 6,
+      "bitmap_b64": "AAAAfPT0dBQUFBQUFA=="
+    },
+    {
+      "address": "0x8022c26",
+      "encoded": 183,
+      "width": 1,
+      "bitmap_b64": "AAAAAAAAAIAAAAAAAA=="
+    },
+    {
+      "address": "0x8022c37",
+      "encoded": 184,
+      "width": 2,
+      "bitmap_b64": "AAAAAAAAAAAAAABAgA=="
+    },
+    {
+      "address": "0x8022c48",
+      "encoded": 185,
+      "width": 3,
+      "bitmap_b64": "AAAAIGCgICAgAAAAAA=="
+    },
+    {
+      "address": "0x8022c59",
+      "encoded": 186,
+      "width": 4,
+      "bitmap_b64": "AAAAYJCQkGAAAAAAAA=="
+    },
+    {
+      "address": "0x8022c6a",
+      "encoded": 187,
+      "width": 5,
+      "bitmap_b64": "AAAAAACgUChQoAAAAA=="
+    },
+    {
+      "address": "0x8022c7b",
+      "encoded": 188,
+      "width": 11,
+      "bitmap_b64": "AAAgYKEiJCkTIEAAAAAAQIAAQMBA4EBAAAA="
+    },
+    {
+      "address": "0x8022c99",
+      "encoded": 189,
+      "width": 11,
+      "bitmap_b64": "AAAgYKEiJSgQIEEAAAAAQIAAwCAgQIDgAAA="
+    },
+    {
+      "address": "0x8022cb7",
+      "encoded": 190,
+      "width": 11,
+      "bitmap_b64": "AGCQIBGSZAkTIEAAAAAAQIAAQMBA4EBAAAA="
+    },
+    {
+      "address": "0x8022cd5",
+      "encoded": 191,
+      "width": 5,
+      "bitmap_b64": "AAAAAAAgACAgQICIcA=="
+    },
+    {
+      "address": "0x8022ce6",
+      "encoded": 192,
+      "width": 7,
+      "bitmap_b64": "IBAAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022cf7",
+      "encoded": 193,
+      "width": 7,
+      "bitmap_b64": "CBAAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022d08",
+      "encoded": 194,
+      "width": 7,
+      "bitmap_b64": "ECgAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022d19",
+      "encoded": 195,
+      "width": 7,
+      "bitmap_b64": "MkwAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022d2a",
+      "encoded": 196,
+      "width": 7,
+      "bitmap_b64": "ACgAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022d3b",
+      "encoded": 197,
+      "width": 7,
+      "bitmap_b64": "ECgQEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8022d4c",
+      "encoded": 198,
+      "width": 12,
+      "bitmap_b64": "AAAAExIqK0Z+goMAAAAAAPAAAPAAAADwAAA="
+    },
+    {
+      "address": "0x8022d6a",
+      "encoded": 199,
+      "width": 6,
+      "bitmap_b64": "AAAAOESAgICARDgQIA=="
+    },
+    {
+      "address": "0x8022d7b",
+      "encoded": 200,
+      "width": 6,
+      "bitmap_b64": "IBAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x8022d8c",
+      "encoded": 201,
+      "width": 6,
+      "bitmap_b64": "ECAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x8022d9d",
+      "encoded": 202,
+      "width": 6,
+      "bitmap_b64": "MEgA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x8022dae",
+      "encoded": 203,
+      "width": 6,
+      "bitmap_b64": "AEgA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x8022dbf",
+      "encoded": 204,
+      "width": 2,
+      "bitmap_b64": "gEAAQEBAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x8022dd0",
+      "encoded": 205,
+      "width": 2,
+      "bitmap_b64": "QIAAgICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8022de1",
+      "encoded": 206,
+      "width": 3,
+      "bitmap_b64": "QKAAQEBAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x8022df2",
+      "encoded": 207,
+      "width": 3,
+      "bitmap_b64": "AKAAQEBAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x8022e03",
+      "encoded": 208,
+      "width": 7,
+      "bitmap_b64": "AAAAeERC8kJCRHgAAA=="
+    },
+    {
+      "address": "0x8022e14",
+      "encoded": 209,
+      "width": 6,
+      "bitmap_b64": "ZJgAhMSklIyEhIQAAA=="
+    },
+    {
+      "address": "0x8022e25",
+      "encoded": 210,
+      "width": 7,
+      "bitmap_b64": "IBAAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022e36",
+      "encoded": 211,
+      "width": 7,
+      "bitmap_b64": "CBAAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022e47",
+      "encoded": 212,
+      "width": 7,
+      "bitmap_b64": "ECgAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022e58",
+      "encoded": 213,
+      "width": 7,
+      "bitmap_b64": "MkwAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022e69",
+      "encoded": 214,
+      "width": 7,
+      "bitmap_b64": "ACgAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022e7a",
+      "encoded": 215,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIUCBQiAAAAA=="
+    },
+    {
+      "address": "0x8022e8b",
+      "encoded": 216,
+      "width": 8,
+      "bitmap_b64": "AAAAPEKFiZGhQjwAAA=="
+    },
+    {
+      "address": "0x8022e9c",
+      "encoded": 217,
+      "width": 7,
+      "bitmap_b64": "IBAAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022ead",
+      "encoded": 218,
+      "width": 7,
+      "bitmap_b64": "CBAAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022ebe",
+      "encoded": 219,
+      "width": 7,
+      "bitmap_b64": "ECgAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022ecf",
+      "encoded": 220,
+      "width": 7,
+      "bitmap_b64": "ACgAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8022ee0",
+      "encoded": 221,
+      "width": 7,
+      "bitmap_b64": "CBAAgkQoEBAQEBAAAA=="
+    },
+    {
+      "address": "0x8022ef1",
+      "encoded": 222,
+      "width": 6,
+      "bitmap_b64": "AAAAgID4hIT4gIAAAA=="
+    },
+    {
+      "address": "0x8022f02",
+      "encoded": 223,
+      "width": 5,
+      "bitmap_b64": "AAAAYJCQoJCIiLAAAA=="
+    },
+    {
+      "address": "0x8022f13",
+      "encoded": 224,
+      "width": 5,
+      "bitmap_b64": "AABAIABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f24",
+      "encoded": 225,
+      "width": 5,
+      "bitmap_b64": "AAAQIABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f35",
+      "encoded": 226,
+      "width": 5,
+      "bitmap_b64": "AAAgUABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f46",
+      "encoded": 227,
+      "width": 6,
+      "bitmap_b64": "AABkmABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f57",
+      "encoded": 228,
+      "width": 5,
+      "bitmap_b64": "AAAAUABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f68",
+      "encoded": 229,
+      "width": 5,
+      "bitmap_b64": "ACBQIABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8022f79",
+      "encoded": 230,
+      "width": 9,
+      "bitmap_b64": "AAAAAAB3CH+IiHcAAAAAAAAAAICAAIAAAAA="
+    },
+    {
+      "address": "0x8022f97",
+      "encoded": 231,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiICAiHAgQA=="
+    },
+    {
+      "address": "0x8022fa8",
+      "encoded": 232,
+      "width": 5,
+      "bitmap_b64": "AABAIABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x8022fb9",
+      "encoded": 233,
+      "width": 5,
+      "bitmap_b64": "AAAQIABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x8022fca",
+      "encoded": 234,
+      "width": 5,
+      "bitmap_b64": "AAAgUABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x8022fdb",
+      "encoded": 235,
+      "width": 5,
+      "bitmap_b64": "AAAAUABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x8022fec",
+      "encoded": 236,
+      "width": 2,
+      "bitmap_b64": "AACAQABAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x8022ffd",
+      "encoded": 237,
+      "width": 2,
+      "bitmap_b64": "AABAgACAgICAgIAAAA=="
+    },
+    {
+      "address": "0x802300e",
+      "encoded": 238,
+      "width": 3,
+      "bitmap_b64": "AABAoABAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x802301f",
+      "encoded": 239,
+      "width": 3,
+      "bitmap_b64": "AAAAoABAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x8023030",
+      "encoded": 240,
+      "width": 6,
+      "bitmap_b64": "AAAAEDwIeIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023041",
+      "encoded": 241,
+      "width": 6,
+      "bitmap_b64": "AABkmADwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x8023052",
+      "encoded": 242,
+      "width": 5,
+      "bitmap_b64": "AABAIABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023063",
+      "encoded": 243,
+      "width": 5,
+      "bitmap_b64": "AAAQIABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023074",
+      "encoded": 244,
+      "width": 5,
+      "bitmap_b64": "AAAgUABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023085",
+      "encoded": 245,
+      "width": 6,
+      "bitmap_b64": "AABkmABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023096",
+      "encoded": 246,
+      "width": 5,
+      "bitmap_b64": "AAAAUABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x80230a7",
+      "encoded": 247,
+      "width": 5,
+      "bitmap_b64": "AAAAAAAgAPgAIAAAAA=="
+    },
+    {
+      "address": "0x80230b8",
+      "encoded": 248,
+      "width": 6,
+      "bitmap_b64": "AAAAAAA0SJSkSLAAAA=="
+    },
+    {
+      "address": "0x80230c9",
+      "encoded": 249,
+      "width": 5,
+      "bitmap_b64": "AABAIACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80230da",
+      "encoded": 250,
+      "width": 5,
+      "bitmap_b64": "AAAQIACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80230eb",
+      "encoded": 251,
+      "width": 5,
+      "bitmap_b64": "AAAgUACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80230fc",
+      "encoded": 252,
+      "width": 5,
+      "bitmap_b64": "AAAAUACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x802310d",
+      "encoded": 253,
+      "width": 5,
+      "bitmap_b64": "AAAQIACIiFBQICAgQA=="
+    },
+    {
+      "address": "0x802311e",
+      "encoded": 254,
+      "width": 5,
+      "bitmap_b64": "AAAAgIDwiIiIiPCAgA=="
+    },
+    {
+      "address": "0x802312f",
+      "encoded": 255,
+      "width": 5,
+      "bitmap_b64": "AAAAUACIiFBQICAgQA=="
+    },
+    {
+      "address": "0x8023140",
+      "encoded": 256,
+      "width": 7,
+      "bitmap_b64": "AHwAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8023151",
+      "encoded": 257,
+      "width": 5,
+      "bitmap_b64": "AAAAcABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8023162",
+      "encoded": 258,
+      "width": 7,
+      "bitmap_b64": "RDgAEBAoKER8goIAAA=="
+    },
+    {
+      "address": "0x8023173",
+      "encoded": 259,
+      "width": 5,
+      "bitmap_b64": "AABIMABwCHiIiHgAAA=="
+    },
+    {
+      "address": "0x8023184",
+      "encoded": 260,
+      "width": 8,
+      "bitmap_b64": "AAAAEBAoKER8goICAQ=="
+    },
+    {
+      "address": "0x8023195",
+      "encoded": 261,
+      "width": 6,
+      "bitmap_b64": "AAAAAABwCHiIiHgIBA=="
+    },
+    {
+      "address": "0x80231a6",
+      "encoded": 262,
+      "width": 6,
+      "bitmap_b64": "CBAAOESAgICARDgAAA=="
+    },
+    {
+      "address": "0x80231b7",
+      "encoded": 263,
+      "width": 5,
+      "bitmap_b64": "AAAQIABwiICAiHAAAA=="
+    },
+    {
+      "address": "0x80231c8",
+      "encoded": 264,
+      "width": 6,
+      "bitmap_b64": "ECgAOESAgICARDgAAA=="
+    },
+    {
+      "address": "0x80231d9",
+      "encoded": 265,
+      "width": 5,
+      "bitmap_b64": "AAAgUABwiICAiHAAAA=="
+    },
+    {
+      "address": "0x80231ea",
+      "encoded": 266,
+      "width": 6,
+      "bitmap_b64": "ABAAOESAgICARDgAAA=="
+    },
+    {
+      "address": "0x80231fb",
+      "encoded": 267,
+      "width": 5,
+      "bitmap_b64": "AAAAIABwiICAiHAAAA=="
+    },
+    {
+      "address": "0x802320c",
+      "encoded": 268,
+      "width": 6,
+      "bitmap_b64": "KBAAOESAgICARDgAAA=="
+    },
+    {
+      "address": "0x802321d",
+      "encoded": 269,
+      "width": 5,
+      "bitmap_b64": "AABQIABwiICAiHAAAA=="
+    },
+    {
+      "address": "0x802322e",
+      "encoded": 270,
+      "width": 6,
+      "bitmap_b64": "SDAA8IiEhISEiPAAAA=="
+    },
+    {
+      "address": "0x802323f",
+      "encoded": 271,
+      "width": 7,
+      "bitmap_b64": "AAAACgp6iIiIiHgAAA=="
+    },
+    {
+      "address": "0x8023250",
+      "encoded": 272,
+      "width": 7,
+      "bitmap_b64": "AAAAeERC8kJCRHgAAA=="
+    },
+    {
+      "address": "0x8023261",
+      "encoded": 273,
+      "width": 6,
+      "bitmap_b64": "AAAIPAh4iIiIiHgAAA=="
+    },
+    {
+      "address": "0x8023272",
+      "encoded": 274,
+      "width": 6,
+      "bitmap_b64": "AHgA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x8023283",
+      "encoded": 275,
+      "width": 5,
+      "bitmap_b64": "AAAAcABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x8023294",
+      "encoded": 276,
+      "width": 6,
+      "bitmap_b64": "SDAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x80232a5",
+      "encoded": 277,
+      "width": 5,
+      "bitmap_b64": "AACIcABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x80232b6",
+      "encoded": 278,
+      "width": 6,
+      "bitmap_b64": "ABAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x80232c7",
+      "encoded": 279,
+      "width": 5,
+      "bitmap_b64": "AAAAIABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x80232d8",
+      "encoded": 280,
+      "width": 6,
+      "bitmap_b64": "AAAA/ICA/ICAgPwQCA=="
+    },
+    {
+      "address": "0x80232e9",
+      "encoded": 281,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiPiAiHAgEA=="
+    },
+    {
+      "address": "0x80232fa",
+      "encoded": 282,
+      "width": 6,
+      "bitmap_b64": "SDAA/ICA/ICAgPwAAA=="
+    },
+    {
+      "address": "0x802330b",
+      "encoded": 283,
+      "width": 5,
+      "bitmap_b64": "AABQIABwiPiAiHAAAA=="
+    },
+    {
+      "address": "0x802331c",
+      "encoded": 284,
+      "width": 7,
+      "bitmap_b64": "ECgAOESCgI6CRDgAAA=="
+    },
+    {
+      "address": "0x802332d",
+      "encoded": 285,
+      "width": 5,
+      "bitmap_b64": "AAAgUAB4iIiIiHgIcA=="
+    },
+    {
+      "address": "0x802333e",
+      "encoded": 286,
+      "width": 7,
+      "bitmap_b64": "RDgAOESCgI6CRDgAAA=="
+    },
+    {
+      "address": "0x802334f",
+      "encoded": 287,
+      "width": 5,
+      "bitmap_b64": "AACIcAB4iIiIiHgIcA=="
+    },
+    {
+      "address": "0x8023360",
+      "encoded": 288,
+      "width": 7,
+      "bitmap_b64": "ABAAOESCgI6CRDgAAA=="
+    },
+    {
+      "address": "0x8023371",
+      "encoded": 289,
+      "width": 5,
+      "bitmap_b64": "AAAAIAB4iIiIiHgIcA=="
+    },
+    {
+      "address": "0x8023382",
+      "encoded": 290,
+      "width": 7,
+      "bitmap_b64": "AAAAOESCgI6CRDgQIA=="
+    },
+    {
+      "address": "0x8023393",
+      "encoded": 291,
+      "width": 5,
+      "bitmap_b64": "ABAgIAB4iIiIiHgIcA=="
+    },
+    {
+      "address": "0x80233a4",
+      "encoded": 292,
+      "width": 6,
+      "bitmap_b64": "MEgAhISE/ISEhIQAAA=="
+    },
+    {
+      "address": "0x80233b5",
+      "encoded": 293,
+      "width": 5,
+      "bitmap_b64": "IFAAgIDwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x80233c6",
+      "encoded": 294,
+      "width": 8,
+      "bitmap_b64": "AAAAQv9CfkJCQkIAAA=="
+    },
+    {
+      "address": "0x80233d7",
+      "encoded": 295,
+      "width": 6,
+      "bitmap_b64": "AABA+EB4REREREQAAA=="
+    },
+    {
+      "address": "0x80233e8",
+      "encoded": 296,
+      "width": 6,
+      "bitmap_b64": "ZJgAICAgICAgICAAAA=="
+    },
+    {
+      "address": "0x80233f9",
+      "encoded": 297,
+      "width": 6,
+      "bitmap_b64": "AABkmAAgICAgICAAAA=="
+    },
+    {
+      "address": "0x802340a",
+      "encoded": 298,
+      "width": 3,
+      "bitmap_b64": "AOAAQEBAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x802341b",
+      "encoded": 299,
+      "width": 3,
+      "bitmap_b64": "AAAA4ABAQEBAQEAAAA=="
+    },
+    {
+      "address": "0x802342c",
+      "encoded": 300,
+      "width": 5,
+      "bitmap_b64": "iHAAICAgICAgICAAAA=="
+    },
+    {
+      "address": "0x802343d",
+      "encoded": 301,
+      "width": 5,
+      "bitmap_b64": "AACIcAAgICAgICAAAA=="
+    },
+    {
+      "address": "0x802344e",
+      "encoded": 302,
+      "width": 2,
+      "bitmap_b64": "AAAAgICAgICAgICAQA=="
+    },
+    {
+      "address": "0x802345f",
+      "encoded": 303,
+      "width": 2,
+      "bitmap_b64": "AAAAgACAgICAgICAQA=="
+    },
+    {
+      "address": "0x8023470",
+      "encoded": 304,
+      "width": 1,
+      "bitmap_b64": "AIAAgICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8023481",
+      "encoded": 305,
+      "width": 1,
+      "bitmap_b64": "AAAAAACAgICAgIAAAA=="
+    },
+    {
+      "address": "0x8023492",
+      "encoded": 306,
+      "width": 7,
+      "bitmap_b64": "AAAAgoKCgoKiopwAAA=="
+    },
+    {
+      "address": "0x80234a3",
+      "encoded": 307,
+      "width": 3,
+      "bitmap_b64": "AAAAoACgoKCgoKAgQA=="
+    },
+    {
+      "address": "0x80234b4",
+      "encoded": 308,
+      "width": 6,
+      "bitmap_b64": "CBQACAgICAiIiHAAAA=="
+    },
+    {
+      "address": "0x80234c5",
+      "encoded": 309,
+      "width": 3,
+      "bitmap_b64": "AABAoABAQEBAQEBAgA=="
+    },
+    {
+      "address": "0x80234d6",
+      "encoded": 310,
+      "width": 6,
+      "bitmap_b64": "AAAAhIiQoNCIhIQQIA=="
+    },
+    {
+      "address": "0x80234e7",
+      "encoded": 311,
+      "width": 4,
+      "bitmap_b64": "AAAAgICQoMDAoJAgQA=="
+    },
+    {
+      "address": "0x80234f8",
+      "encoded": 312,
+      "width": 4,
+      "bitmap_b64": "AAAAAACQoMDAoJAAAA=="
+    },
+    {
+      "address": "0x8023509",
+      "encoded": 313,
+      "width": 6,
+      "bitmap_b64": "QIAAgICAgICAgPwAAA=="
+    },
+    {
+      "address": "0x802351a",
+      "encoded": 314,
+      "width": 2,
+      "bitmap_b64": "QIAAgICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x802352b",
+      "encoded": 315,
+      "width": 6,
+      "bitmap_b64": "AAAAgICAgICAgPwQIA=="
+    },
+    {
+      "address": "0x802353c",
+      "encoded": 316,
+      "width": 2,
+      "bitmap_b64": "AAAAQEBAQEBAQEBAgA=="
+    },
+    {
+      "address": "0x802354d",
+      "encoded": 317,
+      "width": 6,
+      "bitmap_b64": "AAAAoKCggICAgPwAAA=="
+    },
+    {
+      "address": "0x802355e",
+      "encoded": 318,
+      "width": 3,
+      "bitmap_b64": "AAAAoKCggICAgIAAAA=="
+    },
+    {
+      "address": "0x802356f",
+      "encoded": 319,
+      "width": 8,
+      "bitmap_b64": "AAAAgICAgIGAgPwAAA=="
+    },
+    {
+      "address": "0x8023580",
+      "encoded": 320,
+      "width": 3,
+      "bitmap_b64": "AAAAgICAgKCAgIAAAA=="
+    },
+    {
+      "address": "0x8023591",
+      "encoded": 321,
+      "width": 7,
+      "bitmap_b64": "AAAAQEBAcMBAQH4AAA=="
+    },
+    {
+      "address": "0x80235a2",
+      "encoded": 322,
+      "width": 3,
+      "bitmap_b64": "AAAAQEBAYMBAQEAAAA=="
+    },
+    {
+      "address": "0x80235b3",
+      "encoded": 323,
+      "width": 6,
+      "bitmap_b64": "ECAAhMSklIyEhIQAAA=="
+    },
+    {
+      "address": "0x80235c4",
+      "encoded": 324,
+      "width": 5,
+      "bitmap_b64": "AAAQIADwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x80235d5",
+      "encoded": 325,
+      "width": 6,
+      "bitmap_b64": "AAAAhMSklIyEhIQQIA=="
+    },
+    {
+      "address": "0x80235e6",
+      "encoded": 326,
+      "width": 5,
+      "bitmap_b64": "AAAAAADwiIiIiIggQA=="
+    },
+    {
+      "address": "0x80235f7",
+      "encoded": 327,
+      "width": 6,
+      "bitmap_b64": "SDAAhMSklIyEhIQAAA=="
+    },
+    {
+      "address": "0x8023608",
+      "encoded": 328,
+      "width": 5,
+      "bitmap_b64": "AABQIADwiIiIiIgAAA=="
+    },
+    {
+      "address": "0x8023619",
+      "encoded": 329,
+      "width": 7,
+      "bitmap_b64": "AAAAQIA8IiIiIiIAAA=="
+    },
+    {
+      "address": "0x802362a",
+      "encoded": 330,
+      "width": 6,
+      "bitmap_b64": "AAAAhMSklIyEhIQECA=="
+    },
+    {
+      "address": "0x802363b",
+      "encoded": 331,
+      "width": 5,
+      "bitmap_b64": "AAAAAADwiIiIiIgIEA=="
+    },
+    {
+      "address": "0x802364c",
+      "encoded": 332,
+      "width": 7,
+      "bitmap_b64": "AHwAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x802365d",
+      "encoded": 333,
+      "width": 5,
+      "bitmap_b64": "AAAAcABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x802366e",
+      "encoded": 334,
+      "width": 7,
+      "bitmap_b64": "RDgAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x802367f",
+      "encoded": 335,
+      "width": 5,
+      "bitmap_b64": "AACIcABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x8023690",
+      "encoded": 336,
+      "width": 7,
+      "bitmap_b64": "FCgAOESCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x80236a1",
+      "encoded": 337,
+      "width": 5,
+      "bitmap_b64": "AAAoUABwiIiIiHAAAA=="
+    },
+    {
+      "address": "0x80236b2",
+      "encoded": 338,
+      "width": 12,
+      "bitmap_b64": "AAAAO0aCg4KCRjsAAAAAAPAAAPAAAADwAAA="
+    },
+    {
+      "address": "0x80236d0",
+      "encoded": 339,
+      "width": 9,
+      "bitmap_b64": "AAAAAAB3iI+IiHcAAAAAAAAAAICAAIAAAAA="
+    },
+    {
+      "address": "0x80236ee",
+      "encoded": 340,
+      "width": 6,
+      "bitmap_b64": "ECAA+ISE+ISEhIQAAA=="
+    },
+    {
+      "address": "0x80236ff",
+      "encoded": 341,
+      "width": 4,
+      "bitmap_b64": "AAAgQACwwICAgIAAAA=="
+    },
+    {
+      "address": "0x8023710",
+      "encoded": 342,
+      "width": 6,
+      "bitmap_b64": "AAAA+ISE+ISEhIQQIA=="
+    },
+    {
+      "address": "0x8023721",
+      "encoded": 343,
+      "width": 4,
+      "bitmap_b64": "AAAAAACwwICAgIAgQA=="
+    },
+    {
+      "address": "0x8023732",
+      "encoded": 344,
+      "width": 6,
+      "bitmap_b64": "SDAA+ISE+ISEhIQAAA=="
+    },
+    {
+      "address": "0x8023743",
+      "encoded": 345,
+      "width": 4,
+      "bitmap_b64": "AACQYACwwICAgIAAAA=="
+    },
+    {
+      "address": "0x8023754",
+      "encoded": 346,
+      "width": 6,
+      "bitmap_b64": "ECAAeISAeAQEhHgAAA=="
+    },
+    {
+      "address": "0x8023765",
+      "encoded": 347,
+      "width": 5,
+      "bitmap_b64": "AAAQIABwiGAQiHAAAA=="
+    },
+    {
+      "address": "0x8023776",
+      "encoded": 348,
+      "width": 6,
+      "bitmap_b64": "MEgAeISAeAQEhHgAAA=="
+    },
+    {
+      "address": "0x8023787",
+      "encoded": 349,
+      "width": 5,
+      "bitmap_b64": "AAAgUABwiGAQiHAAAA=="
+    },
+    {
+      "address": "0x8023798",
+      "encoded": 350,
+      "width": 6,
+      "bitmap_b64": "AAAAeISAeAQEhHgQIA=="
+    },
+    {
+      "address": "0x80237a9",
+      "encoded": 351,
+      "width": 5,
+      "bitmap_b64": "AAAAAABwiGAQiHAgQA=="
+    },
+    {
+      "address": "0x80237ba",
+      "encoded": 352,
+      "width": 6,
+      "bitmap_b64": "SDAAeISAeAQEhHgAAA=="
+    },
+    {
+      "address": "0x80237cb",
+      "encoded": 353,
+      "width": 5,
+      "bitmap_b64": "AABQIABwiGAQiHAAAA=="
+    },
+    {
+      "address": "0x80237dc",
+      "encoded": 354,
+      "width": 7,
+      "bitmap_b64": "AAAA/hAQEBAQEBAQIA=="
+    },
+    {
+      "address": "0x80237ed",
+      "encoded": 355,
+      "width": 4,
+      "bitmap_b64": "AAAAQEDwQEBAQDBAgA=="
+    },
+    {
+      "address": "0x80237fe",
+      "encoded": 356,
+      "width": 7,
+      "bitmap_b64": "KBAA/hAQEBAQEBAAAA=="
+    },
+    {
+      "address": "0x802380f",
+      "encoded": 357,
+      "width": 6,
+      "bitmap_b64": "AAAARET0QEBAQDAAAA=="
+    },
+    {
+      "address": "0x8023820",
+      "encoded": 358,
+      "width": 7,
+      "bitmap_b64": "AAAA/hAQfBAQEBAAAA=="
+    },
+    {
+      "address": "0x8023831",
+      "encoded": 359,
+      "width": 4,
+      "bitmap_b64": "AAAAQEDwQPBAQDAAAA=="
+    },
+    {
+      "address": "0x8023842",
+      "encoded": 360,
+      "width": 7,
+      "bitmap_b64": "MkwAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8023853",
+      "encoded": 361,
+      "width": 6,
+      "bitmap_b64": "AABkmACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x8023864",
+      "encoded": 362,
+      "width": 7,
+      "bitmap_b64": "AHwAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8023875",
+      "encoded": 363,
+      "width": 5,
+      "bitmap_b64": "AAAAcACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x8023886",
+      "encoded": 364,
+      "width": 7,
+      "bitmap_b64": "RDgAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x8023897",
+      "encoded": 365,
+      "width": 5,
+      "bitmap_b64": "AACIcACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80238a8",
+      "encoded": 366,
+      "width": 7,
+      "bitmap_b64": "ECgQgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x80238b9",
+      "encoded": 367,
+      "width": 5,
+      "bitmap_b64": "ACBQIACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80238ca",
+      "encoded": 368,
+      "width": 7,
+      "bitmap_b64": "FCgAgoKCgoKCRDgAAA=="
+    },
+    {
+      "address": "0x80238db",
+      "encoded": 369,
+      "width": 5,
+      "bitmap_b64": "AAAoUACIiIiIiHgAAA=="
+    },
+    {
+      "address": "0x80238ec",
+      "encoded": 370,
+      "width": 7,
+      "bitmap_b64": "AAAAgoKCgoKCRDgQCA=="
+    },
+    {
+      "address": "0x80238fd",
+      "encoded": 371,
+      "width": 5,
+      "bitmap_b64": "AAAAAACIiIiIiHggEA=="
+    },
+    {
+      "address": "0x802390e",
+      "encoded": 372,
+      "width": 9,
+      "bitmap_b64": "CBQAiIhJVVUiIiIAAAAAAICAAAAAAAAAAAA="
+    },
+    {
+      "address": "0x802392c",
+      "encoded": 373,
+      "width": 9,
+      "bitmap_b64": "AAAIFACIiFVVIiIAAAAAAAAAgIAAAAAAAAA="
+    },
+    {
+      "address": "0x802394a",
+      "encoded": 374,
+      "width": 7,
+      "bitmap_b64": "ECgAgkQoEBAQEBAAAA=="
+    },
+    {
+      "address": "0x802395b",
+      "encoded": 375,
+      "width": 5,
+      "bitmap_b64": "AAAgUACIiFBQICAgQA=="
+    },
+    {
+      "address": "0x802396c",
+      "encoded": 376,
+      "width": 7,
+      "bitmap_b64": "ACgAgkQoEBAQEBAAAA=="
+    },
+    {
+      "address": "0x802397d",
+      "encoded": 377,
+      "width": 6,
+      "bitmap_b64": "ECAA/AQIECBAgPwAAA=="
+    },
+    {
+      "address": "0x802398e",
+      "encoded": 378,
+      "width": 5,
+      "bitmap_b64": "AAAQIAD4CBAgQPgAAA=="
+    },
+    {
+      "address": "0x802399f",
+      "encoded": 379,
+      "width": 6,
+      "bitmap_b64": "ABAA/AQIECBAgPwAAA=="
+    },
+    {
+      "address": "0x80239b0",
+      "encoded": 380,
+      "width": 5,
+      "bitmap_b64": "AAAAIAD4CBAgQPgAAA=="
+    },
+    {
+      "address": "0x80239c1",
+      "encoded": 381,
+      "width": 6,
+      "bitmap_b64": "SDAA/AQIECBAgPwAAA=="
+    },
+    {
+      "address": "0x80239d2",
+      "encoded": 382,
+      "width": 5,
+      "bitmap_b64": "AABQIAD4CBAgQPgAAA=="
+    },
+    {
+      "address": "0x80239e3",
+      "encoded": 383,
+      "width": 3,
+      "bitmap_b64": "AAAAYICAgICAgIAAAA=="
+    },
+    {
+      "address": "0x80239f4",
+      "encoded": 8211,
+      "width": 8,
+      "bitmap_b64": "AAAAAAAAAP8AAAAAAA=="
+    },
+    {
+      "address": "0x8023a05",
+      "encoded": 8212,
+      "width": 8,
+      "bitmap_b64": "AAAAAAAAAP8AAAAAAA=="
+    },
+    {
+      "address": "0x8023a16",
+      "encoded": 8217,
+      "width": 2,
+      "bitmap_b64": "AABAQIAAAAAAAAAAAA=="
+    },
+    {
+      "address": "0x8023a27",
+      "encoded": 8364,
+      "width": 7,
+      "bitmap_b64": "AAAAHiBA/kD+QCAeAA=="
+    }
+  ]
+}

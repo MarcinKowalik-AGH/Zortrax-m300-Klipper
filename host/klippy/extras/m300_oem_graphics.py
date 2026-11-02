@@ -88,9 +88,12 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
             screw=instr.get('screw')
             return ((SCREW_HIGH if instr.get('action')=='TIGHTEN' else SCREW_LOW)
                     .get(screw,'0x0801ca28'))
-        if state=='WAIT_PREPARE': return '0x0801fe50'
+        if state in ('WAIT_PREPARE', 'WAIT_WARNING'): return '0x0801c434'
+        if state=='WAIT_TIGHTEN': return '0x0801fe50'
         if state=='HEATING': return '0x0801c2b8'
-        if state in ('HOMING', 'PROBING'): return '0x0801ca28'
+        if state=='HOMING': return '0x0801c2b8'
+        if state=='PROBING':
+            return '0x0801c2b8' if calibration.get('measurement_stage', 'initial')=='initial' else '0x0801ca28'
         if state in ('COMPLETE','REVIEW'):return '0x0801c024'
         if state in ('FAULT','CANCELLED'):return '0x0801fe34'
         return '0x0801ca28'

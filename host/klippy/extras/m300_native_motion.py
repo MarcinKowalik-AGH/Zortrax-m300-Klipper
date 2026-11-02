@@ -177,6 +177,12 @@ class M300NativeMotion:
             # Native homing is not resumable after an asynchronous stop.
             self.printer.invoke_shutdown('M300 homing cancelled')
 
+    def panel_update(self, snapshot, received_at, token=None, view_current=False):
+        # The OLED also delivers raw counters to the older leased M06 jog
+        # owner. Native jogs are ordinary G-code; receiving telemetry grants
+        # no movement or homing authority here.
+        return None
+
     def is_busy(self):
         return self.state == 'HOMING'
 

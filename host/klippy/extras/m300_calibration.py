@@ -481,6 +481,12 @@ class M300Calibration:
             if self.native_mode:
                 self.reactor.update_timer(self._timer, self.reactor.NOW)
                 self.reactor.update_timer(self._watch_timer, self.reactor.NOW)
+                # The stock wizard heats first, then asks the hot-head and
+                # three-knob questions. Starting the procedure is the heat
+                # request; neither of those later confirmations is skipped.
+                self.machine.confirm(token, self.machine.phase_id, self.reactor.monotonic())
+                self._expected_hotend = self.target
+                self._heat(self.hotend, self.target)
             self._present()
             return token
         except (CalibrationError, self.printer.command_error) as exc:
@@ -492,7 +498,26 @@ class M300Calibration:
             raise self._error('calibration commit already in progress')
         try:
             self.machine.check(token, phase)
-            self._guard(require_temperature=self.machine.state in ('ADJUST', 'WAIT_RETRY'))
+            self._guard(require_temperature=self.machine.state in
+                        ('WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY'))
+            if self.native_mode and self.machine.state == 'WAIT_WARNING':
+                self.machine._phase('HOMING', self.reactor.monotonic())
+                self._present()
+                try:
+                    self._home_for_leveling()
+                    self.machine.check(token)
+                    self.machine._phase('WAIT_TIGHTEN', self.reactor.monotonic())
+                    self._present()
+                except Exception as exc:
+                    self._fault(str(exc))
+                    raise
+                return self.get_status(self.reactor.monotonic())
+            if self.native_mode and self.machine.state == 'WAIT_TIGHTEN':
+                # Keep the pure M07 measurement/event ledger unchanged.
+                self.machine.state = 'HEATING'
+                self.machine.heated(token, self.reactor.monotonic())
+                self._present()
+                return self.get_status(self.reactor.monotonic())
             action = self.machine.confirm(token, phase, self.reactor.monotonic())
             if action == 'HEAT':
                 self._expected_hotend = self.target
@@ -689,6 +714,22 @@ class M300Calibration:
         if target[2] > maximum[2]:
             raise self._error('release endpoint outside axis limit')
         self._native_contact(target, self.release_speed, False)
+        # HomingMove stops at the first opening edge, not at its target. On
+        # the physical HW05 trace that edge was only 59 counts (0.1475 mm)
+        # from contact and PC7 closed again before the next query. Complete
+        # the already bounded retract to contact + release_distance before
+        # requiring a stable opening. Never extend the search or axis limits.
+        self.machine.check(token, phase)
+        self._queue_move(target, self.release_speed)
+        try:
+            self.toolhead.dwell(.050)
+            self.toolhead.wait_moves()
+            self.machine.check(token, phase)
+            self._guard(require_temperature=True)
+            if self.reactor.monotonic() > self._move_deadline:
+                raise self._error('release movement deadline exceeded')
+        finally:
+            self._wait_until = self._move_deadline = None
         if self._query_contact():
             raise self._error('NO_RELEASE: PC7 remains active')
         self.machine.check(token, phase)
@@ -730,8 +771,9 @@ class M300Calibration:
                         self._stable_since = eventtime
                     if eventtime-self._stable_since >= self.stable_time:
                         if self.native_mode:
-                            self._home_for_leveling()
-                        self.machine.heated(self.machine.token, eventtime)
+                            self.machine._phase('WAIT_WARNING', eventtime)
+                        else:
+                            self.machine.heated(self.machine.token, eventtime)
                         self._present()
                 else:
                     self._stable_since = None
@@ -783,7 +825,7 @@ class M300Calibration:
                 elapsed = eventtime-self.machine.phase_started
                 if self.machine.state == 'HEATING' and elapsed > self.heat_timeout:
                     raise self._error('heating deadline exceeded')
-                if self.machine.state in ('WAIT_PREPARE', 'ADJUST', 'WAIT_RETRY', 'REVIEW') and elapsed > self.confirm_timeout:
+                if self.machine.state in ('WAIT_PREPARE', 'WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY', 'REVIEW') and elapsed > self.confirm_timeout:
                     self.cancel('operator confirmation timeout')
                 if self._move_deadline is not None and eventtime > self._move_deadline:
                     raise self._error('native/motion deadline exceeded')
@@ -798,14 +840,15 @@ class M300Calibration:
                       model='M300_CLASSIC', qualified=self.qualified,
                       hardware_qualified=False, target=self._expected_hotend,
                       requested_target=self.target, last_rejection=self.last_rejection,
-                      can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
+                      can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
                       can_cancel=self.ready and self.machine.active)
         if self.native_mode:
-            result.update(revision='0.13.16.3-NATIVE-M07',
+            result.update(revision='0.13.16.4-OEM-M07',
                           procedure_temperature=self.procedure_temperature,
                           probe_search_margin=self.search_margin,
                           measurement_frame_offset=self._frame_offset,
                           automatic_homing=True, legacy_job_enabled=self.job.workflow_qualified)
+            result['measurement_stage'] = self.machine.stage
             if self._cal_homing:
                 result['state'] = result['prompt'] = 'HOMING'
         return result

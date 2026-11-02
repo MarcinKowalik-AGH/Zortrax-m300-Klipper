@@ -8,10 +8,12 @@ All physical actions still execute through M300Menu's existing owners.
 import json
 import math
 import os
+from collections import deque
 
 from .m300_ui_m11_state import MenuHistory, LANGS, atlas_summary, require_rows, clean_label
 from .m300_oem_graphics import OEMGraphics, choose_icon
 from .m300_ui_labels import english_label
+from .m300_leveling_oem import render as render_leveling
 
 
 class M300MenuUI:
@@ -32,6 +34,7 @@ class M300MenuUI:
         self.oem_graphics_enabled = config.getboolean('oem_graphics', True)
         self.oem_sprites = OEMGraphics() if self.oem_graphics_enabled else None
         self.last_sprite = None
+        self._leveling_frames = deque(maxlen=16)
         self.history = MenuHistory(self.menu_max_depth)
         path = os.path.join(os.path.dirname(__file__), 'm300_m11_stock_atlas.json')
         with open(path,encoding='utf-8') as stream:
@@ -51,6 +54,7 @@ class M300MenuUI:
     def invalidate(self, *args):
         self.history.clear()
         self._present_generation = None
+        self._leveling_frames.clear()
 
     def entered(self, old, new, remember=True):
         self.history.entered(old, new, remember)
@@ -114,6 +118,51 @@ class M300MenuUI:
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
         return self.oem_sprites.get(self.last_sprite, now)
 
+    def leveling_frame(self, panel_page, now, frame_type):
+        if panel_page != 'm04' or self.menu.page != 'procedure':
+            self._leveling_frames.clear()
+            return None
+        view = self.procedures.view(now)
+        if view['owner'] != 'm300_calibration':
+            self._leveling_frames.clear()
+            return None
+        screen = view['leveling_screen']
+        self.last_sprite = screen['sprite']
+        wire = render_leveling(screen, self.oem_sprites, frame_type, now)
+        # Keep all recent animation frames of this phase. An acknowledged
+        # frame, not a render request, establishes the visible action identity.
+        if self._leveling_frames and self._leveling_frames[-1][0] != view['view_id']:
+            self._leveling_frames.clear()
+        self._leveling_frames.append((view['view_id'], wire))
+        return wire
+
+    def leveling_receipt(self, stream):
+        if not stream.enabled or not stream.ready:
+            return None
+        previous = getattr(stream, 'previous', None)
+        return next((view for view, frame in reversed(self._leveling_frames)
+                     if frame == previous), None)
+
+    def leveling_panel(self, events, received_view, now):
+        if self.oled.page != 'm04' or self.menu.page != 'procedure':
+            return False
+        view = self.procedures.view(now)
+        if view['owner'] != 'm300_calibration':
+            return False
+        # Consume rotation and stale/coalesced clicks in this modal dialog.
+        # The short press confirms precisely the phase visible at receipt.
+        if received_view == view['view_id']:
+            if events['longs'] and 'CANCEL' in view['actions']:
+                self.procedures.action(received_view, 'CANCEL')
+            elif events['shorts']:
+                if 'CONFIRM' in view['actions']:
+                    self.procedures.action(received_view, 'CONFIRM')
+                elif view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
+                    self.menu.home()
+                    self.oled.page, self.oled.selection = 'status', 0
+        self.oled.render_at = 0.
+        return True
+
     def list_atlas(self):
         return [(self.translate(entry['source_en']) or '(unnamed)',
                  ('atlas_item',entry['ram_address'])) for entry in self.atlas]
@@ -134,7 +183,7 @@ class M300MenuUI:
                 'oled_spi_owner':'m300_oled',
                 'encoder_owner':'m300_oled',
                 'action_owner':'m300_menu_and_existing_services',
-                'host_ui_revision':'0.13.16-M300-NORMAL-UI',
+                'host_ui_revision':'0.13.16.4-OEM-M07-UI',
                 'operation_groups':['Klipper', 'Zortrax M300', 'Service / Tests'],
                 'menu_wrap':False,
                 'menu_reverse':self.oled.menu_reverse,

@@ -1,8 +1,8 @@
-# Zortrax M300 Classic — Klipper R16.3.1
+# Zortrax M300 Classic — Klipper R16.4
 
 [English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Funkcje / odbiór](docs/pl/FEATURES.md) · [Kompilacja](docs/pl/BUILD.md)
 
-Iteracja testowa: **MCU R14.5 + host R16.3.1**, Klipper
+Iteracja testowa: **MCU R14.5 + host R16.4**, Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103, Cartesian M300 Classic.
 
 - Natywne grzanie, wentylatory, PID, SAVE_CONFIG, XYZ/E i obsługa druku Klippera.
@@ -13,9 +13,9 @@ Iteracja testowa: **MCU R14.5 + host R16.3.1**, Klipper
 - Zachowane księżyc/przygaszanie/wybudzanie, chłodzenie lokalne MCU i łączność.
 - Odwracalna migracja hosta/konfiguracji z zachowaniem PID i kalibracji E.
 
-GitHub Actions wykonuje czysty build ARM, 157 testów hosta, testy modeli
+GitHub Actions wykonuje czysty build ARM, 171 testów hosta, testy modeli
 rejestrowych i 13 scenariuszy rzeczywistego Klippy FILEOUTPUT. W Artifacts
-udanego przebiegu pobierz `m300-r14_5-host-r16_3_1-test-<commit>`. Zawiera M3B,
+udanego przebiegu pobierz `m300-r14_5-host-r16_4-test-<commit>`. Zawiera M3B,
 BIN/ELF/mapę/słownik, instalator Orange Pi R16, grupowanie Fluidd, raporty i sumy.
 Wgrany MCU R14.5 może pozostać.
 
@@ -30,10 +30,10 @@ Natywny homing przy 180C oraz timing 300 mm/s pod obciążeniem wymagają odbior
 tej wersji na drukarce. Procedury M03/M07/M08 pozostają w TEST; pojedynczy test
 grzałki lub XYZ nie zatwierdza całego ich przebiegu.
 
-R16.3.1 dodaje jedną próbę natywnego resetu MCU po starcie procesu hosta dla
+R16.4 dodaje jedną próbę natywnego resetu MCU po starcie procesu hosta dla
 starej uzbrojonej sesji lub zatrzasku heartbeat. Awarie sprzętu/M112 pozostają
 do jawnego odzyskania. Zobacz [Cykl połączenia](docs/pl/CONNECTION.md).
 
-R16.3.1 łączy wykonawcę M07 z natywnym ruchem oraz wspólnymi ekranami OLED/Fluidd; zobacz [Poziomowanie](docs/pl/LEVELING.md).
+R16.4 łączy wykonawcę M07 z natywnym ruchem oraz wspólnymi ekranami OLED/Fluidd; zobacz [Poziomowanie](docs/pl/LEVELING.md).
 
-R16.3.1 poprawia nazwy makr na `TEST_ZORTRAX_LEVEL`, `TEST_ZORTRAX_STATUS` i `TEST_ZORTRAX_XY`. Testy natywnego parsera sprawdzają wywołanie przycisków; instalator migruje obecne nazwy i preferencje Fluidd. Wykonawca M07 i MCU pozostają zgodne.
+R16.3.1 poprawiło nazwy makr testowych. R16.4 naprawia pełne cofnięcie po rozwarciu styku M07, przywraca ostrzeżenie i potwierdzenie trzech śrub oraz oryginalny układ dialogów z czcionką 13 px. OLED i Fluidd korzystają z tych samych tekstów OEM. 85 ekranów wzorcowych zgadza się piksel po pikselu z modelem oryginału w pięciu językach; odbiór na drukarce pozostaje do wykonania. [Audyt ekranów i algorytmu](docs/pl/LEVELING.md). Aplikacja MCU pozostaje bez zmian.

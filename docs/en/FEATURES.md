@@ -83,3 +83,5 @@ fan and OLED commands; it does not execute those events on the F103.
 The release contains 131 host tests, 8 repository contracts, 6720 STEP guard
 cases, 52 cooling cases, 1792 factory-decoder cases, startup/timer checks and
 13 actual Klippy FILEOUTPUT scenarios. CI never flashes or operates a printer.
+
+R16.4 fixes the complete M07 release retract and panel_update compatibility; restores OEM 13-pixel dialogs, shared OLED/Fluidd text and 85 matching reference frames. 171 host tests and 20002 turn vectors pass; physical acceptance remains open. [M07 audit](LEVELING.md).

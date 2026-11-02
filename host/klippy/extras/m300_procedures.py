@@ -10,7 +10,7 @@ import math
 import os
 
 from .m300_material_ui_state import MESSAGES
-from .m300_leveling_ui import format_view
+from .m300_leveling_oem import describe
 
 OWNERS = ('m300_filament', 'm300_calibration', 'm300_thermal', 'm300_fans', 'm300_job')
 TERMINAL = ('COMPLETE', 'CANCELLED', 'FAULT', 'ERROR')
@@ -67,6 +67,11 @@ class M300Procedures:
         self._release_display()
         self._emit('prompt_end')
         self.reactor.update_timer(self.timer, self.reactor.NEVER)
+        calibration = self._read('m300_calibration', self.reactor.monotonic())
+        if calibration.get('state') == 'FAULT':
+            # A host-requested shutdown must retain the actual pad failure
+            # explanation in Fluidd. All actions are revoked by live=False.
+            self._prompt(self.view(self.reactor.monotonic(), owner_override='m300_calibration'))
 
     def _emit(self, line):
         # Native respond_raw bypasses a second G-code parse. This is the
@@ -101,7 +106,7 @@ class M300Procedures:
                 status.get('can_confirm_resume_clean') is True,
                 status.get('ready') is True)
 
-    def view(self, now):
+    def view(self, now, owner_override=None):
         snapshots = {name: self._read(name, now) for name in OWNERS}
         for name, status in snapshots.items():
             key = self._key(name, status)
@@ -124,8 +129,12 @@ class M300Procedures:
             owner = recent
         else:
             owner = active[0] if active else recent
+        if owner_override in snapshots:
+            owner = owner_override
         status = snapshots[owner] if owner else {'state': 'IDLE', 'busy': False}
-        identity = self._key(owner, status)
+        ui = self.printer.lookup_object('m300_menu_ui', None)
+        language = ui.language() if ui is not None else 'EN'
+        identity = self._key(owner, status) + (language,)
         if identity != self.identity:
             self.identity = identity
             self.revision += 1
@@ -159,8 +168,13 @@ class M300Procedures:
         elapsed = (number(stats.get('print_duration')) if owner == 'm300_job' else
                    max(0., now - self.started.get(owner, now)))
         progress = number(status.get('progress')) if owner == 'm300_job' else None
+        screen = describe(status, language) if owner == 'm300_calibration' else None
+        if screen:
+            title = 'Poziomowanie platformy' if language == 'PL' else 'Platform leveling'
+            message = screen['text']
         return {'owner': owner, 'state': state, 'title': clean(title),
-                'message': clean(message), 'view_id': self.view_id,
+                'leveling_screen': screen,
+                'message': message if screen else clean(message), 'view_id': self.view_id,
                 'token': status.get('session_token'), 'phase': status.get('phase_id'),
                 'actions': actions, 'busy': status.get('busy') is True,
                 'reason': clean(status.get('reason') or status.get('resume_block_reason')),
@@ -174,15 +188,18 @@ class M300Procedures:
 
     def rows(self, now):
         view = self.view(now)
-        rows = [('Back', ('page', 'main')), (view['title'] + ': ' + view['state'], None)]
         if view['owner'] == 'm300_calibration':
-            # Present the screw and turns before navigation buttons/session
-            # metadata, so the physical panel immediately shows the instruction.
-            rows.extend((label, None) for label, action in format_view(
-                view['snapshots'][view['owner']], (view['token'], view['phase']))
-                if action is None)
-        else:
-            rows.append((view['message'], None))
+            screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
+            rows = [(line, None) for line in screen['text'].split('\n')]
+            if screen['diagram'] is not None:
+                rows.extend(('%s: %.1f mm' % (p, v), None)
+                            for p, v in enumerate(screen['diagram']))
+            rows.extend((self._action_label(view, action),
+                         ('procedure_action', view['view_id'], action))
+                        for action in view['actions'])
+            return view['title'], rows
+        rows = [('Back', ('page', 'main')), (view['title'] + ': ' + view['state'], None)]
+        rows.append((view['message'], None))
         for action in view['actions']:
             rows.append((self._action_label(view, action),
                          ('procedure_action', view['view_id'], action)))
@@ -201,9 +218,12 @@ class M300Procedures:
 
     @staticmethod
     def _action_label(view, action):
-        if view['owner'] == 'm300_calibration' and action == 'CONFIRM':
-            return {'WAIT_PREPARE': 'Start measurement', 'ADJUST': 'Adjustment done',
-                    'WAIT_RETRY': 'Repeat this point', 'REVIEW': 'Save result'}.get(view['state'], 'Confirm')
+        if view['owner'] == 'm300_calibration':
+            lang = (view.get('leveling_screen') or {}).get('language', 'EN')
+            labels = {'EN': ('Continue', 'Cancel'), 'PL': ('Kontynuuj', 'Anuluj'),
+                      'FR': ('Continuer', 'Annuler'), 'DE': ('Weiter', 'Abbrechen'),
+                      'ES': ('Continuar', 'Cancelar')}
+            return labels[lang][action == 'CANCEL']
         return action.replace('_', ' ').title()
 
     def action(self, view_id, action):
@@ -244,20 +264,25 @@ class M300Procedures:
     def _prompt(self, view):
         self._emit('prompt_end')
         self._emit('prompt_begin ' + ('Klipper - ' if view['owner'] == 'm300_thermal' else 'ZORTRAX M300 - ') + view['title'])
-        for line in (view['state'] + ': ' + view['message'],
-                     'Session %s / Phase %s' % (view['token'], view['phase']), view['reason']):
-            if line:
-                self._emit('prompt_text ' + clean(line))
         if view['owner'] == 'm300_calibration':
-            for label, action in format_view(view['snapshots'][view['owner']],
-                                            (view['token'], view['phase'])):
-                if action is None:
-                    self._emit('prompt_text ' + clean(label))
+            screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
+            for line in screen['text'].split('\n'):
+                self._emit('prompt_text ' + line.replace('|', '/'))
+            if screen['diagram'] is not None:
+                # Same rounded numbers as the physical five-point diagram.
+                for p in (4, 3, 2, 1, 0):
+                    self._emit('prompt_text %s: %.1f mm' % (p, screen['diagram'][p]))
+        else:
+            for line in (view['state'] + ': ' + view['message'],
+                         'Session %s / Phase %s' % (view['token'], view['phase']), view['reason']):
+                if line:
+                    self._emit('prompt_text ' + clean(line))
         for verb in view['actions']:
             color = 'error' if verb == 'CANCEL' else 'primary'
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
                        (self._action_label(view, verb), view['view_id'], verb, color))
-        self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
+        if self.live and view['owner'] != 'm300_calibration':
+            self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
         self._emit('prompt_show')
         self.last_prompt = view['view_id']
 
@@ -273,7 +298,8 @@ class M300Procedures:
                     # same current owner/phase, including screw pictograms.
                     menu = self.printer.lookup_object('m300_menu', None)
                     oled = self.printer.lookup_object('m300_oled', None)
-                    if menu is not None and oled is not None:
+                    if (menu is not None and oled is not None
+                            and (menu.page != 'procedure' or oled.page != 'm04')):
                         menu._navigate('procedure')
                         oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
             display = self.printer.lookup_object('display_status', None)
@@ -285,6 +311,8 @@ class M300Procedures:
                 if view['owner'] == 'm300_job':
                     text = ('Clean nozzle' if 'CONFIRM_CLEAN' in view['actions'] else
                             view['state'].replace('_', ' ').title())
+                elif view['owner'] == 'm300_calibration':
+                    text = view['leveling_screen']['text']
                 else:
                     prefix = (str(view['snapshots'][view['owner']].get('operation') or 'Filament')
                               if view['owner'] == 'm300_filament' else
@@ -311,7 +339,7 @@ class M300Procedures:
         # the shared object small at normal subscription rates.
         view.pop('snapshots')
         return dict(view, installed=True, ready=self.live,
-                    revision='0.13.16.3-PROCEDURES-M07', automatic_resume=False)
+                    revision='0.13.16.4-OEM-PROCEDURES', automatic_resume=False)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_PROCEDURE ' + json.dumps(

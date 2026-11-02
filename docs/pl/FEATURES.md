@@ -81,3 +81,5 @@ grzałek, wentylatorów i OLED; nie wykonuje tych zdarzeń na F103.
 Wydanie obejmuje 131 testów hosta, 8 kontraktów repozytorium, 6720 przypadków
 STEP, 52 chłodzenia, 1792 dekodera fabrycznego, testy startu/timerów i 13
 scenariuszy rzeczywistego Klippy FILEOUTPUT. CI nie programuje ani nie porusza drukarki.
+
+R16.4: naprawione pełne cofnięcie M07 po pierwszym rozwarciu PC7 i metoda panel_update; przywrócone dialogi OEM z czcionką 13 px, wspólne teksty OLED/Fluidd i 85 zgodnych ramek wzorcowych. 171 testów hosta, 20002 wektory obrotów; odbiór fizyczny pozostaje otwarty. [Audyt M07](LEVELING.md).

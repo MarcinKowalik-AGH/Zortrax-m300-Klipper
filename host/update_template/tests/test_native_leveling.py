@@ -53,9 +53,12 @@ class Harness:
         self.level, self.triggered, self.trigger_time = False, True, 0.
         self.surface = lambda xy: -1./scale
         self.no_contact = self.no_release = False
+        self.reclose_after_edge = self.stuck_after_tail = False
+        self.release_target = None
+        self.on_wait = None
         self.on_drip = None
         self.endstop = NS(get_steppers=lambda: [self.stepper],
-            query_endstop=lambda now: self.level, home_start=self.home_start,
+            query_endstop=self.query, home_start=self.home_start,
             home_wait=lambda now: self.trigger_time)
         self.kin = NS(get_status=lambda now: {'homed_axes':'xyz'},
             get_steppers=lambda: [self.stepper],
@@ -64,7 +67,7 @@ class Harness:
             move=self.move, drip_move=self.drip, set_position=self.set_position,
             get_last_move_time=lambda: self.now, check_busy=lambda now: (self.now,self.now,True),
             get_kinematics=lambda: self.kin, flush_step_generation=lambda: None,
-            dwell=lambda delay: None)
+            dwell=lambda delay: self.events.append(('dwell', delay)), wait_moves=self.wait_moves)
         self.commands = {'G1': lambda cmd: self.move([1.,2.,3.,17.],1.),
                          'G28': lambda cmd: None, 'M109': lambda cmd: None}
         self.gcode = NS(register_command=self.register)
@@ -126,6 +129,15 @@ class Harness:
         if not 0.<=p[2]<=315.:raise RuntimeError('native Z boundary')
         self.position=list(p);self.stepper.actual=round((p[2]-self.stepper.offset)*self.stepper.scale)
         self.events.append(('move',tuple(p),speed))
+    def query(self, now):
+        if self.release_target is not None and self.reclose_after_edge:
+            return self.position[2] < self.release_target or self.stuck_after_tail
+        return self.level
+    def wait_moves(self):
+        self.events.append(('drain', self.position[2]))
+        if self.on_wait:
+            fn, self.on_wait = self.on_wait, None
+            fn()
     def home(self,axes):
         self.events.append(('home',axes,self.c.get_status(self.now)['state']))
         self.c._foreign_home()
@@ -137,12 +149,14 @@ class Harness:
     def drip(self,target,speed,completion):
         start=self.position[2]
         if self.triggered:
+            self.release_target = None
             threshold=self.surface(tuple(target[:2]))+self.c._frame_offset
             success=not self.no_contact and target[2]<=threshold<start
             value=threshold if success else target[2]
             self.level=success
         else:
-            value=start+.05;success=not self.no_release and value<=target[2]
+            self.release_target = target[2]
+            value=start+59./self.stepper.scale;success=not self.no_release and value<=target[2]
             if not success:value=target[2]
             self.level=not success
         self.stepper.actual=round((value-self.stepper.offset)*self.stepper.scale)
@@ -163,7 +177,13 @@ class Harness:
             self.tick()
         raise AssertionError('did not reach '+state)
     def start(self):
-        self.c.start();self.confirm()
+        self.c.start();self.until('WAIT_WARNING')
+        try:
+            self.confirm()
+        except RuntimeError:
+            if self.c.machine.state == 'FAULT':return
+            raise
+        self.confirm()
     def confirm(self):
         self.c.confirm(self.c.machine.token,self.c.machine.phase_id)
 
@@ -202,12 +222,18 @@ class NativeLevelingTests(unittest.TestCase):
         h=Harness();h.c._ready()
         self.assertEqual(h.events,[('timer','cal',0.),('timer','watch',0.)])
 
-    def test_start_waits_for_preparation_confirmation_before_heating_or_homing(self):
+    def test_oem_preflight_heats_then_waits_for_warning_and_knob_confirmations(self):
         h=Harness();h.c.start()
+        self.assertEqual(h.c.machine.state,'HEATING')
+        self.assertEqual(h.hotend.target,180.)
+        h.until('WAIT_WARNING')
         for _ in range(10):h.tick()
-        self.assertEqual(h.c.machine.state,'WAIT_PREPARE')
-        self.assertEqual(h.hotend.target,0.)
         self.assertFalse(any(e[0] in ('home','move','contact') for e in h.events))
+        h.confirm()
+        self.assertEqual(h.c.machine.state,'WAIT_TIGHTEN')
+        for _ in range(10):h.tick()
+        self.assertFalse(any(e[0]=='contact' for e in h.events))
+        h.confirm();h.until('REVIEW')
 
     def test_external_movement_is_rejected_only_during_session_and_restored_after_cancel(self):
         h=Harness();h.c.start()
@@ -219,10 +245,10 @@ class NativeLevelingTests(unittest.TestCase):
         self.assertEqual(h.toolhead.move,h.original_move)
 
     def test_stale_confirmation_does_not_advance_phase(self):
-        h=Harness();h.c.start();token,phase=h.c.machine.token,h.c.machine.phase_id
+        h=Harness();h.c.start();h.until('WAIT_WARNING');token,phase=h.c.machine.token,h.c.machine.phase_id
         h.confirm()
         with self.assertRaisesRegex(RuntimeError,'stale'):h.c.confirm(token,phase)
-        self.assertEqual(h.c.machine.state,'HEATING')
+        self.assertEqual(h.c.machine.state,'WAIT_TIGHTEN')
 
     def test_screw_instruction_waits_for_explicit_confirmation(self):
         h=Harness();h.surface=lambda xy:.4 if xy in ((269.,275.),(35.,275.)) else 0.
@@ -267,13 +293,13 @@ class NativeLevelingTests(unittest.TestCase):
               'filename':'','reason':''}
         p=M300Procedures.__new__(M300Procedures);p.view=lambda now:view
         title,rows=p.rows(h.now)
-        screw=next(i for i,(label,action) in enumerate(rows) if label.startswith('Screw:'))
-        confirm=next(i for i,(label,action) in enumerate(rows) if label=='Adjustment done')
+        screw=next(i for i,(label,action) in enumerate(rows) if ' side is too ' in label)
+        confirm=next(i for i,(label,action) in enumerate(rows) if label=='Continue')
         self.assertLess(screw,confirm)
 
     def test_oem_icons_follow_prepare_heat_home_measure_adjust_review_and_cancel(self):
-        for state,expected in (('WAIT_PREPARE','0x0801fe50'),('HEATING','0x0801c2b8'),
-            ('HOMING','0x0801ca28'),('PROBING','0x0801ca28'),('REVIEW','0x0801c024'),
+        for state,expected in (('WAIT_WARNING','0x0801c434'),('WAIT_TIGHTEN','0x0801fe50'),('HEATING','0x0801c2b8'),
+            ('HOMING','0x0801c2b8'),('PROBING','0x0801c2b8'),('REVIEW','0x0801c024'),
             ('CANCELLED','0x0801fe34')):
             self.assertEqual(choose_icon(menu_page='calibration',calibration={'state':state}),expected)
         icon=choose_icon(menu_page='calibration',calibration={'state':'ADJUST',
@@ -300,6 +326,46 @@ class NativeLevelingTests(unittest.TestCase):
         h=Harness();h.no_release=True;h.start();h.until('FAULT')
         self.assertIsNone(h.record);self.assertTrue(h.shutdown)
         self.assertEqual(h.hotend.target,0.)
+
+    def test_hw05_open_edge_then_reclose_completes_full_retract_before_query(self):
+        for scale in (400, 800):
+            h=Harness(scale);h.reclose_after_edge=True
+            h.start();h.until('REVIEW')
+            reverse=[i for i,e in enumerate(h.events) if e[0]=='contact' and not e[1]]
+            self.assertTrue(reverse)
+            for i in reverse:
+                edge=h.events[i]
+                tail,settle,drain=[e for e in h.events[i+1:] if e[0] in ('move','dwell','drain')][:3]
+                self.assertAlmostEqual(edge[2]-edge[3],1.-59./scale)
+                self.assertEqual(tail[0],'move')
+                self.assertAlmostEqual(tail[1][2],edge[2])
+                self.assertEqual(settle,('dwell',.05))
+                self.assertEqual(drain,('drain',edge[2]))
+            self.assertFalse(h.shutdown)
+
+    def test_reclosed_contact_still_active_after_full_retract_is_a_real_fault(self):
+        h=Harness();h.reclose_after_edge=h.stuck_after_tail=True
+        h.record={'previous':'kept'};h.start();h.until('FAULT')
+        self.assertIn('NO_RELEASE',h.c.machine.reason)
+        self.assertEqual(h.record,{'previous':'kept'})
+        self.assertTrue(h.shutdown);self.assertEqual(h.hotend.target,0.)
+
+    def test_cancel_during_release_tail_cannot_publish_or_continue(self):
+        h=Harness();h.start();h.on_wait=lambda:h.c.cancel('stop during retract drain')
+        h.until('FAULT')
+        self.assertIsNone(h.record);self.assertTrue(h.shutdown)
+        self.assertEqual(h.hotend.target,0.)
+
+    def test_old_edge_only_retract_reproduces_the_reported_closed_query(self):
+        h=Harness();h.reclose_after_edge=True;h.start()
+        queue=h.c._queue_move
+        def skip_tail(target,speed):
+            if h.release_target is not None:
+                h.c._wait_until=h.now;h.c._move_deadline=h.now+120.
+            else:queue(target,speed)
+        with patch.object(h.c,'_queue_move',skip_tail):
+            h.until('FAULT')
+        self.assertIn('NO_RELEASE',h.c.machine.reason)
 
     def test_cancel_after_measurements_restores_frame_and_native_owners(self):
         h=Harness();h.start();h.until('REVIEW')
@@ -329,17 +395,17 @@ class NativeLevelingTests(unittest.TestCase):
         menu._navigate=navigate
         oled=NS(page='status',selection=4,render_at=5.)
         h.objects.update(m300_menu=menu,m300_oled=oled)
-        h.c.start();p._tick(h.now)
+        h.c.start();h.until('WAIT_WARNING');p._tick(h.now)
         self.assertEqual((menu.page,oled.page,oled.selection),('procedure','m04',0))
-        self.assertTrue(any('WAIT_PREPARE' in line for line in prompts))
+        self.assertTrue(any('WARNING: Printhead will be hot' in line for line in prompts))
         self.assertTrue(any('ZORTRAX_PROCEDURE_ACTION VIEW=' in line for line in prompts))
         ui=M300MenuUI.__new__(M300MenuUI)
         ui.menu=menu;ui.procedures=p;ui.printer=h.printer;ui.oem_sprites=NS(get=lambda icon,now:icon)
-        self.assertEqual(ui.get_oem_sprite('m04',[],0,h.now),'0x0801fe50')
+        self.assertEqual(ui.get_oem_sprite('m04',[],0,h.now),'0x0801c434')
         old=p.view_id;p.action(old,'CONFIRM')
-        self.assertEqual(h.c.machine.state,'HEATING')
+        self.assertEqual(h.c.machine.state,'WAIT_TIGHTEN')
         with self.assertRaisesRegex(RuntimeError,'expired'):p.action(old,'CONFIRM')
-        self.assertEqual(ui.get_oem_sprite('m04',[],0,h.now),'0x0801c2b8')
+        self.assertEqual(ui.get_oem_sprite('m04',[],0,h.now),'0x0801fe50')
 
 
 if __name__=='__main__':unittest.main()

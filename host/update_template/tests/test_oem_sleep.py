@@ -241,11 +241,16 @@ class StartupContrastTests(unittest.TestCase):
 
 class CurrentOLEDIntegration(unittest.TestCase):
     def test_real_r9_panel_cancels_notice_without_opening_unseen_menu(self):
+        for module in ('tests.reference.m300_oled', 'payload.m300_oled'):
+            with self.subTest(module=module):
+                self._check_panel(module)
+
+    def _check_panel(self, module):
         p = fixture.Printer()
         p.reactor.register_async_callback = lambda cb: cb(p.reactor.now)
         p.sent_events = []
         p.send_event = lambda *args: p.sent_events.append(args)
-        oled_type = importlib.import_module('tests.reference.m300_oled').M300OLED
+        oled_type = importlib.import_module(module).M300OLED
         o = oled_type.__new__(oled_type)
         o.__dict__.update(p.oled.__dict__)
         o.printer, o.reactor = p, p.reactor

@@ -244,6 +244,9 @@ class M300OLED:
         received_menu_generation = getattr(received_menu, 'generation', None)
         received_menu_page = getattr(received_menu, 'page', None)
         received_motion_token = getattr(received_menu, '_motion_jog_token', None)
+        received_ui = self.printer.lookup_object('m300_menu_ui', None)
+        receipt = getattr(received_ui, 'leveling_receipt', None)
+        received_leveling = receipt(self.stream) if receipt is not None else None
         # Native serialhdl records this before dispatching its handler. A
         # delayed serial callback must not freshen a stale press/rotation.
         received_at = params.get('#receive_time', self.reactor.monotonic())
@@ -330,6 +333,9 @@ class M300OLED:
                     menu.maintenance.activity()
                 if events['shorts']:
                     menu.maintenance.click()
+            leveling_panel = getattr(received_ui, 'leveling_panel', None)
+            if leveling_panel is not None and leveling_panel(events, received_leveling, now):
+                return
             if events['longs']:
                 self._show_status()
             elif self.message:
@@ -829,8 +835,14 @@ class M300OLED:
         started = self.reactor.monotonic()
         previous_wire = self._render_wire
         previous_context = self._presented_context
+        ui = self.printer.lookup_object('m300_menu_ui', None)
+        leveling_frame = getattr(ui, 'leveling_frame', None)
+        leveling_wire = (leveling_frame(self.page, now, Frame)
+                         if leveling_frame is not None and not self.message else None)
         if self.message:
             key = ('notice', tuple(self.message))
+        elif leveling_wire is not None:
+            key = ('leveling', leveling_wire)
         elif self.page == 'status':
             status_wire = self.status_screen.render(now)
             key = ('klipper_default', status_wire)
@@ -859,12 +871,13 @@ class M300OLED:
             frame = Frame()
             if key[0] == 'notice':
                 frame.dialog(*(english_label(x) for x in self.message))
-            elif key[0] == 'klipper_default':
+            elif key[0] in ('klipper_default', 'leveling'):
                 frame = None
             else:
                 frame.menu_full(labels, self.selection, keep_back_visible=True,
                                 sprite=sprite)
-            self._render_wire = status_wire if frame is None else frame.wire_bytes()
+            self._render_wire = ((leveling_wire if key[0] == 'leveling' else status_wire)
+                                 if frame is None else frame.wire_bytes())
             self._render_key = key
             self.render_last_ms = max(0., 1000.*(self.reactor.monotonic()-started))
             self.render_max_ms = max(self.render_max_ms, self.render_last_ms)

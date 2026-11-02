@@ -54,7 +54,7 @@ def main():
     run('host_tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
         cwd=host, expected_tests=META['self_contained_host_tests'])
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
-                                '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=8)
+                                '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
     run('step_equivalence', [sys.executable, KIT / 'tools/test_stepfast.py',
                             '--upstream', pristine, '--report', report / 'STEP.json'])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',
@@ -87,7 +87,7 @@ def main():
     summary = {'status': 'PASS_M300_PUBLIC_SOFTWARE_CHECKS', 'checks': rows,
                'source_sha256': source_digest(),
                'compiled_dictionary_sha256': digest(args.dictionary) if args.dictionary else None,
-               'host_tests': META['self_contained_host_tests'], 'repository_tests': 8,
+               'host_tests': META['self_contained_host_tests'], 'repository_tests': 9,
                'actual_klippy_fileoutput_executed': bool(args.dictionary),
                'physical_uart': False, 'physical_hardware': False, 'flashed': False}
     (report / 'VALIDATION.json').write_text(json.dumps(summary, indent=2) + '\n')

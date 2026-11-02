@@ -1,5 +1,6 @@
 """Packaging boundaries and compatibility contracts for the public repository."""
 import hashlib
+import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -69,10 +70,22 @@ class RepositoryContracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             tool.pack(struct.pack('<II', 0x20020000, 0x08010009) + bytes(56))
 
-    def test_existing_oled_transport_renderer_and_host_are_unchanged(self):
-        for name in ('m300_oled.py', 'm300_oled_transport.py', 'm300_oled_render.py'):
+    def test_existing_oled_transport_and_generic_renderer_are_unchanged(self):
+        for name in ('m300_oled_transport.py', 'm300_oled_render.py'):
             self.assertEqual(digest(ROOT / 'host/klippy/extras' / name),
                              digest(ROOT / 'host/update_template/tests/reference' / name), name)
+
+    def test_oled_spi_lifecycle_and_background_scheduler_are_unchanged(self):
+        def methods(path):
+            tree=ast.parse(path.read_text())
+            node=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='M300OLED')
+            return {n.name:ast.dump(n,include_attributes=False) for n in node.body
+                    if isinstance(n,ast.FunctionDef)}
+        old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')
+        new=methods(ROOT/'host/klippy/extras/m300_oled.py')
+        self.assertEqual(set(old),set(new))
+        for name in old.keys()-{'_render','_panel'}:
+            self.assertEqual(old[name],new[name],name)
 
     def test_published_host_and_mcu_sources_exclude_factory_dump_images(self):
         forbidden = {'.bin', '.elf', '.m3b', '.ivb', '.hex'}
