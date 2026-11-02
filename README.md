@@ -1,42 +1,44 @@
-# Zortrax M300 Classic — Klipper R16.2
+# Zortrax M300 Classic — Klipper R16.3
 
-[Polski](README_PL.md) · [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [Detailed project status (2 Nov 2026)](docs/en/STATUS_2026-11-02_OLED.md)
+[Polski](README_PL.md) · [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Detailed project status (2 Nov 2026)](docs/en/STATUS_2026-11-02_OLED.md)
 
 ## Project overview — November 2, 2026
 
-This project ports **Klipper to the original Zortrax M300 Classic**, using the STM32F103 controller, an Orange Pi host, the factory monochrome OLED and rotary encoder. The present integration baseline is **MCU R14.5 / Host R16.2**. It is a **functional integration / test release**, not a statement of full equivalence with the original firmware.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.3**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
-**Integrated and software-validated:** native Klipper temperature and fan control, PID and SAVE_CONFIG, Cartesian XYZ/extrusion, contact-homing adapter, OEM hardware-revision detection, OLED status and menu framework, firmware-side fault/heartbeat monitoring and local protective cooling, limited host startup reconnection, reversible host/config migration, and Fluidd organization. CI reports 131 host tests plus dedicated guard, cooling, hardware decoder and Klippy FILEOUTPUT scenarios.
+### Actual printer photographs — OLED / Klipper
 
-**Still pending physical acceptance or completion:** latest 180°C contact-homing flow, high-speed 300 mm/s XY timing and stress tests, end-to-end OLED heater action / actual temperature display, complete M03/M07/M08 OEM workflows, binary Z-code and physical SD support, and comprehensive fault/recovery verification. The November 2 settings-screen photograph shows a live `M300NativeMotion.panel_update` exception, which **must be fixed**; settings-menu operation is not complete.
+**Picture 1 — Native Klipper status screen (Ready)**
 
-### On-device OLED gallery
+![Picture 1: Klipper Ready status](docs/assets/oled/2026-11-02/picture%201.png)
 
-**Picture 1 — Klipper status screen, Ready**
+**Picture 2 — Settings menu and observed `panel_update` exception**
 
-![Picture 1: Klipper status, Ready](docs/assets/oled/2026-11-02/picture%201.png)
+![Picture 2: Settings menu / panel_update error](docs/assets/oled/2026-11-02/picture%202.png)
 
-**Picture 2 — Settings screen with visible panel_update error**
+**Picture 3 — Heating menu, hotend selected**
 
-![Picture 2: Settings menu and integration exception](docs/assets/oled/2026-11-02/picture%202.png)
+![Picture 3: Heat hotend selection](docs/assets/oled/2026-11-02/picture%203.png)
 
-**Picture 3 — Heating menu, hotend selection**
+**Picture 4 — Heating menu, bed selected**
 
-![Picture 3: Heat hotend menu](docs/assets/oled/2026-11-02/picture%203.png)
+![Picture 4: Heat bed selection](docs/assets/oled/2026-11-02/picture%204.png)
 
-**Picture 4 — Heating menu, bed selection**
+### Current implementation status
 
-![Picture 4: Heat bed menu](docs/assets/oled/2026-11-02/picture%204.png)
+**Integrated in software:** native Klipper hotend/bed control, PID/SAVE_CONFIG, fan handling, Cartesian XYZE and G28/contact-homing adapter; Z400/Z800 hardware identification; factory OLED status and encoder-based menu; host-link and local MCU protection, including autonomous hotend cooling; reversible configuration migration and Fluidd menus. **R16.3 integrates the five-point/three-screw M07 leveling workflow** with shared OLED/Fluidd presentation and host NVM recording, but it still requires physical acceptance.
 
-**Image publishing status:** The Markdown paths are prepared, but the four picture binaries must be committed at the paths above before GitHub can display them. An uncommitted image is **not** displayed as a photo. [See the annotated evidence and detailed implementation/acceptance matrix](docs/en/STATUS_2026-11-02_OLED.md).
+**Verified on the printer by the photographs:** actual OLED status rendering, navigation to settings/heating menus, and display of heater commands. The second photograph also records an **unresolved `M300NativeMotion.panel_update` exception**. Visible menu text alone does not prove successful heater actuation or correct temperature binding.
+
+**Automated validation:** the R16.3 release documentation reports **150 host tests**, plus MCU/register, safety-guard, cooling, decoder and **13 real Klippy FILEOUTPUT** scenarios. These are software/CI checks, not performance measurements on the physical STM32.
+
+**Open acceptance items:** the 180°C Z-contact-homing sequence and repeat clearance, 300 mm/s loaded motion and 2 µs step scheduling, service restart/Orange Pi reboot recovery, the OLED settings exception and heater menu end-to-end behaviour, physical M07 wizard acceptance, M03/M08, OEM Z-code and SD handling, and the complete OEM menu/indicator and fault matrix.
+
+[Full evidence, feature boundaries and test plan](docs/en/STATUS_2026-11-02_OLED.md) · [M07 acceptance procedure](docs/en/LEVELING.md)
 
 ---
 
 ## Release and build details
-
-# Zortrax M300 Classic — Klipper R16.3
-
-[Polski](README_PL.md) · [Install](docs/en/INSTALL.md) · [Features / acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md)
 
 Test iteration: **MCU R14.5 + host R16.3**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103, Cartesian M300 Classic.
@@ -63,10 +65,9 @@ bootloader is distributed.
 
 The operator-confirmed features and new-iteration acceptance boundaries are
 listed in FEATURES.md. New 180C/native homing and 300 mm/s full-load timing need
-physical acceptance of this iteration. M03/M07/M08 procedures stay in TEST;
-their complete workflows are not certified by a heater or XYZ test.
+physical acceptance of this iteration. M07 is integrated as a TEST procedure with a shared OLED/Fluidd presenter; physical machine acceptance is pending. M03/M08 and full OEM print/SD workflows are not certified.
 
-R16.3 adds one bounded native MCU reset on host-process startup for an old
+R16.2 introduced one bounded native MCU reset (retained in R16.3) on host-process startup for an old
 armed session or heartbeat-loss latch only. Hardware faults/M112 remain
 explicit recovery cases. See [Connection lifecycle](docs/en/CONNECTION.md).
 

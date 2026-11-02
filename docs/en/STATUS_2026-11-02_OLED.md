@@ -4,23 +4,21 @@
 
 **Picture 1 — Klipper status screen (Ready)**
 
-![Picture 1 — Ready status screen](../../assets/oled/2026-11-02/picture%201.png)
+![Picture 1 — Ready status screen](../assets/oled/2026-11-02/picture%201.png)
 
 **Picture 2 — Settings screen and panel_update exception**
 
-![Picture 2 — Settings and panel_update exception](../../assets/oled/2026-11-02/picture%202.png)
+![Picture 2 — Settings and panel_update exception](../assets/oled/2026-11-02/picture%202.png)
 
 **Picture 3 — Heating menu, hotend selected**
 
-![Picture 3 — Heat hotend](../../assets/oled/2026-11-02/picture%203.png)
+![Picture 3 — Heat hotend](../assets/oled/2026-11-02/picture%203.png)
 
 **Picture 4 — Heating menu, bed selected**
 
-![Picture 4 — Heat bed](../../assets/oled/2026-11-02/picture%204.png)
+![Picture 4 — Heat bed](../assets/oled/2026-11-02/picture%204.png)
 
-> **Image publication pending:** The referenced image files must also be committed to `docs/assets/oled/2026-11-02/`. Until then, GitHub will show placeholders rather than photographs. The 4-image upload bundle is supplied separately.
-
-**Release under review:** MCU R14.5 / Host R16.2  
+**Release under review:** MCU R14.5 / Host R16.3  
 **Hardware:** original Zortrax M300 Classic, STM32F103-based MCU, Orange Pi host and original monochrome OLED/rotary control.  
 **Status:** functional integration with a number of operator-observed features; not yet a fully certified OEM-equivalent implementation.
 
@@ -50,10 +48,11 @@ These photographs independently confirm working OLED rendering, the first status
 - **Native Klipper architecture:** native thermal/PID, bed and hotend controls, fan configuration, SAVE_CONFIG, Cartesian XYZE control, G28/probe adapter, print/pause/resume functionality as documented in current configuration.
 - **OLED transport and basic UI:** native Klipper status page, rotary input and grouped menu infrastructure; existing display dim/off/wake and host-link waiting/recovery paths retained. Today's photographs substantiate first-page drawing and two menu states, but also reveal a missing `panel_update` method.
 - **MCU safety supervision:** local thermostat-based hotend cooling when the host link is absent, protective cooling for invalid/critical conditions, heartbeat and fault guard, without relying solely on the host process.
-- **Host startup reconnection, R16.2:** a bounded single native reset attempt for a previous armed session / lost heartbeat under documented conditions; hardware faults and M112 require explicit recovery. The software logic is tested; fresh physical restart/reboot acceptance is still required.
+- **Host startup reconnection (introduced in R16.2, retained in R16.3):** a bounded single native reset attempt for a previous armed session / lost heartbeat under documented conditions; hardware faults and M112 require explicit recovery. The software logic is tested; fresh physical restart/reboot acceptance is still required.
+- **R16.3 M07 procedure integration:** five-point contact measurements, three-screw instructions, synchronized OLED/Fluidd confirmations, and a host NVM observation ledger are implemented in software; physical machine acceptance remains pending. See [M07 leveling](LEVELING.md).
 - **Hardware revision / Z:** factory Z400/Z800 identification before native configuration, preserving the scale through native motion and the OEM levelling adapter.
 - **Configuration management:** reversible migration that preserves prior PID, extrusion calibration and deliberate geometry, with settings and Fluidd macro-category setup.
-- **Software verification:** as documented in `docs/en/FEATURES.md`, 131 host tests, 8 repository contracts, 6720 STEP guard cases, 52 cooling cases, 1792 factory decoder cases, startup/timer checks and 13 actual pinned Klippy FILEOUTPUT scenarios. These counts are **software coverage, not physical printer acceptance**.
+- **Software verification:** as reported by the R16.3 README, 150 host tests, 8 repository contracts, 6720 STEP guard cases, 52 cooling cases, 1792 factory decoder cases, startup/timer checks and 13 actual pinned Klippy FILEOUTPUT scenarios. These counts are **software coverage, not physical printer acceptance**.
 
 ## Implemented but not yet fully physically accepted
 
@@ -65,7 +64,7 @@ These photographs independently confirm working OLED rendering, the first status
 
 ## Not closed / not to be advertised as complete
 
-- Full factory-equivalent M03/M07/M08 procedures, including calibration/levelling wizard state transitions and complete safety acceptance.
+- Full factory-equivalent M03/M08 procedures and physical acceptance of the R16.3 M07 leveling wizard, including all its state transitions and safety cases.
 - OEM binary Z-code execution and physical SD workflows, including all preview, validation and error cases.
 - End-to-end verified OEM menu, original graphics and every status/icon/buzzer/LED combination.
 - Full machine-level print acceptance, extreme speed/acceleration stress testing, all heater/fan failure cases and all interruption/recovery scenarios.
@@ -78,12 +77,13 @@ These photographs independently confirm working OLED rendering, the first status
 3. Verify host restart and Orange Pi reboot recovery; ensure heaters stay off, fault handling stays local and homing is invalidated.
 4. Physically validate native homing with the 180 °C minimum and repeat-contact 5 mm clearance.
 5. Execute progressive XY 200 / 250 / 300 mm/s tests with realistic load and inspect skipped steps, timing, MCU logs and faults.
-6. Continue acceptance of M03/M07/M08, SD and Z-code as separate tracked workflows.
+6. Physically accept R16.3 M07 and continue M03/M08, SD and Z-code as separate tracked workflows.
 
 ### Related documentation
 
 - [Main README](../../../README.md)
 - [Features and acceptance](../../en/FEATURES.md)
-- [Connection lifecycle](../../en/CONNECTION.md)
+- [Connection lifecycle](CONNECTION.md)
+- [M07 leveling](LEVELING.md)
 
 **Evidence standard:** photographed = visible on the machine; integrated = present in the code/configuration; software-tested = covered by automated tests; physically accepted = explicitly run and observed on hardware. These must remain separate claims.
