@@ -1,65 +1,77 @@
-# Install the built artifact
+# Install MCU R14.5 and host R15.7
 
-[Polski](../pl/INSTALL.md)
+[Polski](../pl/INSTALL.md) · [Hardware variants](HARDWARE_VARIANTS.md)
 
-The artifact is for **M300 Classic** and the already installed native R15.5
-host. It is not an Inventure image. The host update leaves printer.cfg settings,
-saved PID, extruder calibration and motion geometry in place.
+For M300 Classic with the existing M300 bootloader and installed native
+R15.5/R15.6 host. The factory Z feature requires **both** the R14.5 MCU application
+and the R15.7 host. This is an application update, not a bootloader update.
+The installer preserves printer.cfg Z numbers, saved PID, extruder calibration
+and existing display settings. The effective Z scale is selected at startup.
 
-## Orange Pi host
+## Prepare the host update
 
-Extract the Actions artifact. Copy its M300_HOST_R15_6_OEM_SLEEP directory
-from your Mac to the Orange Pi, then verify and inspect the plan:
+Download the artifact from the successful Actions run for the exact commit and
+extract it. Copy its M300_HOST_R15_7_FACTORY_Z directory from the Mac:
 
 ~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R15_6_OEM_SLEEP" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R15_7_FACTORY_Z" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R15_6_OEM_SLEEP
+cd ~/M300_HOST_R15_7_FACTORY_Z
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py
 ~~~
 
-Expected: 71 tests OK and a plan showing host_update R15.6.
-If the known installed baseline does not match, retain REFUSED rather than
-overwriting files manually. The installer discovers the Klipper/config paths
-from Moonraker, with the established M300 paths as fallback.
+Expected: 92 tests OK and an R15.7 plan reporting that factory Z requires MCU
+R14.5. The installer discovers paths from Moonraker with the established M300
+paths as fallback. Unknown modified runtime files are refused rather than
+silently overwritten.
+
+## Apply the matching pair
 
 Between printer operations:
 
-~~~bash
-sudo systemctl stop klipper.service
-python3 install.py --apply
-sudo systemctl start klipper.service
+1. Run `sudo systemctl stop klipper.service`.
+2. Install **MCU/M300APP.M3B** from this artifact through the already verified
+   M300 bootloader/SD update procedure. MCU/M300_R14_5_SD.zip contains this
+   application alone. Keep the factory Flash page and bootloader intact.
+3. In the host update directory run `python3 install.py --apply`.
+4. Run `sudo systemctl start klipper.service`.
+
+Keep the returned RECEIPT.json. No service is started and no MCU is flashed by
+the installer. The application base remains 0x08008000. The ELF/map/dictionary
+and build report belong to this exact build; do not mix files from other commits.
+
+## Verify the detected variant
+
+In Fluidd run:
+
+~~~gcode
+STATUS
+ZORTRAX_HARDWARE_STATUS
+ZORTRAX_MCU_STATUS
+ZORTRAX_MOTION_STATUS
 ~~~
 
-Keep the returned RECEIPT.json path. Apply requires the stopped service.
-After Ready, inspect ZORTRAX_DISPLAY_STATUS, ZORTRAX_MENU_STATUS and
-ZORTRAX_NATIVE_STATUS. The display revision is 0.2.0-M300-OEM-SLEEP and menu
-revision is 0.13.15.6-M300-NATIVE-OEM-SLEEP. The unchanged OLED transport may
-retain its earlier host_revision.
+Expected hardware state: FACTORY_PROFILE_APPLIED. For a retained HW05 record,
+expect hardware_label=HW05, stock/effective Z=400 and effective rotation=8.
+HW04 selects 800 and rotation=4. The configured rotation may differ because
+factory selection does not rewrite the file. M07 must report/use the same scale.
+OLED Information shows the hardware revision and effective Z scale. Physically
+measure a short Z move from a properly homed, clear starting position before
+using full travel. CI has not operated either physical printer.
 
-Check five-minute work dimming, idle moon/notice/off, wake without a hidden
-selection and local waiting during a planned restart. Display settings are
-in ~/printer_data/config/m300_display.cfg. Existing valid values are preserved.
+A missing/corrupt ID3 or old MCU gives a descriptive startup error. An explicitly
+configured/rebuilt machine can use `[m300_mcu] z_profile: config`; see Hardware
+variants for its meaning. Do not use that mode to guess an unidentified screw.
 
-Rollback with the exact receipt, while the service is stopped:
+R15.6 sleep/menu behaviour remains available: ZORTRAX_DISPLAY_STATUS,
+ZORTRAX_MENU_STATUS and ZORTRAX_NATIVE_STATUS report their existing owners.
+Display settings remain in ~/printer_data/config/m300_display.cfg.
 
-~~~bash
-python3 install.py --rollback /EXACT/PATH/RECEIPT.json
-~~~
+## Rollback
 
-Later edited files are protected from replacement. Restart the service afterward.
-
-## MCU
-
-An already working R14.4 MCU does not need re-flashing for this host update.
-The newly built files are available for reproducible future deployments.
-
-MCU/M300_R14_4_SD.zip contains M300APP.M3B. This is the **application** at
-0x08008000 for the existing M300 bootloader. No bootloader is replaced.
-The ELF/map/dictionary/build report belong to this exact build; do not mix
-a dictionary or ELF from another commit. CI has not tested the image on a printer.
-
-HOST_SOURCE is a complete reference snapshot. It is not a second automatic
-installer and does not replace the calibration-preserving host update above.
+Stop the service, run `python3 install.py --rollback /EXACT/PATH/RECEIPT.json`,
+then start the service. Later edited files are protected. This restores host
+files/configuration only; the MCU application is not changed by rollback.
+HOST_SOURCE is the complete matching source snapshot, not another installer.

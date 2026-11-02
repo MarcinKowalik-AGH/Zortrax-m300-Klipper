@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.15.6-M300-NATIVE-OEM-SLEEP"
+    MENU_REVISION = "0.13.15.7-M300-FACTORY-Z"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -383,7 +383,7 @@ class M300Menu:
             if self.page == 'motion_status':
                 rows.extend([('Phase: ' + self.clean(status.get('phase','')), None),
                     ('PC7 contact: query via Fluidd', None),
-                    ('Z 400 steps/mm (UNQUALIFIED)', None),
+                    ('Z %s steps/mm' % status.get('z_steps_per_mm', '?'), None),
                     ('Z0 heat: %sC' % status.get('z_home_hotend_target_c','?'),None),
                     ('Heating: ' + str(status.get('z_home_preheat_active',False)),None),
                     ('Z gap proof: ' + str(status.get('xy_clearance_mm')),None)])
@@ -472,10 +472,14 @@ class M300Menu:
             return 'Stock record / M11', rows
         if self.page == 'information':
             status = self.nvm.get_status(now)
+            hardware = getattr(getattr(self.job, 'board', None), 'hardware', None)
+            hw = hardware.get_status() if hardware is not None else {}
             return self.t('Information'), self._notice(back + [
                 ('M300_CLASSIC / M11' if ui is not None else 'M300_CLASSIC / M07', None),
-                ('0.11.0-LAB / 2026-10-26' if ui is not None else '0.7.0-LAB / 2026-10-25', None),
-                ('Hardware: NOT_TESTED', None),
+                (self.MENU_REVISION, None),
+                ('Hardware: ' + str(hw.get('hardware_label') or 'unavailable'), None),
+                ('Z %s steps/mm' % hw.get('effective_z_steps_per_mm', '?'), None),
+                ('Z profile: ' + str(hw.get('z_profile', 'config')), None),
                 ('Serial: not inferred', None),
                 ('NVM: ' + str(status.get('source', 'host JSON')), None),
                 (self.clean(status.get('identity', {})), None),

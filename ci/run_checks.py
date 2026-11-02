@@ -51,7 +51,7 @@ def main():
     pristine = pristine_tree(archive)
     host = stage_host_update(ROOT / '.ci/host-update')
     run('host_package_integrity', [sys.executable, 'VERIFY.py'], cwd=host)
-    run('host_71_tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
+    run('host_tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
         cwd=host, expected_tests=META['self_contained_host_tests'])
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=8)
@@ -68,6 +68,10 @@ def main():
     run('timer_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                           KIT / 'tests/test_m300_timer_deadline.c', '-o', timer])
     run('timer_execute', [timer])
+    factory = report / 'factory-test'
+    run('factory_decoder_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
+                                    KIT / 'tests/test_m300_factory.c', '-o', factory])
+    run('factory_decoder_execute', [factory])
     if args.dictionary:
         host_tree = stage_host_tree(pristine)
         fixture = ROOT / '.ci/native-printer.cfg'

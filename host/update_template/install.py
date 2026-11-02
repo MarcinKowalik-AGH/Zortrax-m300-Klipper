@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R15.6 menu repair and display-only inactivity."""
+"""Plan/apply/rollback M300 R15.7 factory Z profile and OLED update."""
 import argparse
 import ast
 import base64
@@ -19,7 +19,8 @@ import urllib.request
 HERE = Path(__file__).resolve().parent
 NAMES = ('m300_display.py', 'm300_display_stream.py', 'm300_display_oem.py',
          'm300_display_moon.json', 'm300_menu.py')
-NAMES += ('m300_ui_m11_state.py',)
+NAMES += ('m300_ui_m11_state.py', 'm300_mcu.py', 'm300_hardware.py',
+          'm300_motion.py', 'm300_calibration.py')
 
 
 def digest(data):
@@ -246,16 +247,17 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R15_6' if changes else 'ALREADY_M300_R15_6',
-                  'host_update': 'R15.6',
+        result = {'status': 'PLAN_M300_R15_7' if changes else 'ALREADY_M300_R15_7',
+                  'host_update': 'R15.7',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
-                  'MCU_changed': False, 'native_control_changed': False,
+                  'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
+                  'native_control_changed': False,
                   'service_started': False}
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R15_6'
+            result['status'] = 'INSTALLED_M300_R15_7'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

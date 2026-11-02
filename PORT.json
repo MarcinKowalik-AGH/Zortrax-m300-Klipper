@@ -3,9 +3,9 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "upstream_archive_sha256": "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0",
   "upstream_archive_url": "https://codeload.github.com/Klipper3d/klipper/zip/ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.4-GUARD-SNAPSHOT-UART8",
-  "host_update": "R15.6",
-  "menu_revision": "0.13.15.6-M300-NATIVE-OEM-SLEEP",
+  "mcu_release": "0.13.14.5-FACTORY-Z-UART8",
+  "host_update": "R15.7",
+  "menu_revision": "0.13.15.7-M300-FACTORY-Z",
   "display_revision": "0.2.0-M300-OEM-SLEEP",
   "mcu_application_base": "0x08008000",
   "physical_hardware_tested_by_CI": false,
@@ -15,7 +15,12 @@
     "m300_display_oem.py",
     "m300_display_moon.json",
     "m300_menu.py",
-    "m300_ui_m11_state.py"
+    "m300_ui_m11_state.py",
+    "m300_mcu.py",
+    "m300_hardware.py",
+    "m300_motion.py",
+    "m300_calibration.py"
   ],
-  "self_contained_host_tests": 71
+  "self_contained_host_tests": 92,
+  "factory_identity_abi": 1
 }

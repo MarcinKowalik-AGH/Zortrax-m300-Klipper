@@ -178,6 +178,12 @@ class M300Calibration:
 
     def _audit_config(self):
         self._bind()
+        hardware = getattr(self.job.board, 'hardware', None)
+        factory_scale = hardware.selected_z_steps() if hardware is not None else None
+        if self.workflow == 'M07_STOCK' and factory_scale is not None:
+            # The factory scale and the native step generator share one source.
+            # No existing calibration result or configuration file is rewritten.
+            self.machine.stock_steps_per_mm = factory_scale
         if self.workflow == 'M07_STOCK' and self.printer.lookup_object('m300_motion', None) is None:
             raise self.config.error('M07 calibration requires the M06 motion owner')
         probe_config = self.config.getsection('probe')

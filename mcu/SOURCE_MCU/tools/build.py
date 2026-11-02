@@ -22,7 +22,7 @@ APP_START = 0x08008000
 NVM_START = 0x0803A000
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_oled_',
-                     'm300_uart_query', 'm300_local_oled_query', 'm300_oled_host state=',
+                     'm300_factory_query', 'm300_uart_query', 'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',
                      'm300_sd_chunk ', 'm300_sd_close ')
 
@@ -111,6 +111,7 @@ def validate(work, output, env, log):
     dictionary = json.loads((work / 'out/klipper.dict').read_text())
     constants = dictionary['config']
     for key, expected in {'M300_ABI': 1, 'M300_MODEL': 'M300_CLASSIC',
+                          'M300_FACTORY_ABI': 1, 'M300_FACTORY_HW_ADDRESS': 0x0803f848,
                           'M300_SOFTWARE_PWM_ONLY': 1, 'M300_FAN_POLICY': 3,
                           'M300_LOCAL_COOLING_ABI': 1, 'M300_LOCAL_COOLING_ON_RAW': 314,
                           'M300_LOCAL_COOLING_OFF_RAW': 281,
@@ -122,7 +123,7 @@ def validate(work, output, env, log):
                           'M300_LOCAL_OLED_STARTUP_FIX': 1,
                           'M300_OLED_HOSTLINK_ABI': 1, 'M300_OLED_HOSTLINK_TIMEOUT_US': 1500000,
                           'M300_OLED_FAST_ABI': 1, 'M300_OLED_FAST_QUEUE': 4,
-                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.4-GUARD-SNAPSHOT-UART8',
+                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.5-FACTORY-Z-UART8',
                           'M300_PANEL_CAPTURE_ABI': 3,
                           'M300_PANEL_IRQ_PRIORITY': 3, 'M300_OLED_DMA_IRQ_PRIORITY': 4,
                           'CLOCK_FREQ': 72000000}.items():
@@ -131,6 +132,9 @@ def validate(work, output, env, log):
     commands = dictionary['commands']
     if 'm300_local_cooling_query' not in commands:
         raise ValueError('Missing autonomous cooling query command')
+    if ('m300_factory_state header=%u raw=%c valid=%c revision=%c z_steps=%hu'
+            not in dictionary['responses']):
+        raise ValueError('Missing or incompatible factory identity response')
     for prefix in REQUIRED_COMMANDS:
         if not any(command.startswith(prefix) for command in commands):
             raise ValueError('Missing MCU command prefix: ' + prefix)
@@ -152,7 +156,7 @@ def validate(work, output, env, log):
     stack_start = symbols['_stack_start']
     if bss_end >= stack_start:
         raise ValueError('Static data overlaps reserved MCU stack')
-    report = {'version': '0.13.14.4-GUARD-SNAPSHOT-UART8',
+    report = {'version': '0.13.14.5-FACTORY-Z-UART8',
               'mcu_stage': 'P01_LAB + M04_SD + R9_HOST_LEASE_LOCAL_WAITING', 'upstream_commit': PIN,
               'upstream_archive_sha256': ARCHIVE_SHA256,
               'model': 'M300_CLASSIC', 'abi': 1,

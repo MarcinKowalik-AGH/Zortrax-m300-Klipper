@@ -46,3 +46,8 @@ Lista plików aktualizacji i liczba testów hosta są w PORT.json.
 
 Opcjonalny skrypt porównania księżyca wymaga prywatnie przechowywanego
 oryginalnego firmware. Nie jest zaliczany do automatycznych testów publicznego CI.
+
+R14.5 sprawdza też ABI fabryczne 1 i format odpowiedzi w świeżym słowniku MCU.
+Dziewięć uruchomień Klippy obejmuje syntetyczne HW04/HW05, jawny tryb config
+i odmowę przy skasowanym rekordzie. Testowy moduł tożsamości z CI nie jest
+instalowany przez aktualizację hosta.

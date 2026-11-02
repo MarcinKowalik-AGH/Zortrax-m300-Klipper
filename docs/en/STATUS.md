@@ -2,10 +2,12 @@
 
 [Polski](../pl/STATUS.md)
 
-This source snapshot carries MCU R14.4 and host R15.6. It preserves the existing
+This source snapshot carries MCU R14.5 and host R15.7. It preserves the existing
 native Klipper owners and the R15.5 split-homing contract. R15.6 corrects the
 menu regression, M11 action registration, startup contrast and OEM sleep notice.
-No new speed limits, thermal settings or geometry values are installed.
+R15.7 reads factory ID3 and selects Z=400/800 at startup. Configuration files
+are preserved; the effective Z scale can change to match the factory revision.
+See [Hardware variants](HARDWARE_VARIANTS.md). No new speed or thermal limits are installed.
 
 The ordinary status screen, transport, renderer and encoder remain the existing
 implementations. The original moon is a 50×50 one-frame resource, descriptor
@@ -15,10 +17,10 @@ waits 10,000 firmware ticks before the physical sleep routine. The display
 adaptation uses an explicit ten-second acknowledged notice. It does not copy
 the original wake-up bed target of 70°C or other actuator side effects.
 
-The public checks cover 71 host tests, 8 repository contracts, 6,720 STEP cases,
+The public checks cover 92 host tests, 8 repository contracts, 6,720 STEP cases,
 52 autonomous-cooling cases, protected pin rejections, guard snapshots, startup
 epochs, periodic timer deadlines and native heater verification. Real Klippy
-FILEOUTPUT checks five scenarios using the fresh dictionary. Results are
+FILEOUTPUT checks nine scenarios using the fresh dictionary. Results are
 software evidence, not physical UART, electrical timing or thermal measurements.
 
 Offline cooling stays in the MCU: hotend approximately 50°C on / 45°C off,
@@ -28,7 +30,8 @@ policy remains positive heater target OR temperature above its threshold.
 Still open in this historical motion branch:
 
 - The R15.5 test example uses Z rotation_distance=8 and temporary Zmax=30.
-  Physical scale and full travel need measurement.
+  Factory selection now resolves the OEM variant; physical distance and
+  full travel still need measurement.
 - Its staged Z speed/acceleration and clearance qualification remain.
 - It contains 220°C homing rather than the later requested 180°C.
 - Absolute hotend sensor calibration and simultaneous full-load timing

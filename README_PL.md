@@ -3,21 +3,21 @@
 [English](README.md) · [Kompilacja](docs/pl/BUILD.md) · [Instalacja](docs/pl/INSTALL.md) · [Stan i ograniczenia](docs/pl/STATUS.md)
 
 Repozytorium źródeł dla **M300 Classic**, STM32F103 72 MHz, kinematyka Cartesian.
-Aktualna baza: **MCU R14.4 + natywny host R15.6**, Klipper
+Aktualna baza: **MCU R14.5 + natywny host R15.7**, Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
 
 GitHub Actions wykonuje czystą kompilację GNU ARM, testy hosta i modeli
-rejestrowych oraz pięć uruchomień rzeczywistego Klippy w FILEOUTPUT.
+rejestrowych oraz dziewięć uruchomień rzeczywistego Klippy w FILEOUTPUT.
 Artefakt do pobrania zawiera:
 
 - BIN, ELF, słownik MCU, mapę, konfigurację kompilacji i opis pochodzenia.
 - Sprawdzony kontener `M300APP.M3B` i ZIP na SD z aplikacją.
-- Pasującą aktualizację **hosta Orange Pi R15.6**, testy i dokładne cofnięcie.
+- Pasującą aktualizację **hosta Orange Pi R15.7**, testy i dokładne cofnięcie.
 - Pełny zestaw źródeł hosta, raporty walidacji i sumy kontrolne.
 
 Push do main ze zmianami źródeł lub CI uruchamia workflow. Dostępny jest też
-przycisk **Actions → Build M300 STM32F103 and host R15.6 → Run workflow**.
-Po zakończeniu pobierz `m300-r14_4-host-r15_6-<commit>` w sekcji Artifacts.
+przycisk **Actions → Build M300 STM32F103 and host R15.7 → Run workflow**.
+Po zakończeniu pobierz `m300-r14_5-host-r15_7-<commit>` w sekcji Artifacts.
 
 | Katalog | Zawartość |
 |---|---|
@@ -42,7 +42,9 @@ wyświetlania, następnie wygaszenie. Podczas pracy ekran tylko przygasa.
 Pierwszy niewidoczny gest wybudza bez wyboru opcji. Sterowanie urządzeniami
 i idle_timeout pozostaje u dotychczasowych właścicieli.
 
-Działający MCU R14.4 nie wymaga ponownego flashowania dla aktualizacji hosta.
+R15.7 dodaje odczyt fabrycznej rewizji i automatyczny dobór Z=400/800,
+wspólny dla M07 i statusu OLED. Wymaga pasującej aplikacji MCU R14.5.
+Zobacz [Warianty sprzętu](docs/pl/HARDWARE_VARIANTS.md).
 Paczka nie zawiera bootloadera ani zrzutu fabrycznego firmware. CI nie uruchamia
 flashowania, UART, fizycznego ruchu ani grzania. Otwarte kwestie skali/zakresu Z
 i pozostałych pomiarów opisuje STATUS.md.

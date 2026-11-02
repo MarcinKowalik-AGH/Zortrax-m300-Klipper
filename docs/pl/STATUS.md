@@ -2,10 +2,11 @@
 
 [English](../en/STATUS.md)
 
-Ta baza obejmuje MCU R14.4 i host R15.6. Zachowuje natywnych właścicieli
+Ta baza obejmuje MCU R14.5 i host R15.7. Zachowuje natywnych właścicieli
 Klippera i kontrakt osobnego bazowania R15.5. R15.6 naprawia regresję menu,
 rejestrację akcji M11, kontrast startowy i komunikat usypiania OEM.
-Nie instaluje nowych limitów prędkości, nastaw termiki ani geometrii.
+R15.7 wybiera skalę Z z rekordu fabrycznego; pliki konfiguracji są zachowane.
+Nie instaluje nowych limitów prędkości ani nastaw termiki.
 
 Zwykły ekran stanu, transport, renderer i enkoder pozostają istniejącymi
 implementacjami. Oryginalny księżyc ma 50×50 i jedną klatkę, deskryptor
@@ -15,10 +16,10 @@ przed fizycznym sleep. Adaptacja obrazu ma jawne dziesięć sekund potwierdzoneg
 wyświetlania. Nie kopiuje grzania stołu do 70°C przy wybudzaniu ani innych
 skutków dla urządzeń wykonawczych.
 
-Publiczne testy obejmują 71 przypadków hosta, 8 kontraktów repozytorium,
+Publiczne testy obejmują 92 przypadki hosta, 8 kontraktów repozytorium,
 6720 przypadków STEP, 52 przypadki chłodzenia autonomicznego, odrzucenia
 chronionych pinów, guard snapshot, epoki startowe, terminy timerów oraz natywną
-kontrolę grzania. Rzeczywisty Klippy FILEOUTPUT sprawdza pięć scenariuszy ze
+kontrolę grzania. Rzeczywisty Klippy FILEOUTPUT sprawdza dziewięć scenariuszy ze
 świeżym słownikiem. To dowód programowy, nie pomiar UART, impulsów i temperatur.
 
 Chłodzenie bez hosta pozostaje w MCU: hotend około 50°C ON / 45°C OFF,
@@ -38,3 +39,8 @@ W tej historycznej gałęzi ruchu nadal otwarte są:
 tests/fixtures/printer_r15_5_test.cfg jest tylko wejściem syntetycznego CI.
 Nie jest instalowany ani wydawany jako zamiennik printer.cfg. Aktualizacja
 hosta zachowuje bieżące wartości użytkownika.
+
+R15.7 odczytuje ID3 fabrycznej rewizji i wybiera Z=400/800 podczas startu.
+Pliki konfiguracji są zachowane; używana skala może się zmienić zgodnie z
+rewizją. M07 i status OLED używają tej samej skali. [Warianty sprzętu](HARDWARE_VARIANTS.md).
+Rozpoznanie profilu OEM nie zastępuje pomiaru fizycznej drogi i zakresu Z.

@@ -1,4 +1,4 @@
-# Zachowanie — R15.6
+# Zachowanie — R15.7
 
 [English](../en/BEHAVIOUR.md) · [Instalacja](INSTALL.md)
 
@@ -61,3 +61,10 @@ Dodatek nie wywołuje ZORTRAX_SLEEP/ZORTRAX_WAKE ani nie ustawia temperatur,
 silników, wentylatorów i pozycji. Jeśli stary moduł maintenance zgłosi wejście
 w SLEEP/SLEEPING, dodatek może pokazać komunikat; jego wybudzenie dotyczy tylko
 obrazu. Nie przywraca działania ani zadanych temperatur sprzed uśpienia.
+
+## Wybór wariantu Z
+
+R15.7 wybiera skalę natywnego Z raz przy starcie z zachowanego ID3. M07, audyt
+ruchu i OLED używają tej samej skali. Brak/uszkodzenie rekordu daje błąd startu;
+z_profile=config jest jawnym wyborem operatora. Zobacz
+[Warianty sprzętu](HARDWARE_VARIANTS.md).

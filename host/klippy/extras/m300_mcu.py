@@ -8,6 +8,7 @@ P01 is a LAB port. A valid dictionary or FILEOUTPUT run is not hardware proof.
 import json
 import logging
 import math
+from . import m300_hardware
 
 ABI = 1
 MODEL = 'M300_CLASSIC'
@@ -214,6 +215,7 @@ class M300MCU:
         self._disarm_cmd = None
         self._fault_reported = False
         self.startup_transport = M300StartupTransport(self)
+        self.hardware = m300_hardware.M300Hardware(self, config)
         self._timer = self.reactor.register_timer(self._tick)
         self.mcu.register_config_callback(self._build_config)
         if self.native_control:
@@ -636,6 +638,7 @@ class M300MCU:
         return {'model': MODEL, 'abi': ABI, 'stage': STAGE,
                 'mcu_release': getattr(self, 'mcu_release', 'legacy'),
                 'uart': dict(getattr(self, 'uart_state', {})),
+                'hardware': self.hardware.get_status(),
                 'startup_transport': (self.startup_transport.get_status()
                     if hasattr(self, 'startup_transport') else {}),
                 'identified': self.identified, 'connected': self.connected,

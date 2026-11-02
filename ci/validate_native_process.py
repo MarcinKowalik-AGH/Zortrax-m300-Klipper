@@ -6,6 +6,7 @@ import io
 import json
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import native_config
@@ -66,6 +67,20 @@ def main():
         ('native_xyz_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG90\nG1 X50 F12000\nG1 X250 F12000\nG1 Y50 F12000\nG1 Y250 F12000\nG1 Z10 F300\nG1 Z5 F300\nM400\nSET_VELOCITY_LIMIT\n',True,None),
         ('native_axis_bounds','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 X301 F12000\n',True,'Move out of range'),
     ]
+    # These identities are synthetic, never read from or sent to a printer.
+    factory_cases = {
+        'factory_hw04_800': (0xe4, 0xaabb0103, 'factory', 800),
+        'factory_hw05_400': (0xe5, 0xaabb0103, 'factory', 400),
+        'factory_config_override': (0xe4, 0xaabb0103, 'config', 400),
+        'factory_erased_refused': (0xff, 0xffffffff, 'factory', 0),
+    }
+    shutil.copy2(Path(__file__).with_name('m300_ci_factory_fixture.py'),
+                 args.root / 'klippy/extras/m300_ci_factory_fixture.py')
+    for name, (_, _, _, scale) in factory_cases.items():
+        script = ('ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\n'
+                  'ZORTRAX_CI_SCALE_CHECK MODE=START\nG90\nG1 Z6 F60\nM400\n'
+                  'ZORTRAX_CI_SCALE_CHECK MODE=END\nZORTRAX_HARDWARE_STATUS\n')
+        cases.append((name, script, True, 'missing/corrupt factory ID3' if not scale else None))
     results=[]
     for name,script,synthetic,error in cases:
         dest=args.output/name
@@ -78,6 +93,12 @@ def main():
         if synthetic:
             if not cp.has_section('force_move'):cp.add_section('force_move')
             cp.set('force_move','enable_force_move','True')
+        if name in factory_cases:
+            raw, header, profile, scale = factory_cases[name]
+            cp.set('m300_mcu', 'z_profile', profile)
+            cp.add_section('m300_ci_factory_fixture')
+            for key, value in {'raw': raw, 'header': header, 'expected_steps': scale}.items():
+                cp.set('m300_ci_factory_fixture', key, str(value))
         config=io.StringIO();cp.write(config)
         (dest/'printer.cfg').write_text(config.getvalue())
         (dest/'input.gcode').write_text('ZORTRAX_DISPLAY_STATUS\n' + script)
@@ -86,6 +107,12 @@ def main():
         with (dest/'klippy.log').open('w') as log:
             process=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=30)
         text=(dest/'klippy.log').read_text(errors='replace')
+        if name == 'factory_erased_refused':
+            assert error in text, (name, text[-3000:])
+            assert "Configured MCU 'mcu'" not in text
+            results.append({'case': name, 'PASS': True, 'startup_refused': True,
+                            'synthetic_factory_record': True, 'physical_hardware': False})
+            continue
         display_line=next(line.split('M300_DISPLAY ',1)[1] for line in text.splitlines() if 'M300_DISPLAY ' in line)
         assert json.loads(display_line)['connected'] is True, (name, display_line)
         report_line=next(line.split('M300_NATIVE ',1)[1] for line in text.splitlines() if 'M300_NATIVE ' in line)
@@ -98,11 +125,16 @@ def main():
         else:
             assert process.returncode==0,(name,text[-3000:])
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
+        if name in factory_cases:
+            check_line = next(line.split('M300_CI_FACTORY ', 1)[1] for line in text.splitlines()
+                              if 'M300_CI_FACTORY ' in line)
+            assert json.loads(check_line)['native_steps_for_1mm'] == factory_cases[name][3]
         results.append({'case':name,'PASS':True,'expected_native_refusal':error,
                         'synthetic_coordinates':synthetic,'physical_hardware':False,
                         'exit_code':process.returncode,
                         'protocol_bytes':(dest/'protocol.bin').stat().st_size,
                         'native_bindings':bindings['owners']})
+        results[-1]['synthetic_factory_record'] = name in factory_cases
     result={'status':'PASS_REAL_KLIPPY_NATIVE_CORE','cases':results,
             'FILEOUTPUT':True,'physical_UART':False,'MCU_executed':False,
             'FILEOUTPUT_native_cold_extrusion_check_disabled_by_upstream':True,

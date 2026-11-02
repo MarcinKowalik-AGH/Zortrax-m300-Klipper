@@ -71,9 +71,14 @@ Z400_CONTRACT = {
 }
 
 
-def z400_contract_check(values):
+def z400_contract_check(values, z_steps_per_mm=400):
     """Pure fail-closed startup invariant shared by native Klipper and M07."""
-    for key, expected in Z400_CONTRACT.items():
+    if z_steps_per_mm not in (400, 800):
+        raise ValueError('M300 stock Z profile must be 400 or 800 steps/mm')
+    contract = dict(Z400_CONTRACT)
+    contract[('stepper_z', 'rotation_distance')] = 3200. / z_steps_per_mm
+    contract[('m300_calibration', 'stock_steps_per_mm')] = z_steps_per_mm
+    for key, expected in contract.items():
         value = values.get(key)
         if value is None:
             raise ValueError('%s.%s missing (Z400 commissioning)' % key)
@@ -90,7 +95,7 @@ def z400_contract_check(values):
         elif str(value).strip() != expected:
             raise ValueError('%s.%s=%r must be %r' % (*key, value, expected))
     steps = float(values[('stepper_z', 'microsteps')]) * float(values[('stepper_z', 'full_steps_per_rotation')]) / float(values[('stepper_z', 'rotation_distance')])
-    assert steps == 400.0
+    assert steps == z_steps_per_mm
     assert float(values[('m300_motion', 'z_search_distance')]) < float(values[('stepper_z', 'position_max')])
     return {'physical_z_qualified': False, 'configured_steps_per_mm': steps,
             'z_soft_max_mm': float(values[('stepper_z', 'position_max')]),
@@ -351,10 +356,18 @@ class M300Motion:
         for section, option in Z400_CONTRACT:
             values[(section, option)] = self.config.getsection(section).get(option, None)
         try:
-            self._z_safety_evidence = z400_contract_check(values)
             steppers = self.kin.rails[2].get_steppers()
-            if len(steppers) != 1 or abs(steppers[0].get_step_dist() - .0025) > 1.e-9:
-                raise ValueError('native Z step distance is not exactly 1/400mm')
+            hardware = getattr(self.board, 'hardware', None)
+            factory_scale = hardware.selected_z_steps() if hardware is not None else None
+            if factory_scale is not None:
+                # The file keeps its calibrated values. Runtime factory
+                # selection precedes every MCU config callback, including M07.
+                values[('stepper_z', 'rotation_distance')] = steppers[0].get_rotation_distance()[0]
+                values[('m300_calibration', 'stock_steps_per_mm')] = factory_scale
+            scale = factory_scale or int(float(values[('m300_calibration', 'stock_steps_per_mm')]))
+            self._z_safety_evidence = z400_contract_check(values, scale)
+            if len(steppers) != 1 or abs(steppers[0].get_step_dist() - 1. / scale) > 1.e-9:
+                raise ValueError('native Z step distance differs from the selected stock profile')
             if not getattr(self.job, 'hotend', None) or not getattr(self.job, 'idle', None):
                 raise ValueError('native hotend and idle timeout are required for Z preheat')
             if self.z_home_heat_policy != 'REQUIRED_AUTO':
@@ -366,7 +379,7 @@ class M300Motion:
                 raise ValueError('thermal Z contact homing requires production mode and explicit hotend target')
 
         except (ValueError, TypeError, KeyError, AttributeError) as exc:
-            raise self.config.error('M300 R15.5 Z400 FAIL-CLOSED: ' + str(exc))
+            raise self.config.error('M300 Z profile/commissioning configuration: ' + str(exc))
         pcfg = self.config.getsection('probe')
         for option in ('activate_gcode', 'deactivate_gcode'):
             if pcfg.get(option, '').strip():
@@ -1695,7 +1708,8 @@ class M300Motion:
     def get_status(self, eventtime):
         homed = self._homed()
         return {'version': VERSION, 'model': 'M300_CLASSIC', 'state': self.state,
-                'motion_revision': '0.13.15.5.0-M300-Z400-HOMING-UI',
+                'motion_revision': '0.13.15.7-M300-FACTORY-Z',
+                'z_steps_per_mm': (self._z_safety_evidence or {}).get('configured_steps_per_mm'),
                 'homing_ui_abi': 1, 'oled_homing_shared_owner': True,
                 'full_g28_commissioning': 'DISABLED_SPLIT_XY_THEN_Z',
                 'z_home_heat_policy': self.z_home_heat_policy,

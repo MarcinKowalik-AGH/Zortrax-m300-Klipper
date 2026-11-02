@@ -46,3 +46,8 @@ The canonical list of update files and expected host suite count are in PORT.jso
 
 The optional factory-moon reproducer requires the privately held stock image.
 It is not counted as an automatically executed public CI test.
+
+R14.5 also validates factory ABI 1 and its response format in the fresh
+MCU dictionary. Nine actual Klippy processes include synthetic HW04/HW05,
+explicit configuration override and refusal of an erased record. The CI-only
+identity fixture is not installed by the host update.

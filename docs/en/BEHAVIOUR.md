@@ -1,4 +1,4 @@
-# Behaviour — R15.6
+# Behaviour — R15.7
 
 [Polski](../pl/BEHAVIOUR.md) · [Install](INSTALL.md)
 
@@ -57,3 +57,10 @@ The extension does not call ZORTRAX_SLEEP/ZORTRAX_WAKE, change heater targets,
 motors, fans or position. An existing maintenance SLEEP/SLEEPING transition may
 trigger the notice, but display wake only restores the image. It does not
 resume an operation or restore a previous heater target.
+
+## Factory Z selection
+
+R15.7 selects the native Z scale once at startup from retained factory ID3.
+M07, motion audit and OLED use that scale. Missing/corrupt identity is a startup
+error; z_profile=config is an explicit operator override. See
+[Hardware variants](HARDWARE_VARIANTS.md).

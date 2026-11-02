@@ -75,6 +75,31 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(p.read_text(), 'unknown')
         self.assertEqual(self.config.read_bytes(), self.original)
 
+    def test_unknown_core_module_is_not_overwritten_by_factory_upgrade(self):
+        p = self.root / 'klippy/extras/m300_mcu.py'
+        p.write_text('# local core change\n')
+        with self.assertRaises(ValueError):
+            install.plan(self.root, self.config)
+        self.assertEqual(p.read_text(), '# local core change\n')
+        self.assertEqual(self.config.read_bytes(), self.original)
+
+    def test_factory_upgrade_preserves_z_m07_extruder_and_both_saved_pid_blocks(self):
+        body = ('[mcu]\nserial: /dev/ttyS1\n'
+                '[stepper_z]\nmicrosteps: 16\nrotation_distance: 8\nposition_max: 30\n'
+                '[m300_calibration]\nstock_steps_per_mm: 400\n'
+                '[extruder]\nrotation_distance: 26.133\n'
+                '#*# <--- SAVE_CONFIG --->\n'
+                '#*# [extruder]\n#*# control = pid\n#*# pid_Kp = 15.152\n'
+                '#*# [heater_bed]\n#*# control = pid\n#*# pid_Kp = 61.966\n')
+        self.config.write_text(body)
+        changes = install.plan(self.root, self.config)
+        after = next(new.decode() for path, _, new in changes if path == self.config)
+        self.assertEqual(after.split('#*#', 1)[1], body.split('#*#', 1)[1])
+        for line in ('rotation_distance: 8', 'stock_steps_per_mm: 400',
+                     'rotation_distance: 26.133', 'position_max: 30'):
+            self.assertIn(line, after)
+        self.assertNotIn('z_profile:', after)
+
     def test_verified_previous_display_upgrade_and_exact_rollback(self):
         previous = ROOT / 'tests/reference/previous_display'
         for name in ('m300_display.py', 'm300_display_stream.py'):
@@ -85,7 +110,7 @@ class InstallerTests(unittest.TestCase):
         self.config.write_text('[include m300_display.cfg]\n' + self.original.decode())
         saved = self.config.read_bytes()
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), 6)
+        self.assertEqual(len(changes), len(install.NAMES))
         receipt = install.apply(self.root, self.config, changes)
         self.assertEqual(install.plan(self.root, self.config), [])
         self.assertEqual(self.config.read_bytes(), saved)
