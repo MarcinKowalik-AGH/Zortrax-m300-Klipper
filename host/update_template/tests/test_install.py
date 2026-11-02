@@ -91,6 +91,18 @@ class InstallerTests(unittest.TestCase):
         install.apply(self.root, self.config, changes)
         self.assertEqual(path.read_bytes(), (ROOT / 'payload/m300_ui_m11_state.py').read_bytes())
 
+    def test_known_r153_runtime_upgrades_without_newer_homing_marker(self):
+        for reference in (ROOT / 'tests/reference/r153').glob('*.py'):
+            (self.root / 'klippy/extras' / reference.name).write_bytes(reference.read_bytes())
+        motion = self.root / 'klippy/extras/m300_motion.py'
+        self.assertNotIn('HOMING_UI_ABI', motion.read_text())
+        changes = install.plan(self.root, self.config)
+        receipt = install.apply(self.root, self.config, changes)
+        self.assertEqual(install.plan(self.root, self.config), [])
+        self.assertEqual(motion.read_bytes(), (ROOT / 'payload/m300_motion.py').read_bytes())
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(motion.read_bytes(), (ROOT / 'tests/reference/r153/m300_motion.py').read_bytes())
+
     def test_factory_upgrade_preserves_z_m07_extruder_and_both_saved_pid_blocks(self):
         body = ('[mcu]\nserial: /dev/ttyS1\n'
                 '[stepper_z]\nmicrosteps: 16\nrotation_distance: 8\nposition_max: 30\n'

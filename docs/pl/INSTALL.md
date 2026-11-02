@@ -1,8 +1,8 @@
-# Instalacja iteracji testowej R16
+# Instalacja iteracji testowej R16.1
 
 [English](../en/INSTALL.md) · [Funkcje i odbiór](FEATURES.md)
 
-Dla M300 Classic z natywnym hostem R15.5/R15.6/R15.7 i bootloaderem M300.
+Dla M300 Classic z natywnym hostem R15.3/R15.5/R15.6/R15.7 i bootloaderem M300.
 R16 wymaga MCU R14.5 dla odczytu wariantu Z. Jeśli R14.5 jest już wgrany,
 nie wymaga ponownego programowania. Pełny artefakt Actions zawiera również
 świeżo skompilowaną aplikację R14.5 dla starszych instalacji.
@@ -10,15 +10,15 @@ nie wymaga ponownego programowania. Pełny artefakt Actions zawiera również
 Rozpakuj artefakt i skopiuj z Maca znajdujący się w nim katalog hosta:
 
 ~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R16_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R16_1_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_NORMAL_UI
+cd ~/M300_HOST_R16_1_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py
 ~~~
 
-Oczekiwane: 111 testów OK i plan R16. Sprawdź listę plików: aktualizacja
+Oczekiwane: 112 testów OK i plan R16.1. Sprawdź listę plików: aktualizacja
 zmienia dawną sekcję uruchomieniową na tryb native, ustawia homing Z przy 180C,
 STEP 2 us, profil XY 300 mm/s i dodaje trzy pliki makr. Zachowuje PID-y,
 kalibrację E oraz świadome wartości geometrii inne niż dawne Z30. Nieznane
@@ -61,3 +61,15 @@ Cofnięcie hosta/konfiguracji: zatrzymaj Klipper, wykonaj
 Receipt przywraca dokładne poprzednie pliki i chroni późniejsze edycje. Nie
 zmienia MCU. HOST_SOURCE jest zgodną kopią źródeł, nie drugim instalatorem.
 SHA256SUMS i BUILD_PROVENANCE.json identyfikują konkretny build Actions.
+
+R16.1 dodaje bezpośrednią migrację znanego natywnego hosta R15.3, również
+bez rozszerzenia wyświetlacza. Rzeczywiste sprawdzenie API i aktualizacja po
+sumach są testowane na archiwalnych modułach R15.3. Zachowanie runtime/MCU
+pozostaje jak w R16. Oczekiwany wynik: INSTALLED_M300_R16_1.
+
+Jeżeli poprzedni instalator zgłosił `REFUSED: R15.5 motion and M11 presentation support required`,
+nie zainstalował R16. Samo powodzenie setup_fluidd.py zmienia jedynie grupy makr.
+R16.1 usuwa tę przeszkodę dla rozpoznanej bazy R15.3. Przed ruchem potwierdź
+`INSTALLED_M300_R16_1` oraz w `ZORTRAX_MOTION_STATUS`: `normal_control=true`
+i `z_home_hotend_target_c=180`. `G28 X Y` nie grzeje; `G28 Z` czeka na
+natywną kontrolę nagrzania przed ruchem do kontaktu.

@@ -18,7 +18,7 @@ OLED dim/off/wake and the original moon/Entering sleep mode remain unchanged.
 Device idle_timeout remains the existing native setting. Screen sleep does
 not imply restoration of heater targets or motor coordinates.
 
-Software checks cover 111 host tests, 8 repository contracts, 6720 STEP cases,
+Software checks cover 112 host tests, 8 repository contracts, 6720 STEP cases,
 52 cooling cases, 1792 factory-decoder cases, startup/timer checks and 13 real
 Klippy FILEOUTPUT scenarios. Those include 180C XYZ/repeated Z homing, native
 300 mm/s planning, M220=150%, ACCEL=3000 and Z299/Z300 boundaries.

@@ -2,7 +2,7 @@
 
 [Polski](../pl/INSTALL.md) · [Features and acceptance](FEATURES.md)
 
-For M300 Classic with the installed native R15.5/R15.6/R15.7 host and the M300
+For M300 Classic with the installed native R15.3/R15.5/R15.6/R15.7 host and the M300
 bootloader. R16 needs MCU R14.5 for factory Z detection; an already installed
 R14.5 does not need re-flashing. The complete Actions artifact also contains
 a fresh compiled R14.5 application for older installations.
@@ -10,15 +10,15 @@ a fresh compiled R14.5 application for older installations.
 Extract the artifact and copy its host directory from the Mac:
 
 ~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R16_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R16_1_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_NORMAL_UI
+cd ~/M300_HOST_R16_1_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py
 ~~~
 
-Expected: 111 tests OK and an R16 plan. Inspect the listed files: this update
+Expected: 112 tests OK and an R16 plan. Inspect the listed files: this update
 migrates the commissioning motion section to native mode, sets 180C Z homing,
 2 us STEP and the 300 mm/s XY profile, and adds three macro includes. Saved PID,
 calibrated E and deliberate geometry outside the old Z30 envelope are retained.
@@ -62,3 +62,15 @@ Host/config rollback: stop Klipper, run
 The receipt restores exact prior files and protects subsequent edits. It does
 not change the MCU. HOST_SOURCE is a matching source snapshot, not another
 installer. SHA256SUMS and BUILD_PROVENANCE.json identify the exact Actions build.
+
+R16.1 adds direct migration from the known native R15.3 host, including
+installations without the display extension. The real API check and hash-based
+upgrade are exercised using archived R15.3 modules. Runtime/MCU behaviour is
+unchanged from R16. Expected installer result: INSTALLED_M300_R16_1.
+
+If the previous installer printed `REFUSED: R15.5 motion and M11 presentation support required`,
+R16 was not installed. A successful setup_fluidd.py only changes macro groups.
+R16.1 removes that migration obstacle for the recognized R15.3 baseline. Before motion,
+confirm `INSTALLED_M300_R16_1` and `ZORTRAX_MOTION_STATUS` reporting
+`normal_control=true` and `z_home_hotend_target_c=180`. `G28 X Y` does not heat;
+`G28 Z` waits for the native heater check before moving to contact.

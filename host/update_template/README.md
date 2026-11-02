@@ -2,7 +2,7 @@
 
 [Polski](README_PL.md) · [Install](docs/en/INSTALL.md) · [Features](docs/en/FEATURES.md)
 
-Upgrade for installed native M300 R15.5/R15.6/R15.7, requiring MCU R14.5 for
+Upgrade for installed native M300 R15.3/R15.5/R15.6/R15.7, requiring MCU R14.5 for
 factory Z selection. The complete Actions artifact includes the MCU application.
 This host ZIP contains no bootloader or firmware to flash.
 
@@ -16,6 +16,6 @@ Fluidd). Run setup_fluidd.py --apply after Ready, then refresh the browser.
 Unfinished OEM M03/M07/M08 procedures remain in TEST. The existing display
 sleep, MCU cooling and lifecycle remain; an installed R14.5 MCU can remain.
 
-Run python3 VERIFY.py, python3 -m unittest discover -s tests -v (111 tests),
+Run python3 VERIFY.py, python3 -m unittest discover -s tests -v (112 tests),
 and python3 install.py. Follow the installation instructions for --apply and
 physical acceptance. CI tests software; it does not measure full-load 300 mm/s.

@@ -1,8 +1,8 @@
-# Zortrax M300 Classic — Klipper R16
+# Zortrax M300 Classic — Klipper R16.1
 
 [English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Funkcje / odbiór](docs/pl/FEATURES.md) · [Kompilacja](docs/pl/BUILD.md)
 
-Iteracja testowa: **MCU R14.5 + host R16**, Klipper
+Iteracja testowa: **MCU R14.5 + host R16.1**, Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103, Cartesian M300 Classic.
 
 - Natywne grzanie, wentylatory, PID, SAVE_CONFIG, XYZ/E i obsługa druku Klippera.
@@ -13,9 +13,9 @@ Iteracja testowa: **MCU R14.5 + host R16**, Klipper
 - Zachowane księżyc/przygaszanie/wybudzanie, chłodzenie lokalne MCU i łączność.
 - Odwracalna migracja hosta/konfiguracji z zachowaniem PID i kalibracji E.
 
-GitHub Actions wykonuje czysty build ARM, 111 testów hosta, testy modeli
+GitHub Actions wykonuje czysty build ARM, 112 testów hosta, testy modeli
 rejestrowych i 13 scenariuszy rzeczywistego Klippy FILEOUTPUT. W Artifacts
-udanego przebiegu pobierz `m300-r14_5-host-r16-test-<commit>`. Zawiera M3B,
+udanego przebiegu pobierz `m300-r14_5-host-r16_1-test-<commit>`. Zawiera M3B,
 BIN/ELF/mapę/słownik, instalator Orange Pi R16, grupowanie Fluidd, raporty i sumy.
 Wgrany MCU R14.5 może pozostać.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16 normal controls, 180C homing and separate TEST UI."""
+"""Plan/apply/rollback M300 R16.1 native R15.3-compatible update, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -63,10 +63,12 @@ def check_api(root):
     wh = (root / 'klippy/webhooks.py').read_text()
     if "m300:panel" not in oled or '_endpoints' not in wh:
         raise ValueError('Missing M300 panel / Klipper API capability')
-    motion = (root / 'klippy/extras/m300_motion.py').read_text()
     ui = (root / 'klippy/extras/m300_ui_m11_state.py').read_text()
-    if 'HOMING_UI_ABI' not in motion or 'def require_rows(' not in ui:
-        raise ValueError('R15.5 motion and M11 presentation support required')
+    # The old motion/menu modules are replaced atomically below. R15.3 has
+    # no HOMING_UI_ABI; its exact known hashes, not a newer API marker, govern
+    # upgrade eligibility. Keep checking the presentation API actually used.
+    if 'def require_rows(' not in ui:
+        raise ValueError('M300 M11 presentation support required')
 
 
 def validate_settings(data):
@@ -115,7 +117,7 @@ def plan(root, config):
     baselines = json.loads((HERE / 'SUPPORTED_BASELINES.json').read_text())
     for p, data in desired.items():
         if p.name == 'm300_menu.py' and not p.is_file():
-            raise ValueError('Installed R15.5 menu is required')
+            raise ValueError('An installed native M300 menu is required')
         if (p.exists() and p.read_bytes() != data
                 and digest(p.read_bytes()) not in baselines.get(p.name, [])):
             raise ValueError('Existing unknown M300 runtime module: ' + str(p))
@@ -150,7 +152,7 @@ def plan(root, config):
     if not already_included(config, settings):
         additions.append('[include m300_display.cfg]\n')
     if additions:
-        addition = '\n# M300 R16 normal controls and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 R16.1 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -279,8 +281,8 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R16' if changes else 'ALREADY_M300_R16',
-                  'host_update': 'R16',
+        result = {'status': 'PLAN_M300_R16_1' if changes else 'ALREADY_M300_R16_1',
+                  'host_update': 'R16.1',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
@@ -290,7 +292,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16'
+            result['status'] = 'INSTALLED_M300_R16_1'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

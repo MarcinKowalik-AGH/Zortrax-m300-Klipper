@@ -78,6 +78,6 @@ grzałek, wentylatorów i OLED; nie wykonuje tych zdarzeń na F103.
 5. Sprawdź przygaszanie, księżyc/wygaszenie, wybudzenie i nawigację grup.
    M03/M07/M08 odbieramy osobno w TEST podczas dopracowywania procesów.
 
-Wydanie obejmuje 111 testów hosta, 8 kontraktów repozytorium, 6720 przypadków
+Wydanie obejmuje 112 testów hosta, 8 kontraktów repozytorium, 6720 przypadków
 STEP, 52 chłodzenia, 1792 dekodera fabrycznego, testy startu/timerów i 13
 scenariuszy rzeczywistego Klippy FILEOUTPUT. CI nie programuje ani nie porusza drukarki.

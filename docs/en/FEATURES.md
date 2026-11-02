@@ -80,6 +80,6 @@ fan and OLED commands; it does not execute those events on the F103.
 5. Check screen dimming, moon/off, wake and category navigation. Keep M03/M07/M08
    acceptance in the TEST group while refining their procedures.
 
-The release contains 111 host tests, 8 repository contracts, 6720 STEP guard
+The release contains 112 host tests, 8 repository contracts, 6720 STEP guard
 cases, 52 cooling cases, 1792 factory-decoder cases, startup/timer checks and
 13 actual Klippy FILEOUTPUT scenarios. CI never flashes or operates a printer.

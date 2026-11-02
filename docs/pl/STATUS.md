@@ -18,7 +18,7 @@ Przygaszanie/wygaszanie/wybudzanie OLED oraz księżyc/Entering sleep mode są
 zachowane. idle_timeout urządzenia pozostaje dotychczasowym ustawieniem
 natywnym. Sen ekranu nie oznacza przywracania targetów ani pozycji silników.
 
-Testy programowe: 111 hosta, 8 kontraktów repozytorium, 6720 przypadków STEP,
+Testy programowe: 112 hosta, 8 kontraktów repozytorium, 6720 przypadków STEP,
 52 chłodzenia, 1792 dekodera, start/timery i 13 scenariuszy rzeczywistego Klippy
 FILEOUTPUT. Obejmują 180C przy XYZ/powtórnym Z, planowanie 300 mm/s,
 M220=150%, ACCEL=3000 i granice Z299/Z300.

@@ -12,11 +12,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--baseline', choices=('current', 'r153'), default='current')
     args = parser.parse_args()
     stage = stage_host_update(ROOT / '.ci/install-package')
     spec = importlib.util.spec_from_file_location('real_m300_installer', stage / 'install.py')
     installer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(installer)
+    if args.baseline == 'r153':
+        for source in (stage / 'tests/reference/r153').glob('*.py'):
+            (args.root / 'klippy/extras' / source.name).write_bytes(source.read_bytes())
     target = fresh_directory(args.output)
     cfg = target / 'printer.cfg'
     original = (ROOT / 'tests/fixtures/printer_r15_5_test.cfg').read_bytes()
@@ -38,7 +42,7 @@ def main():
     assert not (target / 'm300_tests.cfg').exists()
     installer.apply(args.root, cfg, installer.plan(args.root, cfg))
     assert installer.plan(args.root, cfg) == []
-    report = {'status': 'PASS_REAL_INSTALLER', 'config': str(cfg),
+    report = {'status': 'PASS_REAL_INSTALLER', 'config': str(cfg), 'baseline': args.baseline,
               'actual_API_checks': True, 'exact_rollback': True,
               'idempotent': True, 'services_changed': False, 'physical_hardware': False}
     (target / 'REPORT.json').write_text(json.dumps(report, indent=2) + '\n')

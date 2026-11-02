@@ -76,6 +76,8 @@ def main():
         host_tree = stage_host_tree(pristine)
         run('real_installer_migration', [sys.executable, ROOT / 'ci/validate_install.py',
             '--root', host_tree, '--output', ROOT / '.ci/installed-config'])
+        run('real_installer_r153_migration', [sys.executable, ROOT / 'ci/validate_install.py',
+            '--root', host_tree, '--output', ROOT / '.ci/installed-r153', '--baseline', 'r153'])
         fixture = ROOT / '.ci/installed-config/printer.cfg'
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
