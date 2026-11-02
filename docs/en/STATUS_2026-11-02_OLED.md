@@ -1,5 +1,25 @@
 # Zortrax M300 Classic — Project Status and OLED Demonstration (2026-11-02)
 
+## OLED photographs — on-device evidence
+
+**Picture 1 — Klipper status screen (Ready)**
+
+![Picture 1 — Ready status screen](../../assets/oled/2026-11-02/picture%201.png)
+
+**Picture 2 — Settings screen and panel_update exception**
+
+![Picture 2 — Settings and panel_update exception](../../assets/oled/2026-11-02/picture%202.png)
+
+**Picture 3 — Heating menu, hotend selected**
+
+![Picture 3 — Heat hotend](../../assets/oled/2026-11-02/picture%203.png)
+
+**Picture 4 — Heating menu, bed selected**
+
+![Picture 4 — Heat bed](../../assets/oled/2026-11-02/picture%204.png)
+
+> **Image publication pending:** The referenced image files must also be committed to `docs/assets/oled/2026-11-02/`. Until then, GitHub will show placeholders rather than photographs. The 4-image upload bundle is supplied separately.
+
 **Release under review:** MCU R14.5 / Host R16.2  
 **Hardware:** original Zortrax M300 Classic, STM32F103-based MCU, Orange Pi host and original monochrome OLED/rotary control.  
 **Status:** functional integration with a number of operator-observed features; not yet a fully certified OEM-equivalent implementation.
@@ -15,16 +35,14 @@ Four original photographs supplied by the machine operator show the following se
 
 These photographs independently confirm working OLED rendering, the first status page, menu navigation and display of heater commands. **They do not prove that selecting those commands heats the hardware, that displayed dashes correctly represent sensor readings, or that all OEM icon states and menu procedures are finished.** The exception visible in photograph 2 is a tracked regression to resolve.
 
-### Photo placement / intended order
+### Original photograph filenames and repository assets
 
-| No. | Asset filename | Original supplied image |
+| Order | New filename | Supplied photograph |
 |---|---|---|
-| 1 | `01-ready-status.png` | `Zrzut ekranu 2026-11-2 o 20.12.16.png` |
-| 2 | `02-settings-panel-update-error.png` | `Zrzut ekranu 2026-11-2 o 20.12.31.png` |
-| 3 | `03-heating-hotend.png` | `Zrzut ekranu 2026-11-2 o 20.12.50.png` |
-| 4 | `04-heating-bed.png` | `Zrzut ekranu 2026-11-2 o 20.13.04.png` |
-
-> The uploaded original image binaries must be committed to `docs/assets/oled/2026-11-02/` separately. No claim is made here that these assets have already been pushed.
+| 1 | `picture 1.png` | `Zrzut ekranu 2026-11-2 o 20.12.16.png` |
+| 2 | `picture 2.png` | `Zrzut ekranu 2026-11-2 o 20.12.31.png` |
+| 3 | `picture 3.png` | `Zrzut ekranu 2026-11-2 o 20.12.50.png` |
+| 4 | `picture 4.png` | `Zrzut ekranu 2026-11-2 o 20.13.04.png` |
 
 ## Completed or integrated in the current codebase
 
