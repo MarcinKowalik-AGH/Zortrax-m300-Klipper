@@ -63,8 +63,7 @@ class M300MenuUI:
         return self.history.parent(current)
 
     def language(self):
-        value = str(self.nvm.get_setting('language', 'EN')).upper()
-        return value if value in LANGS else 'EN'
+        return 'EN'
 
     def translate(self, name):
         return self.history.translate(name,self.language(),self.menu._labels)
@@ -76,7 +75,7 @@ class M300MenuUI:
             if labels and labels[0] == 'Up':
                 labels[0] = 'Back'
         width = self.row_pixels if row_pixels is None else min(self.row_pixels, row_pixels)
-        return clean_label(title), self.history.present(
+        return clean_label(english_label(title)), self.history.present(
             page,generation,selected,now,labels,width,self.scroll_interval,self.scroll_delay)
 
     def present(self, title, rows, selected, now, page, generation, row_pixels=None):
@@ -158,8 +157,9 @@ class M300MenuUI:
                 if 'CONFIRM' in view['actions']:
                     self.procedures.action(received_view, 'CONFIRM')
                 elif view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
-                    self.menu.home()
-                    self.oled.page, self.oled.selection = 'status', 0
+                    self.menu._navigate('native_job' if view['snapshots'][view['owner']].get('operation')=='CHANGE'
+                                        else 'maintenance' if view['owner']!='m300_filament' else 'material')
+                    self.oled.page, self.oled.selection = 'm04', 0
         self.oled.render_at = 0.
         return True
 
@@ -249,7 +249,7 @@ class M300MenuUI:
                 'oled_spi_owner':'m300_oled',
                 'encoder_owner':'m300_oled',
                 'action_owner':'m300_menu_and_existing_services',
-                'host_ui_revision':'0.13.16.5-OEM-MENU-SERVICES',
+                'host_ui_revision':'0.13.16.6-EN-OEM-VALIDATED',
                 'operation_groups':['Klipper', 'Zortrax M300', 'Service / Tests'],
                 'menu_wrap':False,
                 'menu_reverse':self.oled.menu_reverse,

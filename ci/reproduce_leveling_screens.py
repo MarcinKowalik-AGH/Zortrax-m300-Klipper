@@ -11,7 +11,6 @@ import importlib.util
 import json
 import re
 from pathlib import Path
-import shutil
 import struct
 import subprocess
 import sys
@@ -64,7 +63,7 @@ def reproduce(source, working, output):
         for owner,operation,state in (
             ('m300_maintenance','HOTEND','WAIT_CONFIRM'),
             ('m300_filament','LOAD','WAIT_INSERT'),('m300_filament','LOAD','LOADING'),
-            ('m300_filament','UNLOAD','UNLOADING'),('m300_filament','UNLOAD','WAIT_REMOVE'))]
+            ('m300_filament','UNLOAD','UNLOADING'),('m300_filament','UNLOAD','WAIT_UNLOAD'))]
     records = []
     for li, language in enumerate(('EN','PL','FR','DE','ES')):
         for status in statuses:

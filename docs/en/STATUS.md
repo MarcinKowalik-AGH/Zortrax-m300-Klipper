@@ -1,45 +1,36 @@
-# Current status — R16 test iteration
+# Current status — R16.6 test release
 
-[Polski](../pl/STATUS.md) · [Feature status and acceptance](FEATURES.md)
+MCU: R14.5, unchanged. Host: R16.6, English only. Upstream:
+`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
 
-MCU R14.5 + host R16.3, pinned Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
-The operator reports native thermal/fan, XYZ/E, OLED and link work as confirmed.
-R16 consolidates those paths under normal controls and keeps unfinished OEM
-procedures separate. It replaces the older commissioning homing adapter with
-native G28/probe plus the M300 contact location, 180C minimum and final 5 mm.
-Repeated homing no longer adds clearance to a previous Z299 coordinate.
+The previous completion statement did not substitute for procedure validation.
+This iteration re-executes OEM 1.3.1 control flow and corrects confirmed gaps:
+Unload confirmation order, M07 Y-before-X and session offsets, ordinary
+five-update Z reference, native paused Change, M07/native-print exclusion,
+result return navigation, and runtime language consistency.
 
-Normal motion has no 60-second declaration gate, Z30 envelope or per-G1
-resource wrapper. Native Cartesian bounds, verify_heater, cold-extrusion
-protection, MCU guard and independent cooling remain. The factory ID3
-Z400/Z800 selection remains. PID and extruder calibration text are preserved.
+Implemented and software-tested: the two requested OEM submenus, shared
+OLED/Fluidd dialogs, seven procedure macros, bounded native motion/contact
+ownership, 260/258 and 240/238 thresholds, calibrated material transport,
+pause preservation and explicit Resume, error/cancel handling, exact command
+restoration and reversible migration.
 
-OLED dim/off/wake and the original moon/Entering sleep mode remain unchanged.
-Device idle_timeout remains the existing native setting. Screen sleep does
-not imply restoration of heater targets or motor coordinates.
+Validation: 233 host tests, 9 repository contracts, MCU/register/startup
+checks and 13 real Klippy FILEOUTPUT cases. Source evidence adds 5 executed
+material traces, 3 wizard traces, 2 five-contact Z profiles, 6 XY-offset seeds,
+110 renderer frames and 20,002 screw-turn vectors. Only modeled boundaries
+are covered by the procedure tests; there is no new physical UART/printer run.
 
-Software checks cover 131 host tests, 8 repository contracts, 6720 STEP cases,
-52 cooling cases, 1792 factory-decoder cases, startup/timer checks and 13 real
-Klippy FILEOUTPUT scenarios. Those include 180C XYZ/repeated Z homing, native
-300 mm/s planning, M220=150%, ACCEL=3000 and Z299/Z300 boundaries.
+Status polling no longer copies a complete material transport plan. M07 and
+ordinary Z share the same bounded native probe capability and rounding policy.
+The obsolete post-retract WAIT_REMOVE path has been removed.
 
-Remaining acceptance: repeat the changed homing on the physical printer;
-measure high-speed/full-load timing and sensor accuracy; validate complete
-M03/M07/M08 procedures separately. A 2 us pulse setting or FILEOUTPUT PASS
-is not a hardware measurement at 300 mm/s. Inventure remains a separate F207
-project; its files/geometry are not installed here.
+Native PID, sensors, factory Z scale, calibrated E, deliberate axis bounds,
+normal velocity/acceleration controls, OLED transport/refresh, sleep notice,
+MCU cooling and connection lifecycle remain under their existing owners.
+The legacy full OEM M02/Z-code print engine remains separately disabled.
 
-R16.3 adds [host-start connection recovery](CONNECTION.md), using one native
-reset for an old session/heartbeat latch. Other fault codes require explicit
-recovery. Tests exercise actual native restart/configuration helpers with
-simulated guard replies. The service/Orange Pi reboot still needs acceptance
-on the printer.
-
-Operator report, 2026-11-02: HW05/Z400, dimming/moon, and reaching Z300 work.
-A factory decode does not replace physical scale measurement; status still
-explicitly reports physical_scale_measured=false.
-
-R16.5 fixes the complete M07 release retract and panel_update compatibility; restores OEM 13-pixel dialogs, shared OLED/Fluidd text and 85 matching reference frames. 203 host tests and 20002 turn vectors pass; physical acceptance remains open. [M07 audit](LEVELING.md).
-
-R16.5 implements the OEM Maintenance and Material menus and their six Fluidd
-macros. See [controls, source evidence and acceptance](MAINTENANCE_MATERIAL.md).
+See [complete validation and acceptance](VALIDATION_R16_6.md),
+[Maintenance / Material](MAINTENANCE_MATERIAL.md), [M07 / Z](LEVELING.md),
+and [installation](INSTALL.md). Earlier printer photographs remain historical
+on-device evidence; they do not establish physical acceptance of R16.6.

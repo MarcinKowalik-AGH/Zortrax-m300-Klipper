@@ -9,15 +9,15 @@ def describe(owner,status,language='EN'):
     language=language if language in LANGUAGES else 'EN'
     state=status.get('state','IDLE')
     operation=status.get('operation')
-    if owner=='m300_filament' and operation not in ('LOAD','UNLOAD'):
+    if owner=='m300_filament' and operation not in ('LOAD','UNLOAD','CHANGE'):
         return None
     if owner=='m300_maintenance' and operation!='HOTEND':
         return None
     descriptor=({'WAIT_CONFIRM':'0x8021d38'} if owner=='m300_maintenance' else
         {'WAIT_INSERT':'0x8021eb8','LOADING':'0x8021ea0',
-         'UNLOADING':'0x8021eac','WAIT_REMOVE':'0x8021ec4'}).get(state)
+         'UNLOADING':'0x8021eac','WAIT_UNLOAD':'0x8021ec4'}).get(state)
     if owner=='m300_filament' and state=='COMPLETING':
-        descriptor='0x8021ea0' if operation=='LOAD' else '0x8021eac'
+        descriptor='0x8021eac' if operation=='UNLOAD' else '0x8021ea0'
     record=assets()['descriptors'].get(descriptor)
     if record:
         message=text(record['text_id'],language)

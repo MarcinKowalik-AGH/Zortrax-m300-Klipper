@@ -136,8 +136,7 @@ class M300Procedures:
         if owner_override in snapshots:
             owner = owner_override
         status = snapshots[owner] if owner else {'state': 'IDLE', 'busy': False}
-        ui = self.printer.lookup_object('m300_menu_ui', None)
-        language = ui.language() if ui is not None else 'EN'
+        language = 'EN'
         identity = self._key(owner, status) + (language,)
         if identity != self.identity:
             self.identity = identity
@@ -175,11 +174,10 @@ class M300Procedures:
         screen = (describe(status, language) if owner == 'm300_calibration'
                   else describe_service(owner,status,language))
         if screen:
-            titles={'m300_calibration':('Poziomowanie platformy','Platform leveling'),
-                    'm300_maintenance':('Nagrzewanie ekstrudera','Heat the extruder'),
-                    'LOAD':('Ładowanie materiału','Load the material'),
-                    'UNLOAD':('Wysuwanie materiału','Unload the material')}
-            title = titles.get(owner,titles.get(status.get('operation'),('Zortrax M300','Zortrax M300')))[language!='PL']
+            titles={'m300_calibration':'Platform leveling',
+                    'm300_maintenance':'Heat the extruder','LOAD':'Load the material',
+                    'UNLOAD':'Unload the material','CHANGE':'Change the material'}
+            title = titles.get(owner,titles.get(status.get('operation'),'Zortrax M300'))
             message = screen['text']
         return {'owner': owner, 'state': state, 'title': clean(title),
                 'leveling_screen': screen,
@@ -228,11 +226,7 @@ class M300Procedures:
     @staticmethod
     def _action_label(view, action):
         if view.get('leveling_screen') or view['owner']=='m300_calibration':
-            lang = (view.get('leveling_screen') or {}).get('language', 'EN')
-            labels = {'EN': ('Continue', 'Cancel'), 'PL': ('Kontynuuj', 'Anuluj'),
-                      'FR': ('Continuer', 'Annuler'), 'DE': ('Weiter', 'Abbrechen'),
-                      'ES': ('Continuar', 'Cancelar')}
-            return labels[lang][action == 'CANCEL']
+            return 'Cancel' if action=='CANCEL' else 'Continue'
         return action.replace('_', ' ').title()
 
     def action(self, view_id, action):
@@ -302,14 +296,14 @@ class M300Procedures:
         if view['owner']:
             if view['view_id'] != self.last_prompt:
                 finished_service=(view.get('leveling_screen') and view['owner'] in
-                    ('m300_maintenance','m300_filament') and view['state'] in
+                    ('m300_maintenance','m300_filament','m300_calibration') and view['state'] in
                     ('COMPLETE','CANCELLED'))
                 if finished_service:
                     self._emit('prompt_end')
                     self.last_prompt=view['view_id']
                 else:
                     self._prompt(view)
-                if view.get('leveling_screen') and (view['owner']=='m300_calibration'
+                if view.get('leveling_screen') and not finished_service and (view['owner']=='m300_calibration'
                                                     or view['busy']):
                     # External console, Fluidd and the encoder all follow the
                     # same current owner/phase, including screw pictograms.
@@ -319,14 +313,14 @@ class M300Procedures:
                             and (menu.page != 'procedure' or oled.page != 'm04')):
                         menu._navigate('procedure')
                         oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
-                elif (view.get('leveling_screen') and view['owner'] in
-                        ('m300_maintenance','m300_filament') and view['state'] in
-                        ('COMPLETE','CANCELLED')):
+                elif finished_service:
                     # OEM Heat/Load/Unload return to the invoking submenu.
                     menu=self.printer.lookup_object('m300_menu',None)
                     oled=self.printer.lookup_object('m300_oled',None)
                     if menu is not None and oled is not None and menu.page=='procedure':
-                        menu._navigate('material' if view['owner']=='m300_filament' else 'maintenance')
+                        operation=view['snapshots'][view['owner']].get('operation')
+                        menu._navigate('native_job' if operation=='CHANGE' else
+                                       'material' if view['owner']=='m300_filament' else 'maintenance')
                         oled.page,oled.selection,oled.render_at='m04',0,0.
             display = self.printer.lookup_object('display_status', None)
             visible = (view['busy'] or view['state'] not in TERMINAL
@@ -365,7 +359,7 @@ class M300Procedures:
         # the shared object small at normal subscription rates.
         view.pop('snapshots')
         return dict(view, installed=True, ready=self.live,
-                    revision='0.13.16.5-OEM-PROCEDURES', automatic_resume=False)
+                    revision='0.13.16.6-OEM-PROCEDURES', automatic_resume=False)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_PROCEDURE ' + json.dumps(

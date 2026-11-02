@@ -1,6 +1,6 @@
 # Behaviour — R15.7
 
-[Polski](../pl/BEHAVIOUR.md) · [Install](INSTALL.md)
+[Install](INSTALL.md)
 
 | Condition | State | Display |
 |---|---|---|

@@ -4,6 +4,15 @@
 No MCU transport or geometry overrides. Idle native command handlers are
 restored exactly; each permitted move belongs to the current token/phase.
 """
+import math
+
+
+def native_temperature_ready(measured, target, requested, heater):
+    """OEM hotend readiness uses a lower threshold, not a symmetric band."""
+    return (type(measured) in (int,float) and math.isfinite(measured)
+            and type(requested) in (int,float) and math.isfinite(requested)
+            and target == requested
+            and max(heater.min_extrude_temp,requested-2.) <= measured <= heater.max_temp)
 
 BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M220','M221',
            'SAVE_GCODE_STATE','RESTORE_GCODE_STATE','SET_GCODE_OFFSET',
@@ -12,7 +21,7 @@ BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M22
            'SCREWS_TILT_CALCULATE','Z_TILT_ADJUST','QUAD_GANTRY_LEVEL',
            'PID_CALIBRATE','M109','M190','TEMPERATURE_WAIT','SAVE_CONFIG',
            'SET_EXTRUDER_ROTATION_DISTANCE','SYNC_EXTRUDER_MOTION',
-           'SET_PRESSURE_ADVANCE','SDCARD_PRINT_FILE','M23','M24','PAUSE','RESUME')
+           'SET_PRESSURE_ADVANCE','SDCARD_PRINT_FILE','M23','M24','PAUSE','RESUME','CLEAR_PAUSE')
 
 
 def require_idle_print(printer, now):

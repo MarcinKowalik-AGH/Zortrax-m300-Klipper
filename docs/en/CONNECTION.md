@@ -1,6 +1,6 @@
 # Host restart and MCU connection — R16.2
 
-[Polski](../pl/CONNECTION.md) · [Installation](INSTALL.md)
+[Installation](INSTALL.md)
 
 Restarting the Klipper service or Orange Pi ends the host process, while the
 printer MCU remains powered. The local guard shuts down its previous armed

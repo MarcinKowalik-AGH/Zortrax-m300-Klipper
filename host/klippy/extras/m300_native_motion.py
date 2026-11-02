@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Normal M300 homing on Klipper's native Cartesian/probe implementation.
 
-Only the M300 Z preheat, contact location and final clearance are adapted.
+M300 Z preheat, contact location, five reference updates and clearance are adapted.
 G0/G1, motion limits, step generation and endstop stopping remain native.
 """
 import json
@@ -30,6 +30,8 @@ class M300NativeMotion:
         self.state = self.phase = 'IDLE'
         self.reason, self.result = '', None
         self.ready = False
+        self.precision = None
+        self._z_target = None
         self.toolhead = self.hotend = self.heaters = self.native_G28 = None
         self.printer.load_object(config, 'homing')
         self.printer.register_event_handler('klippy:connect', self._connect)
@@ -70,6 +72,8 @@ class M300NativeMotion:
             raise self.config.error('M300 normal homing requires the native G28 owner')
         self.native_G28 = original
         self.gcode.register_command('G28', self.cmd_G28)
+        from .m300_native_z import M300ZRefinement
+        self.precision = M300ZRefinement(self,probe)
 
     def _ready(self):
         self.ready = True
@@ -100,7 +104,10 @@ class M300NativeMotion:
             raise gcmd.error('G28 accepts X/Y/Z axis selectors')
         self.home(axes=''.join(params).lower() or 'xyz')
 
-    def home(self, owner_job=None, job_token=None, axes='xyz'):
+    def home_oem(self, contact_xy):
+        return self.home(axes='xyz',oem_leveling=True,contact_xy=contact_xy)
+
+    def home(self, owner_job=None, job_token=None, axes='xyz',oem_leveling=False,contact_xy=None):
         axes = axes.lower()
         if not axes or any(a not in 'xyz' for a in axes) or len(set(axes)) != len(axes):
             raise self.printer.command_error('M300 homing axes must be X/Y/Z')
@@ -122,11 +129,13 @@ class M300NativeMotion:
         token = self.token
         self.state, self.reason, self.result = 'HOMING', '', None
         previous_target, owned_target = None, None
+        reference = None
         try:
             if 'z' in axes:
                 self._phase('Z_PREHEAT')
                 _, previous_target = self.hotend.get_temp(self.reactor.monotonic())
                 target = max(previous_target, self.z_home_hotend_target)
+                self._z_target = target
                 if target != previous_target:
                     owned_target = target
                 # Native heater wait/verify_heater and MCU guard remain owners.
@@ -134,28 +143,51 @@ class M300NativeMotion:
                 self._check(token)
             xy = ''.join(a for a in 'xy' if a in axes)
             if xy:
-                self._phase('HOME_' + xy.upper())
-                self._native_home(xy)
-                self._check(token)
+                for group in ('y','x') if oem_leveling else (xy,):
+                    self._phase('HOME_' + group.upper())
+                    self._native_home(group)
+                    self._check(token)
             if 'z' in axes:
                 self._phase('Z_CONTACT_POSITION')
-                self.toolhead.manual_move([*self.home_xy, None], self.travel_speed)
+                point = self.home_xy if contact_xy is None else tuple(contact_xy)
+                if len(point)!=2 or any(not math.isfinite(v) for v in point):
+                    raise self.printer.command_error('M300 invalid contact XY')
+                self.toolhead.manual_move([*point, None], self.travel_speed)
                 self.toolhead.wait_moves()
                 self._check(token)
                 self._phase('HOME_Z_NATIVE_PROBE')
                 self._native_home('z')
                 self._check(token)
+                # M07's 0x0801456c is its own initial coarse contact. Ordinary
+                # homing instead follows the five-update 0x0800ab90 policy.
+                if not oem_leveling:
+                    mcu = getattr(self.board,'mcu',None)
+                    if mcu is not None and mcu.is_fileoutput():
+                        reference = dict(method='FILEOUTPUT_NO_PHYSICAL_CONTACT',contacts=0)
+                    else:
+                        self._phase('Z_FIVE_CONTACT_REFERENCES')
+                        try:
+                            reference = self.precision.run(token)
+                        except Exception:
+                            if not self.printer.is_shutdown():
+                                self.printer.invoke_shutdown('M300 precision Z reference failed')
+                            raise
                 # Native homing has just established contact Z. Never add a
                 # blind 5 mm retreat to an old Z299 coordinate before homing.
                 self._phase('Z_FINAL_CLEARANCE')
-                target = self.toolhead.get_position()[2] + self.clearance
+                # Refinement can leave a stable opening above its reference.
+                # Clearance is measured from contact, never accumulated.
+                target = (self.precision.probe.get_offsets()[2]+self.clearance
+                          if reference and reference.get('contacts')==5 else
+                          self.toolhead.get_position()[2]+self.clearance)
                 self.toolhead.manual_move([None, None, target], self.lift_speed)
                 self.toolhead.wait_moves()
                 self._check(token)
             self.state = 'COMPLETE'
             self._phase('COMPLETE')
             self.result = {'axes': axes, 'position': list(self.toolhead.get_position()),
-                           'native_endstop_stopping': True}
+                           'native_endstop_stopping': True,'z_reference':reference,
+                           'oem_leveling':oem_leveling}
         except Exception as exc:
             self.reason = str(exc)
             if self.state != 'CANCELLED':
@@ -163,6 +195,7 @@ class M300NativeMotion:
                 self._phase('FAULT')
             raise
         finally:
+            self._z_target = None
             if owned_target is not None and not self.printer.is_shutdown():
                 _, current_target = self.hotend.get_temp(self.reactor.monotonic())
                 if current_target == owned_target:
@@ -190,7 +223,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16-NATIVE-OPERATIONS', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.6-NATIVE-OPERATIONS', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'phase_id': self.phase_id, 'session_token': self.token,

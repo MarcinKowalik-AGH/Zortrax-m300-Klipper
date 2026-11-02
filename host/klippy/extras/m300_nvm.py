@@ -439,6 +439,8 @@ class M300NVM:
         return self.store.snapshot()
 
     def get_setting(self, name, default=None):
+        if name == 'language':
+            return 'EN'
         return self.store._published['settings'].get(name, default)
 
     def is_busy(self):
@@ -506,6 +508,8 @@ class M300NVM:
             self._busy = False
 
     def set_setting(self, name, value):
+        if name == 'language' and value != 'EN':
+            raise self.printer.command_error('This host supports English only')
         try:
             validate_setting(name, value)
         except NVMError as exc:
@@ -623,6 +627,9 @@ class M300NVM:
                     setting_choices={name: [{'value': value, 'label': LABELS.get(value, str(value))}
                                             for value in choices]
                                      for name, choices in CHOICES.items()})
+        data['settings']['language'] = 'EN'
+        data['setting_choices']['language'] = [{'value':'EN','label':'English'}]
+        data['language_profile'] = 'EN_ONLY'
         return data
 
     def cmd_setting(self, gcmd):

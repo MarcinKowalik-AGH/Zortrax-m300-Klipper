@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.5-OEM-MENU-SERVICES"
+    MENU_REVISION = "0.13.16.6-EN-OEM-VALIDATED"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -121,8 +121,7 @@ class M300Menu:
         ui = self._ui()
         if ui is not None:
             return ui.translate(english)
-        lang = self.nvm.get_setting('language', 'EN').lower()
-        return self._labels.get(english, {}).get(lang, english)
+        return self._labels.get(english, {}).get('en', english)
 
     @staticmethod
     def clean(text, maximum=160):
@@ -261,6 +260,7 @@ class M300Menu:
             if state == 'printing':
                 rows.append(('Pause', ('native_gcode', 'PAUSE')))
             if state == 'paused':
+                rows.append(('Change the material', ('native_gcode', 'ZORTRAX_CHANGE')))
                 rows.append(('Resume', ('native_gcode', 'RESUME')))
             if state in ('printing', 'paused'):
                 rows.append(('Cancel', ('native_gcode', 'CANCEL_PRINT')))
@@ -473,9 +473,7 @@ class M300Menu:
                         rows.extend((line, None) for line in textwrap.wrap(self.clean(label, 240), 36))
                     else:
                         rows.append((self.clean(label, 120), action))
-                title = ('Regulacja platformy' if self.nvm.get_setting('language') == 'PL'
-                         else 'Platform leveling')
-                return title, self._notice(rows)
+                return 'Platform leveling', self._notice(rows)
             rows = back + [(self.clean(status.get('state')), None)]
             if (status.get('session_token'), status.get('phase_id')) != self._cal_view:
                 rows.append(('Phase changed: refresh required', None))
@@ -492,6 +490,7 @@ class M300Menu:
                       'sleep_mode': 'Sleep Mode', 'sleep_light': 'Sleep light',
                       'sort_mode': 'Models sorting', 'full_platform_preheat': 'Full platform preheating'}
             if native:
+                labels.pop('language', None)
                 labels.pop('sleep_mode', None)
                 labels.pop('sleep_light', None)
             return self.t('Settings'), self._notice(back + [

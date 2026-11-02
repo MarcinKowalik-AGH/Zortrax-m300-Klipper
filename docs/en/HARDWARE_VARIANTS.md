@@ -1,7 +1,5 @@
 # M300 hardware revision and Z profile
 
-[Polski](../pl/HARDWARE_VARIANTS.md)
-
 MCU R14.5 and host R16 read the retained factory hardware revision once at
 Klippy identification and select the native Z scale before configuration and
 board enable. There is no new polling, motion wrapper, GPIO/ADC owner or Flash

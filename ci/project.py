@@ -86,8 +86,9 @@ def manifest(folder):
 def stage_host_update(destination):
     target = fresh_directory(destination)
     shutil.copytree(ROOT / 'host/update_template', target, dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    shutil.copytree(ROOT / 'docs', target / 'docs', dirs_exist_ok=True)
+                    ignore=shutil.ignore_patterns('__pycache__', '*.pyc', 'README_PL.md'))
+    shutil.copytree(ROOT / 'docs', target / 'docs', dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('pl'))
     payload = target / 'payload'
     payload.mkdir()
     for name in META['host_update_files']:

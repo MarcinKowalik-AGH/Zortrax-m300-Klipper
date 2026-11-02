@@ -44,6 +44,7 @@ def motion_fixture():
             position['XYZ'.index(axis)] = 0.
             motion.homed.add(axis.lower())
     motion.native_G28 = native_home
+    motion.precision = NS(run=lambda token:dict(contacts=0),probe=NS(get_offsets=lambda:(0.,0.,0.)))
     motion.board = NS(hardware=NS(get_status=lambda: {'effective_z_steps_per_mm': 400,
                                                      'hardware_revision': 5}))
     return motion

@@ -9,55 +9,14 @@ import copy
 import json
 import logging
 import math
-from .m300_native_service import lock_command, unlock_command
+from .m300_native_service import (lock_command, unlock_command,
+                                  native_temperature_ready, require_idle_print)
+from .m300_native_probe import BoundedProbeToolhead, boundary_z
+from .m300_stock_geometry import stock_xy_offsets
 from .m300_calibration_state import CalibrationState, CalibrationError, POINTS, finite
 
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
-
-
-class _ProbeToolhead:
-    """Private native HomingMove capability, never installed as the toolhead.
-
-Only its retained instance can submit the one bounded drip and reconcile the
-resulting real stepper position. Public toolhead entry points stay locked even
-when the native homing call yields to the reactor.
-"""
-    def __init__(self, owner, start, target, speed):
-        self.owner, self.token, self.phase = owner, owner.machine.token, owner.machine.phase_id
-        self.start, self.target, self.speed = list(start), list(target), speed
-        self.drip_used = False
-
-    def __getattr__(self, name):
-        return getattr(self.owner.toolhead, name)
-
-    def _valid(self):
-        self.owner.machine.check(self.token, self.phase)
-        self.owner._guard(require_temperature=True)
-
-    def drip_move(self, position, speed, completion):
-        self._valid()
-        if self.drip_used or list(position) != self.target or speed != self.speed:
-            raise self.owner._error('native probe attempted an unexpected move')
-        self.drip_used = True
-        return self.owner._native_drip(list(position), speed, completion)
-
-    def set_position(self, position, *args, **kwargs):
-        self._valid()
-        p = list(position)
-        if (args or kwargs or len(p) != 4
-                or not all(isinstance(v, (int, float)) and not isinstance(v, bool)
-                           and math.isfinite(v) for v in p)
-                # Native stepper/C trapq reconstruction can differ from the
-                # commanded unchanged axes by floating-point roundoff. Use
-                # the same tiny tolerance as the existing bounded Z check;
-                # this never permits another move or an unbounded reset.
-                or any(abs(p[i]-self.start[i]) > 1.e-6 for i in (0, 1, 3))
-                or not min(self.start[2], self.target[2])-1.e-6 <= p[2] <= max(self.start[2], self.target[2])+1.e-6):
-            raise self.owner._error('native probe returned an invalid position')
-        if getattr(self.owner, 'workflow', 'M04_OBSERVATION') == 'M07_STOCK':
-            p[2] = self.owner._native_boundary_z(p[2])
-        return self.owner._native_set_position(p)
 
 
 class M300Calibration:
@@ -123,6 +82,7 @@ class M300Calibration:
         # These candidates are audited coordinates, not a measured usable bed.
         # Explicit qualification is required before they can actuate the plate.
         self.points = tuple(POINTS)
+        self.xy_offset = (0, 0)
         self.ready = self.installed = self._executing = self._native_active = False
         self._cleanup_pending = False
         self._cancel_generation = 0
@@ -247,6 +207,8 @@ class M300Calibration:
                           stock_coefficient=self.machine.get_status()['stock_coefficient'])
         if self.native_mode:
             result['probe_search_margin'] = self.search_margin
+            result['nominal_points'] = [list(p) for p in POINTS]
+            result['sampling_xy_offset'] = list(self.xy_offset)
         return result
 
     def _connect(self):
@@ -369,6 +331,8 @@ class M300Calibration:
 
     def _peer_guard(self):
         now = self.reactor.monotonic()
+        if self.native_mode:
+            require_idle_print(self.printer,now)
         try:
             status = self.job.get_status(now)
         except Exception as exc:
@@ -411,7 +375,9 @@ class M300Calibration:
             if (readings['hotend'][1] != self._expected_hotend
                     or readings['bed'][1] != 0.):
                 raise self._error('temperature target changed outside calibration')
-            if require_temperature and abs(readings['hotend'][0]-self.target) > self.tolerance:
+            ready = (native_temperature_ready(*readings['hotend'],self.target,self.hotend)
+                     if self.native_mode else abs(readings['hotend'][0]-self.target) <= self.tolerance)
+            if require_temperature and not ready:
                 raise self._error('nozzle temperature left calibration band')
             if now-self.machine.started > self.total_timeout:
                 raise self._error('total calibration deadline exceeded')
@@ -440,6 +406,8 @@ class M300Calibration:
                 raise self._error('busy or latched fault')
             if self.native_mode:
                 self._homed_once = False
+                self.xy_offset = stock_xy_offsets(int(self.reactor.monotonic()*1000) & 0xffffffff)
+                self.points = tuple((x+self.xy_offset[0], y+self.xy_offset[1]) for x,y in POINTS)
             self._bind()
             self._guard()
             self._geometry()
@@ -609,7 +577,7 @@ class M300Calibration:
         self._cal_homing = self._executing = True
         self._present()
         try:
-            self.printer.lookup_object('m300_motion').home(axes='xyz')
+            self.printer.lookup_object('m300_motion').home_oem(self.points[2])
         finally:
             self._cal_homing = self._executing = False
         self._guard()
@@ -652,21 +620,17 @@ class M300Calibration:
         successive samples. Leave global bounds strict; only this retained
         native capability may normalize a value within eight floating ULPs.
         """
-        value = finite(value, 'native Z')
         minimum, maximum = self.job._axis_bounds()
-        lo, hi = minimum[2], maximum[2]
-        epsilon = 8. * math.ulp(max(1., abs(lo), abs(hi)))
-        if lo-epsilon <= value < lo:
-            return lo
-        if hi < value <= hi+epsilon:
-            return hi
-        return finite(value, 'native Z', lo, hi)
+        return boundary_z(value, (minimum[2],maximum[2]), self._error)
 
     def _native_contact(self, target, speed, triggered):
         from . import homing
         token, phase = self.machine.token, self.machine.phase_id
-        start = self.toolhead.get_position()
-        proxy = _ProbeToolhead(self, start, target, speed)
+        def check():
+            self.machine.check(token,phase)
+            self._guard(require_temperature=True)
+        proxy = BoundedProbeToolhead(self.toolhead,target,speed,check,
+            self._native_drip,self._native_set_position,self._native_boundary_z,self._error)
         native = homing.HomingMove(self.printer, [(self.endstop, 'm300_contact')], toolhead=proxy)
         if not native.get_mcu_endstops():
             raise self._error('native PC7 probe has no Z stepper')
@@ -762,7 +726,8 @@ class M300Calibration:
             self._guard(require_temperature=self.machine.state in ('PROBING', 'ADJUST', 'WAIT_RETRY'))
             if self.machine.state == 'HEATING':
                 temperature = self.job._temperatures(eventtime)['hotend'][0]
-                if abs(temperature-self.target) <= self.tolerance:
+                if (native_temperature_ready(temperature,self._expected_hotend,self.target,self.hotend)
+                        if self.native_mode else abs(temperature-self.target) <= self.tolerance):
                     if self._stable_since is None:
                         self._stable_since = eventtime
                     if eventtime-self._stable_since >= self.stable_time:
@@ -839,12 +804,13 @@ class M300Calibration:
                       can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
                       can_cancel=self.ready and self.machine.active)
         if self.native_mode:
-            result.update(revision='0.13.16.4.1-OEM-TEMPERATURES',
+            result.update(revision='0.13.16.6-EN-OEM-VALIDATED',
                           procedure_temperature=self.procedure_temperature,
                           probe_search_margin=self.search_margin,
                           measurement_frame_offset=self._frame_offset,
                           automatic_homing=True, legacy_job_enabled=self.job.workflow_qualified)
             result['measurement_stage'] = self.machine.stage
+            result['sampling_xy_offset'] = list(self.xy_offset)
             if self._cal_homing:
                 result['state'] = result['prompt'] = 'HOMING'
         return result

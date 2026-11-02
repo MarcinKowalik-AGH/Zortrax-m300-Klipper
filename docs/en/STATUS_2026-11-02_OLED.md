@@ -81,8 +81,8 @@ These photographs independently confirm working OLED rendering, the first status
 
 ### Related documentation
 
-- [Main README](../../../README.md)
-- [Features and acceptance](../../en/FEATURES.md)
+- [Main README](../../README.md)
+- [Features and acceptance](FEATURES.md)
 - [Connection lifecycle](CONNECTION.md)
 - [M07 leveling](LEVELING.md)
 

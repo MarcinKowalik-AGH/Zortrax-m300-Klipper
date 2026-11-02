@@ -1,88 +1,108 @@
-# Menu 2. Maintenance and 3. Material — host R16.5
+# Maintenance and Material — R16.6
 
-[Polski](../pl/MAINTENANCE_MATERIAL.md) · [Install](INSTALL.md) · [Autocalibration](LEVELING.md)
+[Installation](INSTALL.md) · [M07 leveling](LEVELING.md) · [Validation](VALIDATION_R16_6.md)
 
-Open **Zortrax M300** on the OLED. Its catalog order is Models, Maintenance,
-Material, Settings, Information. Maintenance has exactly Back, Autocalibration,
-Heat the extruder, Move the platform up, Move the platform down. Material has
-Back, Unload the material, Load the material. Back follows the menu history;
-the other native controls remain under Klipper.
+All current printer UI, Fluidd prompts, macros and release documentation use
+English. The retained multilingual firmware tables and reference frames are
+audit evidence, not runtime language choices. Existing NVM settings remain
+readable; an old language selection cannot change the English interface.
 
-| OLED item | Fluidd ZORTRAX M300 macro | Execution |
-|---|---|---|
-| Autocalibration | `ZORTRAX_LEVEL` | M07 at 260°C with shared confirmations and three-screw instructions |
-| Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready at 258°C; confirm to switch heater off |
-| Move the platform up | `ZORTRAX_PLATFORM_UP DISTANCE=1 SPEED=1` | Native negative Z, platform toward nozzle |
-| Move the platform down | `ZORTRAX_PLATFORM_DOWN DISTANCE=1 SPEED=1` | Native positive Z, platform away from nozzle |
-| Unload the material | `ZORTRAX_UNLOAD` | 240°C → retract → confirm removal → heater off |
-| Load the material | `ZORTRAX_LOAD` | 240°C → confirm insertion → feed → heater off |
+## Menu and macro bindings
 
-After installation and Ready run `python3 setup_fluidd.py --apply` and refresh
-Fluidd. Existing macros are reassigned while their visibility, colors and other
-user preferences are preserved. `TEST_ZORTRAX_LEVEL` remains a test alias.
+Open Zortrax M300 on the OLED. Its catalog order is Models, Maintenance,
+Material, Settings, Information. Back follows the menu history.
 
-## Controls
+| Menu | Item | Macro | Behavior |
+|---|---|---|---|
+| Maintenance | Back | Navigation | Return to parent |
+| Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
+| Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
+| Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
+| Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
+| Material | Back | Navigation | Return to parent |
+| Material | Unload the material | `ZORTRAX_UNLOAD` | 240°C → confirm removal → retract 110 mm → heater off |
+| Material | Load the material | `ZORTRAX_LOAD` | 240°C → insert and confirm → feed 130 mm → heater off |
+| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Retract 110 mm → insert and confirm → feed 150 mm; remain paused |
 
-Follow the [M07 audit](LEVELING.md) for Autocalibration. Heat/Load/Unload open
-the same modal OLED dialog when started by a macro or console. A short press
-confirms the visible phase; a long press cancels. Fluidd acts on that same
-phase. Expired or duplicate confirmations are rejected. Completion returns
-Heat to Maintenance and material operations to Material. Load adds no purge
-confirmation after its fixed feed.
+The two OEM submenus contain exactly the requested items. Change belongs to
+the paused-print context, not the idle Material submenu. The seven procedure
+macros are assigned to Fluidd's ZORTRAX M300 group by `setup_fluidd.py --apply`.
+The separate `TEST_ZORTRAX_LEVEL` alias remains in TEST M300. Existing macro
+visibility, colors and unrelated Fluidd preferences are preserved.
 
-Select Move the platform up/down and **hold the button**. Releasing stops
-issuing further moves. The gesture uses the button, not encoder rotation;
-its long event is consumed as part of the hold. A genuinely homed Z is
-required; no automatic or fabricated home is added. The OLED requires an
-acknowledged selected row and a fresh press after release. Leaving the view
-or losing fresh panel input for 0.75 s ends the hold. At most one native
-quantum of 0.1 mm can remain queued. Fluidd macros execute a finite DISTANCE,
-default 1 mm, at SPEED in mm/s. Both paths use the same native Z owner and
-existing axis bounds and `max_jog_distance`/`jog_speed` configuration.
+## Operation
 
-Load/Unload move E only and do not require XYZ homing. Existing configured
-lengths and speeds are retained: defaults Load 130 mm, Unload 110 mm, 2 mm/s,
-up to 5 mm per acknowledged segment. Cancel cuts heating and drains the
-already accepted segment. M112 retains native behavior. Services require an
-idle native print; they do not implement material change in a paused native
-print. The legacy M600/M02 path is outside this change. PID, calibrated E,
-sensors, axis geometry and MCU control retain their existing owners.
+A short press confirms the currently acknowledged dialog. A long press
+cancels it. Fluidd buttons carry that same phase identity. A stale or repeated
+confirmation cannot advance a new phase. Starting Heat/Load/Unload/Change from
+a macro or console opens the same OLED dialog as starting from the menu.
+Completion closes the Fluidd prompt and returns to Maintenance, Material or
+the paused native Print status, as appropriate.
 
-During a procedure external movement, coordinate changes and positive heater
-targets are rejected. Heater-off cancels the service. Completion restores
-the original native command functions, material parser state and idle timeout.
-Restart never replays interrupted motion. Enabling the software profile is
-separate from measuring hardware: `hardware_qualified=false` remains accurate.
+On the OLED, select a platform direction and hold the button. Releasing it,
+leaving the visible row or losing fresh panel input for 0.75 seconds stops
+issuing new moves. A release followed by a fresh press on an acknowledged
+row is required. At most one 0.1 mm native quantum remains queued. A long
+button event is part of this hold, not navigation. Z must actually be homed.
 
-## Original evidence and parity boundaries
+Fluidd platform macros execute a finite distance, default 1 mm:
 
-Source: supplied M300 Classic 1.3.1 application, SHA-256
+```gcode
+ZORTRAX_PLATFORM_UP DISTANCE=1 SPEED=1
+ZORTRAX_PLATFORM_DOWN DISTANCE=1 SPEED=1
+```
+
+Both routes share the native maintenance owner, actual axis limits and the
+existing bounded jog configuration. They do not fabricate homing or use
+FORCE_MOVE. Ordinary XYZ jogs remain native Klipper controls.
+
+Load and Unload move E only; XYZ need not be homed. Native extrusion and
+heater checks remain active. Configured lengths, speeds and E calibration
+are preserved; defaults are 130/110 mm at 2 mm/s in up to 5 mm acknowledged
+segments. Cancel cuts heat and drains the already accepted segment. M112
+retains immediate native shutdown behavior.
+
+For native Change, first pause the print. The service verifies the real
+pause owner, PAUSE_STATE and file position. It preserves the pause snapshot,
+XYZ and logical E; Resume is blocked while transport owns the printer.
+Change uses the paused print's positive target, or 240°C if that target is
+cold, unless TEMP is explicitly supplied. Successful completion restores the
+previous paused target and leaves the print paused. The operator separately
+chooses Resume. Cancel leaves the print paused with heating off. Cancellation
+or replacement of the paused parent revokes the material service.
+
+## Source evidence and corrections
+
+The supplied M300 Classic 1.3.1 application has SHA-256
 `11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75`.
-RAM nodes: Maintenance `0x20000680`, Material `0x200007b0`, Heat `0x200006c0`,
-Up `0x20000700`, Down `0x20000720`, Unload `0x200007d0`, Load `0x200007f0`.
-Hold dispatcher `0x08015d1c`, directions `0x08015354`/`0x08015324`, heating
-`0x08015ed0`, Load `0x08014f24`, Unload `0x08015004`.
+The original control-flow model was checked against 27,982 instruction
+comments and executed with declared hardware/UI boundaries.
 
-| Phase | OEM text ID | Dialog descriptor | Sprite descriptor |
-|---|---:|---|---|
-| Heating | 123 | Direct table call `0x0801b96c` | `0x0801c2b8` |
-| Heating done | 16 | `0x08021d38` | `0x0801c024` |
-| Retracting | 19 | `0x08021eac` | `0x0801cfb0` |
-| Insert and press button | 20 | `0x08021eb8` | `0x0801d0b8` |
-| Removal confirmation | 21 | `0x08021ec4` | `0x0801cfb0` |
-| Feeding | 22 | `0x08021ea0` | `0x0801d0b8` |
+| Routine | Source address | Verified result |
+|---|---|---|
+| Load | `0x08014f24` | Heat 240/238, text 20 confirmation, text 22 feed, 124800 requests |
+| Unload callback / helper | `0x08015004` / `0x08019680` | Heat 240/238, text 21 confirmation **before** text 19 retraction, 105600 requests |
+| Change during pause | `0x08015384` | Text 19 retract, text 20 insertion confirmation, text 22 load; 105600/144000 requests; return to pause menu |
+| Heat the extruder | `0x08015ed0` | 260/258, text 16 completion, heater off and Maintenance return |
+| Hold platform controls | `0x08015d1c` | Button hold chooses the up/down motor routines |
 
-Literal text, line breaks, 13-pixel glyphs and sprites come from the binary.
-Fluidd uses the same description as the OLED renderer without state/session
-metadata in OEM dialog text. Port cancellation and fault messages are additions.
+With the nominal OEM E scale of 960 units/mm, the transport counters give
+130, 110 and 150 mm. These are nominal program values, not independent
+physical length measurements. The port retains the printer's calibrated E.
 
-The port uses native motion and thermal control rather than copying the old
-TIM/GPIO motor loops. Physical feed length and hold speed require printer
-acceptance; a timer-call count alone is not a physical calibration.
+R16.5's post-retraction Unload confirmation was incorrect. R16.6 removes that
+extra WAIT_REMOVE state and restores the original confirmation-before-retract
+order. Native Change now uses the actual paused Klipper print rather than
+requiring the disabled legacy M02 print engine.
 
-Software validation: 203 host tests, 9 repository contracts, 13 actual Klippy
-FILEOUTPUT processes, 110 complete frames in five languages matching the
-recovered original renderer byte for byte. Added tests execute the pinned
-G-code dispatcher and GCodeMove, full material sessions and actual OLED dispatch,
-ownership, cancellation and restoration. Heater, clock and physical move
-boundaries are modeled. Orange Pi/printer acceptance remains outstanding.
+## Deliberate port differences
+
+Successful original Unload returns to Material without clearing its hotend
+target. The port explicitly turns heating off. Material timeouts, stable
+readiness, bounded segments, token revocation and restoring parser/idle state
+are port protections. They are not presented as literal firmware behavior.
+
+No raw TIM/GPIO motor loop is copied. Native planners, heater limits, sensors,
+MCU fault supervision and factory Z400/Z800 selection remain authoritative.
+Physical feed length, hold response and full procedure acceptance still need
+a supervised printer test. See [validation and acceptance](VALIDATION_R16_6.md).

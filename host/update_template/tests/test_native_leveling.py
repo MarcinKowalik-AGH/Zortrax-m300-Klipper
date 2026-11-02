@@ -86,7 +86,7 @@ class Harness:
             _temperatures=lambda now:{'hotend':(self.hotend.temperature,self.hotend.target),
                                       'bed':(self.bed.temperature,self.bed.target)},
             get_status=lambda now:{'state':'IDLE','busy':False})
-        self.motion = NS(get_status=lambda now:{'state':'COMPLETE','busy':False},home=self.home)
+        self.motion = NS(home_oem=lambda xy:self.motion.home('xyz'),get_status=lambda now:{'state':'COMPLETE','busy':False},home=self.home)
         self.objects = {'m300_motion':self.motion,'m300_job':self.job,
                         'm300_procedures':NS(timer='procedures')}
         self.printer = NS(command_error=RuntimeError, is_shutdown=lambda:self.shutdown,
@@ -100,6 +100,7 @@ class Harness:
         c.hotend=self.hotend;c.bed=self.bed;c.toolhead=self.toolhead;c.endstop=self.endstop;c.nvm=self.nvm
         c.machine=LevelingState(samples=3,sample_spread=.05,directions={k:'CCW' for k in
             ('rear_left','rear_right','front')},stock_steps_per_mm=scale)
+        c.xy_offset=(0,0)
         c.points=((269.,44.),(35.,44.),(150.,158.),(269.,275.),(35.,275.))
         c.safe_z=5.;c.search_margin=margin;c.approach_distance=5.+margin;c.release_distance=1.
         c.screw_pitch=c.center_tolerance=None;c.directions=c.machine.directions
@@ -251,7 +252,7 @@ class NativeLevelingTests(unittest.TestCase):
         self.assertEqual(h.c.machine.state,'WAIT_TIGHTEN')
 
     def test_screw_instruction_waits_for_explicit_confirmation(self):
-        h=Harness();h.surface=lambda xy:.4 if xy in ((269.,275.),(35.,275.)) else 0.
+        h=Harness();h.surface=lambda xy:.4 if xy in (h.c.points[3],h.c.points[4]) else 0.
         h.start();h.until('ADJUST');instruction=copy.deepcopy(h.c.machine.instruction)
         for _ in range(10):h.tick()
         self.assertEqual(h.c.machine.instruction,instruction)
@@ -283,7 +284,7 @@ class NativeLevelingTests(unittest.TestCase):
         self.assertFalse(any(e[0]=='contact' for e in h.events))
 
     def test_leveling_instruction_precedes_buttons_on_physical_panel(self):
-        h=Harness();h.surface=lambda xy:.4 if xy in ((269.,275.),(35.,275.)) else 0.
+        h=Harness();h.surface=lambda xy:.4 if xy in (h.c.points[3],h.c.points[4]) else 0.
         h.start();h.until('ADJUST')
         status=h.c.get_status(h.now)
         view={'owner':'m300_calibration','title':'Platform leveling','state':'ADJUST',

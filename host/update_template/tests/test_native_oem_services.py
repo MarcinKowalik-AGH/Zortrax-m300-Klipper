@@ -11,6 +11,7 @@ import unittest
 
 import test_display
 from tests.reference import native_gcode, native_gcode_move
+from tests.reference.native_pause_resume import PauseResume
 from test_macro_dispatch import templates, ENV
 from test_native_menu import fixture as menu_fixture
 from payload.m300_filament import M300Filament
@@ -51,6 +52,7 @@ class Harness:
         self.homed=''
         self.busy_until=0.
         self.print_state='standby'
+        self.file_position=123
         self.language='EN'
         self.reactor=NS(monotonic=lambda:self.now,NOW=0.,NEVER=1.e30,
             register_timer=lambda cb:cb,update_timer=lambda *args:self.events.append(('timer',args)),
@@ -87,17 +89,26 @@ class Harness:
             _bind_resources=lambda:None,_queue_drained=lambda now:now>=self.busy_until,
             _set_idle=lambda value:setattr(self.idle,'idle_timeout',value),
             _axis_bounds=lambda:([0.,0.,0.],[305.,305.,315.]),
+            _homed=lambda:set(self.homed)>=set('xyz'),
             _temperatures=lambda now:dict(hotend=self.hotend.get_temp(now),bed=self.bed.get_temp(now)),
             _temperature=lambda name,heater,now:heater.get_temp(now),
             m04_service_busy=lambda:any(self.objects[name].is_busy() for name in ('m300_maintenance',)
                                        if name in self.objects),
             get_status=lambda now:dict(state='IDLE',busy=False))
         self.objects.update(gcode=self.gcode,toolhead=self.toolhead,m300_job=self.job,
-            m300_mcu=self.board,print_stats=NS(get_status=lambda now:dict(state=self.print_state)),
+            m300_mcu=self.board,print_stats=NS(get_status=lambda now:dict(state=self.print_state,filename='fixture.gcode')),
+            webhooks=NS(register_endpoint=lambda *args:None),
+            virtual_sdcard=NS(is_active=lambda:self.print_state=='printing',
+                get_status=lambda now:dict(file_path='fixture.gcode',file_position=self.file_position),
+                do_pause=lambda:self.native_print_state('paused'),
+                do_resume=lambda:self.native_print_state('printing'),
+                do_cancel=lambda:self.native_print_state('cancelled')),
             m300_menu_ui=NS(language=lambda:self.language))
         self.gmove=native_gcode_move.GCodeMove(self.config)
         self.job.gcode_move=self.gmove
         self.objects['gcode_move']=self.gmove
+        self.pause=PauseResume(self.config)
+        self.objects['pause_resume']=self.pause
         self.f=M300Filament(self.config)
         self.objects['m300_filament']=self.f
         self.m=M300NativeMaintenance(self.config)
@@ -106,7 +117,7 @@ class Harness:
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
             if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP',
-                        'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD'):
+                        'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_CHANGE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))
@@ -118,6 +129,9 @@ class Harness:
 
     def emit(self,event,*args):
         for cb in self.handlers[event]:cb(*args)
+    def native_print_state(self,state):
+        self.print_state=state
+        self.events.append(('native_print',state))
     def stop(self,reason):
         self.shutdown=True
         self.events.append(('shutdown',reason))
@@ -185,12 +199,14 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertNotIn('WAIT_PURGE',[e['to'] for e in h.f.machine.snapshot()['history']][-2:])
         h.assert_restored(self)
 
-    def test_unload_retracts_before_asking_for_removal_then_turns_heat_off(self):
-        h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_REMOVE')
-        self.assertEqual(h.position,[150.,158.,5.,-93.])
+    def test_unload_confirms_before_retracting_then_turns_heat_off(self):
+        h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
+        self.assertEqual(h.position,[150.,158.,5.,17.])
+        self.assertFalse(any(e[0]=='move' for e in h.events))
         self.assertEqual(h.hotend.target,240.)
         self.assertTrue(h.f.get_status(h.now)['can_confirm'])
         view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
+        self.assertEqual(h.position,[150.,158.,5.,-93.])
         self.assertEqual(h.hotend.target,0.)
         h.assert_restored(self)
 
@@ -249,7 +265,7 @@ class NativeMaterialTests(unittest.TestCase):
         h=Harness()
         for operation in ('LOAD','UNLOAD'):
             h.run('ZORTRAX_'+operation)
-            h.heat(h.f,'WAIT_INSERT' if operation=='LOAD' else 'WAIT_REMOVE')
+            h.heat(h.f,'WAIT_INSERT' if operation=='LOAD' else 'WAIT_UNLOAD')
             h.f.confirm(h.f.machine.token,h.f.machine.phase_id)
             h.until(h.f,'COMPLETE');h.assert_restored(self)
         self.assertEqual(h.position[3],37.)
@@ -357,11 +373,11 @@ class OEMMenuIntegrationTests(unittest.TestCase):
         self.assertFalse(after['stored'][0]['visible'])
         self.assertEqual(merge_groups(after,names)[0],after)
 
-    def test_all_native_oem_dialogs_have_identical_fluidd_and_oled_text_in_five_languages(self):
+    def test_native_oem_dialogs_use_shared_english_text_for_every_legacy_language(self):
         for language in ('EN','PL','FR','DE','ES'):
             for owner,operation,state in (('m300_maintenance','HOTEND','WAIT_CONFIRM'),
                     ('m300_filament','LOAD','WAIT_INSERT'),('m300_filament','LOAD','LOADING'),
-                    ('m300_filament','UNLOAD','UNLOADING'),('m300_filament','UNLOAD','WAIT_REMOVE')):
+                    ('m300_filament','UNLOAD','UNLOADING'),('m300_filament','UNLOAD','WAIT_UNLOAD')):
                 h=Harness();h.language=language
                 status=dict(state=state,operation=operation,native_control=True,busy=True,ready=True,
                             session_token=3,phase_id=4,can_confirm=True,can_cancel=True)
@@ -469,7 +485,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
     def test_external_heat_load_and_unload_share_modal_oled_and_return_to_submenu(self):
         for command,owner,waiting,page in (('ZORTRAX_HEAT','m','WAIT_CONFIRM','maintenance'),
                    ('ZORTRAX_LOAD','f','WAIT_INSERT','material'),
-                   ('ZORTRAX_UNLOAD','f','WAIT_REMOVE','material')):
+                   ('ZORTRAX_UNLOAD','f','WAIT_UNLOAD','material')):
             h=Harness();o,menu,ui,display,packet=physical_panel(h)
             h.run(command);h.p._tick(h.now)
             self.assertEqual(menu.page,'procedure')

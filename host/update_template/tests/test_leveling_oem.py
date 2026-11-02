@@ -22,7 +22,7 @@ from payload.m300_leveling_state import (LevelingState, stock_screw_turns,
     stock_front_delta, stock_front_accepted, stock_rear_accepted)
 
 
-def presenter(h, language='PL'):
+def presenter(h, language='EN'):
     p=M300Procedures.__new__(M300Procedures)
     p.printer=h.printer;p.reactor=h.reactor;p.timer='present';p.live=True
     p.epoch='modeled';p.revision=0
@@ -135,7 +135,7 @@ class OEMLevelingTests(unittest.TestCase):
         h.c.machine.terminate('NO_RELEASE: PC7 remains active',h.now,fault=True)
         p.invalidate()
         self.assertFalse(p.live)
-        self.assertIn('// action:prompt_text Błąd #042 Niepowodzenie',p.lines)
+        self.assertIn('// action:prompt_text Error #042 Pad probing failed.',p.lines)
         self.assertFalse(any(line.startswith('// action:prompt_button ') for line in p.lines))
         self.assertEqual(p.lines[-1],'// action:prompt_show')
 

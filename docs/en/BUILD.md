@@ -1,7 +1,5 @@
 # Build and develop
 
-[Polski](../pl/BUILD.md)
-
 ## GitHub Actions
 
 1. Commit changes to main, or run the workflow manually from Actions.

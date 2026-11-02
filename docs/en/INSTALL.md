@@ -1,88 +1,92 @@
-# Install the R16 test iteration
+# Install the R16.6 test release
 
-[Polski](../pl/INSTALL.md) · [Features and acceptance](FEATURES.md)
+[Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](VALIDATION_R16_6.md)
 
-For M300 Classic with the installed native R15.3/R15.5/R15.6/R15.7 host and the M300
-bootloader. R16 needs MCU R14.5 for factory Z detection; an already installed
-R14.5 does not need re-flashing. The complete Actions artifact also contains
-a fresh compiled R14.5 application for older installations.
+This host update is for M300 Classic with the native Klipper port. It accepts
+recognized R15.3 and subsequent published baselines, including R16.5. Unknown
+local runtime edits are refused. MCU R14.5 is required for factory Z detection;
+an already installed R14.5 **does not need flashing** for this update.
 
-Extract the artifact and copy its host directory from the Mac:
+## Copy and verify
 
-~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R16_5_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+Extract M300_HOST_R16_6_NORMAL_UI.zip into Downloads on the Mac. Run:
+
+```bash
+scp -r "$HOME/Downloads/M300_HOST_R16_6_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_5_NORMAL_UI
+cd ~/M300_HOST_R16_6_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
-python3 install.py
-~~~
+python3 install.py \
+  --root "$HOME/m300-test01-0.13.2/klipper" \
+  --config "$HOME/printer_data/config/printer.cfg"
+```
 
-Expected: 203 tests OK and an R16 plan. Inspect the listed files: this update
-migrates the commissioning motion section to native mode, sets 180C Z homing,
-2 us STEP and the 300 mm/s XY profile, and adds three macro includes. Saved PID,
-calibrated E and deliberate geometry outside the old Z30 envelope are retained.
-Unknown locally edited runtime modules are refused; no configuration is written
-by the plan. Valid existing display settings remain.
+Expect package PASS, **233 tests OK** and PLAN_M300_R16_6. The plan is read
+only. Inspect its file list before applying. Calibrated E, both saved PID
+blocks, sensor includes, deliberate motion limits and usable geometry remain.
+The HW05 factory profile still selects effective Z400 without rewriting the
+factory record. Old saved language values remain readable; the UI uses English.
 
-Between printer operations:
+## Apply while the printer is idle
 
-~~~bash
+```bash
 sudo systemctl stop klipper.service
-python3 install.py --apply
+python3 install.py \
+  --root "$HOME/m300-test01-0.13.2/klipper" \
+  --config "$HOME/printer_data/config/printer.cfg" \
+  --apply
 sudo systemctl start klipper.service
-~~~
+```
 
-Keep the printed RECEIPT.json path. If the installed MCU is older than R14.5,
-install MCU/M300APP.M3B through the already verified M300 bootloader/SD procedure
-while Klipper is stopped, before starting this host. The application is based
-at 0x08008000; factory records and the bootloader are not replaced. The matching
-SD application archive is MCU/M300_R14_5_SD.zip.
+Expect INSTALLED_M300_R16_6 and retain the exact RECEIPT.json path. Installation
+does not run a motion/heating test. After Klipper reports Ready, update Fluidd:
 
-After Klipper is Ready, set the Fluidd categories:
-
-~~~bash
+```bash
 python3 setup_fluidd.py
 python3 setup_fluidd.py --apply
-~~~
+```
 
-Refresh the browser. Categories are Klipper, ZORTRAX M300 and TEST M300. The
-script only uses Moonraker's Fluidd database API and preserves unrelated UI
-settings; its returned backup can be restored with
-`python3 setup_fluidd.py --rollback /EXACT/BACKUP.json --apply`.
+Refresh Fluidd. The seven procedure macros, including ZORTRAX_CHANGE, belong
+to ZORTRAX M300; test aliases remain in TEST M300. Existing unrelated groups,
+visibility, colors and preferences are retained. The returned Fluidd backup
+can be restored with `python3 setup_fluidd.py --rollback /EXACT/BACKUP.json --apply`.
 
-In the console inspect STATUS, ZORTRAX_HARDWARE_STATUS, ZORTRAX_MOTION_STATUS,
-ZORTRAX_DISPLAY_STATUS and ZORTRAX_NATIVE_STATUS. Check native mode, the actual
-factory Z scale, target 180C and 2 us config values. Use the physical acceptance
-sequence in FEATURES.md. High-speed/full-load timing remains a printer test.
-No test macro runs automatically during installation.
+## Read-only checks and first tests
 
-Host/config rollback: stop Klipper, run
-`python3 install.py --rollback /EXACT/PATH/RECEIPT.json`, then start it again.
-The receipt restores exact prior files and protects subsequent edits. It does
-not change the MCU. HOST_SOURCE is a matching source snapshot, not another
-installer. SHA256SUMS and BUILD_PROVENANCE.json identify the exact Actions build.
+In the Fluidd console run:
 
-R16.5 adds direct migration from the known native R15.3 host, including
-installations without the display extension. The real API check and hash-based
-upgrade are exercised using archived R15.3 modules. Runtime/MCU behaviour is
-unchanged from R16. Expected installer result: INSTALLED_M300_R16_5.
+```gcode
+STATUS
+ZORTRAX_HARDWARE_STATUS
+ZORTRAX_MOTION_STATUS
+ZORTRAX_CALIBRATION_STATUS
+ZORTRAX_FILAMENT_STATUS
+ZORTRAX_LINK_STATUS
+QUERY_PROBE
+```
 
-If the previous installer printed `REFUSED: R15.5 motion and M11 presentation support required`,
-R16 was not installed. A successful setup_fluidd.py only changes macro groups.
-R16.5 removes that migration obstacle for the recognized R15.3 baseline. Before motion,
-confirm `INSTALLED_M300_R16_5` and `ZORTRAX_MOTION_STATUS` reporting
-`normal_control=true` and `z_home_hotend_target_c=180`. `G28 X Y` does not heat;
-`G28 Z` waits for the native heater check before moving to contact.
+Confirm Ready, the real HW05/Z400 identity, normal native control, the R16.6
+motion/calibration revisions and an open PC7 contact with physical clearance.
+The link lifecycle revision remains 0.13.16.2-LIFECYCLE-RECONNECT; this is normal.
+Targets are calibration/Heat 260°C, Load/Unload 240°C and ordinary Z home at
+least 180°C. A hotter pre-existing target during ordinary homing is retained.
 
-R16.5 also updates m300_lifecycle.py. After installation, ZORTRAX_LINK_STATUS
-should report 0.13.16.2-LIFECYCLE-RECONNECT. Host/service reboot gains one recovery
-attempt for an old session or heartbeat latch. Acceptance and explicit-recovery
-cases are described in [Connection lifecycle](CONNECTION.md).
+Follow the supervised sequence in [the validation report](VALIDATION_R16_6.md).
+The first procedure checks are Heat and bounded platform movement, then
+Load/Unload, ordinary Z reference and Autocalibration. Change requires an
+already paused native print. Do not treat generic PROBE_ACCURACY as the OEM
+wizard or a substitute for its owned measurement frame and release checks.
 
-[M07 leveling in R16.5 — start and acceptance](LEVELING.md)
+## Rollback and full artifact
 
-R16.5 restores stock procedure targets: calibration/leveling 260°C and Load/Unload 240°C. Migration updates existing R16.3/R16.4 sections and macro defaults. Ordinary G28 Z retains its separate 180°C setting. Manual heating, PID and M600 paused-print target selection retain their existing behavior. Both calibration and filament status expose procedure_temperature.
+Stop Klipper, run `python3 install.py --rollback /EXACT/PATH/RECEIPT.json`, then
+start Klipper again. The receipt restores exact prior host/config bytes and
+protects later edits. It does not change MCU firmware.
 
-R16.5 implements the OEM Maintenance and Material menus and their six Fluidd
-macros. See [controls, source evidence and acceptance](MAINTENANCE_MATERIAL.md).
+The full Actions artifact also contains a newly compiled matching R14.5
+application, SHA256SUMS, BUILD_PROVENANCE.json, software reports and HOST_SOURCE.
+HOST_SOURCE is a source snapshot, not a second installer. For installations
+older than MCU R14.5, use the previously verified M300 SD/bootloader procedure
+with MCU/M300APP.M3B or MCU/M300_R14_5_SD.zip while Klipper is stopped. The
+application starts at 0x08008000; no bootloader or factory record is supplied.

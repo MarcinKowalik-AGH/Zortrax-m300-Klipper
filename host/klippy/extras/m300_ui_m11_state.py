@@ -10,7 +10,7 @@ import json
 import math
 import unicodedata
 
-LANGS = ('EN', 'PL', 'FR', 'DE', 'ES')
+LANGS = ('EN',)
 # All supported actions must be routed by m300_menu.select(), not by this
 # presentation-only state layer. Unknown actions fail closed in its audit.
 MENU_ACTION_KINDS = frozenset((

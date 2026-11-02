@@ -14,13 +14,13 @@ from numbers import Real
 
 MODES = frozenset({'LOAD', 'UNLOAD', 'CHANGE'})
 STATES = frozenset({'IDLE', 'WAIT_PAUSE', 'HEATING', 'REHEATING', 'WAIT_INSERT', 'LOADING',
-                    'WAIT_UNLOAD', 'WAIT_REMOVE', 'UNLOADING', 'WAIT_PURGE', 'PURGING',
+                    'WAIT_UNLOAD', 'UNLOADING', 'WAIT_PURGE', 'PURGING',
                     'COMPLETING', 'COMPLETE', 'CANCELLING', 'CANCELLED', 'FAULT'})
 TERMINAL_STATES = frozenset({'IDLE', 'COMPLETE', 'CANCELLED', 'FAULT'})
 ACTIVE_STATES = STATES - TERMINAL_STATES
 START_STATES = frozenset({'IDLE', 'COMPLETE', 'CANCELLED'})
 TRANSPORT_STATES = {'LOADING': 'load', 'UNLOADING': 'unload', 'PURGING': 'purge'}
-WAIT_STATES = frozenset({'WAIT_INSERT', 'WAIT_UNLOAD', 'WAIT_REMOVE', 'WAIT_PURGE'})
+WAIT_STATES = frozenset({'WAIT_INSERT', 'WAIT_UNLOAD', 'WAIT_PURGE'})
 PROFILE_FIELDS = frozenset({
     'load_mm', 'unload_mm', 'purge_mm', 'max_purge_mm', 'segment_mm',
     'load_speed', 'unload_speed', 'purge_speed',
@@ -370,21 +370,6 @@ class FilamentState:
         self._enter(target, event, now, reason, deadline)
         return True
 
-    def await_removal(self, token, now):
-        """Native OEM unload asks the operator after retraction, not before."""
-        if not self._current(token) or self._state != 'COMPLETING' or self._mode != 'UNLOAD':
-            raise FilamentStateError('Unload completion required before removal prompt')
-        now=self._time(now)
-        self._enter('WAIT_REMOVE','await_removal',now,None,
-                    _deadline(now,self._plan['profile']['confirm_timeout']))
-
-    def removed(self, token, now):
-        if not self._current(token) or self._state != 'WAIT_REMOVE':
-            raise FilamentStateError('Current removal confirmation required')
-        now=self._time(now)
-        self._enter('COMPLETING','removed',now,None,
-                    _deadline(now,self._plan['profile']['move_timeout']))
-
     def next_segment(self, token, now):
         if not self._current(token):
             return None
@@ -451,10 +436,14 @@ class FilamentState:
         self._enter('FAULT', 'fail', now, reason)
         return self._token
 
-    def snapshot(self):
+    def snapshot(self, include_plan=True):
+        # UI polling needs budgets, not a fresh copy of every future segment.
+        # Full snapshots retain their original independent-copy contract.
+        plan = self.plan if include_plan else {
+            'total_budget_mm': self._plan.get('total_budget_mm',0.)}
         return {'state': self._state, 'token': self._token, 'phase_id': self._phase_id,
                 'mode': self._mode, 'active': self.active, 'reason': self._reason,
-                'context': self.context, 'plan': self.plan, 'deadline': self.deadline,
+                'context': self.context, 'plan': plan, 'deadline': self.deadline,
                 'pending': self.pending, 'issued_mm': self.issued_mm,
                 'completed_mm': self.completed_mm, 'remaining_budget': self.remaining_budget,
                 'purge_requests': self._purge_requests,

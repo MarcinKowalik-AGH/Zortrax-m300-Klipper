@@ -114,6 +114,11 @@ def convert_text(text):
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(260)|float}\n\n')
+        elif section == 'gcode_macro ZORTRAX_CHANGE':
+            block = ('[gcode_macro ZORTRAX_CHANGE]\n'
+                     'description: Change material in a paused native print; explicit Resume\n'
+                     'gcode:\n    ZORTRAX_PROCEDURE_START OP=CHANGE '
+                     '{% if params.TEMP is defined %}TEMP={params.TEMP|float}{% endif %}\n\n')
         elif section in ('gcode_macro TEST_ZORTRAX_LEVEL', 'gcode_macro ZORTRAX_LOAD',
                          'gcode_macro ZORTRAX_UNLOAD'):
             # Existing wrappers live in included files on installed R16.x.

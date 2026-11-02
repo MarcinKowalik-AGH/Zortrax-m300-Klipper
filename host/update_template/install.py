@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16.5 native R15.3-compatible update, 180C homing and separate TEST UI."""
+"""Plan/apply/rollback M300 R16.6 native R15.3-compatible update, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -35,6 +35,7 @@ NAMES += ('m300_leveling_oem.py', 'm300_leveling_oem_131.json',
 NAMES += ('m300_filament.py', 'm300_filament_state.py')
 NAMES += ('m300_native_service.py', 'm300_maintenance.py',
           'm300_native_maintenance.py', 'm300_oem_procedure_ui.py')
+NAMES += ('m300_native_probe.py', 'm300_native_z.py', 'm300_stock_geometry.py', 'm300_nvm.py')
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
 
@@ -166,7 +167,7 @@ def plan(root, config):
     if not already_included(config, settings):
         additions.append('[include m300_display.cfg]\n')
     if additions:
-        addition = '\n# M300 R16.5 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 R16.6 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -295,8 +296,8 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R16_5' if changes else 'ALREADY_M300_R16_5',
-                  'host_update': 'R16.5',
+        result = {'status': 'PLAN_M300_R16_6' if changes else 'ALREADY_M300_R16_6',
+                  'host_update': 'R16.6',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
@@ -307,7 +308,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16_5'
+            result['status'] = 'INSTALLED_M300_R16_6'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

@@ -12,7 +12,7 @@ import math
 
 from .m300_filament_state import (FilamentState, FilamentStateError, build_plan,
                                  TRANSPORT_STATES, WAIT_STATES)
-from .m300_native_service import NativeServiceLease, require_idle_print
+from .m300_native_service import NativeServiceLease, require_idle_print, native_temperature_ready
 
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
@@ -63,6 +63,7 @@ class M300Filament:
         self._phase_started = None
         self._intent = None
         self._owner_token = None
+        self._native_pause = None
         self._owner_file = self._owner_gcode = None
         self._owner_context = None
         self._anchor = None
@@ -274,13 +275,47 @@ class M300Filament:
             raise self._error('TEMP must be finite and within native extrusion/heater limits')
         return float(target)
 
-    def _live(self, require_position=True):
+    def _pause_identity(self):
+        pause = self.printer.lookup_object('pause_resume', None)
+        stats = self.printer.lookup_object('print_stats', None)
+        sd = self.printer.lookup_object('virtual_sdcard', None)
+        if (pause is None or stats is None or not pause.is_paused
+                or stats.get_status(self.reactor.monotonic()).get('state') != 'paused'
+                or sd is not None and sd.is_active()):
+            raise self._error('pause the native print before changing material')
+        saved = self.gcode_move.saved_states.get('PAUSE_STATE')
+        if not isinstance(saved, dict):
+            raise self._error('native PAUSE_STATE is unavailable')
+        status = sd.get_status(self.reactor.monotonic()) if sd is not None else {}
+        return dict(pause_id=id(pause), sd_id=id(sd),
+                    filename=stats.get_status(self.reactor.monotonic()).get('filename'),
+                    file_path=status.get('file_path'), file_position=status.get('file_position'),
+                    saved=copy.deepcopy(saved))
+
+    def _native_parent_ended(self):
+        if self._native_pause is None or not self.machine.active:
+            return
+        try:
+            if self._pause_identity() != self._native_pause['identity']:
+                raise self._error('native paused-print identity changed')
+        except self.printer.command_error:
+            self._parent_cancelled = True
+            self.cancel('native paused print ended or changed')
+
+    def _live(self, require_position=True, native_pause=None):
         if not self.ready or self.printer.is_shutdown():
             raise self._error('Klippy is not ready')
         if not self.filament_qualified:
             raise self._error('filament_qualified=False; material path is unqualified')
         if self.native_mode:
-            require_idle_print(self.printer,self.reactor.monotonic())
+            parent = native_pause if native_pause is not None else self._native_pause
+            if self.machine.state == 'CANCELLING' and self._parent_cancelled:
+                pass  # Cleanup only; never authorizes another E segment.
+            elif parent is not None:
+                if self._pause_identity() != parent['identity']:
+                    raise self._error('native paused-print identity changed')
+            else:
+                require_idle_print(self.printer,self.reactor.monotonic())
             self.board.require_motion()
             self.board.require_heating()
             if self.job.machine.state not in JOB_IDLE or self.job.machine.active:
@@ -340,9 +375,10 @@ class M300Filament:
         if (self._expected_target is not None and self.machine.state != 'CANCELLING'
                 and actual_target != self._expected_target):
             raise self._error('hotend target changed outside material owner')
-        if transport and (not self.hotend.can_extrude
-                or measured < self.hotend.min_extrude_temp
-                or actual_target != self.target or abs(measured-self.target) > self.tolerance):
+        ready = (native_temperature_ready(measured,actual_target,self.target,self.hotend)
+                 if self.native_mode else actual_target == self.target
+                 and measured >= self.hotend.min_extrude_temp and abs(measured-self.target) <= self.tolerance)
+        if transport and (not self.hotend.can_extrude or not ready):
             raise self._error('temperature is not ready for the next E segment')
         return temperatures
 
@@ -423,8 +459,14 @@ class M300Filament:
             raise self._error('another material operation is active or faulted')
         plan = self._profile(operation, length, load_length, unload_length)
         state = self.job.machine.state
+        native_pause = None
+        if self.native_mode and operation == 'CHANGE':
+            if state not in JOB_IDLE or self.job.machine.active:
+                raise self._error('legacy job owns resources')
+            native_pause = dict(identity=self._pause_identity(),
+                                target=self.hotend.get_temp(self.reactor.monotonic())[1])
         if operation == 'CHANGE':
-            if state not in ('PRINTING', 'PAUSING', 'PAUSED'):
+            if native_pause is None and state not in ('PRINTING', 'PAUSING', 'PAUSED'):
                 raise self._error('CHANGE requires a printing or paused M02 job')
         elif state not in JOB_IDLE | {'PAUSED'}:
             raise self._error('LOAD/UNLOAD requires idle or paused M02')
@@ -436,7 +478,10 @@ class M300Filament:
         # without TEMP keeps its existing paused-print target selection.
         target = None if temperature is None and operation == 'CHANGE' else self._validate_temperature(
             self.procedure_temperature if temperature is None else temperature)
-        self._live()
+        if native_pause is not None and temperature is None:
+            target = self._validate_temperature(native_pause['target'] if
+                native_pause['target'] >= self.hotend.min_extrude_temp else self.procedure_temperature)
+        self._live(native_pause=native_pause)
         self._sensor()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
         self._owner_file = self._owner_gcode = self._owner_context = None
@@ -452,8 +497,12 @@ class M300Filament:
         self.last_rejection = ''
         context = {'owner_state': state, 'owner_token': self._owner_token,
                    'target': target, 'automatic_resume': False}
+        if native_pause is not None:
+            context.update(owner_state='PAUSED', owner_token=self.machine.token+1,
+                           owner_kind='NATIVE_PAUSE')
         now = self.reactor.monotonic()
         token = self.machine.start(operation, plan, context, now)
+        self._native_pause = native_pause
         self._phase_started = now
         try:
             if self.native_lease is not None:
@@ -490,6 +539,8 @@ class M300Filament:
 
     def _ready_temperature(self):
         measured, target = self.job._temperatures(self.reactor.monotonic())['hotend']
+        if self.native_mode:
+            return self.hotend.can_extrude and native_temperature_ready(measured,target,self.target,self.hotend)
         return (target == self.target and abs(measured-self.target) <= self.tolerance
                 and self.hotend.can_extrude and measured >= self.hotend.min_extrude_temp)
 
@@ -504,11 +555,7 @@ class M300Filament:
     def confirm(self, token, phase_id):
         self._check_prompt(token, phase_id)
         state = self.machine.state
-        if state == 'WAIT_REMOVE':
-            self.machine.removed(token,self.reactor.monotonic())
-            self._phase_started=self.reactor.monotonic()
-            self.reactor.update_timer(self._timer,self.reactor.NOW)
-        elif state == 'WAIT_PURGE':
+        if state == 'WAIT_PURGE':
             self._advance('finish', phase_id)
         else:
             if state == 'WAIT_INSERT':
@@ -586,7 +633,7 @@ class M300Filament:
         was_reheat = self.machine.state == 'REHEATING'
         intent, self._intent = self._intent, None
         self._advance('heated')
-        if self.native_mode and not was_reheat and self.machine.mode=='UNLOAD':
+        if self.native_mode and not was_reheat and self.machine.mode=='CHANGE':
             self._advance('unload_confirmed')
         if was_reheat and intent is not None:
             self._advance(intent)
@@ -603,10 +650,7 @@ class M300Filament:
         segment = self.machine.next_segment(token, self.reactor.monotonic())
         if segment is None:
             self._advance({'LOADING': 'loaded', 'UNLOADING': 'unloaded', 'PURGING': 'purged'}[self.machine.state])
-            if self.native_mode and self.machine.mode=='UNLOAD' and self.machine.state=='COMPLETING':
-                self.machine.await_removal(self.machine.token,self.reactor.monotonic())
-                self._phase_started=self.reactor.monotonic()
-            elif self.native_mode and self.machine.mode=='LOAD' and self.machine.state=='WAIT_PURGE':
+            if self.native_mode and self.machine.mode in ('LOAD','CHANGE') and self.machine.state=='WAIT_PURGE':
                 self._advance('finish')
             return
         position = list(self.toolhead.get_position())
@@ -660,18 +704,23 @@ class M300Filament:
             if self.machine.mode in ('LOAD', 'CHANGE'):
                 self.job.pause_context['filament_service_required'] = False
                 self.job.pause_context['retracted'] = 0.  # Material explicitly loaded/primed.
+        if success and self._native_pause is not None and not self._parent_cancelled:
+            if not self._set_target(self._native_pause['target']):
+                return
         self._captured = False
         self._saved_gcode = None
         self._advance('completed' if success else 'cancelled')
         self._cleanup_pending = False
         self._expected_target = None
         if self.native_lease is not None:self.native_lease.release()
+        self._native_pause = None
 
     def _watchdog(self, now):
         if not self.ready or self.printer.is_shutdown():
             return self.reactor.NEVER
         if self.machine.active:
             try:
+                self._native_parent_ended()
                 self._guard()
                 self._check_deadline()
                 if self._drain_deadline is not None and now > self._drain_deadline:
@@ -686,6 +735,7 @@ class M300Filament:
         if not self.machine.active or self._executing:
             return self.reactor.NEVER if self.native_mode and not self.machine.active else now + PERIOD
         try:
+            self._native_parent_ended()
             self._guard()
             if not self._check_deadline():
                 return now + PERIOD
@@ -743,7 +793,7 @@ class M300Filament:
             return {'accepted': False, 'error': str(exc)}
 
     def get_status(self, now):
-        snapshot = self.machine.snapshot()
+        snapshot = self.machine.snapshot(include_plan=False)
         live = self.ready and not self.printer.is_shutdown()
         measured = None
         actual_target = self.hotend.get_temp(now)[1] if self.hotend is not None else 0.
@@ -777,6 +827,8 @@ class M300Filament:
                 'owner_job_token': self._owner_token, 'job_resume_automatic': False,
                 'filament_qualified': self.filament_qualified, 'hardware_qualified': False,
                 'native_control': self.native_mode,
+                'revision': '0.13.16.6-MATERIAL',
+                'native_paused_print': self._native_pause is not None,
                 'phase_remaining': None if self.machine.deadline is None else max(0., self.machine.deadline-now),
                 'history': snapshot['history']}
 

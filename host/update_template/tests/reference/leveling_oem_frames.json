@@ -242,7 +242,7 @@
     {
       "language": "EN",
       "status": {
-        "state": "WAIT_REMOVE",
+        "state": "WAIT_UNLOAD",
         "operation": "UNLOAD",
         "native_control": true,
         "oem_owner": "m300_filament"
@@ -482,7 +482,7 @@
     {
       "language": "PL",
       "status": {
-        "state": "WAIT_REMOVE",
+        "state": "WAIT_UNLOAD",
         "operation": "UNLOAD",
         "native_control": true,
         "oem_owner": "m300_filament"
@@ -722,7 +722,7 @@
     {
       "language": "FR",
       "status": {
-        "state": "WAIT_REMOVE",
+        "state": "WAIT_UNLOAD",
         "operation": "UNLOAD",
         "native_control": true,
         "oem_owner": "m300_filament"
@@ -962,7 +962,7 @@
     {
       "language": "DE",
       "status": {
-        "state": "WAIT_REMOVE",
+        "state": "WAIT_UNLOAD",
         "operation": "UNLOAD",
         "native_control": true,
         "oem_owner": "m300_filament"
@@ -1202,7 +1202,7 @@
     {
       "language": "ES",
       "status": {
-        "state": "WAIT_REMOVE",
+        "state": "WAIT_UNLOAD",
         "operation": "UNLOAD",
         "native_control": true,
         "oem_owner": "m300_filament"

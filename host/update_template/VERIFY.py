@@ -2,5 +2,5 @@
 import json
 from install import verify
 
-print(json.dumps({'status': 'PASS_M300_HOST_R16_5_NORMAL_UI_PACKAGE',
+print(json.dumps({'status': 'PASS_M300_HOST_R16_6_NORMAL_UI_PACKAGE',
                   'files_verified': verify()}))
