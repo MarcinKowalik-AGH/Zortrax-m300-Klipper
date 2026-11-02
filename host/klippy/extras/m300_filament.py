@@ -27,6 +27,7 @@ class M300Filament:
         self.job = self.printer.load_object(config, 'm300_job')
         self.board = self.job.board
         self.filament_qualified = config.getboolean('filament_qualified', False)
+        self.procedure_temperature = self._option('procedure_temperature', 240., 170., 300.)
         self.use_sensor = config.getboolean('use_filament_sensor', False)
         self.load_length = self._option('load_length', 130., .1, 500.)
         self.unload_length = self._option('unload_length', 110., .1, 500.)
@@ -409,7 +410,10 @@ class M300Filament:
                 or (state in JOB_IDLE and (self.job._ops or self.job._waiting or self.job._executing))
                 or self.job.sd.is_preparing):
             raise self._error('M02 cleanup or file operation still owns resources')
-        target = None if temperature is None and operation == 'CHANGE' else self._validate_temperature(temperature)
+        # Standalone OEM Load/Unload uses 240C. A print-owned CHANGE/M600
+        # without TEMP keeps its existing paused-print target selection.
+        target = None if temperature is None and operation == 'CHANGE' else self._validate_temperature(
+            self.procedure_temperature if temperature is None else temperature)
         self._live()
         self._sensor()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
@@ -723,6 +727,7 @@ class M300Filament:
                 'ready': live, 'installed': self.installed,
                 'temperature': measured, 'target': actual_target,
                 'requested_target': self.target, 'completed_mm': snapshot['completed_mm'],
+                'procedure_temperature': self.procedure_temperature,
                 'issued_mm': snapshot['issued_mm'], 'budget_mm': snapshot['plan'].get('total_budget_mm', 0.),
                 'remaining_budget_mm': snapshot['remaining_budget'],
                 'purge_requests_remaining': snapshot['purge_requests_remaining'],
@@ -736,11 +741,11 @@ class M300Filament:
 
     def cmd_load(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LENGTH'})
-        self.start('LOAD', temperature=gcmd.get_float('TEMP'), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
+        self.start('LOAD', temperature=gcmd.get_float('TEMP', None), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
 
     def cmd_unload(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LENGTH'})
-        self.start('UNLOAD', temperature=gcmd.get_float('TEMP'), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
+        self.start('UNLOAD', temperature=gcmd.get_float('TEMP', None), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
 
     def cmd_change(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LOAD_LENGTH', 'UNLOAD_LENGTH'})

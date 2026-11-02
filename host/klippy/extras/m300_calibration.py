@@ -80,7 +80,7 @@ class M300Calibration:
         self.approach_distance = self._option('approach_distance', None, .01, 30.)
         self.release_distance = self._option('release_distance', None, .01, 10.)
         self.search_margin = self._option('probe_search_margin', 0., 0., 2.)
-        self.procedure_temperature = self._option('procedure_temperature', 180., 170., 300.)
+        self.procedure_temperature = self._option('procedure_temperature', 260., 170., 300.)
         self.screw_pitch = self._option('screw_pitch', None, .01, 10.)
         self.center_tolerance = self._option('center_tolerance', None, 0., 5.)
         self.directions = {key: config.get(key + '_positive_direction', None)
@@ -447,7 +447,7 @@ class M300Calibration:
             self._bind()
             self._guard()
             self._geometry()
-            self.target = finite(self.procedure_temperature if self.native_mode and temperature is None else temperature,
+            self.target = finite(self.procedure_temperature if temperature is None else temperature,
                                  'temperature', self.hotend.min_extrude_temp, self.hotend.max_temp)
             queued, current, empty = self.toolhead.check_busy(self.reactor.monotonic())
             if not empty or queued > current:
@@ -843,7 +843,7 @@ class M300Calibration:
                       can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
                       can_cancel=self.ready and self.machine.active)
         if self.native_mode:
-            result.update(revision='0.13.16.4-OEM-M07',
+            result.update(revision='0.13.16.4.1-OEM-TEMPERATURES',
                           procedure_temperature=self.procedure_temperature,
                           probe_search_margin=self.search_margin,
                           measurement_frame_offset=self._frame_offset,

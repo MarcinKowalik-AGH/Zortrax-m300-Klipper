@@ -10,6 +10,32 @@ import install
 
 
 class InstallerTests(unittest.TestCase):
+    def test_r164_temperature_migration_updates_includes_and_rolls_back_exactly(self):
+        source=('[mcu]\nserial: /dev/ttyS1\n'
+                '[m300_calibration]\nprocedure_temperature: 180\n'
+                '[m300_filament]\nfilament_qualified: False\n'
+                '[include m300_tests.cfg]\n'
+                '#*# <--- SAVE_CONFIG --->\n#*# pid_Kp = 15.152\n')
+        macros=('[gcode_macro TEST_ZORTRAX_LEVEL]\ngcode:\n'
+                '    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(180)|float}\n'
+                '    M118 My retained command\n'
+                '[gcode_macro ZORTRAX_LOAD]\ngcode:\n'
+                '    ZORTRAX_PROCEDURE_START OP=LOAD TEMP={params.TEMP|default(0)|float}\n'
+                '[gcode_macro ZORTRAX_UNLOAD]\ngcode:\n'
+                '    ZORTRAX_PROCEDURE_START OP=UNLOAD TEMP={params.TEMP|default(0)|float}\n')
+        self.config.write_text(source);path=self.config.parent/'m300_tests.cfg';path.write_text(macros)
+        receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
+        self.assertIn('procedure_temperature: 260',self.config.read_text())
+        self.assertIn('procedure_temperature: 240',self.config.read_text())
+        self.assertIn('filament_qualified: False',self.config.read_text())
+        self.assertIn('default(260)',path.read_text())
+        self.assertEqual(path.read_text().count('default(240)'),2)
+        self.assertIn('M118 My retained command',path.read_text())
+        self.assertEqual(install.plan(self.root,self.config),[])
+        install.rollback(receipt,self.root,self.config)
+        self.assertEqual(self.config.read_text(),source)
+        self.assertEqual(path.read_text(),macros)
+
     def test_native_m07_upgrade_preserves_sensor_include_pid_e_z315_and_existing_test_macros(self):
         source=('[mcu]\nserial: /dev/ttyS1\nbaud: 1500000\n'
             '[stepper_z]\nposition_min: 0\nposition_max: 315\nrotation_distance: 4\n'

@@ -103,7 +103,7 @@ class Harness:
         c.points=((269.,44.),(35.,44.),(150.,158.),(269.,275.),(35.,275.))
         c.safe_z=5.;c.search_margin=margin;c.approach_distance=5.+margin;c.release_distance=1.
         c.screw_pitch=c.center_tolerance=None;c.directions=c.machine.directions
-        c.procedure_temperature=180.; self.hotend.min_extrude_temp=170.;self.hotend.max_temp=300.
+        c.procedure_temperature=260.; self.hotend.min_extrude_temp=170.;self.hotend.max_temp=300.
         c.travel_speed=10.;c.z_speed=1.;c.probe_speed=.5;c.release_speed=.5;c.min_clearance=.5
         c.move_timeout=120.;c.heat_timeout=1200.;c.confirm_timeout=600.;c.total_timeout=3600.
         c.tolerance=2.;c.stable_time=.1
@@ -225,7 +225,7 @@ class NativeLevelingTests(unittest.TestCase):
     def test_oem_preflight_heats_then_waits_for_warning_and_knob_confirmations(self):
         h=Harness();h.c.start()
         self.assertEqual(h.c.machine.state,'HEATING')
-        self.assertEqual(h.hotend.target,180.)
+        self.assertEqual(h.hotend.target,260.)
         h.until('WAIT_WARNING')
         for _ in range(10):h.tick()
         self.assertFalse(any(e[0] in ('home','move','contact') for e in h.events))

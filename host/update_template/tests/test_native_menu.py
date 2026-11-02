@@ -36,6 +36,20 @@ def fixture(native=True):
 
 
 class NativeMenuTests(unittest.TestCase):
+    def test_oem_procedure_temperatures_are_independent_of_manual_heating(self):
+        m,objects=fixture();m._temperature['HOTEND']=200.
+        filament=NS(procedure_temperature=240.,start=Mock())
+        calibration=NS(start=Mock())
+        objects.update(m300_filament=filament,m300_calibration=calibration)
+        m._cal_refresh=Mock()
+        for operation in ('LOAD','UNLOAD'):
+            m.select(('material',operation),100.)
+            filament.start.assert_called_with(operation,temperature=240.)
+        m.select(('cal_start',),100.)
+        calibration.start.assert_called_once_with(None)
+        self.assertEqual(m._temperature['HOTEND'],200.)
+        self.assertEqual(m.commands,[])
+
     def test_old_menu_negative_control_has_no_native_command_path(self):
         self.assertFalse(hasattr(r155_menu.M300Menu, '_native_script'))
         self.assertTrue(hasattr(M300Menu, '_native_script'))

@@ -51,9 +51,9 @@ def main():
     with zipfile.ZipFile(mcu / 'M300_R14_5_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.write(mcu / 'M300APP.M3B', 'M300APP.M3B')
     stage = stage_host_update(ROOT / '.ci/release-host-update')
-    host = release / 'M300_HOST_R16_4_NORMAL_UI'
+    host = release / 'M300_HOST_R16_4_1_NORMAL_UI'
     shutil.copytree(stage, host, ignore=shutil.ignore_patterns(OWNER, '__pycache__', '*.pyc'))
-    with zipfile.ZipFile(release / 'M300_HOST_R16_4_NORMAL_UI.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(release / 'M300_HOST_R16_4_1_NORMAL_UI.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(host.rglob('*')):
             if path.is_file():
                 archive.write(path, str(path.relative_to(release)))
@@ -70,7 +70,8 @@ def main():
         'physical_hardware': False, 'flashed': False,
         'factory_Z_requires_MCU_factory_ABI': 1,
         'normal_motion': True, 'z_homing_temperature': 180,
-        'xy_velocity_profile': 300, 'release_stage': 'TEST_READY'}
+        'xy_velocity_profile': 300, 'calibration_temperature': 260,
+        'filament_temperature': 240, 'release_stage': 'TEST_READY'}
     (release / 'BUILD_PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
     (release / 'INSTALL_EN.md').write_text((ROOT / 'docs/en/INSTALL.md').read_text().replace(
         '(../pl/INSTALL.md)', '(INSTALL_PL.md)'))
@@ -80,7 +81,7 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'Use R14.5 MCU with the R16.4 host; see INSTALL_EN.md / INSTALL_PL.md.\n'
+        'Use R14.5 MCU with the R16.4.1 host; see INSTALL_EN.md / INSTALL_PL.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     (release / OWNER).unlink()

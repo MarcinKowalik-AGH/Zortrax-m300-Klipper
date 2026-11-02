@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.4-OEM-M07-UI"
+    MENU_REVISION = "0.13.16.4.1-OEM-TEMPERATURES"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -329,8 +329,10 @@ class M300Menu:
                 (line, None) for line in textwrap.wrap(self.clean(
                     self._confirm[0] if self._confirm else 'Expired confirmation'), 36)])
         if self.page == 'material':
+            filament = self.printer.lookup_object('m300_filament', None)
+            target = getattr(filament, 'procedure_temperature', 240.)
             return self.t('Material'), self._notice(back + [
-                ('TEMP: ' + self._temperature_label('HOTEND'), ('temperatures', 'HOTEND', 'material')),
+                ('Load / Unload: %gC' % target, None),
                 (self.t('Load the material'), ('material', 'LOAD')),
                 (self.t('Unload the material'), ('material', 'UNLOAD')),
                 (self.t('Change the material'), ('material', 'CHANGE')),
@@ -768,7 +770,8 @@ class M300Menu:
                 service = self.printer.lookup_object('m300_material_ui', None)
                 if service is None:
                     service = self._service('m300_filament')
-                temp = None if action[1] == 'CHANGE' else self._required_temp('HOTEND')
+                filament = self._service('m300_filament')
+                temp = None if action[1] == 'CHANGE' else filament.procedure_temperature
                 service.start(action[1], temperature=temp)
                 return 'filament'
             elif kind == 'material_action':
@@ -834,8 +837,7 @@ class M300Menu:
                 self.reason = 'Service stopped; thermal targets are zero.'
             elif kind == 'cal_start':
                 calibration = self._service('m300_calibration')
-                calibration.start(None if getattr(self.job.board, 'native_control', False)
-                                  else self._required_temp('HOTEND'))
+                calibration.start(None)
                 self._cal_refresh(now)
             elif kind == 'cal_refresh':
                 self._cal_refresh(now)

@@ -77,8 +77,9 @@ def convert_text(text):
         elif section == 'm300_calibration':
             block = set_option(block, 'qualified', 'True')
             block = set_option(block, 'workflow', 'M07_STOCK')
+            block = set_option(block, 'procedure_temperature', '260')
             defaults = {'safe_z': '5', 'probe_search_margin': '1',
-                        'release_distance': '1', 'procedure_temperature': '180',
+                        'release_distance': '1',
                         'rear_left_positive_direction': 'CCW',
                         'rear_right_positive_direction': 'CCW',
                         'front_positive_direction': 'CCW'}
@@ -87,6 +88,8 @@ def convert_text(text):
                     block = set_option(block, key, value)
             block = minimum(block, 'approach_distance',
                             float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
+        elif section == 'm300_filament':
+            block = set_option(block, 'procedure_temperature', '240')
         elif section == 'printer':
             block = minimum(block, 'max_velocity', 300)
             block = minimum(block, 'max_z_velocity', 25)
@@ -107,7 +110,14 @@ def convert_text(text):
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: TEST / M07 leveling with shared OLED and Fluidd steps\n'
-                     'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(180)|float}\n\n')
+                     'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(260)|float}\n\n')
+        elif section in ('gcode_macro TEST_ZORTRAX_LEVEL', 'gcode_macro ZORTRAX_LOAD',
+                         'gcode_macro ZORTRAX_UNLOAD'):
+            # Existing wrappers live in included files on installed R16.x.
+            # Update the TEMP default while preserving their other commands.
+            target = '260' if section.endswith('_LEVEL') else '240'
+            block = re.sub(r'params\.TEMP\s*\|\s*default\([^)]*\)',
+                           'params.TEMP|default(' + target + ')', block)
         elif section == 'gcode_macro CANCEL_PRINT':
             block = ('[gcode_macro CANCEL_PRINT]\ndescription: Cancel native print and heaters\n'
                      'rename_existing: CANCEL_PRINT_BASE\ngcode:\n'

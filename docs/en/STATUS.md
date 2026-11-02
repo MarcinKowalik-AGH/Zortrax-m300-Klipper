@@ -39,4 +39,4 @@ Operator report, 2026-11-02: HW05/Z400, dimming/moon, and reaching Z300 work.
 A factory decode does not replace physical scale measurement; status still
 explicitly reports physical_scale_measured=false.
 
-R16.4 fixes the complete M07 release retract and panel_update compatibility; restores OEM 13-pixel dialogs, shared OLED/Fluidd text and 85 matching reference frames. 171 host tests and 20002 turn vectors pass; physical acceptance remains open. [M07 audit](LEVELING.md).
+R16.4.1 fixes the complete M07 release retract and panel_update compatibility; restores OEM 13-pixel dialogs, shared OLED/Fluidd text and 85 matching reference frames. 178 host tests and 20002 turn vectors pass; physical acceptance remains open. [M07 audit](LEVELING.md).

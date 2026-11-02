@@ -38,4 +38,4 @@ Odbiór operatora 2026-11-02: HW05/Z400, przygaszanie i księżyc oraz dojazd do
 Z300 zgłoszone jako działające. Odczyt fabryczny nie zastępuje pomiaru skali
 fizycznej; raport nadal jawnie zawiera physical_scale_measured=false.
 
-R16.4: naprawione pełne cofnięcie M07 po pierwszym rozwarciu PC7 i metoda panel_update; przywrócone dialogi OEM z czcionką 13 px, wspólne teksty OLED/Fluidd i 85 zgodnych ramek wzorcowych. 171 testów hosta, 20002 wektory obrotów; odbiór fizyczny pozostaje otwarty. [Audyt M07](LEVELING.md).
+R16.4.1: naprawione pełne cofnięcie M07 po pierwszym rozwarciu PC7 i metoda panel_update; przywrócone dialogi OEM z czcionką 13 px, wspólne teksty OLED/Fluidd i 85 zgodnych ramek wzorcowych. 178 testów hosta, 20002 wektory obrotów; odbiór fizyczny pozostaje otwarty. [Audyt M07](LEVELING.md).

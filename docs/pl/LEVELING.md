@@ -1,8 +1,8 @@
-# Poziomowanie M07 — audyt R16.4
+# Poziomowanie M07 — audyt R16.4.1
 
 [Instalacja](INSTALL.md) · [English](../en/LEVELING.md)
 
-R16.4 poprawia awarię pierwszego pomiaru z logu operatora z 2 listopada 2026
+R16.4.1 poprawia awarię pierwszego pomiaru z logu operatora z 2 listopada 2026
 i odtwarza dialogi M300 Classic 1.3.1. Dotychczasowe MCU R14.5 pozostaje
 zgodne. Zgodność obrazów w modelu nie oznacza odbioru na fizycznej drukarce.
 
@@ -23,7 +23,7 @@ zażądanego przez hosta, a nie pierwotną awarią MCU lub grzałki.
 na pierwszej krawędzi rozwarcia. Zadane `release_distance=1` nie oznaczało
 wykonanego cofnięcia o 1 mm; po około 0,4 s zapytanie widziało już zwarcie.
 
-R16.4 po krawędzi kończy cofnięcie do wcześniej sprawdzonego punktu
+R16.4.1 po krawędzi kończy cofnięcie do wcześniej sprawdzonego punktu
 kontakt + 1 mm, czeka na opróżnienie kolejki i 50 ms ustalenia, następnie
 sprawdza PC7. Rzeczywiście zwarty styk nadal zatrzymuje procedurę. Globalny
 zakres Z pozostaje bez zmian. Test bez końca cofnięcia odtwarza awarię;
@@ -37,7 +37,7 @@ natywny właściciel przyjmuje telemetrię panelu bez uruchamiania ruchu.
 Źródło: dostarczona aplikacja M300 1.3.1, 146392 B, baza `0x08008000`,
 SHA-256 `11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75`.
 R16.3 używało dostosowanej czcionki 5×7 i własnych opisów etapów.
-R16.4 przywraca glify 13 px, odstęp wierszy 12 px, pole tekstu 192×60
+R16.4.1 przywraca glify 13 px, odstęp wierszy 12 px, pole tekstu 192×60
 i grafikę od `(200,7)`. Zachowuje podziały wierszy, polskie znaki i literówki.
 
 ![Odtworzone dialogi OEM M300](../assets/m07/r16_4_oem_leveling.svg)
@@ -73,7 +73,7 @@ opisy. Token pozostaje w poleceniu przycisku; diagnostyka jest dostępna przez
 
 ## Kolejność i algorytm
 
-Start → grzanie 180°C → ostrzeżenie i klik → własny G28 XYZ → trzy śruby
+Start → grzanie 260°C → ostrzeżenie i klik → własny G28 XYZ → trzy śruby
 i klik → pierwsza czwórka → regulacja tyłu → regulacja przodu → środek
 → diagram wyniku i potwierdzenie zapisu obserwacji.
 
@@ -104,10 +104,11 @@ Przypadek wzorcowy: 0,1,4,3 → tylna lewa 1 obrót → tylna prawa 0,75
 
 ## Jawne różnice portu
 
-Oryginał używał grzania 260°C z progiem 258°C, własnego bazowania Y/X/Z
-i pięciu kontaktów. Zachowano ustalone dla tej drukarki 180°C, natywny G28,
-trzy próbki/medianę, rozrzut 0,05 mm i stałe punkty bez losowego jittera
-±3 mm. Nie jest to deklaracja identycznej trajektorii wykonania OEM.
+Kreator używa fabrycznych 260°C; oryginalny próg nagrzania wynosi 258°C.
+Load/Unload używają 240°C. Zwykły G28 Z ma oddzielną nastawę 180°C.
+Oryginał stosował własne bazowanie Y/X/Z i pięć kontaktów. Port korzysta
+z natywnego G28, trzech próbek/mediany, rozrzutu 0,05 mm i stałych punktów
+bez losowego jittera ±3 mm. Nie jest to deklaracja identycznej trajektorii wykonania OEM.
 
 Profil: `safe_z=5`, `probe_search_margin=1`, `approach_distance=6`,
 `release_distance=1`. Po własnym G28 rama pomiarowa jest przesunięta o 1 mm
@@ -125,7 +126,7 @@ obrazów. Fluidd zachowuje opis błędu bez aktywnych przycisków procedury.
 
 ## Walidacja i ponowna próba
 
-171 testów hosta obejmuje 85 pełnych ekranów zgodnych bajtowo z wykonaniem
+178 testów hosta obejmuje 85 pełnych ekranów zgodnych bajtowo z wykonaniem
 odzyskanego kodu w pięciu językach, pełne sesje przy obu skalach, ponowne
 zwarcie, rzeczywiście zablokowany styk i klik dostarczony po zmianie etapu.
 Przeszło też 13 scenariuszy rzeczywistego Klippy FILEOUTPUT. FILEOUTPUT
@@ -137,14 +138,16 @@ Zasoby odtwarza `ci/extract_leveling_oem.py`, oryginalny renderer uruchamia
 Pełny dump firmware nie jest częścią repozytorium.
 
 Po instalacji sprawdź `STATUS`, `ZORTRAX_CALIBRATION_STATUS`, `QUERY_PROBE`.
-Rewizja kalibracji: `0.13.16.4-OEM-M07`. Uruchom **TEST M300 → TEST_ZORTRAX_LEVEL**
+Rewizja kalibracji: `0.13.16.4.1-OEM-TEMPERATURES`. Uruchom **TEST M300 → TEST_ZORTRAX_LEVEL**
 lub:
 
 ```gcode
-ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=180
+ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=260
 ```
 
 Porównaj ostrzeżenie i ekran trzech śrub z podglądem powyżej. Krótki klik
 potwierdza, przytrzymanie anuluje; Fluidd potwierdza ten sam etap. Sprawdź
 cofnięcie po kontakcie, zakończenie pierwszego punktu, dalsze instrukcje
 i diagram. Po kolejnym błędzie zachowaj nowy `klippy.log`.
+
+R16.4.1 przywraca fabryczne nastawy procedur: kalibracja/poziomowanie 260°C, Load/Unload 240°C. Instalator aktualizuje także istniejące sekcje i makra z R16.3/R16.4. Zwykły G28 Z zachowuje osobne 180°C. Ręczne grzanie, PID oraz M600 z temperaturą pauzowanego wydruku zachowują dotychczasowe działanie. Status m300_calibration i m300_filament udostępnia procedure_temperature.

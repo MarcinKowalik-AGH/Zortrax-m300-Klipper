@@ -16,11 +16,13 @@ Fluidd). Run setup_fluidd.py --apply after Ready, then refresh the browser.
 Unfinished OEM M03/M07/M08 procedures remain in TEST. The existing display
 sleep, MCU cooling and lifecycle remain; an installed R14.5 MCU can remain.
 
-Run python3 VERIFY.py, python3 -m unittest discover -s tests -v (171 tests),
+Run python3 VERIFY.py, python3 -m unittest discover -s tests -v (178 tests),
 and python3 install.py. Follow the installation instructions for --apply and
 physical acceptance. CI tests software; it does not measure full-load 300 mm/s.
 
-R16.4 also restores a connection after host/service reboot using one native
+R16.4.1 also restores a connection after host/service reboot using one native
 reset for a previous armed session or heartbeat fault. It never resumes old
 heating/motion and does not automatically reset other fault codes.
 See docs/en/CONNECTION.md for the printer acceptance steps.
+
+R16.4.1 restores stock procedure targets: calibration/leveling 260°C and Load/Unload 240°C. Migration updates existing R16.3/R16.4 sections and macro defaults. Ordinary G28 Z retains its separate 180°C setting. Manual heating, PID and M600 paused-print target selection retain their existing behavior. Both calibration and filament status expose procedure_temperature.

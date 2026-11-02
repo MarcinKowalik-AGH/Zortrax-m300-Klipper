@@ -69,7 +69,7 @@ def main():
         base += '\n' + native_config.convert_text(extra)
         existing.update(name.lower() for name, _ in native_config.blocks(extra)[1])
     cases=[
-        ('native_controls','ZORTRAX_NATIVE_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
+        ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
         # Coordinates below are deliberately synthetic FILEOUTPUT fixture data.
@@ -105,6 +105,8 @@ def main():
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
             assert cp.getfloat(section, 'step_pulse_duration') == .000002
         assert cp.getfloat('m300_motion', 'z_home_hotend_target') == 180
+        assert cp.getfloat('m300_calibration', 'procedure_temperature') == 260
+        assert cp.getfloat('m300_filament', 'procedure_temperature') == 240
         assert cp.getfloat('printer', 'max_velocity') >= 300
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
@@ -144,6 +146,13 @@ def main():
             assert process.returncode==0,(name,text[-3000:])
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
         assert 'Unknown command:' not in text, (name, 'undispatched G-code command', text[-4000:])
+        if name == 'native_controls':
+            calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
+                             if 'calibration_api_version' in line and 'procedure_temperature' in line)
+            filament=next(json.loads(line.split('M300_FILAMENT ',1)[1]) for line in text.splitlines()
+                          if 'M300_FILAMENT ' in line)
+            assert calibration['procedure_temperature'] == 260.
+            assert filament['procedure_temperature'] == 240.
         if name == 'native_300_M220_150':
             view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
                         if 'M300_MOTION ' in line)
