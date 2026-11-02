@@ -24,7 +24,7 @@
 
 ## Physical OLED evidence — November 2, 2026
 
-Four original photographs supplied by the machine operator show the following sequence:
+The four original photographs below are displayed in the exact order supplied by the machine operator (not timestamp order):
 
 1. **Ready / live status:** Klipper-style first screen showing approximately 126 °C hotend temperature, 26 °C bed temperature, feed rate 100%, 0% progress, elapsed time 00:00, and the `Ready` state. The visible temperatures are instantaneous readings, not heater setpoints.
 2. **Settings / diagnostics:** encoder-operated menu with `Settings`, `Information`, and an on-screen Python exception: `'M300NativeMotion' object has [no] attribute 'panel_update'` (word wrapping on the photograph). This is evidence of an unresolved menu integration bug, **not** a completed settings workflow.
@@ -37,10 +37,10 @@ These photographs independently confirm working OLED rendering, the first status
 
 | Order | New filename | Supplied photograph |
 |---|---|---|
-| 1 | `picture 1.png` | `Zrzut ekranu 2026-11-2 o 20.12.16.png` |
-| 2 | `picture 2.png` | `Zrzut ekranu 2026-11-2 o 20.12.31.png` |
-| 3 | `picture 3.png` | `Zrzut ekranu 2026-11-2 o 20.12.50.png` |
-| 4 | `picture 4.png` | `Zrzut ekranu 2026-11-2 o 20.13.04.png` |
+| 1 | `picture 1.png` | `Zrzut ekranu 2026-11-2 o 20.13.04.png` — Ready/status |
+| 2 | `picture 2.png` | `Zrzut ekranu 2026-11-2 o 20.12.50.png` — Settings/error |
+| 3 | `picture 3.png` | `Zrzut ekranu 2026-11-2 o 20.12.31.png` — Heat hotend |
+| 4 | `picture 4.png` | `Zrzut ekranu 2026-11-2 o 20.12.16.png` — Heat bed |
 
 ## Completed or integrated in the current codebase
 
