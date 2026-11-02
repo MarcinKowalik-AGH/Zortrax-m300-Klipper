@@ -48,6 +48,9 @@ Opcjonalny skrypt porównania księżyca wymaga prywatnie przechowywanego
 oryginalnego firmware. Nie jest zaliczany do automatycznych testów publicznego CI.
 
 R14.5 sprawdza też ABI fabryczne 1 i format odpowiedzi w świeżym słowniku MCU.
-Dziewięć uruchomień Klippy obejmuje syntetyczne HW04/HW05, jawny tryb config
+Trzynaście uruchomień Klippy obejmuje syntetyczne HW04/HW05, jawny tryb config
 i odmowę przy skasowanym rekordzie. Testowy moduł tożsamości z CI nie jest
 instalowany przez aktualizację hosta.
+
+R16 sprawdza też natywny homing XYZ przy 180C, powtórny Z, 300 mm/s/M220=150,
+Z299/Z300 i jednoczesne żądania termiki/wentylatora/ekranu w FILEOUTPUT.

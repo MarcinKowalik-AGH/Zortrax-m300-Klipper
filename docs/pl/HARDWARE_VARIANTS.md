@@ -2,7 +2,7 @@
 
 [English](../en/HARDWARE_VARIANTS.md)
 
-MCU R14.5 i host R15.7 odczytują zachowaną fabryczną rewizję raz podczas
+MCU R14.5 i host R16 odczytują zachowaną fabryczną rewizję raz podczas
 identyfikacji Klippy. Wybierają skalę natywnego Z przed konfiguracją i włączeniem
 sterowania płytą. Funkcja nie dodaje cyklicznych zapytań, przechwytywania ruchu,
 właścicieli GPIO/ADC ani zapisu Flash. PID-y, kalibracja ekstrudera, limity
@@ -86,3 +86,7 @@ FILEOUTPUT z syntetycznymi rekordami HW04/HW05. Natywny planowany ruch Z o
 rekord jest odrzucany przed konfiguracją MCU. To testy programowe, nie pomiary
 na dwóch drukarkach. Pierwszy test fizyczny powinien potwierdzić raportowaną
 rewizję i zmierzoną drogę Z; pełny zakres pozostaje osobnym pomiarem.
+
+R16 używa normalnego natywnego G28/probe i usuwa dawną konfigurację
+uruchomieniową z obsługi normalnej. Wybór fabryczny i jawny tryb config
+pozostają zgodne z powyższym opisem. Zobacz FEATURES.md.

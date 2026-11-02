@@ -1,50 +1,31 @@
-# Zortrax M300 Classic — port Klippera
+# Zortrax M300 Classic — Klipper R16
 
-[English](README.md) · [Kompilacja](docs/pl/BUILD.md) · [Instalacja](docs/pl/INSTALL.md) · [Stan i ograniczenia](docs/pl/STATUS.md)
+[English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Funkcje / odbiór](docs/pl/FEATURES.md) · [Kompilacja](docs/pl/BUILD.md)
 
-Repozytorium źródeł dla **M300 Classic**, STM32F103 72 MHz, kinematyka Cartesian.
-Aktualna baza: **MCU R14.5 + natywny host R15.7**, Klipper
-`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
+Iteracja testowa: **MCU R14.5 + host R16**, Klipper
+`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103, Cartesian M300 Classic.
 
-GitHub Actions wykonuje czystą kompilację GNU ARM, testy hosta i modeli
-rejestrowych oraz dziewięć uruchomień rzeczywistego Klippy w FILEOUTPUT.
-Artefakt do pobrania zawiera:
+- Natywne grzanie, wentylatory, PID, SAVE_CONFIG, XYZ/E i obsługa druku Klippera.
+- Natywny G28/probe z punktem M300, minimum 180C przy Z i końcowym odstępem 5 mm.
+- Fabryczna rewizja wybiera Z400/Z800 raz przed konfiguracją.
+- STEP 2 us; profil XY 300 mm/s, natywne M220 i ustawienia prędkości/przyspieszeń.
+- Pierwszy ekran stanu Klippera; menu Klipper / Zortrax M300 / Service / Tests.
+- Zachowane księżyc/przygaszanie/wybudzanie, chłodzenie lokalne MCU i łączność.
+- Odwracalna migracja hosta/konfiguracji z zachowaniem PID i kalibracji E.
 
-- BIN, ELF, słownik MCU, mapę, konfigurację kompilacji i opis pochodzenia.
-- Sprawdzony kontener `M300APP.M3B` i ZIP na SD z aplikacją.
-- Pasującą aktualizację **hosta Orange Pi R15.7**, testy i dokładne cofnięcie.
-- Pełny zestaw źródeł hosta, raporty walidacji i sumy kontrolne.
+GitHub Actions wykonuje czysty build ARM, 111 testów hosta, testy modeli
+rejestrowych i 13 scenariuszy rzeczywistego Klippy FILEOUTPUT. W Artifacts
+udanego przebiegu pobierz `m300-r14_5-host-r16-test-<commit>`. Zawiera M3B,
+BIN/ELF/mapę/słownik, instalator Orange Pi R16, grupowanie Fluidd, raporty i sumy.
+Wgrany MCU R14.5 może pozostać.
 
-Push do main ze zmianami źródeł lub CI uruchamia workflow. Dostępny jest też
-przycisk **Actions → Build M300 STM32F103 and host R15.7 → Run workflow**.
-Po zakończeniu pobierz `m300-r14_5-host-r15_7-<commit>` w sekcji Artifacts.
+Źródła runtime: host/klippy/extras, szablony konfiguracji: host/config,
+instalator/testy: host/update_template, MCU: mcu/SOURCE_MCU. CI składa paczki
+z tych głównych plików i upstream sprawdzanego SHA-256. Dokumentacja jest
+rozdzielona na docs/en i docs/pl. Nie publikujemy prywatnego dumpu fabrycznego
+ani bootloadera.
 
-| Katalog | Zawartość |
-|---|---|
-| mcu/SOURCE_MCU | Overlay MCU, patcher przypiętego upstream i kompilator ARM |
-| mcu/tests | Testy guard snapshot i natywnej kontroli grzania |
-| host/klippy/extras | Główne źródła modułów i zasobów hosta M300 |
-| host/update_template | Instalator i samodzielne testy regresji |
-| host/config | Ustawienia samego wyświetlacza |
-| ci | Składanie, walidacja i pakowanie artefaktów |
-| tests/fixtures | Syntetyczne konfiguracje wyłącznie do FILEOUTPUT |
-| docs/en, docs/pl | Dokumentacja rozdzielona na EN i PL |
-
-Każdy plik runtime ma jedno główne źródło. CI składa z niego instalowalną
-aktualizację; nie bazuje na ręcznie poprawianych archiwach ZIP. Upstream jest
-pobierany z konkretnego commitu i sprawdzany SHA-256 przed patchowaniem.
-Nie jest pobierana przypadkowa najnowsza wersja Klippera.
-
-R15.6 przywraca natywne polecenia menu i rozpoznawanie osobnych akcji bazowania,
-poprawia kontrast startowy i dodaje oryginalny księżyc z **Entering sleep mode**:
-po pięciu minutach bezczynności komunikat przez dziesięć sekund potwierdzonego
-wyświetlania, następnie wygaszenie. Podczas pracy ekran tylko przygasa.
-Pierwszy niewidoczny gest wybudza bez wyboru opcji. Sterowanie urządzeniami
-i idle_timeout pozostaje u dotychczasowych właścicieli.
-
-R15.7 dodaje odczyt fabrycznej rewizji i automatyczny dobór Z=400/800,
-wspólny dla M07 i statusu OLED. Wymaga pasującej aplikacji MCU R14.5.
-Zobacz [Warianty sprzętu](docs/pl/HARDWARE_VARIANTS.md).
-Paczka nie zawiera bootloadera ani zrzutu fabrycznego firmware. CI nie uruchamia
-flashowania, UART, fizycznego ruchu ani grzania. Otwarte kwestie skali/zakresu Z
-i pozostałych pomiarów opisuje STATUS.md.
+FEATURES.md rozdziela potwierdzenia operatora i odbiór nowej iteracji.
+Natywny homing przy 180C oraz timing 300 mm/s pod obciążeniem wymagają odbioru
+tej wersji na drukarce. Procedury M03/M07/M08 pozostają w TEST; pojedynczy test
+grzałki lub XYZ nie zatwierdza całego ich przebiegu.

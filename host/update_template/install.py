@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R15.7 factory Z profile and OLED update."""
+"""Plan/apply/rollback M300 R16 normal controls, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -8,6 +8,7 @@ import datetime
 import fnmatch
 import glob
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -17,10 +18,15 @@ import tempfile
 import urllib.request
 
 HERE = Path(__file__).resolve().parent
+_profile_spec = importlib.util.spec_from_file_location('m300_update_profile', HERE / 'm300_profile.py')
+profile = importlib.util.module_from_spec(_profile_spec)
+_profile_spec.loader.exec_module(profile)
 NAMES = ('m300_display.py', 'm300_display_stream.py', 'm300_display_oem.py',
          'm300_display_moon.json', 'm300_menu.py')
 NAMES += ('m300_ui_m11_state.py', 'm300_mcu.py', 'm300_hardware.py',
-          'm300_motion.py', 'm300_calibration.py')
+          'm300_motion.py', 'm300_calibration.py', 'm300_native_motion.py',
+          'm300_menu_ui.py')
+CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
 
 def digest(data):
@@ -112,15 +118,39 @@ def plan(root, config):
             raise ValueError('Installed R15.5 menu is required')
         if (p.exists() and p.read_bytes() != data
                 and digest(p.read_bytes()) not in baselines.get(p.name, [])):
-            raise ValueError('Existing unknown display extension: ' + str(p))
+            raise ValueError('Existing unknown M300 runtime module: ' + str(p))
     settings = config.parent / 'm300_display.cfg'
     settings_data = settings.read_bytes() if settings.exists() else (
         HERE / 'payload/m300_display.cfg').read_bytes()
     validate_settings(settings_data)
     desired[settings] = settings_data
-    text = config.read_text()
+    tree = profile.read_tree(config)
+    for path, text in tree.items():
+        if not path.is_relative_to(config.parent):
+            raise ValueError('Configuration include outside printer config directory: ' + str(path))
+        desired[path] = profile.convert_text(text).encode()
+    existing = {name.lower() for path in tree for name, _ in
+                profile.blocks(desired[path].decode())[1]}
+    additions = []
+    for name in CONFIG_FILES:
+        target = config.parent / name
+        if target not in desired:
+            if target.exists():
+                desired[target] = target.read_bytes()
+            else:
+                text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
+                desired[target] = profile.convert_text(text).encode()
+        existing.update(n.lower() for n, _ in profile.blocks(desired[target].decode())[1])
+        if not any(fnmatch.fnmatchcase(str(target), str((path.parent / section[8:].strip()).resolve()))
+                   for path, content in tree.items()
+                   for section, _ in profile.blocks(content)[1]
+                   if section.lower().startswith('include ')):
+            additions.append('[include ' + name + ']\n')
+    text = desired[config].decode()
     if not already_included(config, settings):
-        addition = '\n# M300 display-only inactivity\n[include m300_display.cfg]\n\n'
+        additions.append('[include m300_display.cfg]\n')
+    if additions:
+        addition = '\n# M300 R16 normal controls and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -148,7 +178,7 @@ def atomic_write(path, data):
 
 def apply(root, config, changes):
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    folder = root / ('host_display_backup_' + stamp)
+    folder = root / ('host_r16_backup_' + stamp)
     folder.mkdir(mode=0o700)
     receipt = folder / 'RECEIPT.json'
     doc = {'root': str(root.resolve()), 'config': str(config.resolve()),
@@ -186,7 +216,9 @@ def rollback(receipt, root, config):
     if doc['root'] != str(root.resolve()) or doc['config'] != str(config.resolve()):
         raise ValueError('Receipt does not match installation paths')
     allowed = {root.resolve() / 'klippy/extras' / name for name in NAMES}
-    allowed |= {config.resolve(), config.parent.resolve() / 'm300_display.cfg'}
+    allowed |= {Path(row['path']).resolve() for row in doc['changes']
+                if Path(row['path']).suffix == '.cfg'
+                and Path(row['path']).resolve().is_relative_to(config.parent.resolve())}
     entries = []
     for row in doc['changes']:
         p = Path(row['path'])
@@ -243,21 +275,22 @@ def main():
         root, config = paths(args)
         if args.rollback:
             stopped()
-            print(json.dumps({'status': 'ROLLED_BACK_DISPLAY',
+            print(json.dumps({'status': 'ROLLED_BACK_R16',
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R15_7' if changes else 'ALREADY_M300_R15_7',
-                  'host_update': 'R15.7',
+        result = {'status': 'PLAN_M300_R16' if changes else 'ALREADY_M300_R16',
+                  'host_update': 'R16',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
-                  'native_control_changed': False,
+                  'native_control_changed': True, 'z_homing_temperature': 180,
+                  'xy_velocity_profile': 300,
                   'service_started': False}
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R15_7'
+            result['status'] = 'INSTALLED_M300_R16'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

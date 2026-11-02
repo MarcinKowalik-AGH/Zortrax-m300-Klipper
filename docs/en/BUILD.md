@@ -48,6 +48,9 @@ The optional factory-moon reproducer requires the privately held stock image.
 It is not counted as an automatically executed public CI test.
 
 R14.5 also validates factory ABI 1 and its response format in the fresh
-MCU dictionary. Nine actual Klippy processes include synthetic HW04/HW05,
+MCU dictionary. Thirteen actual Klippy processes include synthetic HW04/HW05,
 explicit configuration override and refusal of an erased record. The CI-only
 identity fixture is not installed by the host update.
+
+R16 also replays native XYZ homing with 180C, repeated Z, 300 mm/s/M220=150,
+Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.

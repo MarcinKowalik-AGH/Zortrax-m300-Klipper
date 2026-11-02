@@ -1,23 +1,21 @@
-# Host M300 R15.7 — rewizja fabryczna i wariant Z
+# Host M300 R16 — normalna obsługa i osobna grupa TEST
 
-[English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Warianty sprzętu](docs/pl/HARDWARE_VARIANTS.md)
+[English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Funkcje](docs/pl/FEATURES.md)
 
-Aktualizacja natywnego hosta M300 Classic R15.5/R15.6. Domyślny wybór factory
-wymaga pasującej aplikacji MCU R14.5. Aplikacja MCU jest w pełnym artefakcie
-Actions, a nie wewnątrz tego ZIP-a samego hosta.
+Aktualizacja natywnego M300 R15.5/R15.6/R15.7; wybór Z z fabrycznej rewizji
+wymaga MCU R14.5. Pełny artefakt Actions zawiera aplikację MCU. Ten ZIP hosta
+nie zawiera bootloadera ani firmware do wgrania.
 
-ID3 fabryczne wybiera Z=800 dla rewizji przed HW05, w pozostałych 400. Natywny
-stepper, M07 i status OLED używają jednej skali. ZORTRAX_HARDWARE_STATUS podaje
-rewizję, rotation_distance z pliku/używane i tryb. Błędny rekord nie jest
-zgadywany. Jawny z_profile=config zachowuje skalę wybraną w konfiguracji.
+Instalator aktualizuje menu i adapter G28 oraz migruje konfigurację do
+bazowania Z przy 180C, STEP 2 us, XY 300 mm/s i natywnych limitów.
+PID-y, kalibracja E, ustawienia wyświetlacza i zapisane kalibracje pozostają.
+Plan pokazuje wszystkie zmiany; receipt pozwala je dokładnie cofnąć.
 
-Instalator zachowuje zapisane PID-y, kalibrację ekstrudera, pliki konfiguracji
-i obecne ustawienia ekranu. Rozpoznaje znane sumy modułów R15.5/R15.6,
-zapisuje dokładny receipt do cofnięcia i odmawia nadpisania nieznanych edycji.
-Zachowano poprawki menu R15.6 oraz księżyc / Entering sleep mode.
-Nie dodano cyklicznych zapytań ani przechwytywania ruchu.
+Grupy OLED i Fluidd: Klipper, Zortrax M300, Service / Tests (TEST M300 we Fluidd).
+Po Ready wykonaj setup_fluidd.py --apply i odśwież przeglądarkę. M03/M07/M08
+pozostają w TEST. Zachowano sen ekranu, chłodzenie MCU i lifecycle. Wgrany
+MCU R14.5 może pozostać.
 
-Uruchom python3 VERIFY.py, python3 -m unittest discover -s tests -v i
-python3 install.py, aby zobaczyć plan. Zestaw zawiera 92 testów.
-Kolejność zgodnej aktualizacji MCU/hosta opisuje docs/pl/INSTALL.md. Publiczne
-CI i kompilacja ARM są walidacją programową; droga fizycznego Z wymaga pomiaru.
+Uruchom python3 VERIFY.py, python3 -m unittest discover -s tests -v (111 testów)
+i python3 install.py. Zastosuj instrukcję --apply i odbioru fizycznego. CI
+sprawdza programy; nie mierzy 300 mm/s przy pełnym obciążeniu drukarki.

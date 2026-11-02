@@ -30,7 +30,7 @@ class InstallerTests(unittest.TestCase):
 
     def test_plan_is_read_only_and_places_include_before_save_config(self):
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + 2)
+        self.assertEqual(len(changes), len(install.NAMES) + 5)
         self.assertEqual(self.config.read_bytes(), self.original)
         after = next(new for p, _, new in changes if p == self.config)
         self.assertLess(after.index(b'[include'), after.index(b'#*# <--- SAVE_CONFIG'))
@@ -41,7 +41,7 @@ class InstallerTests(unittest.TestCase):
         receipt = install.apply(self.root, self.config, changes)
         self.assertEqual(install.plan(self.root, self.config), [])
         self.assertEqual(install.rollback(receipt, self.root, self.config),
-                         len(install.NAMES) + 2)
+                         len(install.NAMES) + 5)
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse((self.config.parent / 'm300_display.cfg').exists())
 
@@ -83,6 +83,14 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(p.read_text(), '# local core change\n')
         self.assertEqual(self.config.read_bytes(), self.original)
 
+    def test_published_r157_presentation_is_a_supported_upgrade(self):
+        path = self.root / 'klippy/extras/m300_ui_m11_state.py'
+        path.write_bytes((ROOT / 'tests/reference/r157_ui_m11_state.py').read_bytes())
+        changes = install.plan(self.root, self.config)
+        self.assertTrue(any(p == path for p, _, _ in changes))
+        install.apply(self.root, self.config, changes)
+        self.assertEqual(path.read_bytes(), (ROOT / 'payload/m300_ui_m11_state.py').read_bytes())
+
     def test_factory_upgrade_preserves_z_m07_extruder_and_both_saved_pid_blocks(self):
         body = ('[mcu]\nserial: /dev/ttyS1\n'
                 '[stepper_z]\nmicrosteps: 16\nrotation_distance: 8\nposition_max: 30\n'
@@ -96,7 +104,7 @@ class InstallerTests(unittest.TestCase):
         after = next(new.decode() for path, _, new in changes if path == self.config)
         self.assertEqual(after.split('#*#', 1)[1], body.split('#*#', 1)[1])
         for line in ('rotation_distance: 8', 'stock_steps_per_mm: 400',
-                     'rotation_distance: 26.133', 'position_max: 30'):
+                     'rotation_distance: 26.133', 'position_max: 300'):
             self.assertIn(line, after)
         self.assertNotIn('z_profile:', after)
 
@@ -110,11 +118,14 @@ class InstallerTests(unittest.TestCase):
         self.config.write_text('[include m300_display.cfg]\n' + self.original.decode())
         saved = self.config.read_bytes()
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES))
+        self.assertEqual(len(changes), len(install.NAMES) + 4)
         receipt = install.apply(self.root, self.config, changes)
         self.assertEqual(install.plan(self.root, self.config), [])
-        self.assertEqual(self.config.read_bytes(), saved)
+        self.assertEqual(install.profile.split_saved(self.config.read_text())[1],
+                         install.profile.split_saved(saved.decode())[1])
+        self.assertIn('[include m300_tests.cfg]', self.config.read_text())
         install.rollback(receipt, self.root, self.config)
+        self.assertEqual(self.config.read_bytes(), saved)
         for name in ('m300_display.py', 'm300_display_stream.py'):
             self.assertEqual((self.root / 'klippy/extras' / name).read_bytes(),
                              (previous / name).read_bytes())
@@ -143,7 +154,7 @@ class InstallerTests(unittest.TestCase):
     def test_wildcard_include_does_not_get_duplicate_explicit_include(self):
         self.config.write_text('[include *.cfg]\n')
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + 1)
+        self.assertEqual(len(changes), len(install.NAMES) + 4)
         self.assertFalse(any(p == self.config for p, _, _ in changes))
 
     def test_included_inline_section_refuses_duplicate(self):

@@ -27,6 +27,10 @@ EXPECTED = {
     'fan.set_speed': 'extras.fan.Fan.set_speed',
     'G0': 'extras.gcode_move.GCodeMove.cmd_G1',
     'G1': 'extras.gcode_move.GCodeMove.cmd_G1',
+    'G28': 'extras.m300_native_motion.M300NativeMotion.cmd_G28',
+    'G28:native_backend': 'extras.homing.PrinterHoming.cmd_G28',
+    'M220': 'extras.gcode_move.GCodeMove.cmd_M220',
+    'SET_VELOCITY_LIMIT': 'toolhead.ToolHeadCommandHelper.cmd_SET_VELOCITY_LIMIT',
     'M104': 'kinematics.extruder.PrinterExtruder.cmd_M104',
     'M140': 'extras.heater_bed.PrinterHeaterBed.cmd_M140',
     'M106': 'extras.fan.PrinterFan.cmd_M106',
@@ -58,6 +62,12 @@ def main():
     args=parser.parse_args()
     args.output.mkdir(parents=True,exist_ok=True)
     base=native_config.convert_text(flat_config(args.config))
+    existing = {name.lower() for name, _ in native_config.blocks(base)[1]}
+    for filename in ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg'):
+        path = Path(__file__).resolve().parents[1] / 'host/config' / filename
+        extra = native_config.module.missing_macros(path.read_text(), existing)
+        base += '\n' + native_config.convert_text(extra)
+        existing.update(name.lower() for name, _ in native_config.blocks(extra)[1])
     cases=[
         ('native_controls','ZORTRAX_NATIVE_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
@@ -66,6 +76,10 @@ def main():
         # They are never installed and do not prove physical homing or motion.
         ('native_xyz_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG90\nG1 X50 F12000\nG1 X250 F12000\nG1 Y50 F12000\nG1 Y250 F12000\nG1 Z10 F300\nG1 Z5 F300\nM400\nSET_VELOCITY_LIMIT\n',True,None),
         ('native_axis_bounds','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 X301 F12000\n',True,'Move out of range'),
+        ('normal_homing_xyz_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG28 X0 Y0\nG28 Z\nZORTRAX_MOTION_STATUS\nG28\nZORTRAX_MOTION_STATUS\n',False,None),
+        ('native_300_M220_150','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM220 S150\nTEST_M300_XY SPEED=200\nM220 S100\nTEST_M300_XY SPEED=300\nSET_VELOCITY_LIMIT ACCEL=3000\nTEST_M300_XY SPEED=300\nSET_VELOCITY_LIMIT\n',True,None),
+        ('native_z_usable_range','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 Z299 F1500\nG1 Z300\nM400\n',True,None),
+        ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nTEST_M300_XY SPEED=300\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
     ]
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
@@ -88,6 +102,10 @@ def main():
         (dest/'gcodes').mkdir(exist_ok=True)
         cp=configparser.RawConfigParser()
         cp.read_string(base)
+        for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
+            assert cp.getfloat(section, 'step_pulse_duration') == .000002
+        assert cp.getfloat('m300_motion', 'z_home_hotend_target') == 180
+        assert cp.getfloat('printer', 'max_velocity') >= 300
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
         if synthetic:
@@ -129,6 +147,18 @@ def main():
             check_line = next(line.split('M300_CI_FACTORY ', 1)[1] for line in text.splitlines()
                               if 'M300_CI_FACTORY ' in line)
             assert json.loads(check_line)['native_steps_for_1mm'] == factory_cases[name][3]
+        if name == 'normal_homing_xyz_FILEOUTPUT':
+            views = [json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
+                     if 'M300_MOTION ' in line]
+            assert len(views) == 2
+            for view in views:
+                assert view['state'] == 'COMPLETE' and view['homed_axes'] == 'xyz'
+                assert abs(view['native_position'][2] - 5) < 1e-6
+                assert view['z_home_hotend_target_c'] == 180
+        if name == 'native_300_thermal_display_planning':
+            view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
+                        if 'M300_MOTION ' in line)
+            assert view['native_position'][2:] == [5., 0.]
         results.append({'case':name,'PASS':True,'expected_native_refusal':error,
                         'synthetic_coordinates':synthetic,'physical_hardware':False,
                         'exit_code':process.returncode,

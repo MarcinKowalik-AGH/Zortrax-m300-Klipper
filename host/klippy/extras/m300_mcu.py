@@ -708,9 +708,13 @@ class M300MCU:
                     result['owners'][name + '.' + method] = owner(getattr(heater, method))
                 result['owners'][name + '.pwm'] = type(heater.mcu_pwm).__module__ + '.' + type(heater.mcu_pwm).__name__
         commands = getattr(self.gcode, 'ready_gcode_handlers', {})
-        for name in ('G0', 'G1', 'M104', 'M140', 'M106', 'M107',
+        for name in ('G0', 'G1', 'G28', 'M104', 'M140', 'M106', 'M107', 'M220',
+                     'SET_VELOCITY_LIMIT',
                      'PID_CALIBRATE', 'SAVE_CONFIG', 'PAUSE', 'RESUME'):
             result['owners'][name] = owner(commands.get(name))
+        motion = self.printer.lookup_object('m300_motion', None)
+        if getattr(motion, 'normal_control', False):
+            result['owners']['G28:native_backend'] = owner(motion.native_G28)
         mux = getattr(self.gcode, 'mux_commands', {}).get('PID_CALIBRATE')
         if mux is not None:
             for heater, callback in mux[1].items():

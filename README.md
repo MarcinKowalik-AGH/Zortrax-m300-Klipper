@@ -1,49 +1,31 @@
-# Zortrax M300 Classic — Klipper port
+# Zortrax M300 Classic — Klipper R16
 
-[Polski](README_PL.md) · [Build](docs/en/BUILD.md) · [Install](docs/en/INSTALL.md) · [Current limits](docs/en/STATUS.md)
+[Polski](README_PL.md) · [Install](docs/en/INSTALL.md) · [Features / acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md)
 
-Source repository for **M300 Classic**, STM32F103 at 72 MHz, Cartesian mechanics.
-Current snapshot: **MCU R14.5 + native host R15.7** on pinned Klipper
-`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
+Test iteration: **MCU R14.5 + host R16**, pinned Klipper
+`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103, Cartesian M300 Classic.
 
-GitHub Actions performs a clean GNU ARM build, host/register-model tests,
-and nine real Klippy FILEOUTPUT processes. The downloadable artifact contains:
+- Native Klipper heaters, fans, PID, SAVE_CONFIG, XYZ/E and print controls.
+- Native G28/probe with M300 contact location, minimum 180C Z preheat and 5 mm clearance.
+- Factory hardware revision selects Z400/Z800 once before configuration.
+- STEP 2 us; XY profile 300 mm/s, native M220 and velocity/acceleration controls.
+- Native first status screen; grouped Klipper / Zortrax M300 / Service / Tests menu.
+- Existing OEM moon/dimming/wake, MCU local cooling and link recovery retained.
+- Reversible host/config migration preserving PID and calibrated extrusion.
 
-- Compiled BIN, ELF, dictionary, map, build configuration and provenance.
-- Validated `M300APP.M3B` and an SD ZIP containing that application.
-- The matching Orange Pi **host R15.7 update**, with tests and exact rollback.
-- A complete host source snapshot, validation reports and checksums.
+GitHub Actions performs a clean ARM build, 111 host tests, register-model checks
+and 13 real Klippy FILEOUTPUT scenarios. Download
+`m300-r14_5-host-r16-test-<commit>` under the successful run's Artifacts. It
+contains compiled M3B/BIN/ELF/map/dictionary, the Orange Pi R16 installer,
+Fluidd group setup, reports and checksums. An installed R14.5 MCU can remain.
 
-A push to main changing source or CI starts the workflow. It can also be started
-with **Actions → Build M300 STM32F103 and host R15.7 → Run workflow**.
-Open the completed run and download `m300-r14_5-host-r15_7-<commit>` under Artifacts.
+Edit runtime sources in host/klippy/extras, configuration templates in host/config,
+installer/tests in host/update_template, and MCU sources in mcu/SOURCE_MCU.
+CI assembles packages from those canonical files and checksum-pinned upstream.
+Documentation is separated in docs/en and docs/pl. No private factory dump or
+bootloader is distributed.
 
-| Directory | Purpose |
-|---|---|
-| mcu/SOURCE_MCU | MCU overlay, verified upstream patcher and ARM builder |
-| mcu/tests | Guard snapshot and native heater-check replay |
-| host/klippy/extras | Canonical M300 host modules and resources |
-| host/update_template | Installer and self-contained regression fixtures |
-| host/config | Display-only settings |
-| ci | Staging, validation and release packaging |
-| tests/fixtures | Synthetic configurations for FILEOUTPUT only |
-| docs/en, docs/pl | Separated English and Polish documentation |
-
-Host files have one canonical runtime source. CI assembles the installable
-update from those files; it does not rely on manually maintained ZIP snapshots.
-Upstream is downloaded at the fixed commit and checked against its recorded
-SHA-256 before patching. Source changes never fetch an unpinned Klipper main.
-
-R15.6 restores native menu controls and recognized split-homing actions, fixes
-initial contrast, and adds the original moon with **Entering sleep mode**:
-after five idle minutes, ten seconds of acknowledged notice, then display off.
-During work the display only dims. First invisible knob input wakes without
-selecting a hidden action. Printer heater, motion and idle_timeout settings
-remain under their existing owners.
-
-R15.7 adds factory hardware identification and automatic Z=400/800 selection,
-shared with M07 and OLED status. It requires the matching R14.5 MCU application.
-See [Hardware variants](docs/en/HARDWARE_VARIANTS.md).
-No bootloader or factory firmware dump is distributed. CI runs no flash,
-serial, physical movement or heating operation. Physical Z scale/range and
-other remaining qualifications are recorded in STATUS.md.
+The operator-confirmed features and new-iteration acceptance boundaries are
+listed in FEATURES.md. New 180C/native homing and 300 mm/s full-load timing need
+physical acceptance of this iteration. M03/M07/M08 procedures stay in TEST;
+their complete workflows are not certified by a heater or XYZ test.

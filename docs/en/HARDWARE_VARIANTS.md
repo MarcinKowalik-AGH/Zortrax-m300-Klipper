@@ -2,7 +2,7 @@
 
 [Polski](../pl/HARDWARE_VARIANTS.md)
 
-MCU R14.5 and host R15.7 read the retained factory hardware revision once at
+MCU R14.5 and host R16 read the retained factory hardware revision once at
 Klippy identification and select the native Z scale before configuration and
 board enable. There is no new polling, motion wrapper, GPIO/ADC owner or Flash
 write. PID, extruder calibration, speed limits and saved configuration remain
@@ -88,3 +88,7 @@ synthetic HW04/HW05 records. A native 1 mm planned Z move yields respectively
 record is rejected before MCU configuration. These are software checks, not
 measurements on either physical printer. First physical validation must confirm
 the reported revision and measured Z distance; full travel remains separate.
+
+R16 uses normal native G28/probe and removes the legacy commissioning motion
+configuration from normal operation. Factory selection and the explicit config
+override above are unchanged. See FEATURES.md.

@@ -1806,4 +1806,8 @@ class M300Motion:
 
 
 def load_config(config):
+    mode = config.getchoice('mode', ['legacy', 'native'], 'legacy')
+    if mode == 'native':
+        from .m300_native_motion import M300NativeMotion
+        return M300NativeMotion(config)
     return M300Motion(config)

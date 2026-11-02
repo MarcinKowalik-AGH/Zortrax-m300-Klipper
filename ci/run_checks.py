@@ -74,9 +74,9 @@ def main():
     run('factory_decoder_execute', [factory])
     if args.dictionary:
         host_tree = stage_host_tree(pristine)
-        fixture = ROOT / '.ci/native-printer.cfg'
-        fixture.write_text((ROOT / 'tests/fixtures/printer_r15_5_test.cfg').read_text()
-                           + '\n' + (ROOT / 'host/config/m300_display.cfg').read_text())
+        run('real_installer_migration', [sys.executable, ROOT / 'ci/validate_install.py',
+            '--root', host_tree, '--output', ROOT / '.ci/installed-config'])
+        fixture = ROOT / '.ci/installed-config/printer.cfg'
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/fileoutput'])

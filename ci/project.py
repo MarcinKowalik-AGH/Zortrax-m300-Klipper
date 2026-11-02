@@ -92,7 +92,8 @@ def stage_host_update(destination):
     payload.mkdir()
     for name in META['host_update_files']:
         shutil.copy2(ROOT / 'host/klippy/extras' / name, payload / name)
-    shutil.copy2(ROOT / 'host/config/m300_display.cfg', payload / 'm300_display.cfg')
+    for path in (ROOT / 'host/config').glob('*.cfg'):
+        shutil.copy2(path, payload / path.name)
     manifest(target)
     return target
 

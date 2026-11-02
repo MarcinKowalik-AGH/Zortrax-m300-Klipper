@@ -131,7 +131,7 @@ class NativeMenuTests(unittest.TestCase):
         m, _ = fixture()
         m.maintenance.get_status = lambda now: {'sleep': True}
         title, rows = m.rows(100.)
-        self.assertEqual(title, 'Maintenance')
+        self.assertEqual(title, 'Klipper')
         self.assertTrue(any(a and a[0] == 'native_gcode' for _, a in rows))
 
     def test_native_mode_rejects_cached_lab_fan_service_action(self):

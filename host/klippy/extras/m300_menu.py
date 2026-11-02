@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.15.7-M300-FACTORY-Z"
+    MENU_REVISION = "0.13.16-M300-NORMAL-UI"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -209,6 +209,50 @@ class M300Menu:
         if not native and self.maintenance.get_status(now)['sleep']:
             return self.t('Sleep'), [(self.t('Wake up'), ('wake',)),
                     ('Targets 0; position not restored', None)]
+        if native and self.page == 'main':
+            return 'M300', self._notice([
+                ('Klipper', ('page', 'klipper')),
+                ('Zortrax M300', ('page', 'zortrax')),
+                ('Service / Tests', ('page', 'tests'))])
+        if native and self.page == 'zortrax':
+            return 'Zortrax M300', self._notice(back + [
+                (self.t('Settings'), ('page', 'settings')),
+                (self.t('Information'), ('page', 'information')),
+                ('OEM procedures: Service / Tests', None)])
+        if native and self.page == 'tests':
+            return 'Service / Tests', self._notice(back + [
+                ('Diagnostics', ('page', 'diagnostics')),
+                ('TEST: material procedures', ('page', 'material')),
+                ('TEST: platform calibration', ('cal_start',)),
+                ('TEST: calibration status', ('cal_refresh',)),
+                ('TEST: OEM print / SD', ('page', 'models')),
+                ('Current test procedure', ('page', 'procedure')),
+                ('Read test status', ('native_gcode', 'TEST_M300_STATUS')),
+                ('TEST XY 200 mm/s', ('native_gcode', 'TEST_M300_XY SPEED=200')),
+                ('TEST XY 300 mm/s', ('native_gcode', 'TEST_M300_XY SPEED=300'))])
+        if native and self.page == 'native_pid':
+            stats = self.printer.lookup_object('print_stats', None)
+            busy = stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')
+            def command(script):
+                return None if busy else ('native_gcode', script)
+            return 'PID calibration', back + [
+                ('Hotend PID 200C', command('PID_CALIBRATE HEATER=extruder TARGET=200')),
+                ('Bed PID 60C', command('PID_CALIBRATE HEATER=heater_bed TARGET=60')),
+                ('Save calibration', command('SAVE_CONFIG'))]
+        if native and self.page == 'native_job':
+            stats = self.printer.lookup_object('print_stats', None)
+            view = stats.get_status(now) if stats is not None else {}
+            state = view.get('state', 'standby')
+            rows = back + [('State: ' + self.clean(state), None),
+                           ('File: ' + self.clean(view.get('filename', '')), None),
+                           ('Print time: %.0f s' % view.get('print_duration', 0.), None)]
+            if state == 'printing':
+                rows.append(('Pause', ('native_gcode', 'PAUSE')))
+            if state == 'paused':
+                rows.append(('Resume', ('native_gcode', 'RESUME')))
+            if state in ('printing', 'paused'):
+                rows.append(('Cancel', ('native_gcode', 'CANCEL_PRINT')))
+            return 'Print status', rows
         if self.page == 'main':
             rows = [
                 (self.t('Models'), ('page', 'models')),
@@ -317,7 +361,7 @@ class M300Menu:
             if not current:
                 rows.append(('Phase changed: select Refresh', None))
             return self.t('Material'), self._notice(rows)
-        if self.page == 'maintenance':
+        if self.page in ('maintenance', 'klipper'):
             if native:
                 rows = back + [
                     ('Hotend TEMP: ' + self._temperature_label('HOTEND'), ('temperatures', 'HOTEND', 'maintenance')),
@@ -325,16 +369,16 @@ class M300Menu:
                     ('Heat hotend', ('service', 'HOTEND')),
                     ('Heat bed', ('service', 'BED')),
                     ('Turn off heaters', ('native_gcode', 'TURN_OFF_HEATERS')),
-                    ('XY gap >=5mm: CONFIRM', ('motion_xy_arm',)),
                     ('Home Y', ('motion_home_y',)),
                     ('Home X', ('motion_home_x',)),
                     ('Home XY', ('motion_home_xy',)),
-                    ('Before Z: heat / clean nozzle', None),
-                    ('Home Z', ('motion_home_z',)),
-                    ('Home XYZ: SPLIT ONLY', None),
+                    ('Home Z (180C)', ('motion_home_z',)),
+                    ('Home XYZ', ('motion_home_xyz',)),
                     ('Move axes', ('page', 'native_moves')),
-                    ('Fans', ('page', 'fans'))]
-                return self.t('Maintenance'), self._notice(rows)
+                    ('Fans', ('page', 'fans')),
+                    ('PID calibration', ('page', 'native_pid')),
+                    ('Print status', ('page', 'native_job'))]
+                return 'Klipper', self._notice(rows)
             motion = self.printer.lookup_object('m300_motion', None)
             motion_rows = ([('XY gap >=5mm: CONFIRM', ('motion_xy_arm',)),
                             ('Home Y', ('motion_home_y',)),
@@ -737,15 +781,20 @@ class M300Menu:
                 # Deliberate physical operator affirmation, NEVER a sensor measurement.
                 outcome=self._service('m300_motion').arm_xy_clearance(5.)
                 self.reason = 'Confirmed operator >=5mm XY gap (60s), MCU ARM requested. No movement.'
-            elif kind in ('motion_home_x','motion_home_y','motion_home_xy','motion_home_z'):
+            elif kind in ('motion_home_x','motion_home_y','motion_home_xy','motion_home_z','motion_home_xyz'):
                 axes={'motion_home_x':'x','motion_home_y':'y',
-                      'motion_home_xy':'xy','motion_home_z':'z'}[kind]
+                      'motion_home_xy':'xy','motion_home_z':'z','motion_home_xyz':'xyz'}[kind]
                 self._navigate('motion_status')
                 oled = self.printer.lookup_object('m300_oled', None)
                 if oled is not None:
                     oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
-                self._service('m300_motion').home(axes=axes)
-                self.reason = 'Homing %s ended. Check PC7, axis reference and status.' % axes.upper()
+                motion = self._service('m300_motion')
+                if getattr(motion, 'normal_control', False):
+                    self._native_script('G28 ' + ' '.join(axes.upper()))
+                    self.reason = 'Homing %s requested.' % axes.upper()
+                else:
+                    motion.home(axes=axes)
+                    self.reason = 'Homing %s ended. Check PC7, axis reference and status.' % axes.upper()
             elif kind == 'motion_home':
                 # Old M11 action cached on screen before the upgrade is not allowed.
                 raise self._error('Full G28 XYZ disabled for unqualified Z400. Use XY then Z.')
