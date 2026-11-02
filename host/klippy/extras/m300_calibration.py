@@ -67,6 +67,7 @@ class M300Calibration:
         self.gcode = self.printer.lookup_object('gcode')
         self.job = self.printer.load_object(config, 'm300_job')
         self.board = self.job.board
+        self.native_mode = bool(getattr(self.board, 'native_control', False))
         self.nvm = self.printer.load_object(config, 'm300_nvm')
         required = config.getsection('m300_resources').get('require_calibration_workflow', None)
         self.workflow = config.get('workflow', required or 'M04_OBSERVATION')
@@ -78,6 +79,8 @@ class M300Calibration:
         self.safe_z = self._option('safe_z', None, 0., 1000.)
         self.approach_distance = self._option('approach_distance', None, .01, 30.)
         self.release_distance = self._option('release_distance', None, .01, 10.)
+        self.search_margin = self._option('probe_search_margin', 0., 0., 2.)
+        self.procedure_temperature = self._option('procedure_temperature', 180., 170., 300.)
         self.screw_pitch = self._option('screw_pitch', None, .01, 10.)
         self.center_tolerance = self._option('center_tolerance', None, 0., 5.)
         self.directions = {key: config.get(key + '_positive_direction', None)
@@ -131,6 +134,10 @@ class M300Calibration:
         self._permit_move = self._permit_heat = None
         self._native_move = self._native_drip = self._native_set_position = None
         self._native_heaters = {}
+        self._ownership_methods, self._ownership_commands = [], []
+        self._ownership_callbacks = False
+        self._frame_offset = 0.
+        self._cal_homing = self._homed_once = False
         self._idle_saved = None
         self.last_rejection = ''
         self.toolhead = self.hotend = self.bed = self.endstop = None
@@ -202,6 +209,9 @@ class M300Calibration:
                 origin = self.probe.get_offsets()[2] * self.machine.stock_steps_per_mm
                 if not math.isfinite(origin) or abs(origin-round(origin)) > 1.e-6:
                     raise self.config.error('M07 probe.z_offset must lie on the qualified Z count grid')
+                margin = self.search_margin * self.machine.stock_steps_per_mm
+                if abs(margin-round(margin)) > 1.e-6:
+                    raise self.config.error('M07 probe_search_margin must lie on the native Z count grid')
 
     def _geometry(self):
         self.machine.validate_profile()
@@ -212,6 +222,12 @@ class M300Calibration:
             raise self._error('safe_z outside axis limits/clearance')
         if self.release_distance < self.min_clearance:
             raise self._error('release_distance must cover min_clearance')
+        if self.search_margin and (not self.native_mode or self.workflow != 'M07_STOCK'):
+            raise self._error('probe_search_margin requires native M07')
+        if self.safe_z + self.search_margin > maximum[2]:
+            raise self._error('safe_z plus probe search margin outside native Z range')
+        if self.native_mode and self.approach_distance < self.safe_z + self.search_margin - minimum[2]:
+            raise self._error('approach_distance must cover safe_z plus probe search margin')
         if self.approach_distance/self.probe_speed + 1. >= self.move_timeout:
             raise self._error('probe distance/speed exceeds move_timeout')
         if self.release_distance/self.release_speed + 1. >= self.move_timeout:
@@ -228,6 +244,8 @@ class M300Calibration:
             result.update(workflow=self.workflow, stock_steps_per_mm=self.machine.stock_steps_per_mm,
                           contract_version=self.machine.contract_version,
                           stock_coefficient=self.machine.get_status()['stock_coefficient'])
+        if self.native_mode:
+            result['probe_search_margin'] = self.search_margin
         return result
 
     def _connect(self):
@@ -238,26 +256,35 @@ class M300Calibration:
         if getattr(self.job.board, 'native_control', False):
             self.installed = True
             return
+        self._install_ownership()
+
+    def _own_method(self, obj, name, replacement):
+        self._ownership_methods.append((obj, name, getattr(obj, name), replacement))
+        setattr(obj, name, replacement)
+
+    def _install_ownership(self):
+        if self._ownership_methods:
+            return
         def move(position, speed):
-            if self.is_busy():
+            if self.is_busy() and not self._cal_homing:
                 permit, self._permit_move = self._permit_move, None
                 if permit != (self.machine.token, self.machine.phase_id, list(position), speed):
                     raise self._error('calibration owns motion; external move refused')
                 self._guard(require_temperature=True)
             return self._native_move(position, speed)
-        self.toolhead.move = move
+        self._own_method(self.toolhead, 'move', move)
         for name, original in (('drip_move', self._native_drip),
                                ('set_position', self._native_set_position)):
             def locked(*args, original=original, name=name, **kwargs):
-                if self.is_busy():
+                if self.is_busy() and not self._cal_homing:
                     raise self._error('calibration owns position; external ' + name + ' refused')
                 return original(*args, **kwargs)
-            setattr(self.toolhead, name, locked)
+            self._own_method(self.toolhead, name, locked)
         for heater in (self.hotend, self.bed):
             original = heater.set_temp
             self._native_heaters[heater] = original
             def set_temp(value, heater=heater, original=original):
-                if self.is_busy():
+                if self.is_busy() and not (self._cal_homing and value == self.target):
                     permit, self._permit_heat = self._permit_heat, None
                     if permit != (heater, value):
                         if value == 0.:
@@ -265,7 +292,8 @@ class M300Calibration:
                         else:
                             raise self._error('calibration owns heaters')
                 return original(value)
-            heater.set_temp = set_temp
+            self._own_method(heater, 'set_temp', set_temp)
+        self._native_parser_move = self.job.gcode_move.move_with_transform
         self._bind_parser()
         blocked = ('G0', 'G1', 'G28', 'G90', 'G91', 'G92', 'M82', 'M83', 'M204',
                    'M220', 'M221', 'SAVE_GCODE_STATE', 'RESTORE_GCODE_STATE',
@@ -273,7 +301,8 @@ class M300Calibration:
                    'STEPPER_BUZZ', 'SET_VELOCITY_LIMIT', 'PROBE', 'PROBE_ACCURACY',
                    'PROBE_CALIBRATE', 'BED_MESH_CALIBRATE', 'SCREWS_TILT_CALCULATE',
                    'Z_TILT_ADJUST', 'QUAD_GANTRY_LEVEL', 'PID_CALIBRATE',
-                   'M109', 'M190', 'TEMPERATURE_WAIT')
+                   'M109', 'M190', 'TEMPERATURE_WAIT', 'SAVE_CONFIG',
+                   'SDCARD_PRINT_FILE', 'M23', 'M24', 'PAUSE', 'RESUME')
         for name in blocked:
             original = self.gcode.register_command(name, None)
             if original is not None:
@@ -282,9 +311,26 @@ class M300Calibration:
                         raise self._error('calibration owns resources; ' + name + ' refused')
                     return original(gcmd)
                 self.gcode.register_command(name, guarded)
-        for name in self.job.steppers.get_steppers():
-            self.job.steppers.lookup_enable(name).register_state_callback(self._enable_changed)
+                self._ownership_commands.append((name, original, guarded))
+        if not self._ownership_callbacks:
+            for name in self.job.steppers.get_steppers():
+                self.job.steppers.lookup_enable(name).register_state_callback(self._enable_changed)
+            self._ownership_callbacks = True
         self.installed = True
+
+    def _release_ownership(self):
+        if not self.native_mode or not self._ownership_methods:
+            return
+        for name, original, guarded in self._ownership_commands:
+            current = self.gcode.register_command(name, None)
+            self.gcode.register_command(name, original if current == guarded else current)
+        self._ownership_commands.clear()
+        for obj, name, original, guarded in reversed(self._ownership_methods):
+            if getattr(obj, name) == guarded:
+                setattr(obj, name, original)
+        self._ownership_methods.clear()
+        self.job.gcode_move.move_with_transform = self._native_parser_move
+        self._native_heaters.clear()
 
     def _bind_parser(self):
         move = self.job.gcode_move.move_with_transform
@@ -294,6 +340,8 @@ class M300Calibration:
     def _ready(self):
         if getattr(self.job.board, 'native_control', False):
             self.ready = True
+            self.reactor.update_timer(self._timer, self.reactor.NOW)
+            self.reactor.update_timer(self._watch_timer, self.reactor.NOW)
             return
         self._bind_parser()
         self.ready = True
@@ -316,7 +364,7 @@ class M300Calibration:
             self._motor_off()
 
     def _foreign_home(self, *args):
-        if self.machine.active:
+        if self.machine.active and not self._cal_homing:
             self._fault('foreign homing during calibration')
 
     def is_busy(self):
@@ -333,6 +381,8 @@ class M300Calibration:
                 or status.get('busy') is not False):
             raise self._error('job owns resources')
         for name in ('m300_filament', 'm300_maintenance', 'm300_sd', 'm300_motion', 'm300_fans', 'm300_thermal'):
+            if name == 'm300_motion' and self._cal_homing:
+                continue
             obj = self.printer.lookup_object(name, None)
             if obj is not None:
                 try:
@@ -347,7 +397,17 @@ class M300Calibration:
     def _guard(self, require_temperature=False):
         if not self.ready or not self.qualified or self.printer.is_shutdown():
             raise self._error('not ready/qualified or printer shutdown')
-        self.job._check_authority(require_position=True)
+        if self.native_mode:
+            # Native M07 owns its own profile. Enabling leveling does not enable
+            # the separately unqualified legacy M02 print/load workflows.
+            self.board.require_motion()
+            self.board.require_heating()
+            if self.job.gcode_move.move_transform not in (None, self.toolhead):
+                raise self._error('native M07 requires untransformed Cartesian motion')
+            if self._homed_once and not self._cal_homing:
+                self.job._check_position()
+        else:
+            self.job._check_authority(require_position=True)
         self._peer_guard()
         now = self.reactor.monotonic()
         readings = self.job._temperatures(now)
@@ -377,15 +437,18 @@ class M300Calibration:
                 except Exception:
                     logging.exception('M300 calibration heater cleanup')
 
-    def start(self, temperature):
+    def start(self, temperature=None):
         generation = self._cancel_generation
         try:
             if self.is_busy():
                 raise self._error('busy or latched fault')
+            if self.native_mode:
+                self._homed_once = False
             self._bind()
             self._guard()
             self._geometry()
-            self.target = finite(temperature, 'temperature', self.hotend.min_extrude_temp, self.hotend.max_temp)
+            self.target = finite(self.procedure_temperature if temperature is None else temperature,
+                                 'temperature', self.hotend.min_extrude_temp, self.hotend.max_temp)
             queued, current, empty = self.toolhead.check_busy(self.reactor.monotonic())
             if not empty or queued > current:
                 raise self._error('calibration requires an empty motion queue')
@@ -405,6 +468,9 @@ class M300Calibration:
             if contact:
                 raise self._error('INITIAL_ACTIVE: release contact before calibration')
             token = self.machine.start(self.reactor.monotonic())
+            self._homed_once = False
+            if self.native_mode:
+                self._install_ownership()
             self._moves = self._pending_point = None
             self._stable_since = self._wait_until = self._move_deadline = None
             self._off()
@@ -412,6 +478,10 @@ class M300Calibration:
             # deadline; restore it after finishing, not by inventing a homed pose.
             self._idle_saved = self.job.idle.idle_timeout
             self.job.idle.idle_timeout = max(self._idle_saved, self.total_timeout + 60.)
+            if self.native_mode:
+                self.reactor.update_timer(self._timer, self.reactor.NOW)
+                self.reactor.update_timer(self._watch_timer, self.reactor.NOW)
+            self._present()
             return token
         except (CalibrationError, self.printer.command_error) as exc:
             self.last_rejection = str(exc)
@@ -469,7 +539,7 @@ class M300Calibration:
             self._cancel_generation += 1
         if not self.machine.active and not self._cleanup_pending:
             return
-        active_native = self._native_active
+        active_native = self._native_active or self._cal_homing
         if self.workflow == 'M07_STOCK':
             queued, current, empty = self.toolhead.check_busy(self.reactor.monotonic())
             active_native = active_native or not empty or queued > current
@@ -492,11 +562,46 @@ class M300Calibration:
 
     def _finish_cleanup(self):
         self._off()
+        if self._frame_offset:
+            if not self.printer.is_shutdown():
+                position = self.toolhead.get_position()
+                position[2] -= self._frame_offset
+                minimum, maximum = self.job._axis_bounds()
+                if not minimum[2] <= position[2] <= maximum[2]:
+                    raise self._error('cannot restore leveling frame within native Z bounds')
+                self._native_set_position(position)
+            self._frame_offset = 0.
         if self._idle_saved is not None:
             self.job.idle.idle_timeout = self._idle_saved
             self._idle_saved = None
         self.job.gcode_move.reset_last_position()
         self._cleanup_pending = False
+        self._release_ownership()
+
+    def _present(self):
+        # One presenter owns OLED and Fluidd. No action is auto-confirmed.
+        procedures = self.printer.lookup_object('m300_procedures', None)
+        if procedures is not None:
+            self.reactor.update_timer(procedures.timer, self.reactor.NOW)
+
+    def _home_for_leveling(self):
+        self._cal_homing = self._executing = True
+        self._present()
+        try:
+            self.printer.lookup_object('m300_motion').home(axes='xyz')
+        finally:
+            self._cal_homing = self._executing = False
+        self._guard()
+        self._homed_once = True
+        # The known, freshly homed position is translated for this session
+        # only. Native axis limits are never edited. One millimetre of bounded
+        # contact search below the home reference avoids stopping at Z0 before
+        # the electrical contact is sampled. Results are translated back.
+        position = self.toolhead.get_position()
+        position[2] += self.search_margin
+        self._native_set_position(position)
+        self._frame_offset = self.search_margin
+        self.job.gcode_move.reset_last_position()
 
     def _queue_move(self, position, speed):
         self._guard(require_temperature=True)
@@ -577,7 +682,7 @@ class M300Calibration:
         if not self._query_contact():
             raise self._error('contact unstable after approach')
         z = finite(measured[2], 'measured Z', minimum[2], maximum[2])
-        if z > self.safe_z-self.min_clearance:
+        if z > self.safe_z+self._frame_offset-self.min_clearance:
             raise self._error('contact leaves insufficient safe_z clearance')
         target = self.toolhead.get_position()
         target[2] += self.release_distance
@@ -587,11 +692,11 @@ class M300Calibration:
         if self._query_contact():
             raise self._error('NO_RELEASE: PC7 remains active')
         self.machine.check(token, phase)
-        return z
+        return z - self._frame_offset
 
     def _point_steps(self, point):
         position = self.toolhead.get_position()
-        position[2] = self.safe_z
+        position[2] = self.safe_z + self._frame_offset
         yield ('move', position, self.z_speed)
         yield ('released',)
         position = list(position)
@@ -600,7 +705,7 @@ class M300Calibration:
         for _ in range(self.machine.samples):
             yield ('sample',)
         position = self.toolhead.get_position()
-        position[2] = self.safe_z
+        position[2] = self.safe_z + self._frame_offset
         yield ('move', position, self.z_speed)
         yield ('result',)
 
@@ -616,7 +721,7 @@ class M300Calibration:
                     self._finish_cleanup()
                 return eventtime + PERIOD
             if not self.machine.active:
-                return eventtime + PERIOD
+                return self.reactor.NEVER if self.native_mode else eventtime + PERIOD
             self._guard(require_temperature=self.machine.state in ('PROBING', 'ADJUST', 'WAIT_RETRY'))
             if self.machine.state == 'HEATING':
                 temperature = self.job._temperatures(eventtime)['hotend'][0]
@@ -624,7 +729,10 @@ class M300Calibration:
                     if self._stable_since is None:
                         self._stable_since = eventtime
                     if eventtime-self._stable_since >= self.stable_time:
+                        if self.native_mode:
+                            self._home_for_leveling()
                         self.machine.heated(self.machine.token, eventtime)
+                        self._present()
                 else:
                     self._stable_since = None
                 return eventtime + PERIOD
@@ -667,6 +775,8 @@ class M300Calibration:
     def _watchdog(self, eventtime):
         if not self.ready:
             return self.reactor.NEVER
+        if self.native_mode and not self.machine.active:
+            return self.reactor.NEVER
         if self.machine.active:
             try:
                 self._guard(require_temperature=self.machine.state in ('PROBING', 'ADJUST', 'WAIT_RETRY'))
@@ -690,6 +800,14 @@ class M300Calibration:
                       requested_target=self.target, last_rejection=self.last_rejection,
                       can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
                       can_cancel=self.ready and self.machine.active)
+        if self.native_mode:
+            result.update(revision='0.13.16.3-NATIVE-M07',
+                          procedure_temperature=self.procedure_temperature,
+                          probe_search_margin=self.search_margin,
+                          measurement_frame_offset=self._frame_offset,
+                          automatic_homing=True, legacy_job_enabled=self.job.workflow_qualified)
+            if self._cal_homing:
+                result['state'] = result['prompt'] = 'HOMING'
         return result
 
     def _webhook_cancel(self, request):
@@ -701,7 +819,7 @@ class M300Calibration:
         request.send(self.get_status(self.reactor.monotonic()))
 
     def cmd_start(self, gcmd):
-        self.start(gcmd.get_float('TEMP'))
+        self.start(gcmd.get_float('TEMP', None))
         self.cmd_status(gcmd)
 
     def cmd_confirm(self, gcmd):

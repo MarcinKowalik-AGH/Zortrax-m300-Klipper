@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16.2 native R15.3-compatible update, 180C homing and separate TEST UI."""
+"""Plan/apply/rollback M300 R16.3 native R15.3-compatible update, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -26,6 +26,9 @@ NAMES = ('m300_display.py', 'm300_display_stream.py', 'm300_display_oem.py',
 NAMES += ('m300_ui_m11_state.py', 'm300_mcu.py', 'm300_hardware.py',
           'm300_motion.py', 'm300_calibration.py', 'm300_native_motion.py',
           'm300_menu_ui.py', 'm300_lifecycle.py')
+NAMES += ('m300_calibration_state.py', 'm300_leveling_state.py',
+          'm300_leveling_ui.py', 'm300_procedures.py', 'm300_oem_graphics.py',
+          'm300_material_ui_state.py', 'm300_ui_labels.py')
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
 
@@ -144,6 +147,10 @@ def plan(root, config):
                 text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
                 desired[target] = profile.convert_text(text).encode()
         existing.update(n.lower() for n, _ in profile.blocks(desired[target].decode())[1])
+        extra = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
+        if profile.blocks(extra)[1]:
+            desired[target] += ('\n' + extra).encode()
+            existing.update(n.lower() for n, _ in profile.blocks(extra)[1])
         if not any(fnmatch.fnmatchcase(str(target), str((path.parent / section[8:].strip()).resolve()))
                    for path, content in tree.items()
                    for section, _ in profile.blocks(content)[1]
@@ -153,7 +160,7 @@ def plan(root, config):
     if not already_included(config, settings):
         additions.append('[include m300_display.cfg]\n')
     if additions:
-        addition = '\n# M300 R16.2 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 R16.3 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -282,8 +289,8 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R16_2' if changes else 'ALREADY_M300_R16_2',
-                  'host_update': 'R16.2',
+        result = {'status': 'PLAN_M300_R16_3' if changes else 'ALREADY_M300_R16_3',
+                  'host_update': 'R16.3',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
@@ -293,7 +300,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16_2'
+            result['status'] = 'INSTALLED_M300_R16_3'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

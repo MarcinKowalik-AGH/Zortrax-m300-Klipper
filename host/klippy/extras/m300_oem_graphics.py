@@ -90,7 +90,7 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                     .get(screw,'0x0801ca28'))
         if state=='WAIT_PREPARE': return '0x0801fe50'
         if state=='HEATING': return '0x0801c2b8'
-        if state=='PROBING': return '0x0801ca28'
+        if state in ('HOMING', 'PROBING'): return '0x0801ca28'
         if state in ('COMPLETE','REVIEW'):return '0x0801c024'
         if state in ('FAULT','CANCELLED'):return '0x0801fe34'
         return '0x0801ca28'

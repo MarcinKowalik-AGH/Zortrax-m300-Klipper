@@ -65,6 +65,19 @@ def convert_text(text):
             block = set_option(block, 'restart_method', 'command')
         elif section == 'm300_mcu':
             block = set_option(block, 'native_control', 'True')
+        elif section == 'm300_calibration':
+            block = set_option(block, 'qualified', 'True')
+            block = set_option(block, 'workflow', 'M07_STOCK')
+            defaults = {'safe_z': '5', 'probe_search_margin': '1',
+                        'release_distance': '1', 'procedure_temperature': '180',
+                        'rear_left_positive_direction': 'CCW',
+                        'rear_right_positive_direction': 'CCW',
+                        'front_positive_direction': 'CCW'}
+            for key, value in defaults.items():
+                if option(block, key) is None:
+                    block = set_option(block, key, value)
+            block = minimum(block, 'approach_distance',
+                            float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
         elif section == 'printer':
             block = minimum(block, 'max_velocity', 300)
             block = minimum(block, 'max_z_velocity', 25)
@@ -82,6 +95,10 @@ def convert_text(text):
         elif section == 'gcode_macro PID_SAVE':
             block = ('[gcode_macro PID_SAVE]\ndescription: Save native Klipper calibration\n'
                      'gcode:\n    SAVE_CONFIG\n\n')
+        elif section == 'gcode_macro ZORTRAX_LEVEL':
+            block = ('[gcode_macro ZORTRAX_LEVEL]\n'
+                     'description: TEST / M07 leveling with shared OLED and Fluidd steps\n'
+                     'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(180)|float}\n\n')
         elif section == 'gcode_macro CANCEL_PRINT':
             block = ('[gcode_macro CANCEL_PRINT]\ndescription: Cancel native print and heaters\n'
                      'rename_existing: CANCEL_PRINT_BASE\ngcode:\n'

@@ -13,6 +13,7 @@ def format_view(status, view, language='EN'):
         'WAIT_PREPARE': ('Oczysc dysze i pola kontaktowe. Przygotuj dostep do srub.',
                          'Clean nozzle and contact pads. Prepare access to screws.'),
         'HEATING': ('Nagrzewanie dyszy. Nie dotykaj.', 'Heating nozzle. Do not touch.'),
+        'HOMING': ('Bazowanie XYZ przed pomiarem.', 'Homing XYZ before measurement.'),
         'PROBING': ('Pomiar platformy. Nie dotykaj.', 'Measuring platform. Keep clear.'),
         'WAIT_RETRY': ('Rozrzut probek jest za duzy. Sprawdz dysze i pole kontaktowe.',
                        'Samples disagree. Check nozzle and contact pad.'),

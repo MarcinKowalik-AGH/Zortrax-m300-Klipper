@@ -2,7 +2,7 @@
 
 [Polski](../pl/STATUS.md) · [Feature status and acceptance](FEATURES.md)
 
-MCU R14.5 + host R16.2, pinned Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
+MCU R14.5 + host R16.3, pinned Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
 The operator reports native thermal/fan, XYZ/E, OLED and link work as confirmed.
 R16 consolidates those paths under normal controls and keeps unfinished OEM
 procedures separate. It replaces the older commissioning homing adapter with
@@ -29,7 +29,7 @@ M03/M07/M08 procedures separately. A 2 us pulse setting or FILEOUTPUT PASS
 is not a hardware measurement at 300 mm/s. Inventure remains a separate F207
 project; its files/geometry are not installed here.
 
-R16.2 adds [host-start connection recovery](CONNECTION.md), using one native
+R16.3 adds [host-start connection recovery](CONNECTION.md), using one native
 reset for an old session/heartbeat latch. Other fault codes require explicit
 recovery. Tests exercise actual native restart/configuration helpers with
 simulated guard replies. The service/Orange Pi reboot still needs acceptance

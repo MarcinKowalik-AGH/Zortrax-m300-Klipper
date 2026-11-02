@@ -1,4 +1,4 @@
-# Host M300 R16.2 — normalna obsługa i osobna grupa TEST
+# Host M300 R16.3 — normalna obsługa i osobna grupa TEST
 
 [English](README.md) · [Instalacja](docs/pl/INSTALL.md) · [Funkcje](docs/pl/FEATURES.md)
 
@@ -16,11 +16,11 @@ Po Ready wykonaj setup_fluidd.py --apply i odśwież przeglądarkę. M03/M07/M08
 pozostają w TEST. Zachowano sen ekranu, chłodzenie MCU i lifecycle. Wgrany
 MCU R14.5 może pozostać.
 
-Uruchom python3 VERIFY.py, python3 -m unittest discover -s tests -v (131 testów)
+Uruchom python3 VERIFY.py, python3 -m unittest discover -s tests -v (150 testów)
 i python3 install.py. Zastosuj instrukcję --apply i odbioru fizycznego. CI
 sprawdza programy; nie mierzy 300 mm/s przy pełnym obciążeniu drukarki.
 
-R16.2 przywraca również połączenie po restarcie hosta/usługi przez jedną próbę
+R16.3 przywraca również połączenie po restarcie hosta/usługi przez jedną próbę
 natywnego resetu starej sesji lub błędu heartbeat. Nie wznawia poprzedniego
 grzania/ruchu i nie resetuje automatycznie innych kodów awarii.
 Odbiór na drukarce opisuje docs/pl/CONNECTION.md.

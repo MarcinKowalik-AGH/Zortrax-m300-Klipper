@@ -1,4 +1,4 @@
-# Instalacja iteracji testowej R16.2
+# Instalacja iteracji testowej R16.3
 
 [English](../en/INSTALL.md) · [Funkcje i odbiór](FEATURES.md)
 
@@ -10,15 +10,15 @@ nie wymaga ponownego programowania. Pełny artefakt Actions zawiera również
 Rozpakuj artefakt i skopiuj z Maca znajdujący się w nim katalog hosta:
 
 ~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R16_2_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R16_3_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_2_NORMAL_UI
+cd ~/M300_HOST_R16_3_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py
 ~~~
 
-Oczekiwane: 131 testów OK i plan R16.2. Sprawdź listę plików: aktualizacja
+Oczekiwane: 150 testów OK i plan R16.3. Sprawdź listę plików: aktualizacja
 zmienia dawną sekcję uruchomieniową na tryb native, ustawia homing Z przy 180C,
 STEP 2 us, profil XY 300 mm/s i dodaje trzy pliki makr. Zachowuje PID-y,
 kalibrację E oraz świadome wartości geometrii inne niż dawne Z30. Nieznane
@@ -62,19 +62,21 @@ Receipt przywraca dokładne poprzednie pliki i chroni późniejsze edycje. Nie
 zmienia MCU. HOST_SOURCE jest zgodną kopią źródeł, nie drugim instalatorem.
 SHA256SUMS i BUILD_PROVENANCE.json identyfikują konkretny build Actions.
 
-R16.2 dodaje bezpośrednią migrację znanego natywnego hosta R15.3, również
+R16.3 dodaje bezpośrednią migrację znanego natywnego hosta R15.3, również
 bez rozszerzenia wyświetlacza. Rzeczywiste sprawdzenie API i aktualizacja po
 sumach są testowane na archiwalnych modułach R15.3. Zachowanie runtime/MCU
-pozostaje jak w R16. Oczekiwany wynik: INSTALLED_M300_R16_2.
+pozostaje jak w R16. Oczekiwany wynik: INSTALLED_M300_R16_3.
 
 Jeżeli poprzedni instalator zgłosił `REFUSED: R15.5 motion and M11 presentation support required`,
 nie zainstalował R16. Samo powodzenie setup_fluidd.py zmienia jedynie grupy makr.
-R16.2 usuwa tę przeszkodę dla rozpoznanej bazy R15.3. Przed ruchem potwierdź
-`INSTALLED_M300_R16_2` oraz w `ZORTRAX_MOTION_STATUS`: `normal_control=true`
+R16.3 usuwa tę przeszkodę dla rozpoznanej bazy R15.3. Przed ruchem potwierdź
+`INSTALLED_M300_R16_3` oraz w `ZORTRAX_MOTION_STATUS`: `normal_control=true`
 i `z_home_hotend_target_c=180`. `G28 X Y` nie grzeje; `G28 Z` czeka na
 natywną kontrolę nagrzania przed ruchem do kontaktu.
 
-R16.2 aktualizuje także m300_lifecycle.py. Po instalacji ZORTRAX_LINK_STATUS
+R16.3 aktualizuje także m300_lifecycle.py. Po instalacji ZORTRAX_LINK_STATUS
 ma zgłaszać 0.13.16.2-LIFECYCLE-RECONNECT. Dla zwykłego restartu usługi/Orange Pi
 dodano jedną próbę odzyskania starej sesji lub zatrzasku heartbeat. Odbiór i
 przypadki wymagające jawnego restartu opisuje [Cykl połączenia](CONNECTION.md).
+
+[Poziomowanie M07 w R16.3 — uruchomienie i odbiór](LEVELING.md)

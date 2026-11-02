@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16-M300-NORMAL-UI"
+    MENU_REVISION = "0.13.16.3-M300-M07-UI"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -833,7 +833,9 @@ class M300Menu:
                 self.maintenance.stop()
                 self.reason = 'Service stopped; thermal targets are zero.'
             elif kind == 'cal_start':
-                self._service('m300_calibration').start(self._required_temp('HOTEND'))
+                calibration = self._service('m300_calibration')
+                calibration.start(None if getattr(self.job.board, 'native_control', False)
+                                  else self._required_temp('HOTEND'))
                 self._cal_refresh(now)
             elif kind == 'cal_refresh':
                 self._cal_refresh(now)

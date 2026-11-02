@@ -54,8 +54,6 @@ class M300Procedures:
                                         when_not_ready=name.endswith('STATUS'))
 
     def _ready(self):
-        if getattr(self.printer.lookup_object('m300_mcu', None), 'native_control', False):
-            return
         self.live = True
         self.reactor.update_timer(self.timer, self.reactor.NOW)
 
@@ -177,15 +175,18 @@ class M300Procedures:
     def rows(self, now):
         view = self.view(now)
         rows = [('Back', ('page', 'main')), (view['title'] + ': ' + view['state'], None)]
-        rows.append((view['message'], None))
-        rows.append(('Session: %s / Phase: %s' % (view['token'], view['phase']), None))
-        for action in view['actions']:
-            rows.append((action.replace('_', ' ').title(),
-                         ('procedure_action', view['view_id'], action)))
         if view['owner'] == 'm300_calibration':
-            rows.extend((label, None) for label, _ in format_view(
+            # Present the screw and turns before navigation buttons/session
+            # metadata, so the physical panel immediately shows the instruction.
+            rows.extend((label, None) for label, action in format_view(
                 view['snapshots'][view['owner']], (view['token'], view['phase']))
-                if _ is None)
+                if action is None)
+        else:
+            rows.append((view['message'], None))
+        for action in view['actions']:
+            rows.append((self._action_label(view, action),
+                         ('procedure_action', view['view_id'], action)))
+        rows.append(('Session: %s / Phase: %s' % (view['token'], view['phase']), None))
         for field, label, fmt in (('progress', 'Progress', lambda v: '%.1f%%' % (v * 100.)),
                                  ('elapsed', 'Elapsed', lambda v: '%d:%02d' % (v // 60, v % 60)),
                                  ('phase_remaining', 'Phase remaining', lambda v: '%.0f s' % v),
@@ -197,6 +198,13 @@ class M300Procedures:
         if view['reason']:
             rows.append((view['reason'], None))
         return 'Current procedure', rows
+
+    @staticmethod
+    def _action_label(view, action):
+        if view['owner'] == 'm300_calibration' and action == 'CONFIRM':
+            return {'WAIT_PREPARE': 'Start measurement', 'ADJUST': 'Adjustment done',
+                    'WAIT_RETRY': 'Repeat this point', 'REVIEW': 'Save result'}.get(view['state'], 'Confirm')
+        return action.replace('_', ' ').title()
 
     def action(self, view_id, action):
         view = self.view(self.reactor.monotonic())
@@ -248,7 +256,7 @@ class M300Procedures:
         for verb in view['actions']:
             color = 'error' if verb == 'CANCEL' else 'primary'
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
-                       (verb.replace('_', ' ').title(), view['view_id'], verb, color))
+                       (self._action_label(view, verb), view['view_id'], verb, color))
         self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
         self._emit('prompt_show')
         self.last_prompt = view['view_id']
@@ -260,6 +268,14 @@ class M300Procedures:
         if view['owner']:
             if view['view_id'] != self.last_prompt:
                 self._prompt(view)
+                if view['owner'] == 'm300_calibration':
+                    # External console, Fluidd and the encoder all follow the
+                    # same current owner/phase, including screw pictograms.
+                    menu = self.printer.lookup_object('m300_menu', None)
+                    oled = self.printer.lookup_object('m300_oled', None)
+                    if menu is not None and oled is not None:
+                        menu._navigate('procedure')
+                        oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
             display = self.printer.lookup_object('display_status', None)
             visible = (view['busy'] or view['state'] not in TERMINAL
                        or now - self.changes[view['owner']] < 8.)
@@ -295,7 +311,7 @@ class M300Procedures:
         # the shared object small at normal subscription rates.
         view.pop('snapshots')
         return dict(view, installed=True, ready=self.live,
-                    revision='0.13.7-PROCEDURES-R7', automatic_resume=False)
+                    revision='0.13.16.3-PROCEDURES-M07', automatic_resume=False)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_PROCEDURE ' + json.dumps(

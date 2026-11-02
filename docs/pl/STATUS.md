@@ -1,8 +1,8 @@
-# Stan — iteracja testowa R16.2
+# Stan — iteracja testowa R16.3
 
 [English](../en/STATUS.md) · [Funkcje i odbiór](FEATURES.md)
 
-MCU R14.5 + host R16.2, Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
+MCU R14.5 + host R16.3, Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
 Operator potwierdza natywną termikę/wentylatory, XYZ/E, OLED i łączność.
 R16 porządkuje te ścieżki w obsłudze normalnej, oddzielając niedokończone
 procedury OEM. Zastępuje dawny adapter uruchomieniowy przez natywny G28/probe
@@ -28,7 +28,7 @@ prędkości/pełnym obciążeniu i dokładności czujników oraz pełne procedur
 M03/M07/M08. Nastawa 2 us i PASS FILEOUTPUT nie są pomiarem 300 mm/s na MCU.
 Inventure pozostaje osobnym projektem F207; jego geometria/pliki nie są tu instalowane.
 
-R16.2 dodaje opisane w [cyklu połączenia](CONNECTION.md) odzyskanie po restarcie
+R16.3 dodaje opisane w [cyklu połączenia](CONNECTION.md) odzyskanie po restarcie
 procesu hosta, z jednym natywnym resetem dla starej sesji/błędu heartbeat.
 Pozostałe kody awarii wymagają jawnego odzyskania. Testy obejmują rzeczywiste
 helpery natywnego restartu i konfiguracji, z symulowanymi odpowiedziami guarda.

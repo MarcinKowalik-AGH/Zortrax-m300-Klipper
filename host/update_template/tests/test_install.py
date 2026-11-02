@@ -10,6 +10,34 @@ import install
 
 
 class InstallerTests(unittest.TestCase):
+    def test_native_m07_upgrade_preserves_sensor_include_pid_e_z315_and_existing_test_macros(self):
+        source=('[mcu]\nserial: /dev/ttyS1\nbaud: 1500000\n'
+            '[stepper_z]\nposition_min: 0\nposition_max: 315\nrotation_distance: 4\n'
+            '[extruder]\nrotation_distance: 26.133\n'
+            '[m300_job]\nworkflow_qualified: False\n'
+            '[m300_calibration]\nqualified: False\nworkflow: M07_STOCK\nstock_steps_per_mm: 800\n'
+            '[include m300_sensors.cfg]\n[include m300_tests.cfg]\n'
+            '#*# <--- SAVE_CONFIG --->\n#*# [extruder]\n#*# pid_kp = 15.152\n')
+        self.config.write_text(source)
+        sensors=self.config.parent/'m300_sensors.cfg';sensor_data=b'# Original sensor conversion bytes\n'
+        sensors.write_bytes(sensor_data)
+        macros=self.config.parent/'m300_tests.cfg'
+        original_macro='[gcode_macro TEST_M300_STATUS]\ngcode:\n    M105\n'
+        macros.write_text(original_macro)
+        changes=install.plan(self.root,self.config)
+        receipt=install.apply(self.root,self.config,changes)
+        self.assertEqual(sensors.read_bytes(),sensor_data)
+        for line in ('position_min: 0','position_max: 315','rotation_distance: 26.133',
+                     'workflow_qualified: False','#*# pid_kp = 15.152','[include m300_sensors.cfg]'):
+            self.assertIn(line,self.config.read_text())
+        self.assertIn(original_macro,macros.read_text())
+        self.assertIn('[gcode_macro TEST_M300_LEVEL]',macros.read_text())
+        self.assertEqual(install.plan(self.root,self.config),[])
+        install.rollback(receipt,self.root,self.config)
+        self.assertEqual(self.config.read_text(),source)
+        self.assertEqual(sensors.read_bytes(),sensor_data)
+        self.assertEqual(macros.read_text(),original_macro)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.temp.name) / 'klipper'
