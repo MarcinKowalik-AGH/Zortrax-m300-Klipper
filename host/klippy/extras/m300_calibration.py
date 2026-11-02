@@ -447,7 +447,7 @@ class M300Calibration:
             self._bind()
             self._guard()
             self._geometry()
-            self.target = finite(self.procedure_temperature if temperature is None else temperature,
+            self.target = finite(self.procedure_temperature if self.native_mode and temperature is None else temperature,
                                  'temperature', self.hotend.min_extrude_temp, self.hotend.max_temp)
             queued, current, empty = self.toolhead.check_busy(self.reactor.monotonic())
             if not empty or queued > current:
