@@ -247,6 +247,8 @@ class M300OLED:
         received_ui = self.printer.lookup_object('m300_menu_ui', None)
         receipt = getattr(received_ui, 'leveling_receipt', None)
         received_leveling = receipt(self.stream) if receipt is not None else None
+        platform_receipt=getattr(received_ui,'platform_receipt',None)
+        received_platform=platform_receipt(self.stream) if platform_receipt is not None else None
         # Native serialhdl records this before dispatching its handler. A
         # delayed serial callback must not freshen a stale press/rotation.
         received_at = params.get('#receive_time', self.reactor.monotonic())
@@ -302,6 +304,11 @@ class M300OLED:
                 if (current_view and menu.page == 'motion_status'
                         and events is not None and events['longs']):
                     motion.cancel('operator long press during homing')
+            platform_panel=getattr(received_ui,'platform_panel',None)
+            if platform_panel is not None and platform_panel(
+                    snapshot,received_at,received_platform,events,now):
+                self.render_at=0.
+                return
             if events is None:
                 return
             if self.fast and not (self.stream.enabled and self.stream.ready):

@@ -20,6 +20,7 @@ import zlib
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'host/klippy'))
 from extras.m300_leveling_oem import describe, render, turn_unit
+from extras.m300_oem_procedure_ui import describe as describe_service
 from extras.m300_oem_graphics import OEMGraphics, STOCK_SHA256
 from extras.m300_oled_render import Frame
 
@@ -59,6 +60,11 @@ def reproduce(source, working, output):
     statuses += [dict(state='FAULT',reason='NO_RELEASE: PC7 remains active'),
                  dict(state='FAULT',reason='maximum screw instructions reached'),
                  dict(state='REVIEW',review=[-.2,.1,0.,-.4,-.1])]
+    statuses += [dict(state=state,operation=operation,native_control=True,oem_owner=owner)
+        for owner,operation,state in (
+            ('m300_maintenance','HOTEND','WAIT_CONFIRM'),
+            ('m300_filament','LOAD','WAIT_INSERT'),('m300_filament','LOAD','LOADING'),
+            ('m300_filament','UNLOAD','UNLOADING'),('m300_filament','UNLOAD','WAIT_REMOVE'))]
     records = []
     for li, language in enumerate(('EN','PL','FR','DE','ES')):
         for status in statuses:
@@ -76,7 +82,8 @@ def reproduce(source, working, output):
                     raise AssertionError('Unexpected OLED column offset '+str(offset))
                 return 1
             f.hook(0x0800c290, flush)
-            screen = describe(status, language)
+            screen = (describe_service(status['oem_owner'],status,language)
+                      if 'oem_owner' in status else describe(status, language))
             if status['state'] == 'REVIEW':
                 # Original result display assumes 800 counts/mm. Its physical
                 # composition is the reference; the port fixes HW05 units.

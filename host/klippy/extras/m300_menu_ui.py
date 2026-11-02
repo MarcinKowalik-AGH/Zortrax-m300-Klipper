@@ -123,7 +123,7 @@ class M300MenuUI:
             self._leveling_frames.clear()
             return None
         view = self.procedures.view(now)
-        if view['owner'] != 'm300_calibration':
+        if not view.get('leveling_screen'):
             self._leveling_frames.clear()
             return None
         screen = view['leveling_screen']
@@ -147,7 +147,7 @@ class M300MenuUI:
         if self.oled.page != 'm04' or self.menu.page != 'procedure':
             return False
         view = self.procedures.view(now)
-        if view['owner'] != 'm300_calibration':
+        if not view.get('leveling_screen'):
             return False
         # Consume rotation and stale/coalesced clicks in this modal dialog.
         # The short press confirms precisely the phase visible at receipt.
@@ -162,6 +162,72 @@ class M300MenuUI:
                     self.oled.page, self.oled.selection = 'status', 0
         self.oled.render_at = 0.
         return True
+
+    def _platform_context(self):
+        o=self.oled
+        if o.message or o.page not in ('home','m04') or self.menu.page!='maintenance':
+            return None
+        actions=o._presented_actions
+        if (o._presented_context!=o._input_context() or not actions
+                or not 0<=o.selection<len(actions)):
+            return None
+        action=actions[o.selection]
+        if not action or action[0]!='platform_hold':
+            return None
+        return (o._input_context(),o.selection,action[1])
+
+    def _platform_visible(self):
+        stream=self.oled.stream
+        if not stream.enabled or not stream.ready:
+            return False
+        display=self.printer.lookup_object('m300_display',None)
+        return not (display is not None and
+            (display._consume_gesture or display.phase=='ENTERING_SLEEP'
+             or display._presentation_wait
+             or getattr(stream,'display_mode',None)=='OFF'
+             or getattr(stream,'requested_mode',None)=='OFF'))
+
+    def platform_receipt(self,stream):
+        return (self._platform_context(), self._platform_visible()
+                and stream.previous==self.oled._render_wire)
+
+    def platform_panel(self,snapshot,received_at,receipt,events,now):
+        service=self.menu.maintenance
+        if not getattr(service,'lease',None):
+            return False
+        context,acknowledged=receipt or (None,False)
+        visible=(context is not None and context==self._platform_context()
+                 and self._platform_visible())
+        fresh=(type(received_at) in (int,float) and math.isfinite(received_at)
+               and 0.<=now-received_at<=.75 and events is not None)
+        pressed=snapshot.get('pressed') in (1,True)
+        was_held=service.state=='PLATFORM_HOLD'
+        consume=getattr(self,'_platform_gesture',False)
+        if was_held:
+            service.refresh_hold(context,received_at,pressed,visible and fresh)
+        if not fresh or not visible:
+            self._platform_released=False
+            if not pressed:
+                self._platform_gesture=False
+            return was_held or consume
+        if not pressed:
+            self._platform_released=True
+            self._platform_gesture=False
+            return was_held or consume
+        if not was_held and not consume and events.get('presses'):
+            may_start=(acknowledged and getattr(self,'_platform_released',False)
+                       and not events.get('delta'))
+            self._platform_released=False
+            self._platform_gesture=True
+            if may_start:
+                try:
+                    service.hold(context[2],context,received_at,
+                        lambda:context==self._platform_context() and self._platform_visible())
+                except Exception as exc:
+                    self.menu.reason=str(exc)
+            self.oled.render_at=0.
+            return True
+        return was_held or consume
 
     def list_atlas(self):
         return [(self.translate(entry['source_en']) or '(unnamed)',
@@ -183,7 +249,7 @@ class M300MenuUI:
                 'oled_spi_owner':'m300_oled',
                 'encoder_owner':'m300_oled',
                 'action_owner':'m300_menu_and_existing_services',
-                'host_ui_revision':'0.13.16.4.1-OEM-TEMPERATURES',
+                'host_ui_revision':'0.13.16.5-OEM-MENU-SERVICES',
                 'operation_groups':['Klipper', 'Zortrax M300', 'Service / Tests'],
                 'menu_wrap':False,
                 'menu_reverse':self.oled.menu_reverse,

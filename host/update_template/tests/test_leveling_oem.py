@@ -12,6 +12,7 @@ import zlib
 import test_display
 from test_native_leveling import Harness, homing
 from payload.m300_leveling_oem import assets, describe, render, text, turn_unit
+from payload.m300_oem_procedure_ui import describe as describe_service
 from payload.m300_menu_ui import M300MenuUI
 from payload.m300_oem_graphics import OEMGraphics
 from payload.m300_oled import M300OLED
@@ -74,15 +75,18 @@ class OEMLevelingTests(unittest.TestCase):
                 self.assertTrue(stock_rear_accepted(bound,scale))
                 self.assertFalse(stock_front_accepted(bound,scale))
 
-    def test_eighty_five_frames_match_original_register_c_pixels_in_all_five_languages(self):
+    def test_one_hundred_ten_frames_match_original_register_c_pixels_in_all_five_languages(self):
         fixture=json.loads((Path(__file__).parent/'reference/leveling_oem_frames.json').read_text())
         sprites=OEMGraphics()
-        self.assertEqual(len(fixture['frames']),85)
+        self.assertEqual(len(fixture['frames']),110)
         for record in fixture['frames']:
             with self.subTest(language=record['language'],status=record['status']):
                 expected=zlib.decompress(base64.b64decode(record['wire_zlib_b64']))
                 self.assertEqual(hashlib.sha256(expected).hexdigest(),record['sha256'])
-                actual=render(describe(record['status'],record['language']),sprites,test_display.renderer.Frame)
+                status=record['status']
+                screen=(describe_service(status['oem_owner'],status,record['language'])
+                        if 'oem_owner' in status else describe(status,record['language']))
+                actual=render(screen,sprites,test_display.renderer.Frame)
                 self.assertEqual(actual,expected)
 
     def test_binary_descriptor_text_and_sprite_associations_are_explicit(self):

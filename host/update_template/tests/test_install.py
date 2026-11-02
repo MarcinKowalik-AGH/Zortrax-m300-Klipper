@@ -27,7 +27,7 @@ class InstallerTests(unittest.TestCase):
         receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
         self.assertIn('procedure_temperature: 260',self.config.read_text())
         self.assertIn('procedure_temperature: 240',self.config.read_text())
-        self.assertIn('filament_qualified: False',self.config.read_text())
+        self.assertIn('filament_qualified: True',self.config.read_text())
         self.assertIn('default(260)',path.read_text())
         self.assertEqual(path.read_text().count('default(240)'),2)
         self.assertIn('M118 My retained command',path.read_text())

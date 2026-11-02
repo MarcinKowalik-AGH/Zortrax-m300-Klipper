@@ -511,4 +511,8 @@ class M300Maintenance:
 
 
 def load_config(config):
+    board=config.get_printer().load_object(config,'m300_mcu')
+    if getattr(board,'native_control',False):
+        from .m300_native_maintenance import M300NativeMaintenance
+        return M300NativeMaintenance(config)
     return M300Maintenance(config)

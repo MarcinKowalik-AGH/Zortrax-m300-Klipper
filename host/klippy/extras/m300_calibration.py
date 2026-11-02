@@ -9,6 +9,7 @@ import copy
 import json
 import logging
 import math
+from .m300_native_service import lock_command, unlock_command
 from .m300_calibration_state import CalibrationState, CalibrationError, POINTS, finite
 
 PERIOD = .1
@@ -304,14 +305,10 @@ class M300Calibration:
                    'M109', 'M190', 'TEMPERATURE_WAIT', 'SAVE_CONFIG',
                    'SDCARD_PRINT_FILE', 'M23', 'M24', 'PAUSE', 'RESUME')
         for name in blocked:
-            original = self.gcode.register_command(name, None)
-            if original is not None:
-                def guarded(gcmd, original=original, name=name):
-                    if self.is_busy():
-                        raise self._error('calibration owns resources; ' + name + ' refused')
-                    return original(gcmd)
-                self.gcode.register_command(name, guarded)
-                self._ownership_commands.append((name, original, guarded))
+            def guarded(gcmd,name=name):
+                raise self._error('calibration owns resources; ' + name + ' refused')
+            record=lock_command(self.gcode,name,guarded)
+            if record is not None:self._ownership_commands.append(record)
         if not self._ownership_callbacks:
             for name in self.job.steppers.get_steppers():
                 self.job.steppers.lookup_enable(name).register_state_callback(self._enable_changed)
@@ -321,9 +318,8 @@ class M300Calibration:
     def _release_ownership(self):
         if not self.native_mode or not self._ownership_methods:
             return
-        for name, original, guarded in self._ownership_commands:
-            current = self.gcode.register_command(name, None)
-            self.gcode.register_command(name, original if current == guarded else current)
+        for record in self._ownership_commands:
+            unlock_command(self.gcode,record)
         self._ownership_commands.clear()
         for obj, name, original, guarded in reversed(self._ownership_methods):
             if getattr(obj, name) == guarded:

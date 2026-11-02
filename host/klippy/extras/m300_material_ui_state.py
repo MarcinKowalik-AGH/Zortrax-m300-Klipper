@@ -7,13 +7,14 @@ sole owner of transport, deadlines and operator-confirmation tokens.
 from dataclasses import dataclass
 
 PHASES = frozenset({'IDLE','WAIT_PAUSE','HEATING','REHEATING','WAIT_INSERT',
-    'LOADING','WAIT_UNLOAD','UNLOADING','WAIT_PURGE','PURGING',
+    'LOADING','WAIT_UNLOAD','WAIT_REMOVE','UNLOADING','WAIT_PURGE','PURGING',
     'COMPLETING','COMPLETE','CANCELLING','CANCELLED','FAULT'})
 OPERATIONS = frozenset({'LOAD','UNLOAD','CHANGE'})
 MESSAGES = {
  'IDLE':'Choose material operation', 'WAIT_PAUSE':'Pausing print safely',
  'HEATING':'Heating nozzle', 'REHEATING':'Reheating nozzle',
  'WAIT_INSERT':'Insert filament, then confirm', 'WAIT_UNLOAD':'Remove filament, then confirm',
+ 'WAIT_REMOVE':'Retraction finished; remove filament, then confirm',
  'WAIT_PURGE':'Inspect extrusion: confirm finish or purge',
  'LOADING':'Feeding filament in bounded steps', 'UNLOADING':'Retracting filament in bounded steps',
  'PURGING':'Purging bounded amount', 'COMPLETING':'Completing material operation',
@@ -39,7 +40,7 @@ def view_from_status(status):
         raise MaterialUiError('incomplete M03 operator permissions')
     if state!='WAIT_PURGE' and status['can_purge']:
         raise MaterialUiError('purge permission in invalid phase')
-    if state not in ('WAIT_INSERT','WAIT_UNLOAD','WAIT_PURGE') and status['can_confirm']:
+    if state not in ('WAIT_INSERT','WAIT_UNLOAD','WAIT_REMOVE','WAIT_PURGE') and status['can_confirm']:
         raise MaterialUiError('confirmation permission in invalid phase')
     return {'state':state,'operation':op,'message':MESSAGES[state],
         'token':token,'phase':phase,'busy':status['busy'],'ready':status['ready'],

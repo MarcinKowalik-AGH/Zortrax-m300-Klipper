@@ -24,12 +24,14 @@ def extract(application, ram):
         end = application.index(b'\0', start)
         return application[start:end].decode('utf-8')
     texts = {}
-    for index in (105, 108, *range(123, 143)):
+    for index in (16, 19, 20, 21, 22, 105, 108, *range(123, 143)):
         table = 0x0801afd0 + index*20
         texts[str(index)] = {'table': hex(table), 'languages': {
             lang: string(word(table+4*i)) for i, lang in enumerate(LANGUAGES)}}
     descriptors = {}
-    for address in (0x08021c60, *range(0x08021db0, 0x08021e58, 12)):
+    for address in (0x08021c60, 0x08021d38,
+                    *range(0x08021db0, 0x08021e58, 12),
+                    0x08021ea0, 0x08021eac, 0x08021eb8, 0x08021ec4):
         table, flags, sprite = (word(address+i) for i in (0, 4, 8))
         text_id = (table-0x0801afd0)//20
         assert str(text_id) in texts

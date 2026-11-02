@@ -127,7 +127,7 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
         if state in ('COMPLETE',):return '0x0801c024'
         if state in ('FAULT','FILE_ERROR'):return '0x0801be48'
         return '0x08020fb8' if state in ('PRINTING', 'COMPLETING') else '0x0801be48'
-    if menu_page == 'main' and rows and 0<=selected<len(rows):
+    if menu_page in ('main','zortrax') and rows and 0<=selected<len(rows):
         action=rows[selected][1]
         if action in ('status', ('oled','status')):
             return None  # There is no audited OEM Back pictogram.
@@ -136,6 +136,14 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
     if rows and 0<=selected<len(rows):
         action=rows[selected][1]
         if isinstance(action,tuple) and len(action)>0:
+            if action[0] in ('ui_back','page') and (action[0]=='ui_back' or action[1] in ('main','zortrax')):
+                return None
+            if action[0]=='platform_hold':
+                return '0x0801cb24' if action[1]<0 else '0x0801cc24'
+            if action[0]=='native_gcode':
+                icon={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
+                      'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}.get(action[1])
+                if icon:return icon
             if action[0]=='page' and len(action)>1:
                 return PAGES.get(action[1], PAGES.get(menu_page,'0x0801dc08'))
             icon=ACTION_ICONS.get(action[0])

@@ -12,6 +12,7 @@ import math
 
 from .m300_filament_state import (FilamentState, FilamentStateError, build_plan,
                                  TRANSPORT_STATES, WAIT_STATES)
+from .m300_native_service import NativeServiceLease, require_idle_print
 
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
@@ -26,6 +27,10 @@ class M300Filament:
         self.gcode = self.printer.lookup_object('gcode')
         self.job = self.printer.load_object(config, 'm300_job')
         self.board = self.job.board
+        self.native_mode = bool(getattr(self.board,'native_control',False))
+        self.native_lease = (NativeServiceLease(self,
+            lambda:(self.machine.token,self.machine.phase_id),
+            lambda:self._guard(transport=True),self.cancel) if self.native_mode else None)
         self.filament_qualified = config.getboolean('filament_qualified', False)
         self.procedure_temperature = self._option('procedure_temperature', 240., 170., 300.)
         self.use_sensor = config.getboolean('use_filament_sensor', False)
@@ -229,16 +234,19 @@ class M300Filament:
         self.ready = False
         self._fault('Klippy shutdown', signal_shutdown=False)
         self._stop_timers()
+        if self.native_lease is not None:self.native_lease.release()
 
     def _disconnect(self):
         self.ready = False
         self._fault('MCU/host disconnected', signal_shutdown=False)
         self._stop_timers()
+        if self.native_lease is not None:self.native_lease.release()
 
     def _restart(self, *args):
         self.ready = False
         self._fault('restart invalidated material operation', signal_shutdown=False)
         self._stop_timers()
+        if self.native_lease is not None:self.native_lease.release()
 
     def _stop_timers(self):
         self.reactor.update_timer(self._timer, self.reactor.NEVER)
@@ -271,7 +279,19 @@ class M300Filament:
             raise self._error('Klippy is not ready')
         if not self.filament_qualified:
             raise self._error('filament_qualified=False; material path is unqualified')
-        self.job._check_authority(require_position=require_position)
+        if self.native_mode:
+            require_idle_print(self.printer,self.reactor.monotonic())
+            self.board.require_motion()
+            self.board.require_heating()
+            if self.job.machine.state not in JOB_IDLE or self.job.machine.active:
+                raise self._error('M02 job owns resources')
+            if self.gcode_move.move_transform not in (None,self.toolhead):
+                raise self._error('native filament requires untransformed Cartesian motion')
+            if self.job.m04_service_busy():
+                raise self._error('another OEM service owns resources')
+            # E-only services do not invent an XYZ home or require a Z move.
+        else:
+            self.job._check_authority(require_position=require_position)
         return self.job._temperatures(self.reactor.monotonic())
 
     def _check_owner(self):
@@ -350,7 +370,8 @@ class M300Filament:
             self._live()
             if not self._check_deadline():
                 return False
-        self.hotend.set_temp(target)
+        if self.native_lease is not None:self.native_lease.heat(self.hotend,target)
+        else:self.hotend.set_temp(target)
         self._expected_target = target
         self._temperature_stable_since = None
         return True
@@ -358,7 +379,8 @@ class M300Filament:
     def _off(self):
         if self.hotend is not None:
             try:
-                self.hotend.set_temp(0.)
+                if self.native_lease is not None:self.native_lease.heat(self.hotend,0.)
+                else:self.hotend.set_temp(0.)
             except Exception:
                 logging.exception('M300 filament heater-off')
         self._expected_target = 0.
@@ -434,6 +456,8 @@ class M300Filament:
         token = self.machine.start(operation, plan, context, now)
         self._phase_started = now
         try:
+            if self.native_lease is not None:
+                self.native_lease.acquire(self.toolhead,self.gcode_move,(self.hotend,self.job.bed))
             if self.machine.state == 'WAIT_PAUSE':
                 self.job.pause('M03 filament change')
             else:
@@ -443,6 +467,7 @@ class M300Filament:
             raise
         if self._valid_session(token):
             self.reactor.update_timer(self._timer, self.reactor.NOW)
+            if self.native_mode:self.reactor.update_timer(self._watchdog_timer,self.reactor.NOW)
             if gcmd is not None:
                 gcmd.respond_info('M300 material operation accepted; explicit confirmations required, no automatic Resume')
 
@@ -479,7 +504,11 @@ class M300Filament:
     def confirm(self, token, phase_id):
         self._check_prompt(token, phase_id)
         state = self.machine.state
-        if state == 'WAIT_PURGE':
+        if state == 'WAIT_REMOVE':
+            self.machine.removed(token,self.reactor.monotonic())
+            self._phase_started=self.reactor.monotonic()
+            self.reactor.update_timer(self._timer,self.reactor.NOW)
+        elif state == 'WAIT_PURGE':
             self._advance('finish', phase_id)
         else:
             if state == 'WAIT_INSERT':
@@ -557,6 +586,8 @@ class M300Filament:
         was_reheat = self.machine.state == 'REHEATING'
         intent, self._intent = self._intent, None
         self._advance('heated')
+        if self.native_mode and not was_reheat and self.machine.mode=='UNLOAD':
+            self._advance('unload_confirmed')
         if was_reheat and intent is not None:
             self._advance(intent)
 
@@ -572,6 +603,11 @@ class M300Filament:
         segment = self.machine.next_segment(token, self.reactor.monotonic())
         if segment is None:
             self._advance({'LOADING': 'loaded', 'UNLOADING': 'unloaded', 'PURGING': 'purged'}[self.machine.state])
+            if self.native_mode and self.machine.mode=='UNLOAD' and self.machine.state=='COMPLETING':
+                self.machine.await_removal(self.machine.token,self.reactor.monotonic())
+                self._phase_started=self.reactor.monotonic()
+            elif self.native_mode and self.machine.mode=='LOAD' and self.machine.state=='WAIT_PURGE':
+                self._advance('finish')
             return
         position = list(self.toolhead.get_position())
         position[3] += segment['delta_e']
@@ -579,7 +615,10 @@ class M300Filament:
             raise self._error('non-finite E endpoint')
         self._move_permit = {'token': token, 'phase': phase, 'position': position, 'speed': segment['speed']}
         try:
-            self.toolhead.manual_move([None, None, None, position[3]], segment['speed'])
+            if self.native_lease is not None:
+                self.native_lease.move(position,segment['speed'],extruder_only=True)
+            else:
+                self.toolhead.manual_move([None, None, None, position[3]], segment['speed'])
         finally:
             self._move_permit = None
         if self._valid_session(token, phase):
@@ -626,6 +665,7 @@ class M300Filament:
         self._advance('completed' if success else 'cancelled')
         self._cleanup_pending = False
         self._expected_target = None
+        if self.native_lease is not None:self.native_lease.release()
 
     def _watchdog(self, now):
         if not self.ready or self.printer.is_shutdown():
@@ -638,13 +678,13 @@ class M300Filament:
                     raise self._error('native material queue drain deadline expired')
             except Exception as exc:
                 self._fault(str(exc))
-        return now + PERIOD if self.ready else self.reactor.NEVER
+        return now + PERIOD if self.ready and (not self.native_mode or self.machine.active) else self.reactor.NEVER
 
     def _tick(self, now):
         if not self.ready or self.printer.is_shutdown():
             return self.reactor.NEVER
         if not self.machine.active or self._executing:
-            return now + PERIOD
+            return self.reactor.NEVER if self.native_mode and not self.machine.active else now + PERIOD
         try:
             self._guard()
             if not self._check_deadline():
@@ -736,6 +776,7 @@ class M300Filament:
                 'reason': self.machine.reason or '', 'last_rejection': self.last_rejection,
                 'owner_job_token': self._owner_token, 'job_resume_automatic': False,
                 'filament_qualified': self.filament_qualified, 'hardware_qualified': False,
+                'native_control': self.native_mode,
                 'phase_remaining': None if self.machine.deadline is None else max(0., self.machine.deadline-now),
                 'history': snapshot['history']}
 

@@ -56,6 +56,7 @@ class NativeMenuTests(unittest.TestCase):
 
     def test_all_native_maintenance_actions_are_supported_by_presentation(self):
         m, _ = fixture()
+        m.page='klipper'
         rows = m.rows(100.)[1]
         self.assertEqual(rows[0][0], 'Back')
         self.assertTrue(require_rows(rows))
@@ -143,6 +144,7 @@ class NativeMenuTests(unittest.TestCase):
 
     def test_legacy_sleep_cannot_replace_native_controls(self):
         m, _ = fixture()
+        m.page='klipper'
         m.maintenance.get_status = lambda now: {'sleep': True}
         title, rows = m.rows(100.)
         self.assertEqual(title, 'Klipper')

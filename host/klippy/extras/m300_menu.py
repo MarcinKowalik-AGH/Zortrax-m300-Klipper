@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.4.1-OEM-TEMPERATURES"
+    MENU_REVISION = "0.13.16.5-OEM-MENU-SERVICES"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -216,9 +216,21 @@ class M300Menu:
                 ('Service / Tests', ('page', 'tests'))])
         if native and self.page == 'zortrax':
             return 'Zortrax M300', self._notice(back + [
+                (self.t('Models'), ('page', 'models')),
+                (self.t('Maintenance'), ('page', 'maintenance')),
+                (self.t('Material'), ('page', 'material')),
                 (self.t('Settings'), ('page', 'settings')),
-                (self.t('Information'), ('page', 'information')),
-                ('OEM procedures: Service / Tests', None)])
+                (self.t('Information'), ('page', 'information'))])
+        if native and self.page == 'maintenance':
+            return self.t('Maintenance'), self._notice(back + [
+                (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
+                (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
+                (self.t('Move the platform up'), ('platform_hold',-1)),
+                (self.t('Move the platform down'), ('platform_hold',1))])
+        if native and self.page == 'material':
+            return self.t('Material'), self._notice(back + [
+                (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
+                (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))])
         if native and self.page == 'tests':
             return 'Service / Tests', self._notice(back + [
                 ('Diagnostics', ('page', 'diagnostics')),
@@ -663,6 +675,10 @@ class M300Menu:
                 if not getattr(getattr(getattr(self, 'job', None), 'board', None), 'native_control', False):
                     raise self._error('native controls are not active')
                 self._native_script(action[1])
+            elif kind == 'platform_hold':
+                # The raw acknowledged physical press owns this gesture.
+                # The short/long event delivered on release never jogs twice.
+                return None
             elif kind == 'page':
                 self._navigate(action[1])
             elif kind == 'procedure_action':

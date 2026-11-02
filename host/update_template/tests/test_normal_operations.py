@@ -182,9 +182,11 @@ class GroupTests(unittest.TestCase):
     def test_classifies_confirmed_and_unconfirmed_functions(self):
         for name in ('PID_SAVE', 'PID_HOTEND', 'CANCEL_PRINT'):
             self.assertEqual(category(name), 'Klipper')
-        for name in ('ZORTRAX_STATUS', 'ZORTRAX_LIGHT', 'ZORTRAX_FANS'):
+        for name in ('ZORTRAX_STATUS', 'ZORTRAX_LIGHT', 'ZORTRAX_FANS',
+                     'ZORTRAX_LEVEL','ZORTRAX_LOAD','ZORTRAX_UNLOAD',
+                     'ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP','ZORTRAX_PLATFORM_DOWN'):
             self.assertEqual(category(name), 'ZORTRAX M300')
-        for name in ('ZORTRAX_LOAD', 'ZORTRAX_PRINT', 'TEST_M300_XY'):
+        for name in ('ZORTRAX_PRINT', 'TEST_M300_XY'):
             self.assertEqual(category(name), 'TEST M300')
         self.assertIsNone(category('MY_OTHER_PRINTER_MACRO'))
 

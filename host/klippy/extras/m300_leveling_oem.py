@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 import struct
 
-ASSET_SHA256 = '808e2cabf0c9f1c7bb1d522d612fed8639f4f7cae0b329d38e689371e27dfd10'
+ASSET_SHA256 = '2a681b7a04acf39b9d4a2cbbec99a781fc22f6f695c9f0ddcc33b923da9f9caf'
 LANGUAGES = ('EN', 'PL', 'FR', 'DE', 'ES')
 SCREENS = {'WAIT_PREPARE': '0x8021db0', 'WAIT_WARNING': '0x8021db0',
            'WAIT_TIGHTEN': '0x8021dbc', 'HOMING': '0x8021c60',

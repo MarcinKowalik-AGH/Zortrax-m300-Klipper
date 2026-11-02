@@ -90,6 +90,9 @@ def convert_text(text):
                             float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
         elif section == 'm300_filament':
             block = set_option(block, 'procedure_temperature', '240')
+            block = set_option(block, 'filament_qualified', 'True')
+        elif section == 'm300_maintenance':
+            block = set_option(block, 'qualified', 'True')
         elif section == 'printer':
             block = minimum(block, 'max_velocity', 300)
             block = minimum(block, 'max_z_velocity', 25)
@@ -109,7 +112,7 @@ def convert_text(text):
                      'gcode:\n    SAVE_CONFIG\n\n')
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
-                     'description: TEST / M07 leveling with shared OLED and Fluidd steps\n'
+                     'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(260)|float}\n\n')
         elif section in ('gcode_macro TEST_ZORTRAX_LEVEL', 'gcode_macro ZORTRAX_LOAD',
                          'gcode_macro ZORTRAX_UNLOAD'):

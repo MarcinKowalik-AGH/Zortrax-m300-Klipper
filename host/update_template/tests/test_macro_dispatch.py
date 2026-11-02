@@ -28,7 +28,7 @@ def dispatcher():
 
 def templates():
     cp=configparser.RawConfigParser()
-    cp.read(ROOT/'payload/m300_tests.cfg')
+    cp.read([ROOT/'payload/m300_tests.cfg',ROOT/'payload/m300_operations.cfg'])
     return {name[12:]:cp.get(name,'gcode') for name in cp.sections() if name.startswith('gcode_macro ')}
 
 

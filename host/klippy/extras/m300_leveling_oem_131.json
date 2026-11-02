@@ -15,6 +15,56 @@
     7
   ],
   "texts": {
+    "16": {
+      "table": "0x801b110",
+      "languages": {
+        "EN": "WARNING: Hot printhead\nExtruder heating is done",
+        "PL": "UWAGA: Gorąca głowica\nNagrzewanie zakończone",
+        "FR": "AVERTISSEMENT: Extrudeur\nchaud. Chauffage terminé.",
+        "DE": "WARNUNG: Heißer Kopf\nVorheizen abgeschlossen",
+        "ES": "ADVERTENCIA: Cabezal caliente\nCalentamiento terminado"
+      }
+    },
+    "19": {
+      "table": "0x801b14c",
+      "languages": {
+        "EN": "WARNING: Hot printhead\nRemoving the material Please\nwait",
+        "PL": "UWAGA: Gorąca głowica\nWysuwanie materiału Proszę\nczekać",
+        "FR": "AVERTISSEMENT: Extrudeur\nchaud. Retrait du filament.\nVeuillez patienter.",
+        "DE": "WARNUNG: Heißer Kopf Material\nwird ausgefahren Bitte warten",
+        "ES": "ADVERTENCIA: Cabezal caliente\nRetirada del material Espere"
+      }
+    },
+    "20": {
+      "table": "0x801b160",
+      "languages": {
+        "EN": "WARNING: Hot printhead Insert\nnew material into the extruder\nand press the button to continue",
+        "PL": "UWAGA: Gorąca głowica Wsuń\nmateriał do ekstrudera i naciśnij\nprzycisk",
+        "FR": "AVERTISSEMENT:\nTêted'extrusionchaude\nIntroduisez le matériau dans\nl’extrudeur et appuyez le bouton",
+        "DE": "WARNUNG: Heißer Kopf Material\nin den Extruder einlegen und\nTaste betätigen",
+        "ES": "ADVERTENCIA: Cabeza caliente\nIntroduzca el material en la\nextrusora y pulse el botón"
+      }
+    },
+    "21": {
+      "table": "0x801b174",
+      "languages": {
+        "EN": "WARNING: Hot printhead Press button\nto remove material from printer",
+        "PL": "UWAGA: Gorąca głowica Naciśnij\nprzycisk aby usunąć materiał\n z drukarki",
+        "FR": "ATTENTION: tête d’impression\nchaude Cliquez sur le bouton\npour supprimer un matériel\nde l’imprimante",
+        "DE": "ACHTUNG: Heißer Druckkopf Drucken\nSie die Taste, um das\nMaterial aus dem Drucker\nzu entfernen",
+        "ES": "Advertencia: Cabezal caliente.\nPresione el botón para evacuar\nel material de la\nimpresora"
+      }
+    },
+    "22": {
+      "table": "0x801b188",
+      "languages": {
+        "EN": "WARNING: Hot printhead\nLoading material Please wait",
+        "PL": "UWAGA: Gorąca głowica\nŁadowanie materiału Proszę\nczekać",
+        "FR": "AVERTISSEMENT:\nTêted'extrusionchaude\nChargement du matériau; Veuillez\npatienter",
+        "DE": "WARNUNG: Heißer Kopf Material\nwird geladen Bitte warten",
+        "ES": "ADVERTENCIA: Cabezal caliente\nCarga del material Espere"
+      }
+    },
     "105": {
       "table": "0x801b804",
       "languages": {
@@ -242,6 +292,11 @@
       "flags": 0,
       "sprite": "0x801c2b8"
     },
+    "0x8021d38": {
+      "text_id": 16,
+      "flags": 0,
+      "sprite": "0x801c024"
+    },
     "0x8021db0": {
       "text_id": 124,
       "flags": 0,
@@ -311,6 +366,26 @@
       "text_id": 137,
       "flags": 0,
       "sprite": "0x801c024"
+    },
+    "0x8021ea0": {
+      "text_id": 22,
+      "flags": 0,
+      "sprite": "0x801d0b8"
+    },
+    "0x8021eac": {
+      "text_id": 19,
+      "flags": 0,
+      "sprite": "0x801cfb0"
+    },
+    "0x8021eb8": {
+      "text_id": 20,
+      "flags": 0,
+      "sprite": "0x801d0b8"
+    },
+    "0x8021ec4": {
+      "text_id": 21,
+      "flags": 0,
+      "sprite": "0x801cfb0"
     }
   },
   "glyphs": [
