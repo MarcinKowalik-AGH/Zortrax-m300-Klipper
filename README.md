@@ -1,3 +1,39 @@
+# Zortrax M300 Classic — Klipper R16.2
+
+[Polski](README_PL.md) · [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [Detailed project status (2 Nov 2026)](docs/en/STATUS_2026-11-02_OLED.md)
+
+## Project overview — November 2, 2026
+
+This project ports **Klipper to the original Zortrax M300 Classic**, using the STM32F103 controller, an Orange Pi host, the factory monochrome OLED and rotary encoder. The present integration baseline is **MCU R14.5 / Host R16.2**. It is a **functional integration / test release**, not a statement of full equivalence with the original firmware.
+
+**Integrated and software-validated:** native Klipper temperature and fan control, PID and SAVE_CONFIG, Cartesian XYZ/extrusion, contact-homing adapter, OEM hardware-revision detection, OLED status and menu framework, firmware-side fault/heartbeat monitoring and local protective cooling, limited host startup reconnection, reversible host/config migration, and Fluidd organization. CI reports 131 host tests plus dedicated guard, cooling, hardware decoder and Klippy FILEOUTPUT scenarios.
+
+**Still pending physical acceptance or completion:** latest 180°C contact-homing flow, high-speed 300 mm/s XY timing and stress tests, end-to-end OLED heater action / actual temperature display, complete M03/M07/M08 OEM workflows, binary Z-code and physical SD support, and comprehensive fault/recovery verification. The November 2 settings-screen photograph shows a live `M300NativeMotion.panel_update` exception, which **must be fixed**; settings-menu operation is not complete.
+
+### On-device OLED gallery
+
+**Picture 1 — Klipper status screen, Ready**
+
+![Picture 1: Klipper status, Ready](docs/assets/oled/2026-11-02/picture%201.png)
+
+**Picture 2 — Settings screen with visible panel_update error**
+
+![Picture 2: Settings menu and integration exception](docs/assets/oled/2026-11-02/picture%202.png)
+
+**Picture 3 — Heating menu, hotend selection**
+
+![Picture 3: Heat hotend menu](docs/assets/oled/2026-11-02/picture%203.png)
+
+**Picture 4 — Heating menu, bed selection**
+
+![Picture 4: Heat bed menu](docs/assets/oled/2026-11-02/picture%204.png)
+
+**Image publishing status:** The Markdown paths are prepared, but the four picture binaries must be committed at the paths above before GitHub can display them. An uncommitted image is **not** displayed as a photo. [See the annotated evidence and detailed implementation/acceptance matrix](docs/en/STATUS_2026-11-02_OLED.md).
+
+---
+
+## Release and build details
+
 # Zortrax M300 Classic — Klipper R16.3
 
 [Polski](README_PL.md) · [Install](docs/en/INSTALL.md) · [Features / acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md)
