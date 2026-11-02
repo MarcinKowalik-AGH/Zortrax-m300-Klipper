@@ -73,7 +73,7 @@ fan and OLED commands; it does not execute those events on the F103.
 3. Use Fluidd native heaters/fans, confirm RGB and local cooling/link recovery
    against the already tested behaviour. Retain native verify_heater and MCU
    fault protection.
-4. With the head/bed physically clear and XY homed, TEST_M300_XY SPEED=200,
+4. With the head/bed physically clear and XY homed, TEST_ZORTRAX_XY SPEED=200,
    then SPEED=250 and SPEED=300. The test moves XY only; it does not heat,
    home, move Z/E or change velocity/acceleration settings. Inspect motion,
    lost steps and timing under real load before accepting 300 mm/s.

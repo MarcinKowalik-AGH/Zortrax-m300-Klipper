@@ -17,7 +17,7 @@ calibration authority depended on the legacy M02 qualification flag. R16.3
 uses an independent M07 profile while leaving M02/M03/M08 qualification separate.
 
 Start from **Service / Tests → TEST: platform calibration**, the Fluidd
-**TEST M300 → TEST_M300_LEVEL** macro, or:
+**TEST M300 → TEST_ZORTRAX_LEVEL** macro, or:
 
 ```gcode
 ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=180
@@ -55,3 +55,5 @@ Physical acceptance must confirm synchronized screens, 180°C, homing, contact
 locations and repeatability, correct screw/direction instructions, explicit
 confirmation waits, remeasurement, review/save, restored frame, cancellation
 and the following first layer.
+
+R16.3.1 uses alphabetic command names because the native parser truncates an embedded numeric segment. On an installed R16.3 host, the direct `ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=180` entry already reaches the same M07 owner. The macro fix does not require a new MCU.

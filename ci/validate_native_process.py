@@ -77,9 +77,9 @@ def main():
         ('native_xyz_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG90\nG1 X50 F12000\nG1 X250 F12000\nG1 Y50 F12000\nG1 Y250 F12000\nG1 Z10 F300\nG1 Z5 F300\nM400\nSET_VELOCITY_LIMIT\n',True,None),
         ('native_axis_bounds','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 X301 F12000\n',True,'Move out of range'),
         ('normal_homing_xyz_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG28 X0 Y0\nG28 Z\nZORTRAX_MOTION_STATUS\nG28\nZORTRAX_MOTION_STATUS\n',False,None),
-        ('native_300_M220_150','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM220 S150\nTEST_M300_XY SPEED=200\nM220 S100\nTEST_M300_XY SPEED=300\nSET_VELOCITY_LIMIT ACCEL=3000\nTEST_M300_XY SPEED=300\nSET_VELOCITY_LIMIT\n',True,None),
+        ('native_300_M220_150','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM220 S150\nTEST_ZORTRAX_XY SPEED=200\nM220 S100\nTEST_ZORTRAX_XY SPEED=300\nSET_VELOCITY_LIMIT ACCEL=3000\nTEST_ZORTRAX_XY SPEED=300\nSET_VELOCITY_LIMIT\nZORTRAX_MOTION_STATUS\n',True,None),
         ('native_z_usable_range','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 Z299 F1500\nG1 Z300\nM400\n',True,None),
-        ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nTEST_M300_XY SPEED=300\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
+        ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nTEST_ZORTRAX_XY SPEED=300\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
     ]
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
@@ -143,6 +143,11 @@ def main():
         else:
             assert process.returncode==0,(name,text[-3000:])
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
+        assert 'Unknown command:' not in text, (name, 'undispatched G-code command', text[-4000:])
+        if name == 'native_300_M220_150':
+            view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
+                        if 'M300_MOTION ' in line)
+            assert view['native_position'][:2] == [50., 50.], view
         if name in factory_cases:
             check_line = next(line.split('M300_CI_FACTORY ', 1)[1] for line in text.splitlines()
                               if 'M300_CI_FACTORY ' in line)
@@ -158,7 +163,7 @@ def main():
         if name == 'native_300_thermal_display_planning':
             view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
                         if 'M300_MOTION ' in line)
-            assert view['native_position'][2:] == [5., 0.]
+            assert view['native_position'] == [50., 50., 5., 0.]
         results.append({'case':name,'PASS':True,'expected_native_refusal':error,
                         'synthetic_coordinates':synthetic,'physical_hardware':False,
                         'exit_code':process.returncode,

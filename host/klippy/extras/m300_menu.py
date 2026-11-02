@@ -227,9 +227,9 @@ class M300Menu:
                 ('TEST: calibration status', ('cal_refresh',)),
                 ('TEST: OEM print / SD', ('page', 'models')),
                 ('Current test procedure', ('page', 'procedure')),
-                ('Read test status', ('native_gcode', 'TEST_M300_STATUS')),
-                ('TEST XY 200 mm/s', ('native_gcode', 'TEST_M300_XY SPEED=200')),
-                ('TEST XY 300 mm/s', ('native_gcode', 'TEST_M300_XY SPEED=300'))])
+                ('Read test status', ('native_gcode', 'TEST_ZORTRAX_STATUS')),
+                ('TEST XY 200 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=200')),
+                ('TEST XY 300 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=300'))])
         if native and self.page == 'native_pid':
             stats = self.printer.lookup_object('print_stats', None)
             busy = stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')

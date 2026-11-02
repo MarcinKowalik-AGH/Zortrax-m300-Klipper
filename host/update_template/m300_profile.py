@@ -5,6 +5,9 @@ import math
 import re
 
 HEADER = re.compile(r'^\[([^]\r\n]+)\]\s*(?:[#;].*)?$', re.M)
+MACRO_RENAMES = {'TEST_M300_LEVEL': 'TEST_ZORTRAX_LEVEL',
+                 'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
+                 'TEST_M300_XY': 'TEST_ZORTRAX_XY'}
 PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
 DROP = {'m300_test01'} | {'gcode_macro ' + n for n in (
@@ -53,6 +56,12 @@ def convert_text(text):
     for section, block in chunks:
         if section in DROP:
             continue
+        if section.startswith('gcode_macro '):
+            old = section[12:]
+            if old in MACRO_RENAMES:
+                renamed = 'gcode_macro ' + MACRO_RENAMES[old]
+                block = block.replace('[' + section + ']', '[' + renamed + ']', 1)
+                section = renamed
         if section == 'm300_motion':
             # The complete old text stays in the installer's rollback receipt.
             block = ('[m300_motion]\nmode: native\nhome_xy: ' +

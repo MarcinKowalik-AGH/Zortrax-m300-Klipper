@@ -21,10 +21,10 @@ na własnym profilu, zachowując osobną blokadę niedokończonego M02/M03/M08.
 ## Jeden start i jeden przebieg
 
 Z menu OLED: **Service / Tests → TEST: platform calibration**.
-We Fluidd: **TEST M300 → TEST_M300_LEVEL**, albo w konsoli:
+We Fluidd: **TEST M300 → TEST_ZORTRAX_LEVEL**, albo w konsoli:
 
 ```gcode
-TEST_M300_LEVEL
+TEST_ZORTRAX_LEVEL
 ```
 
 Równoważne polecenie właściciela:
@@ -74,3 +74,5 @@ bazowanie, poprawne miejsca kontaktu, trzy próbki na punkt, wskazanie właściw
 śruby i zgodność kierunku obrotu, oczekiwanie na potwierdzenie, ponowny pomiar,
 przegląd i zapis. Potwierdź odsunięcie oraz zwykłe współrzędne po zakończeniu.
 Pełny odbiór obejmuje również anulowanie i późniejszą pierwszą warstwę.
+
+R16.3.1 stosuje nazwy poleceń bez cyfr w środku, ponieważ natywny parser rozcinał stary segment M300. Na zainstalowanym R16.3 polecenie `ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=180` już uruchamia ten sam M07. Poprawka makr nie wymaga nowego MCU.

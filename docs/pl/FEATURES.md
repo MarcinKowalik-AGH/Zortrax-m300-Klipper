@@ -71,7 +71,7 @@ grzałek, wentylatorów i OLED; nie wykonuje tych zdarzeń na F103.
 3. Użyj natywnego grzania/wentylatorów we Fluidd; porównaj RGB, chłodzenie
    lokalne i odzyskiwanie połączenia z potwierdzonym zachowaniem. Natywne
    verify_heater i ochrona MCU pozostają aktywne.
-4. Przy fizycznym prześwicie i zbazowanych XY wykonaj TEST_M300_XY SPEED=200,
+4. Przy fizycznym prześwicie i zbazowanych XY wykonaj TEST_ZORTRAX_XY SPEED=200,
    później SPEED=250 i SPEED=300. Test porusza tylko XY: nie grzeje, nie bazuje,
    nie rusza Z/E i nie zmienia nastaw prędkości/przyspieszeń. Przed odbiorem
    300 mm/s sprawdź ruch, gubienie kroków i timing przy rzeczywistym obciążeniu.

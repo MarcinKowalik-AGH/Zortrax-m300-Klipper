@@ -30,8 +30,8 @@ class InstallerTests(unittest.TestCase):
         for line in ('position_min: 0','position_max: 315','rotation_distance: 26.133',
                      'workflow_qualified: False','#*# pid_kp = 15.152','[include m300_sensors.cfg]'):
             self.assertIn(line,self.config.read_text())
-        self.assertIn(original_macro,macros.read_text())
-        self.assertIn('[gcode_macro TEST_M300_LEVEL]',macros.read_text())
+        self.assertIn(original_macro.replace('TEST_M300_STATUS','TEST_ZORTRAX_STATUS'),macros.read_text())
+        self.assertIn('[gcode_macro TEST_ZORTRAX_LEVEL]',macros.read_text())
         self.assertEqual(install.plan(self.root,self.config),[])
         install.rollback(receipt,self.root,self.config)
         self.assertEqual(self.config.read_text(),source)

@@ -10,15 +10,15 @@ a fresh compiled R14.5 application for older installations.
 Extract the artifact and copy its host directory from the Mac:
 
 ~~~bash
-scp -r "$HOME/Downloads/M300_HOST_R16_3_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R16_3_1_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_3_NORMAL_UI
+cd ~/M300_HOST_R16_3_1_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py
 ~~~
 
-Expected: 150 tests OK and an R16 plan. Inspect the listed files: this update
+Expected: 157 tests OK and an R16 plan. Inspect the listed files: this update
 migrates the commissioning motion section to native mode, sets 180C Z homing,
 2 us STEP and the 300 mm/s XY profile, and adds three macro includes. Saved PID,
 calibrated E and deliberate geometry outside the old Z30 envelope are retained.
@@ -63,21 +63,21 @@ The receipt restores exact prior files and protects subsequent edits. It does
 not change the MCU. HOST_SOURCE is a matching source snapshot, not another
 installer. SHA256SUMS and BUILD_PROVENANCE.json identify the exact Actions build.
 
-R16.3 adds direct migration from the known native R15.3 host, including
+R16.3.1 adds direct migration from the known native R15.3 host, including
 installations without the display extension. The real API check and hash-based
 upgrade are exercised using archived R15.3 modules. Runtime/MCU behaviour is
-unchanged from R16. Expected installer result: INSTALLED_M300_R16_3.
+unchanged from R16. Expected installer result: INSTALLED_M300_R16_3_1.
 
 If the previous installer printed `REFUSED: R15.5 motion and M11 presentation support required`,
 R16 was not installed. A successful setup_fluidd.py only changes macro groups.
-R16.3 removes that migration obstacle for the recognized R15.3 baseline. Before motion,
-confirm `INSTALLED_M300_R16_3` and `ZORTRAX_MOTION_STATUS` reporting
+R16.3.1 removes that migration obstacle for the recognized R15.3 baseline. Before motion,
+confirm `INSTALLED_M300_R16_3_1` and `ZORTRAX_MOTION_STATUS` reporting
 `normal_control=true` and `z_home_hotend_target_c=180`. `G28 X Y` does not heat;
 `G28 Z` waits for the native heater check before moving to contact.
 
-R16.3 also updates m300_lifecycle.py. After installation, ZORTRAX_LINK_STATUS
+R16.3.1 also updates m300_lifecycle.py. After installation, ZORTRAX_LINK_STATUS
 should report 0.13.16.2-LIFECYCLE-RECONNECT. Host/service reboot gains one recovery
 attempt for an old session or heartbeat latch. Acceptance and explicit-recovery
 cases are described in [Connection lifecycle](CONNECTION.md).
 
-[M07 leveling in R16.3 — start and acceptance](LEVELING.md)
+[M07 leveling in R16.3.1 — start and acceptance](LEVELING.md)

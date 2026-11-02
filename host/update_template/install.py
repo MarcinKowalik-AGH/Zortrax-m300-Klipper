@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16.3 native R15.3-compatible update, 180C homing and separate TEST UI."""
+"""Plan/apply/rollback M300 R16.3.1 native R15.3-compatible update, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -160,7 +160,7 @@ def plan(root, config):
     if not already_included(config, settings):
         additions.append('[include m300_display.cfg]\n')
     if additions:
-        addition = '\n# M300 R16.3 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 R16.3.1 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -289,8 +289,8 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R16_3' if changes else 'ALREADY_M300_R16_3',
-                  'host_update': 'R16.3',
+        result = {'status': 'PLAN_M300_R16_3_1' if changes else 'ALREADY_M300_R16_3_1',
+                  'host_update': 'R16.3.1',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
@@ -300,7 +300,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16_3'
+            result['status'] = 'INSTALLED_M300_R16_3_1'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

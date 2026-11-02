@@ -11,6 +11,7 @@ import urllib.request
 import uuid
 
 from install import atomic_write
+from m300_profile import MACRO_RENAMES
 
 GROUPS = ('Klipper', 'ZORTRAX M300', 'TEST M300')
 TEST_NAMES = {'ZORTRAX_LOAD', 'ZORTRAX_UNLOAD', 'ZORTRAX_CHANGE', 'ZORTRAX_LEVEL',
@@ -21,7 +22,7 @@ TEST_NAMES = {'ZORTRAX_LOAD', 'ZORTRAX_UNLOAD', 'ZORTRAX_CHANGE', 'ZORTRAX_LEVEL
 
 def category(name):
     name = name.upper()
-    if name in TEST_NAMES or name.startswith(('TEST_M300_', 'ZORTRAX_TEST_')):
+    if name in TEST_NAMES or name.startswith(('TEST_M300_', 'TEST_ZORTRAX_', 'ZORTRAX_TEST_')):
         return 'TEST M300'
     if name.startswith('PID_') or name in ('PAUSE', 'RESUME', 'CANCEL_PRINT',
                                           'START_PRINT', 'END_PRINT', 'COOLDOWN'):
@@ -44,6 +45,18 @@ def merge_groups(before, names):
         raise ValueError('Ambiguous Fluidd category identities')
     if any(not isinstance(m, dict) or not isinstance(m.get('name'), str) for m in stored):
         raise ValueError('Unsupported Fluidd stored macros')
+    available = {n.upper() for n in names}
+    for old, new in MACRO_RENAMES.items():
+        old_rows = [m for m in stored if m['name'].upper() == old]
+        new_rows = [m for m in stored if m['name'].upper() == new]
+        if len(old_rows) > 1 or len(new_rows) > 1:
+            raise ValueError('Duplicate Fluidd macro during name migration: ' + old)
+        if new not in available or not old_rows:
+            continue
+        if new_rows:
+            stored.remove(old_rows[0])
+        else:
+            old_rows[0]['name'] = new
     assignments = {name: category(name) for name in names if category(name) is not None}
     for group in GROUPS:
         relevant = [name for name in assignments if assignments[name] == group]
