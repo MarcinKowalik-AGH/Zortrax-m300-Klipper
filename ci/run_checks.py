@@ -78,6 +78,8 @@ def main():
             '--root', host_tree, '--output', ROOT / '.ci/installed-config'])
         run('real_installer_r153_migration', [sys.executable, ROOT / 'ci/validate_install.py',
             '--root', host_tree, '--output', ROOT / '.ci/installed-r153', '--baseline', 'r153'])
+        run('native_host_reconnect_policy', [sys.executable, ROOT / 'ci/validate_host_reconnect.py',
+            '--root', host_tree, '--package', host])
         fixture = ROOT / '.ci/installed-config/printer.cfg'
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),

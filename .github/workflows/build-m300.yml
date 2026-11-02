@@ -1,4 +1,4 @@
-name: Build M300 STM32F103 and host R16.1
+name: Build M300 STM32F103 and host R16.2
 
 on:
   push:
@@ -71,7 +71,7 @@ jobs:
       - name: Save compiled MCU and matching host artifact
         uses: actions/upload-artifact@v4
         with:
-          name: m300-r14_5-host-r16_1-test-${{ github.sha }}
+          name: m300-r14_5-host-r16_2-test-${{ github.sha }}
           path: dist/release/
           if-no-files-found: error
           retention-days: 30

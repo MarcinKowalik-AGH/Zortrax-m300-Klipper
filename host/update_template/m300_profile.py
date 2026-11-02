@@ -59,6 +59,10 @@ def convert_text(text):
                      option(block, 'home_xy', '150, 158') +
                      '\nhome_travel_speed: 50\nz_home_hotend_target: 180\n'
                      'z_contact_clearance: 5\nz_lift_speed: 5\n\n')
+        elif section == 'mcu':
+            # The M300 direct UART has no Arduino DTR reset wire. Select the
+            # native software reset used by both explicit and startup recovery.
+            block = set_option(block, 'restart_method', 'command')
         elif section == 'm300_mcu':
             block = set_option(block, 'native_control', 'True')
         elif section == 'printer':

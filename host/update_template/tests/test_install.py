@@ -120,6 +120,22 @@ class InstallerTests(unittest.TestCase):
             self.assertIn(line, after)
         self.assertNotIn('z_profile:', after)
 
+    def test_r161_lifecycle_upgrade_preserves_z312_and_can_be_rolled_back(self):
+        life = self.root / 'klippy/extras/m300_lifecycle.py'
+        previous = (ROOT / 'tests/reference/r153/m300_lifecycle.py').read_bytes()
+        life.write_bytes(previous)
+        self.config.write_text('[mcu]\nserial: /dev/ttyS1\nrestart_method: command\n'
+                               '[stepper_z]\nposition_max: 312\nrotation_distance: 4\n'
+                               '[m300_lifecycle]\nreconnect_on_host_start: True\n')
+        changes = install.plan(self.root, self.config)
+        receipt = install.apply(self.root, self.config, changes)
+        self.assertEqual(life.read_bytes(), (ROOT / 'payload/m300_lifecycle.py').read_bytes())
+        self.assertIn('position_max: 312', self.config.read_text())
+        self.assertIn('rotation_distance: 4', self.config.read_text())
+        self.assertEqual(install.plan(self.root, self.config), [])
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(life.read_bytes(), previous)
+
     def test_verified_previous_display_upgrade_and_exact_rollback(self):
         previous = ROOT / 'tests/reference/previous_display'
         for name in ('m300_display.py', 'm300_display_stream.py'):

@@ -1,8 +1,8 @@
-# Stan — iteracja testowa R16
+# Stan — iteracja testowa R16.2
 
 [English](../en/STATUS.md) · [Funkcje i odbiór](FEATURES.md)
 
-MCU R14.5 + host R16, Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
+MCU R14.5 + host R16.2, Klipper ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
 Operator potwierdza natywną termikę/wentylatory, XYZ/E, OLED i łączność.
 R16 porządkuje te ścieżki w obsłudze normalnej, oddzielając niedokończone
 procedury OEM. Zastępuje dawny adapter uruchomieniowy przez natywny G28/probe
@@ -18,7 +18,7 @@ Przygaszanie/wygaszanie/wybudzanie OLED oraz księżyc/Entering sleep mode są
 zachowane. idle_timeout urządzenia pozostaje dotychczasowym ustawieniem
 natywnym. Sen ekranu nie oznacza przywracania targetów ani pozycji silników.
 
-Testy programowe: 112 hosta, 8 kontraktów repozytorium, 6720 przypadków STEP,
+Testy programowe: 131 hosta, 8 kontraktów repozytorium, 6720 przypadków STEP,
 52 chłodzenia, 1792 dekodera, start/timery i 13 scenariuszy rzeczywistego Klippy
 FILEOUTPUT. Obejmują 180C przy XYZ/powtórnym Z, planowanie 300 mm/s,
 M220=150%, ACCEL=3000 i granice Z299/Z300.
@@ -27,3 +27,13 @@ Pozostały odbiór fizyczny zmienionego homingu, pomiar timingu przy dużej
 prędkości/pełnym obciążeniu i dokładności czujników oraz pełne procedury
 M03/M07/M08. Nastawa 2 us i PASS FILEOUTPUT nie są pomiarem 300 mm/s na MCU.
 Inventure pozostaje osobnym projektem F207; jego geometria/pliki nie są tu instalowane.
+
+R16.2 dodaje opisane w [cyklu połączenia](CONNECTION.md) odzyskanie po restarcie
+procesu hosta, z jednym natywnym resetem dla starej sesji/błędu heartbeat.
+Pozostałe kody awarii wymagają jawnego odzyskania. Testy obejmują rzeczywiste
+helpery natywnego restartu i konfiguracji, z symulowanymi odpowiedziami guarda.
+Restart Orange Pi/usługi należy potwierdzić na drukarce.
+
+Odbiór operatora 2026-11-02: HW05/Z400, przygaszanie i księżyc oraz dojazd do
+Z300 zgłoszone jako działające. Odczyt fabryczny nie zastępuje pomiaru skali
+fizycznej; raport nadal jawnie zawiera physical_scale_measured=false.

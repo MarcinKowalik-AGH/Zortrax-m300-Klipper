@@ -138,6 +138,15 @@ class NormalHomingTests(unittest.TestCase):
 
 
 class ProfileTests(unittest.TestCase):
+    def test_direct_uart_uses_native_command_reset_without_changing_baud(self):
+        for reset in ('', 'restart_method: arduino\n', 'restart_method: command\n'):
+            new = profile.convert_text('[mcu]\nserial: /dev/ttyS1\nbaud: 1500000\n' + reset)
+            section = dict(profile.blocks(new)[1])['mcu']
+            self.assertEqual(profile.option(section, 'restart_method'), 'command')
+            self.assertEqual(profile.option(section, 'baud'), '1500000')
+            self.assertEqual(profile.option(section, 'serial'), '/dev/ttyS1')
+            self.assertEqual(profile.convert_text(new), new)
+
     def test_migrates_only_commissioning_limits_and_preserves_calibrated_e_pid(self):
         text = ('[printer]\nmax_velocity: 200\nmax_accel: 700\nmax_z_velocity: 1\nmax_z_accel: 10\n'
                 '[stepper_z]\nrotation_distance: 8\nposition_max: 30\nhoming_speed: .5\n'
