@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.ci/
+dist/
+mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip
+mcu/SOURCE_MCU/.work/
+mcu/evidence/

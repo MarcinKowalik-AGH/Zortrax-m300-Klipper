@@ -1,0 +1,278 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Offline register/scheduler doubles; this does NOT execute on an STM32.
+// Build: cc -std=c11 -Wall -Wextra tests/test_panel.c -o /tmp/test_m300_panel
+#include <assert.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct { uint32_t CRL, CRH, IDR, ODR, BSRR; } GPIO_TypeDef;
+typedef struct { uint32_t CR1, CR2, SR, DR; } SPI_TypeDef;
+typedef struct { uint32_t APB2ENR, APB1ENR, APB1RSTR, AHBENR; } RCC_TypeDef;
+typedef struct { uint32_t ISR, IFCR; } DMA_TypeDef;
+typedef struct { uint32_t CCR, CNDTR, CPAR, CMAR; } DMA_Channel_TypeDef;
+typedef struct { uint32_t EXTICR[4]; } AFIO_TypeDef;
+typedef struct { uint32_t IMR, RTSR, FTSR, PR; } EXTI_TypeDef;
+static DMA_TypeDef mock_dma;
+static DMA_Channel_TypeDef mock_dma5;
+static AFIO_TypeDef mock_afio;
+static EXTI_TypeDef mock_exti;
+#define DMA1 (&mock_dma)
+#define DMA1_Channel5 (&mock_dma5)
+#define AFIO (&mock_afio)
+#define EXTI (&mock_exti)
+static unsigned mock_encoder_irq_priority, mock_dma_irq_priority;
+#define armcm_enable_irq(func, num, priority) do { \
+    (void)(func); \
+    if(strstr(#func,"encoder")) mock_encoder_irq_priority=(priority); \
+    else if(strstr(#func,"dma")) mock_dma_irq_priority=(priority); \
+} while (0)
+#define NVIC_ClearPendingIRQ(...) do {} while (0)
+#define __DMB() do {} while (0)
+static GPIO_TypeDef mock_b, mock_c, mock_e;
+static SPI_TypeDef mock_spi;
+static RCC_TypeDef mock_rcc;
+#define GPIOB (&mock_b)
+#define GPIOC (&mock_c)
+#define GPIOE (&mock_e)
+#define SPI2 (&mock_spi)
+#define RCC (&mock_rcc)
+#define M300_PANEL_TEST 1
+#define DECL_CONSTANT_STR(...)
+#define DECL_COMMAND_FLAGS(...)
+#define DECL_CONSTANT(...)
+#define DECL_COMMAND(...)
+#define DECL_INIT(...)
+#define DECL_SHUTDOWN(...)
+#define DECL_TASK(...)
+#define get_pclock_frequency(...) 36000000u
+typedef unsigned long irqstatus_t;
+static irqstatus_t irq_level;
+static irqstatus_t irq_save(void) { irqstatus_t old=irq_level;irq_level=1;return old; }
+static void irq_restore(irqstatus_t flag) { irq_level=flag; }
+struct timer { struct timer *next; uint_fast8_t (*func)(struct timer*); uint32_t waketime; };
+struct task_wake { uint8_t wake; };
+enum { SF_DONE, SF_RESCHEDULE };
+static struct timer *registered_timer;
+static void sched_add_timer(struct timer *t) { registered_timer = t; }
+static void sched_del_timer(struct timer *t) { if (registered_timer==t) registered_timer=NULL; }
+static void sched_wake_task(struct task_wake *w) { w->wake = 1; }
+static uint8_t sched_check_wake(struct task_wake *w) { uint8_t v=w->wake; w->wake=0; return v; }
+static uint32_t mock_time;
+#ifndef M300_TIMER_SCALE
+#define M300_TIMER_SCALE 1u
+#endif
+static uint32_t timer_read_time(void) { uint32_t t=mock_time;mock_time+=M300_TIMER_SCALE;return t; }
+static uint32_t timer_from_us(uint32_t us) { return us*M300_TIMER_SCALE; }
+static uint8_t timer_is_before(uint32_t a,uint32_t b) { return (int32_t)(a-b)<0; }
+
+static unsigned cs_low, cs_high, ack_count, last_token, snapshot_count;
+static unsigned snapshot_v2;
+static uint32_t snapshot_position, snapshot_nav_position;
+static unsigned byte_count;
+static unsigned host_reply_count, host_reply_state, host_reply_local, host_reply_fault, host_reply_reason;
+static uint8_t payload[32], wire[20000];
+static uint32_t fake_baud=250000;
+static uint32_t m300_uart_baud(void) {return fake_baud;}
+static void writel(void *addr, uint32_t value) {
+    GPIO_TypeDef *ports[] = {GPIOB, GPIOC, GPIOE};
+    for (unsigned i=0; i<3; i++) {
+        GPIO_TypeDef *p=ports[i];
+        if (addr == &p->BSRR) {
+            p->BSRR=value; p->ODR=(p->ODR | (value&65535)) & ~(value>>16);
+            if (p==GPIOB) { if(value&(1u<<12))cs_high++; if(value&(1u<<28))cs_low++; }
+            return;
+        }
+    }
+    assert(!"Unexpected MMIO write");
+}
+static void writew(void *addr, uint16_t value) {
+    assert(addr == &SPI2->DR);
+    assert(!irq_level); // interrupts stay available throughout all SPI bytes
+    assert(!(GPIOB->ODR & (1u<<12)));
+    assert(byte_count < sizeof(wire));
+    wire[byte_count++]=value; SPI2->DR=value;
+}
+static void *command_decode_ptr(uint32_t token) { (void)token; return payload; }
+static void sendf(const char *format, ...) {
+    va_list a; va_start(a,format);
+    if (strstr(format,"m300_oled_ack")) { last_token=va_arg(a,unsigned); ack_count++; }
+    else if(strstr(format,"m300_oled_host_state")) {
+        host_reply_count++;
+        host_reply_state=va_arg(a,unsigned);host_reply_local=va_arg(a,unsigned);
+        host_reply_fault=va_arg(a,unsigned);host_reply_reason=va_arg(a,unsigned);
+    }
+    else if(strstr(format,"m300_panel_state")) {
+        snapshot_count++;
+        snapshot_v2 = strstr(format,"m300_panel_state_v2") != NULL;
+        (void)va_arg(a,unsigned); (void)va_arg(a,unsigned);
+        snapshot_position=va_arg(a,unsigned);
+        for(unsigned i=0;i<6;i++)(void)va_arg(a,unsigned);
+        if(snapshot_v2)snapshot_nav_position=va_arg(a,unsigned);
+    }
+    else assert(!"Unexpected response");
+    va_end(a);
+}
+static jmp_buf failure;
+static unsigned expecting_failure, failures;
+static void mock_shutdown(const char *message) {
+    (void)message;
+    assert(expecting_failure);
+    failures++;
+    longjmp(failure,1);
+}
+#define shutdown(msg) mock_shutdown(msg)
+#ifndef M300_PANEL_SOURCE
+#define M300_PANEL_SOURCE "../overlay/src/stm32/m300_panel.c"
+#endif
+#include M300_PANEL_SOURCE
+#define REJECT(code) do { expecting_failure=1; if(!setjmp(failure)) { code; assert(!"expected rejection"); } expecting_failure=0; } while(0)
+
+static void sample_n(unsigned count) {
+    for(unsigned i=0;i<count;i++) {
+        assert(registered_timer);
+        mock_time=registered_timer->waketime;
+        assert(registered_timer->func(registered_timer)==SF_RESCHEDULE);
+    }
+}
+static void set_ab(unsigned value) {
+    GPIOE->IDR=(GPIOE->IDR&~(3u<<7)) | (value<<7);
+    EXTI->PR=(1u<<7)|(1u<<8);
+    m300_encoder_irq();
+    sample_n(1);
+}
+static void set_button(unsigned value,unsigned samples) {
+    if(value)GPIOC->IDR &= ~(1u<<5); else GPIOC->IDR |= 1u<<5;
+    sample_n(samples);
+}
+static void reset_encoder(unsigned held) {
+    panel_configured=0;
+    position=presses=releases=shorts=longs=invalid_transitions=panel_sequence=0;
+    changed=long_sent=0; panel_wake.wake=0;
+    GPIOE->IDR=3u<<7;
+    GPIOC->IDR=held ? 0 : 1u<<5;
+    command_m300_panel_config(NULL);
+}
+
+int main(void) {
+    const char *baud_env=getenv("M300_BAUD");
+    if(baud_env)fake_baud=strtoul(baud_env,NULL,10);
+    m300_panel_init();
+    assert(!registered_timer); // no timer before the generic clock reset
+    assert(!(GPIOE->ODR&(1u<<9)));
+    mock_time=0; // models generic timer_init() after DECL_INIT callbacks
+    m300_local_oled_task();
+    assert((GPIOB->ODR & (1u<<12)) && !(GPIOB->ODR & (1u<<14)));
+    assert((GPIOE->ODR&(1u<<9)) && !(GPIOE->ODR&(1u<<10)));
+    assert(((GPIOB->CRH>>24)&15)==2); // PB14 starts GPIO output, never MISO
+    assert(((GPIOE->CRL>>28)&15)==8 && (GPIOE->CRH&15)==8);
+    assert(((GPIOC->CRL>>20)&15)==8);
+    // Progress entirely from the local timer: no host and no panel_config.
+    SPI2->SR=1u<<1;
+    uint8_t frame[8192];
+    for(unsigned i=0;i<1000 && local_state!=LOCAL_READY;i++) {
+        mock_time=local_timer.waketime;
+        assert(local_timer.func(&local_timer)==SF_RESCHEDULE);
+        unsigned before_bytes=byte_count, before_pos=local_frame_pos;
+        unsigned was_frame=local_state==LOCAL_FRAME;
+        m300_local_oled_task();
+        assert(byte_count-before_bytes<=32);
+        if(was_frame)memcpy(frame+before_pos,wire+before_bytes,32);
+    }
+    assert(local_state==LOCAL_READY && local_frame_pos==8192);
+    assert(!panel_configured && !oled_configured && !panel_fault);
+    assert(GPIOE->ODR&(1u<<10));
+    assert(local_timer.func(&local_timer)==SF_DONE);
+    const char *outfile=getenv("M300_FRAME_OUTPUT");
+    if(outfile) {FILE *f=fopen(outfile,"wb");assert(f);assert(fwrite(frame,1,8192,f)==8192);assert(!fclose(f));}
+    byte_count=0;
+    uint32_t config[]={1000000}, control[]={1,1,1};
+    REJECT(command_m300_oled_control(control));
+    command_m300_oled_config(config);
+    assert(((GPIOB->CRH>>24)&15)==2);
+    assert(local_state==LOCAL_READY && (GPIOE->ODR&(1u<<10)));
+    assert(((GPIOB->CRH>>20)&15)==0xb && ((GPIOB->CRH>>28)&15)==0xb);
+    assert((SPI2->CR1 & ((1u<<15)|(1u<<14))) == ((1u<<15)|(1u<<14)));
+    assert((36000000u >> (((SPI2->CR1>>3)&7)+1)) <= 1000000);
+    REJECT(command_m300_oled_config(config));
+    command_m300_oled_control(control);
+    assert(local_state==LOCAL_HANDOVER);
+    assert((GPIOE->ODR&((1u<<9)|(1u<<10)))==((1u<<9)|(1u<<10)));
+    assert(ack_count==1 && last_token==1);
+    for(unsigned i=0;i<32;i++)payload[i]=i;
+    SPI2->SR=1u<<1;
+    uint32_t write[]={2,1,32,0}; unsigned before=cs_low;
+    command_m300_oled_write(write);
+    assert(byte_count==32 && !memcmp(payload,wire,32));
+    assert(cs_low-before==1 && (GPIOB->ODR&(1u<<12)));
+    assert(GPIOB->ODR&(1u<<14));
+    assert(ack_count==2 && last_token==2);
+    write[2]=33;REJECT(command_m300_oled_write(write));
+    write[2]=0;REJECT(command_m300_oled_write(write));
+    write[2]=1;write[1]=2;REJECT(command_m300_oled_write(write));
+    write[1]=1;SPI2->SR=0;
+    uint32_t time_before=mock_time;
+    REJECT(command_m300_oled_write(write));
+    assert(mock_time-time_before<=1002); // timeout bound, no unbounded wait
+    SPI2->SR=1u<<1;SPI2->CR1^=1;
+    REJECT(command_m300_oled_write(write));
+    SPI2->CR1=spi_cr1;
+
+    reset_encoder(0);
+    REJECT(command_m300_panel_config(NULL));
+    set_ab(2);set_ab(0);set_ab(1);set_ab(3);assert(position==4);
+    set_ab(1);set_ab(0);set_ab(2);set_ab(3);assert(position==0);
+    set_ab(2);set_ab(3);assert(position==0); // bounce cancels
+    set_ab(0);assert(invalid_transitions==1 && position==0);
+    set_ab(3);assert(invalid_transitions==2 && position==0);
+    set_button(1,2);set_button(0,2);assert(presses==0); // reject contact bounce
+    set_button(1,5);assert(pressed && presses==1);
+    set_button(0,5);assert(!pressed && releases==1 && shorts==1 && longs==0);
+    set_button(1,5);sample_n(600);assert(longs==1);
+    sample_n(700);assert(longs==1); // one long per hold
+    set_button(0,5);assert(releases==2 && shorts==1);
+    assert(panel_wake.wake);m300_panel_task();assert(snapshot_count==1);
+    command_m300_panel_query(NULL);assert(snapshot_count==2);
+
+    reset_encoder(1);sample_n(700);assert(longs==0 && shorts==0);
+    set_button(0,5);assert(shorts==0 && releases==0);
+    set_button(1,5);set_button(0,5);assert(shorts==1);
+    m300_panel_shutdown();m300_panel_shutdown();
+    assert(!(GPIOE->ODR&((1u<<9)|(1u<<10))));
+    assert(GPIOB->ODR&(1u<<12));
+    // Even if a native clear_shutdown resumes command dispatch, the display
+    // cannot be powered or written by the old session without a full reset.
+    REJECT(command_m300_oled_control(control));
+    REJECT(command_m300_oled_write(write));
+    assert(!(GPIOE->ODR&((1u<<9)|(1u<<10))));
+    // Independent local renderer failure is nonfatal, and never retries itself.
+    panel_fault=oled_configured=0; byte_count=0;
+    m300_panel_init(); SPI2->SR=0;m300_local_oled_task();
+    for(unsigned i=0;i<600 && local_state!=LOCAL_FAILED;i++) {
+        mock_time=local_timer.waketime;
+        local_timer.func(&local_timer);m300_local_oled_task();
+    }
+    assert(local_state==LOCAL_FAILED && !panel_fault);
+    assert(!(GPIOE->ODR&((1u<<9)|(1u<<10))));
+    assert(local_timer.func(&local_timer)==SF_DONE);
+    SPI2->SR=1u<<1;
+    command_m300_oled_config(config); command_m300_oled_control(control);
+    assert(local_state==LOCAL_HANDOVER); // host can recover an optional local failure
+    // A host can take over at EVERY local phase; the task never writes again.
+    for(unsigned phase=LOCAL_OFF;phase<=LOCAL_READY;phase++) {
+        panel_fault=oled_configured=0;m300_panel_init();
+        if(phase!=LOCAL_OFF)m300_local_oled_task();
+        local_state=phase;command_m300_oled_config(config);
+        assert(local_state==phase);command_m300_oled_control(control);
+        unsigned nbytes=byte_count;
+        local_wake.wake=1;m300_local_oled_task();assert(byte_count==nbytes);
+        assert(local_state==LOCAL_HANDOVER);
+        m300_panel_shutdown();local_wake.wake=1;m300_local_oled_task();
+        assert(byte_count==nbytes && panel_fault);
+    }
+    printf("PASS M300 panel: GPIO ownership, TX-only SPI/CS/ACK/bounds, %u rejections, quadrature/debounce/short/long/startup-held/shutdown\n",failures);
+    return 0;
+}

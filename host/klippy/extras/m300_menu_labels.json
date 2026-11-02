@@ -1,0 +1,989 @@
+{
+  "English": {
+    "en": "English",
+    "pl": "English",
+    "fr": "English",
+    "de": "English",
+    "es": "English"
+  },
+  "Main menu": {
+    "en": "Main menu",
+    "pl": "Menu główne",
+    "fr": "Menu principal",
+    "de": "Hauptmenü",
+    "es": "Menú principal"
+  },
+  "Back": {
+    "en": "Back",
+    "pl": "Powrót",
+    "fr": "Retour",
+    "de": "Zurück",
+    "es": "Volver"
+  },
+  "Up": {
+    "en": "Up",
+    "pl": "Do góry",
+    "fr": "Vers le haut",
+    "de": "Nach oben",
+    "es": "Hacia arriba"
+  },
+  "Cancel": {
+    "en": "Cancel",
+    "pl": "Anuluj",
+    "fr": "Annuler",
+    "de": "Abbrechen",
+    "es": "Anular"
+  },
+  "Do you want to repeat the test?": {
+    "en": "Do you want to repeat the test?",
+    "pl": "Czy chciałbyś powtórzyć test?",
+    "fr": "banana",
+    "de": "banana",
+    "es": "banana"
+  },
+  "Do you want to cancel?": {
+    "en": "Do you want to cancel?",
+    "pl": "Czy chcesz przerwać?",
+    "fr": "Voulez-vous interrompre ?",
+    "de": "Abbrechen?",
+    "es": "¿Está seguro de que quiere\ninterrumpir?"
+  },
+  "Models": {
+    "en": "Models",
+    "pl": "Modele",
+    "fr": "Modèles",
+    "de": "Modelle",
+    "es": "Modelos"
+  },
+  "Maintenance": {
+    "en": "Maintenance",
+    "pl": "Konserwacja",
+    "fr": "Maintenance",
+    "de": "Wartung",
+    "es": "Mantenimiento"
+  },
+  "Autocalibration": {
+    "en": "Autocalibration",
+    "pl": "Autopoziomowanie",
+    "fr": "Calibration hauteur platforme.",
+    "de": "Automatisches Nivellieren",
+    "es": "Autonivelación"
+  },
+  "Check extruder connection": {
+    "en": "Check extruder connection",
+    "pl": "Sprawdź podłączenie ekstrudera",
+    "fr": "Vérifiez la connexion de l’extrudeuse",
+    "de": "Prüfen Sie den Extruderanschluss",
+    "es": "Verifique la conexión del extrusor"
+  },
+  "Was extruder gear rotating\n smoothly?": {
+    "en": "Was extruder gear rotating\n smoothly?",
+    "pl": "Czy zębatka ekstrudera się\n obracała płynnie?",
+    "fr": "Est-ce que la denture de\nl’extrudeuse a fait des\nmouvements de rotation sans heurts ?",
+    "de": "Drehte sich das\nExtruderzahnrad reibungslos?",
+    "es": "¿La cremallera del extrusor gira sin dificultad?"
+  },
+  "extruder gear is rotating...": {
+    "en": "extruder gear is rotating...",
+    "pl": "zębatka ekstrudera obraca się...",
+    "fr": "Banana",
+    "de": "Banana",
+    "es": "Banana"
+  },
+  "Click the button and watch if extruder\ngear is rotating smoothly. Bend\nthe cable near extruder during the test.": {
+    "en": "Click the button and watch if extruder\ngear is rotating smoothly. Bend\nthe cable near extruder during the test.",
+    "pl": "Naciśnij przycisk i obserwuj czy obrót\nzębatki ekstrudera jest plynny.\nZginaj przewód blisko ekstrudera podczas testu.",
+    "fr": "Banana",
+    "de": "Banana",
+    "es": "Banana"
+  },
+  "Heat the extruder": {
+    "en": "Heat the extruder",
+    "pl": "Nagrzej extruder",
+    "fr": "Chauffez l’extrudeur",
+    "de": "Extruder vorheizen",
+    "es": "Calentar extrusora"
+  },
+  "Extruder heating...": {
+    "en": "Extruder heating...",
+    "pl": "Nagrzewanie...",
+    "fr": "Chauffage en cours ...",
+    "de": "Vorheizen im Gange...",
+    "es": "Calentando..."
+  },
+  "WARNING: Hot printhead\nExtruder heating is done": {
+    "en": "WARNING: Hot printhead\nExtruder heating is done",
+    "pl": "UWAGA: Gorąca głowica\nNagrzewanie zakończone",
+    "fr": "AVERTISSEMENT: Extrudeur\nchaud. Chauffage terminé.",
+    "de": "WARNUNG: Heißer Kopf\nVorheizen abgeschlossen",
+    "es": "ADVERTENCIA: Cabezal caliente\nCalentamiento terminado"
+  },
+  "Heat the platform": {
+    "en": "Heat the platform",
+    "pl": "Nagrzej platformę",
+    "fr": "Préchauffez le plateau",
+    "de": "Plattform vorheizen",
+    "es": "Caliente la plataforma"
+  },
+  "Platform heating is done": {
+    "en": "Platform heating is done",
+    "pl": "Nagrzewanie platformy zakończone",
+    "fr": "Préchauffage du plateau terminé",
+    "de": "Aufheitzen der Plattform\nabgeschlossen",
+    "es": "Finalizado el calentamiento\n de la plataforma"
+  },
+  "WARNING: Hot printhead\nRemoving the material Please\nwait": {
+    "en": "WARNING: Hot printhead\nRemoving the material Please\nwait",
+    "pl": "UWAGA: Gorąca głowica\nWysuwanie materiału Proszę\nczekać",
+    "fr": "AVERTISSEMENT: Extrudeur\nchaud. Retrait du filament.\nVeuillez patienter.",
+    "de": "WARNUNG: Heißer Kopf Material\nwird ausgefahren Bitte warten",
+    "es": "ADVERTENCIA: Cabezal caliente\nRetirada del material Espere"
+  },
+  "WARNING: Hot printhead Insert\nnew material into the extruder\nand press the button to continue": {
+    "en": "WARNING: Hot printhead Insert\nnew material into the extruder\nand press the button to continue",
+    "pl": "UWAGA: Gorąca głowica Wsuń\nmateriał do ekstrudera i naciśnij\nprzycisk",
+    "fr": "AVERTISSEMENT:\nTêted'extrusionchaude\nIntroduisez le matériau dans\nl’extrudeur et appuyez le bouton",
+    "de": "WARNUNG: Heißer Kopf Material\nin den Extruder einlegen und\nTaste betätigen",
+    "es": "ADVERTENCIA: Cabeza caliente\nIntroduzca el material en la\nextrusora y pulse el botón"
+  },
+  "WARNING: Hot printhead Press button\nto remove material from printer": {
+    "en": "WARNING: Hot printhead Press button\nto remove material from printer",
+    "pl": "UWAGA: Gorąca głowica Naciśnij\nprzycisk aby usunąć materiał\n z drukarki",
+    "fr": "ATTENTION: tête d’impression\nchaude Cliquez sur le bouton\npour supprimer un matériel\nde l’imprimante",
+    "de": "ACHTUNG: Heißer Druckkopf Drucken\nSie die Taste, um das\nMaterial aus dem Drucker\nzu entfernen",
+    "es": "Advertencia: Cabezal caliente.\nPresione el botón para evacuar\nel material de la\nimpresora"
+  },
+  "WARNING: Hot printhead\nLoading material Please wait": {
+    "en": "WARNING: Hot printhead\nLoading material Please wait",
+    "pl": "UWAGA: Gorąca głowica\nŁadowanie materiału Proszę\nczekać",
+    "fr": "AVERTISSEMENT:\nTêted'extrusionchaude\nChargement du matériau; Veuillez\npatienter",
+    "de": "WARNUNG: Heißer Kopf Material\nwird geladen Bitte warten",
+    "es": "ADVERTENCIA: Cabezal caliente\nCarga del material Espere"
+  },
+  "Move the platform up": {
+    "en": "Move the platform up",
+    "pl": "Podnieś platformę",
+    "fr": "Monter le plateau",
+    "de": "Plattform heben",
+    "es": "Elevar plataforma"
+  },
+  "Move the platform down": {
+    "en": "Move the platform down",
+    "pl": "Opuść platformę",
+    "fr": "Descendre le plateau",
+    "de": "Plattform senken",
+    "es": "Bajar plataforma"
+  },
+  "Fan test": {
+    "en": "Fan test",
+    "pl": "Test wentylatorów",
+    "fr": "Test de ventilateur",
+    "de": "Lüftertest",
+    "es": "Test de ventilador"
+  },
+  "Toggle upper fan": {
+    "en": "Toggle upper fan",
+    "pl": "Przełącz górny wentylator",
+    "fr": "Actionner ventilateur du haut",
+    "de": "Oberventilator umschalten",
+    "es": "Ventilador arriba conmutar"
+  },
+  "Toggle lower fan": {
+    "en": "Toggle lower fan",
+    "pl": "Przełącz dolny wentylator",
+    "fr": "Actionner ventilateur du bas",
+    "de": "Unterventilator umschalten",
+    "es": "Ventilador abajo conmutar"
+  },
+  "(Enabled)": {
+    "en": "(Enabled)",
+    "pl": "(Włączony)",
+    "fr": "(Activé)",
+    "de": "(Eingeschaltet)",
+    "es": "(Habilitado)"
+  },
+  "(Disabled)": {
+    "en": "(Disabled)",
+    "pl": "(Wyłączony)",
+    "fr": "(Désactivé)",
+    "de": "(Ausgeschaltet)",
+    "es": "(Discapaz)"
+  },
+  "Material": {
+    "en": "Material",
+    "pl": "Materiał",
+    "fr": "Matériau",
+    "de": "Material",
+    "es": "Material"
+  },
+  "Unload the material": {
+    "en": "Unload the material",
+    "pl": "Wysuń materiał",
+    "fr": "Extraire le filament",
+    "de": "Material ausfahren",
+    "es": "Retirar material"
+  },
+  "Load the material": {
+    "en": "Load the material",
+    "pl": "Załaduj materiał",
+    "fr": "Charger le filament",
+    "de": "Material laden",
+    "es": "Cargar material"
+  },
+  "Settings": {
+    "en": "Settings",
+    "pl": "Ustawienia",
+    "fr": "Réglages",
+    "de": "Einstellungen",
+    "es": "Ajustes"
+  },
+  "Light": {
+    "en": "Light",
+    "pl": "Oświetlenie",
+    "fr": "Éclairage",
+    "de": "Beleuchtung",
+    "es": "Iluminación"
+  },
+  "Dynamic lights": {
+    "en": "Dynamic lights",
+    "pl": "Oświetlenie dynamiczne",
+    "fr": "Éclairage dynamique",
+    "de": "Dynamische Beleuchtung",
+    "es": "Iluminación dinámica"
+  },
+  "White light": {
+    "en": "White light",
+    "pl": "Światło białe",
+    "fr": "Eclairage blanc",
+    "de": "Weißes Licht",
+    "es": "Luz blanca"
+  },
+  "Disable lights": {
+    "en": "Disable lights",
+    "pl": "Wyłącz oświetlenie",
+    "fr": "Pas d'éclairage",
+    "de": "Beleuchtung ausschalten",
+    "es": "Apagar iluminación"
+  },
+  "Buzzer": {
+    "en": "Buzzer",
+    "pl": "Dźwięk",
+    "fr": "Son",
+    "de": "Ton",
+    "es": "Sonido"
+  },
+  "Enable buzzer": {
+    "en": "Enable buzzer",
+    "pl": "Włącz dźwięk",
+    "fr": "Activer le son",
+    "de": "Ton einschalten",
+    "es": "Activar sonido"
+  },
+  "Disable buzzer": {
+    "en": "Disable buzzer",
+    "pl": "Wyłącz dźwięk",
+    "fr": "Desactiver le son",
+    "de": "Ton ausschalten",
+    "es": "Desactivar sonido"
+  },
+  "Sleep Mode": {
+    "en": "Sleep Mode",
+    "pl": "Tryb uśpienia",
+    "fr": "Mode veille",
+    "de": "Ruhemodus",
+    "es": "Modo standby"
+  },
+  "Enable Sleep Mode": {
+    "en": "Enable Sleep Mode",
+    "pl": "Włącz tryb uśpienia",
+    "fr": "Activer le mode veille",
+    "de": "Ruhemodus einschalten",
+    "es": "Activar modo standby"
+  },
+  "Disable Sleep Mode": {
+    "en": "Disable Sleep Mode",
+    "pl": "Wyłącz tryb uśpienia",
+    "fr": "Désactiver le mode veille",
+    "de": "Ruhemodus ausschalten",
+    "es": "Desactivar modo standby"
+  },
+  "Turn lights on (sleep mode)": {
+    "en": "Turn lights on (sleep mode)",
+    "pl": "Włącz światło (tryb uśpienia)",
+    "fr": "Allumez la lumière (mode veille)",
+    "de": "Machen Sie das Licht auf (Ruhemodus)",
+    "es": "Conecte la luz (modo standby)"
+  },
+  "Turn lights off (sleep mode)": {
+    "en": "Turn lights off (sleep mode)",
+    "pl": "Wyłącz światło (tryb uśpienia)",
+    "fr": "Éteignez la lumière (mode veille)",
+    "de": "Schalten Sie das Licht (Ruhemodus)",
+    "es": "Apagar la luz (modo standby)"
+  },
+  "Language": {
+    "en": "Language",
+    "pl": "Język",
+    "fr": "Langue",
+    "de": "Sprache",
+    "es": "Idioma"
+  },
+  "Polski": {
+    "en": "Polski",
+    "pl": "Polski",
+    "fr": "Polski",
+    "de": "Polski",
+    "es": "Polski"
+  },
+  "Français": {
+    "en": "Français",
+    "pl": "Français",
+    "fr": "Français",
+    "de": "Français",
+    "es": "Français"
+  },
+  "Español": {
+    "en": "Español",
+    "pl": "Español",
+    "fr": "Español",
+    "de": "Español",
+    "es": "Español"
+  },
+  "Deutsch": {
+    "en": "Deutsch",
+    "pl": "Deutsch",
+    "fr": "Deutsch",
+    "de": "Deutsch",
+    "es": "Deutsch"
+  },
+  "Models sorting": {
+    "en": "Models sorting",
+    "pl": "Sortowanie modeli",
+    "fr": "Triage de modèles",
+    "de": "Sortieren von Modellen",
+    "es": "Clasificación de los modelos"
+  },
+  "Date/time": {
+    "en": "Date/time",
+    "pl": "Data/czas",
+    "fr": "Date/temps",
+    "de": "Datum/Zeit",
+    "es": "Fecha/tiempo"
+  },
+  "File name": {
+    "en": "File name",
+    "pl": "Nazwa pliku",
+    "fr": "Nom de fichier",
+    "de": "Dateiname",
+    "es": "Nombre del archivo"
+  },
+  "File name (case sensitive)": {
+    "en": "File name (case sensitive)",
+    "pl": "Nazwa pliku (uwzględniaj wielkośc liter)",
+    "fr": "Nom de fichier (respecter la casse)",
+    "de": "Dateiname (Buchstabengröße zu berücksichtigen)",
+    "es": "Nombre del archivo (con el tamaño de los tipos)"
+  },
+  "File size": {
+    "en": "File size",
+    "pl": "Rozmiar pliku",
+    "fr": "Taille de fichier",
+    "de": "Dateigröße",
+    "es": "Tamaño del archivo"
+  },
+  "Full platform preheating": {
+    "en": "Full platform preheating",
+    "pl": "Pelne rozgrzanie platformy",
+    "fr": "Préchauffage Intégral de la Plateforme",
+    "de": "Plattform vollständig vorheizen",
+    "es": "Precalentamiento de plataforma completa"
+  },
+  "Information": {
+    "en": "Information",
+    "pl": "Informacje",
+    "fr": "Informations",
+    "de": "Informationen",
+    "es": "Información"
+  },
+  "Model:": {
+    "en": "Model:",
+    "pl": "Model:",
+    "fr": "Modèle:",
+    "de": "Modell:",
+    "es": "Modelo:"
+  },
+  "Total printing time:": {
+    "en": "Total printing time:",
+    "pl": "Łączny czas pracy:",
+    "fr": "Durée totale de travail:",
+    "de": "Betriebszeit gesamt:",
+    "es": "Tiempo total de trabajo:"
+  },
+  "Serial number:": {
+    "en": "Serial number:",
+    "pl": "Numer seryjny:",
+    "fr": "No de série:",
+    "de": "Seriennummer:",
+    "es": "Número de serie:"
+  },
+  "Firmware version": {
+    "en": "Firmware version",
+    "pl": "Wersja firmware",
+    "fr": "Version du firmware",
+    "de": "Firmware-Version",
+    "es": "Versión de firmaware"
+  },
+  "Firmware version:": {
+    "en": "Firmware version:",
+    "pl": "Wersja firmware:",
+    "fr": "Version de firmware:",
+    "de": "Firmware-Version:",
+    "es": "Versión de firmaware:"
+  },
+  "Hardware version:": {
+    "en": "Hardware version:",
+    "pl": "Wersja hardware:",
+    "fr": "Version du hardware:",
+    "de": "Hardware-Version:",
+    "es": "Versión de hardware:"
+  },
+  "Printer information": {
+    "en": "Printer information",
+    "pl": "Informacje o drukarce",
+    "fr": "Informations imprimante",
+    "de": "Druckerinformationen",
+    "es": "Información sobre impresora"
+  },
+  "Help": {
+    "en": "Help",
+    "pl": "Pomoc",
+    "fr": "Aide",
+    "de": "Hilfe",
+    "es": "Ayuda"
+  },
+  "Print:": {
+    "en": "Print:",
+    "pl": "Drukuj:",
+    "fr": "Imprimer:",
+    "de": "Drucken:",
+    "es": "Imprimir:"
+  },
+  "Material:": {
+    "en": "Material:",
+    "pl": "Materiał:",
+    "fr": "Matériau:",
+    "de": "Material:",
+    "es": "Material:"
+  },
+  "Print time:": {
+    "en": "Print time:",
+    "pl": "Czas wydruku:",
+    "fr": "Temps d’impression:",
+    "de": "Druckzeit:",
+    "es": "Tiempo de impresión:"
+  },
+  "Material usage:": {
+    "en": "Material usage:",
+    "pl": "Zużycie materiału:",
+    "fr": "Consommation de matériau:",
+    "de": "Materialverbrauch:",
+    "es": "Consumo de material:"
+  },
+  "WARNING: Hot printhead": {
+    "en": "WARNING: Hot printhead",
+    "pl": "UWAGA: Gorąca głowica",
+    "fr": "AVERTISSEMENT: Extrudeur\nchaud",
+    "de": "WARNUNG: Heißer Kopf",
+    "es": "ADVERTENCIA: Cabezal caliente"
+  },
+  "--- UNUSED ---": {
+    "en": "--- UNUSED ---",
+    "pl": "--- UNUSED ---",
+    "fr": "---UNUSED---",
+    "de": "---UNUSED---",
+    "es": "---UNUSED---"
+  },
+  "Resume the print": {
+    "en": "Resume the print",
+    "pl": "Kontynuuj druk",
+    "fr": "Continuer l’impression",
+    "de": "Druckvorgang fortsetzen",
+    "es": "Continuar impresión"
+  },
+  "Change the material": {
+    "en": "Change the material",
+    "pl": "Zmień materiał",
+    "fr": "Changer le matériau",
+    "de": "Material ändern",
+    "es": "Cambiar de material"
+  },
+  "Stop the print": {
+    "en": "Stop the print",
+    "pl": "Zatrzymaj druk",
+    "fr": "Arrêter l’impression",
+    "de": "Druckvorgang stoppen",
+    "es": "Parar impresión"
+  },
+  "Are you sure you want to cancel\nthe print?": {
+    "en": "Are you sure you want to cancel\nthe print?",
+    "pl": "Czy na pewno chcesz przerwać\ndruk?",
+    "fr": "Vous-êtes sûr d’arrêter\nl’impression?",
+    "de": "Möchten Sie den Druckvorgang\nstoppen?",
+    "es": "¿Está seguro de que quiere parar\nla impresión?"
+  },
+  "No": {
+    "en": "No",
+    "pl": "Nie",
+    "fr": "Non",
+    "de": "Nein",
+    "es": "No"
+  },
+  "Yes": {
+    "en": "Yes",
+    "pl": "Tak",
+    "fr": "Oui",
+    "de": "Ja",
+    "es": "Sí"
+  },
+  "Remove excess material\nfrom nozzle using tweezers\nand press the button to resume": {
+    "en": "Remove excess material\nfrom nozzle using tweezers\nand press the button to resume",
+    "pl": "Usuń nadmiar materiału\nz dyszy używając pęsety\ni naciśnij przycisk aby wznowić druk",
+    "fr": "Enlever le surplus de matériel\nde la tuyère avec une pince\net appuyer sur le bouton\npour recommencer ",
+    "de": "Überflüssiges Material mit einer\nPinzette aus der Düse entfernen und\nKnopf drücken um Drucken\nwieder zu starten",
+    "es": "Retire exceso del material\ndel bocal con pinza y\npulse el botón para\nreanudar"
+  },
+  "Resuming the print\nPlease wait": {
+    "en": "Resuming the print\nPlease wait",
+    "pl": "Wznawianie druku\nProszę czekać",
+    "fr": "Reprise de l’impression\nVeuillez patienter",
+    "de": "Druckvorgang wieder aufnehmen\nBitte warten",
+    "es": "Renovando impresión\nEspere"
+  },
+  "Printing stopped\nPlease wait": {
+    "en": "Printing stopped\nPlease wait",
+    "pl": "Wydruk zatrzymany\nProszę czekać",
+    "fr": "Impression arrêtée. Veuillez\npatienter",
+    "de": "Druckvorgang gestoppt\nBitte warten",
+    "es": "Impresión parada\nEspere"
+  },
+  "Entering pause Please wait": {
+    "en": "Entering pause Please wait",
+    "pl": "Przechodzenie w stan pauzy\nProszę czekać",
+    "fr": "Passage à l’état de pause\nVeuillez patienter",
+    "de": "Übergang in den Pausemodus\nBitte warten",
+    "es": "Entrando en modo de pausa\nEspere"
+  },
+  "Error : Path to files are too long.\nKeep it shorter than 255 characters": {
+    "en": "Error : Path to files are too long.\nKeep it shorter than 255 characters",
+    "pl": "Błąd : Ścieżka do plików jest zbyt długa.\nNie powinna przekraczać 255 znaków",
+    "fr": "Erreur: Le chemin d’accès aux fichiers est\ntrop long. Ne doit pas dépasser\n255 signes.",
+    "de": "Fehler : Der Dateipfad ist zu lang. Er soll\naus nicht mehr als 255 Zeichen\nbestehen",
+    "es": "Error: Ruta de acceso a los archivos\ndemasiado larga. No debe pasar de\n225 caracteres"
+  },
+  "Error : There can only be 50 files\n in one directory. Please add another\n directory to group your projects": {
+    "en": "Error : There can only be 50 files\n in one directory. Please add another\n directory to group your projects",
+    "pl": "Błąd : Może być jedynie 50 plików\n w jednym katalogu. Proszę dodać\nkolejny katalog w celu\nzgrupowania projektów",
+    "fr": "Erreur: Un seul catalogue ne peut\n contenir que 50 fichiers. Ajoutez un\ncatalogue suivant afin de regrouper\n les projets.",
+    "de": "Fehler : In einem Verzeichnis dürfen\n sich nur 50 Dateien befinden. Geben\n Sie ein weiteres Verzeichnis an,\num die Projekte zu gruppieren",
+    "es": "Error: Pueden existir sólo 50\narchivos en un directorio.\nAgregue otro directorio para colocar\nel resto de los proyectos"
+  },
+  "Error #002\nSD Card reading error": {
+    "en": "Error #002\nSD Card reading error",
+    "pl": "Błąd #002\nBłąd odczytu karty SD",
+    "fr": "Erreur #002\nErreur lecture carte SD",
+    "de": "Fehler #002\nFehler beim Lesen der\nSD-Karte",
+    "es": "Error #002\nError de lectura de la\ntarjeta SD"
+  },
+  "Error #101\nNo models on SD card": {
+    "en": "Error #101\nNo models on SD card",
+    "pl": "Błąd #101\nBrak modeli na karcie SD",
+    "fr": "Erreur #101\nPas de modèles sur carte SD",
+    "de": "Fehler #101\nKeine Modelle auf der\nSD-Karte vorhanden",
+    "es": "Error #101\nFalta de modelos en la\ntarjeta SD"
+  },
+  "Error #003\nFile error Please prepare\nyour model again": {
+    "en": "Error #003\nFile error Please prepare\nyour model again",
+    "pl": "Błąd #003\nPlik zawiera błędy\nPrzygotuj i ponownie nagraj plik",
+    "fr": "Erreur #003\nErreur de fichier.\nRéenregistrez le fichier",
+    "de": "Fehler #003\nDatei enthält Fehler Datei\nvorbereiten und erneut\naufspielen",
+    "es": "Error #003\nEl archivo contiene errores\nPrepare y vuelva a grabar el\narchivo"
+  },
+  "Error #004\nPrint stopped due to SD card\ntimeout. Check SD card contacts\nor format/replace your card.": {
+    "en": "Error #004\nPrint stopped due to SD card\ntimeout. Check SD card contacts\nor format/replace your card.",
+    "pl": "Błąd #004\nWydruk zatrzymany z powodu błędu\nodczytu. Sprawdź  styki karty \nlub sformatuj/wymień kartę",
+    "fr": "Erreur #004 Impression arrêtée\nà cause d’erreur de lecture Vérifiez\nles contactsde la carte ou\nformatezchangez la carte",
+    "de": "Fehler #004 Druckvorgang aufgrund\neines Lesefehlers gestoppt.\nKontakte der überprüfen bzw.\nKarte formatieren/tauschen",
+    "es": "Error #004 Impresión parada\ndebido al error de lectura.\nVerifique loscontactos de la tarjeta\no formatee/sustituya la tarjeta"
+  },
+  "Error #010\nExtruder heating error": {
+    "en": "Error #010\nExtruder heating error",
+    "pl": "Błąd #010\nBłąd grzania ekstrudera",
+    "fr": "Erreur #010\nErreur de chauffage\nd’extrudeur",
+    "de": "Fehler #010\nFehler beim Vorheizen des\nExtruders",
+    "es": "Error #010\nError de calentamiento de la\nextrusora"
+  },
+  "Error #011\nExtruder temperature is too\nhigh": {
+    "en": "Error #011\nExtruder temperature is too\nhigh",
+    "pl": "Błąd #011\nZbyt wysoka temperatura\nekstrudera",
+    "fr": "Erreur #011\nTempérature trop élevée\nd’extrudeur",
+    "de": "Fehler #011\nZu hohe Temperatur des\nExtruders",
+    "es": "Error #011\nTemperatura excesiva de la\nextrusora"
+  },
+  "Error #012\nHeatbed temperature is too high": {
+    "en": "Error #012\nHeatbed temperature is too high",
+    "pl": "Błąd #012\nZbyt wysoka temperatura\nstołu roboczego",
+    "fr": "Erreur #012\nTempérature du plateau\ntrop élevé",
+    "de": "Fehler #012\nZu hohe Temperatur des\nArbeitstischs",
+    "es": "Error #012\nTemperatura excesiva de la\nmesa de trabajo"
+  },
+  "Error #013\nUnexpected extruder\ntemperature drop": {
+    "en": "Error #013\nUnexpected extruder\ntemperature drop",
+    "pl": "Błąd #013\nNieoczekiwany spadek\ntemperatury ekstrudera",
+    "fr": "Erreur #013\nBaisse de température\ninattendue de l’extrudeur",
+    "de": "Fehler #013\nUnerwarteter Temperaturrückgang\ndes Extruders",
+    "es": "Error #013\nCaída inesperada de\ntemperatura de la extrusora"
+  },
+  "Error #014\nHeatbed thermistor error": {
+    "en": "Error #014\nHeatbed thermistor error",
+    "pl": "Błąd #014\nBłąd termistora stołu\nroboczego",
+    "fr": "Erreur #014\nErreur de la thermistance\ndu plateau",
+    "de": "Fehler #014\nFehler des Thermistors am\nArbeitstisch",
+    "es": "Error #014\nError del termistor de la\nmesa de trabajo"
+  },
+  "Error #015\nExtruder thermistor\nconnection error": {
+    "en": "Error #015\nExtruder thermistor\nconnection error",
+    "pl": "Błąd #015\nBłąd grzałki termistora\nekstrudera",
+    "fr": "Erreur #015\nErreur de la thermistance\nde la chauffe de l’extrudeur",
+    "de": "Fehler #015\nFehler des Thermistors der\nHeizung am Extruder",
+    "es": "Error #015\nError del termistor del\ncalentador de la extrusora"
+  },
+  "Error #030\nCheck build platofrm small\nconnector and restart the\nprinter": {
+    "en": "Error #030\nCheck build platofrm small\nconnector and restart the\nprinter",
+    "pl": "Błąd #030\nSprawdź małą wtyczkę\nplatformy roboczej i ponownie\nuruchom drukarkę",
+    "fr": "Erreur #030\nVérifiez la petite prise de la\nplate-forme du travail et\nremettez l’imprimante en route",
+    "de": "Fehler #030\nKleinen Stecker der\nArbeitsplattform prüfen und\nDrucker erneut starten",
+    "es": "Error #030\nVerifique el enchufe pequeño\nde la plataforma de trabajo\ny vuelva a encender la impresora"
+  },
+  "Error #031\nCheck the platform large\nconnector and restart the\nprinter": {
+    "en": "Error #031\nCheck the platform large\nconnector and restart the\nprinter",
+    "pl": "Błąd #031\nSprawdź dużą wtyczkę\nplatformy roboczej i ponownie\nuruchom drukarkę",
+    "fr": "Erreur #031\nVérifiez la grande prise de la\nplate-forme de travail et\nremettez l’imprimante en route",
+    "de": "Fehler #031\nGroßen Stecker der\nArbeitsplattform prüfen und\nDrucker erneut starten",
+    "es": "Error #031\nVerifique el enchufe grande\nde la plataforma de trabajo y\nvuelva a encender la impresora"
+  },
+  "Error #032\nCheck the main extruder\ncable and restart the printer": {
+    "en": "Error #032\nCheck the main extruder\ncable and restart the printer",
+    "pl": "Błąd #032\nSprawdź połączenie kabla\nekstrudera i ponownie uruchom\ndrukarkę",
+    "fr": "Erreur #032\nVérifiez la connexion du\ncâble de l’extrudeur et remettez\nl’imprimante en route",
+    "de": "Fehler #032\nKabelverbindung am\nExtruder prüfen und Drucker\nerneut starten",
+    "es": "Error #032\nVerifique la conexión del\ncable de la extrusora y vuelva a\nencender la impresora"
+  },
+  "Error #035\nIf extruder gear was not rotating\nsmoothly ribbon may be damaged": {
+    "en": "Error #035\nIf extruder gear was not rotating\nsmoothly ribbon may be damaged",
+    "pl": "Błąd #035\nJeśli zębatka ekstrudera nie obracała\nsię płynnie przewód może być uszkodzony",
+    "fr": "Erreur #035\nbanana",
+    "de": "Fehler #035\nbanana",
+    "es": "Error #035\nbanana"
+  },
+  "Error #033\nCheck the perforated plate\ncontacts and restart the printer": {
+    "en": "Error #033\nCheck the perforated plate\ncontacts and restart the printer",
+    "pl": "Błąd #033\nSprawdź styki płyty\nperforowanej i ponownie uruchom\ndrukarkę",
+    "fr": "Erreur #033\nVérifiez les contacts de la\nplaque perforée et remettez\nl’imprimante en route",
+    "de": "Fehler #033\nKontakte der Lochplatte\nprüfen und Drucker erneut starten",
+    "es": "Error #033\nVerifique los contactos de\nla placa perforada y vuelva a\nencender la impresora"
+  },
+  "Error #034\nCheck the endstops and\nrestart the printer": {
+    "en": "Error #034\nCheck the endstops and\nrestart the printer",
+    "pl": "Błąd #034\nSprawdź wyłączniki\nkrańcowe i ponownie uruchom\ndrukarkę",
+    "fr": "Erreur #034\nVérifiez les interrupteurs\nde fin de course et remettez\nl’imprimante en route",
+    "de": "Fehler #034\nEndschalter prüfen und\nDrucker erneut starten",
+    "es": "Error #034\nVerifique los finales de\ncarrera y vuelva a encender la\nimpresora"
+  },
+  "Error #040\nPlease update the Firmware\nto print": {
+    "en": "Error #040\nPlease update the Firmware\nto print",
+    "pl": "Błąd #040\nZaktualizuj firmware, aby\nwydrukować ten model",
+    "fr": "Erreur #040\nActualisez votre firmware\npour imprimer ce modèle",
+    "de": "Fehler #040\nFirmware aktualisieren, um\ndas Modell zu drucken",
+    "es": "Error #040\nActualice el firmware para\nimprimir este modelo"
+  },
+  "Error #075\nPlease prepare the file\nusing a newer Z-Suite version": {
+    "en": "Error #075\nPlease prepare the file\nusing a newer Z-Suite version",
+    "pl": "Błąd #075\nPrzygotuj plik, używając\nnowszej wersji Z-Suite",
+    "fr": "Erreur #075\nPréparez votre fichier\nutilisant une version plus récente\nde Z-suite",
+    "de": "Fehler #075\nDatei mit einer neueren\nVersion von Z-Suite vorbereiten",
+    "es": "Error #075\nPrepare el archivo usando\nversión más nueva de Z-Suite"
+  },
+  "Error #076\nThis zcode file was\nexported for a different printer\nmodel": {
+    "en": "Error #076\nThis zcode file was\nexported for a different printer\nmodel",
+    "pl": "Błąd #076\nTen plik został\nprzygotowany dla innego modelu\ndrukarki",
+    "fr": "Erreur #076\nCe fichier a été préparé\npour un autre modèle\nd’imprimante",
+    "de": "Fehler #\n076 Datei wurde für ein anderes\nDruckermodell vorbereitet",
+    "es": "Error #076\nEste archivo se preparó\npara otro modelo de impresora"
+  },
+  "Contact support service": {
+    "en": "Contact support service",
+    "pl": "Skontaktuj się z pomocą\ntechniczną",
+    "fr": "Consultez votre assistance\ntechnique",
+    "de": "Kontakt mit dem technischen\nSupport aufnehmen",
+    "es": "Póngase en contacto con la\nasistencia técnica"
+  },
+  "www.zortrax.com/support": {
+    "en": "www.zortrax.com/support",
+    "pl": "www.zortrax.com/support",
+    "fr": "www.zortrax.com/support",
+    "de": "www.zortrax.com/support",
+    "es": "www.zortrax.com/support"
+  },
+  "To get help, please visit our\nsupport center at:\nwww.zortrax.com/support": {
+    "en": "To get help, please visit our\nsupport center at:\nwww.zortrax.com/support",
+    "pl": "Aby uzyskać pomoc, odwiedź\nnasze centrum wsparcia\ntechnicznego pod adresem:\nwww.zortrax.com/support",
+    "fr": "Pour obtenir de l’aide visitez\nnotre centre d’appui technique\nsur www.zortrax.com/support",
+    "de": "Brauchen Sie Hilfe? Besuchen Sie\nunser Support-Center unter:\nwww.zortrax.com/support",
+    "es": "Para obtener ayuda visite\nnuestro centro de asistencia\ntécnica en la página web:\nwww.zortrax.com/support"
+  },
+  "Unofficial hardware detected.": {
+    "en": "Unofficial hardware detected.",
+    "pl": "Unofficial hardware detected.",
+    "fr": "Unofficial hardware detected.",
+    "de": "Unofficial hardware detected.",
+    "es": "Unofficial hardware detected."
+  },
+  "Please wait": {
+    "en": "Please wait",
+    "pl": "Proszę czekać",
+    "fr": "Veuillez patienter",
+    "de": "Bitte warten",
+    "es": "Espere, por favor"
+  },
+  "Press the button to wake up": {
+    "en": "Press the button to wake up",
+    "pl": "Naciśnij przycisk, aby wybudzić",
+    "fr": "Pour sortir de l’état de veille\nappuyez le bouton",
+    "de": "Taste betätigen, um den\nRuhemodus zu verlassen",
+    "es": "Para despertar pulse el botón"
+  },
+  "Entering sleep mode": {
+    "en": "Entering sleep mode",
+    "pl": "Przechodzenie w stan uśpienia",
+    "fr": "Passage à l’état de veille",
+    "de": "Übergang in den Ruhemodus",
+    "es": "Entrando en modo standby"
+  },
+  "Entering sleep mode in": {
+    "en": "Entering sleep mode in",
+    "pl": "Stan uśpienia za",
+    "fr": "Veille dans...",
+    "de": "Ruhemodus in...",
+    "es": "Modo standby dentro de..."
+  },
+  "Printing:": {
+    "en": "Printing:",
+    "pl": "Drukowanie:",
+    "fr": "Impression:",
+    "de": "Drucken:",
+    "es": "Impresión:"
+  },
+  "Entering pause, please wait...": {
+    "en": "Entering pause, please wait...",
+    "pl": "Pauzowanie wydruku, proszę czekać...",
+    "fr": "Imprimante en pause, veuillez patienter",
+    "de": "Druckvorgang pausieren, bitte warten...",
+    "es": "Interrupción de la impresión,\nespere por favor..."
+  },
+  "%s %s": {
+    "en": "%s %s",
+    "pl": "%s %s",
+    "fr": "%s %s",
+    "de": "%s %s",
+    "es": "%s %s"
+  },
+  "(PAUSE NOT AVAILABLE)": {
+    "en": "(PAUSE NOT AVAILABLE)",
+    "pl": "(PAUZA NIE DOSTĘPNA)",
+    "fr": "(PAUSE NON DISPONSIBLE)",
+    "de": "(PAUSE NICHT VERFÜGBAR)",
+    "es": "(PAUSE NO DISPONSIBLE)"
+  },
+  "Raft": {
+    "en": "Raft",
+    "pl": "Raft",
+    "fr": "Raft",
+    "de": "Raft",
+    "es": "Raft"
+  },
+  "Estimated time left:": {
+    "en": "Estimated time left:",
+    "pl": "Szacowany pozostały czas:",
+    "fr": "Estimation du temps restant:",
+    "de": "Ungefähre Zeit:",
+    "es": "Tiempo estimado restante:"
+  },
+  "Printing done. Press button to\nreturn. Long-press to reprint.": {
+    "en": "Printing done. Press button to\nreturn. Long-press to reprint.",
+    "pl": "Drukowanie zakończone. Kliknij aby\nwrócić. Przytrzymaj aby ponowić.",
+    "fr": "Impression faite. Cliquez pour\nrevenir. Longue-presse à imprimer.",
+    "de": "Druck fertig. Drücken um zurück\nkehren. Halten um neu zu drucken.",
+    "es": "Impresión finalizada. Pulse para\nvolver. Mantenga volver a imprimir."
+  },
+  "Remove the model from the build\nplate and press the button to\nreprint": {
+    "en": "Remove the model from the build\nplate and press the button to\nreprint",
+    "pl": "Wyjmij model z drukarki a\nnastępnie nacisnij przycisk ażeby\nwydrukować ponownie.",
+    "fr": "Retirez la pièce du plateau et\nappuyez sur le bouton pour\nré-imprimer.",
+    "de": "Entferne das Model von der\nDruckplatte und bestätige um\nerneut zu drucken",
+    "es": "Retire el modelo de la placa de\nacumulación y pulse el botón para\nvolver a imprimir"
+  },
+  "Print stopped by user action": {
+    "en": "Print stopped by user action",
+    "pl": "Wydruk zatrzymany przez\nużytkownika",
+    "fr": "Impression arrêtée par\nl’utilisateur",
+    "de": "Druckvorgang durch den\nBenutzer gestoppt",
+    "es": "Impresión parada por el usuario"
+  },
+  "Checking file Please wait": {
+    "en": "Checking file Please wait",
+    "pl": "Sprawdzanie poprawności pliku\nProszę czekać",
+    "fr": "Contrôle de l’exactitude du\nfichier Veuillez patienter",
+    "de": "Datei wird validiert Bitte warten",
+    "es": "Verificación de la corrección del\narchivo Espere"
+  },
+  "Heating the platform\nPlease wait": {
+    "en": "Heating the platform\nPlease wait",
+    "pl": "Nagrzewanie platformy\nProszę czekać",
+    "fr": "Chauffage du plateau. Veuillez\npatienter",
+    "de": "Plattform wird vorgeheizt\nBitte warten",
+    "es": "Calentamiento de la plataforma\nEspere"
+  },
+  "Heating the extruder\nPlease wait": {
+    "en": "Heating the extruder\nPlease wait",
+    "pl": "Nagrzewanie ekstrudera\nProszę czekać",
+    "fr": "Chauffage de l’extrudeuse\nVeuillez patienter",
+    "de": "Extruder wird vorgeheizt\nBitte warten",
+    "es": "Calentamiento de la extrusora\nEspere"
+  },
+  "WARNING: Printhead will be hot\nduring calibration. Please wear\nsafety gloves.": {
+    "en": "WARNING: Printhead will be hot\nduring calibration. Please wear\nsafety gloves.",
+    "pl": "UWAGA: Głowica będzie gorąca\npodczas poziomowania. Zalecamy\nużycie rękawic ochronnych",
+    "fr": "AVERTISSEMENT: L'extrudeur\nsera chaud pendant la calibration.\nLe port de gants est conseillé",
+    "de": "ACHTUNG: Während der\nNivellierung wird der Kopf heiß.\nVerwendung von\nSchutzhandschuhen wird\nempfohlen",
+    "es": "ADVERTENCIA: El cabezal estará\ncaliente durante la nivelación. Es\nrecomendable llevar guantes de\nprotección."
+  },
+  "Please tighten three calibration\nknobs at the bottom of the\nplatform and press the button": {
+    "en": "Please tighten three calibration\nknobs at the bottom of the\nplatform and press the button",
+    "pl": "Dokręć trzy śruby kalibracyjne\npod platformą i naćiśnij przycisk",
+    "fr": "Serrez les 3 vis de calibration\nsous le plateau et appuyez le\nbouton",
+    "de": "Drei Justierschrauben unter der\nPlattform festziehen und Taste\nbetätigen",
+    "es": "Apriete tres tornillos de\ncalibración debajo de la\nplataforma y pulse el botón."
+  },
+  "Checking the points at the backside\nPlease wait": {
+    "en": "Checking the points at the backside\nPlease wait",
+    "pl": "Sprawdzanie tyłu platformy\nProszę czekać",
+    "fr": "Vérification de l’arrière de la\nplate-forme. Veuillez patienter",
+    "de": "Rückseite der Plattform wird\ngeprüft. Bitte warten",
+    "es": "Verificación de la parte trasera\nde la plataforma. Espere"
+  },
+  "Checking the points at the frontside\nPlease wait": {
+    "en": "Checking the points at the frontside\nPlease wait",
+    "pl": "Sprawdzanie przodu platformy\nProszę czekać",
+    "fr": "Vérification du front de la\nplate-forme. Veuillez patienter",
+    "de": "Vorderseite der Plattform wird\ngeprüft. Bitte warten",
+    "es": "Verificación de la parte frontal\nde la plataforma. Espere"
+  },
+  "Checking the center point\nPlease wait": {
+    "en": "Checking the center point\nPlease wait",
+    "pl": "Sprawdzanie środka platformy\nProszę czekać",
+    "fr": "Vérification du milieu de la\nplate-forme Veuillez patienter",
+    "de": "Mitte der Plattform wird geprüft\nBitte warten",
+    "es": "Verificación del medio de la\nplataforma Espere"
+  },
+  "Front side is too low (%.2f mm).\nPlease loosen the front knob\nclockwise by about %.2f %s.": {
+    "en": "Front side is too low (%.2f mm).\nPlease loosen the front knob\nclockwise by about %.2f %s.",
+    "pl": "Przednia strona jest za nisko\n(%.2f mm). Odkręć przednią śrubę\no około %.2f %s",
+    "fr": "Côté avant est trop bas (%.2f mm).\nDévissez la vis situéeà l’avant\nd’environ d’un %.2f %s",
+    "de": "Vordere Seite ist zu niedrig (%.2f mm).\nSchraube vorne etwa\n%.2f %s",
+    "es": "El lado delantero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo en\naprox. %.2f %s"
+  },
+  "Front side is too high (%.2f mm).\nPlease tighten the front knob \ncounterclockwise by about\n%.2f %s.": {
+    "en": "Front side is too high (%.2f mm).\nPlease tighten the front knob \ncounterclockwise by about\n%.2f %s.",
+    "pl": "Przednia strona jest za wysoko\n(%.2f mm). Dokręć przednią śrubę\no około %.2f %s",
+    "fr": "Côté avant est trop haut (%.2f mm).\nSerrez la vis située à l’avant\nd’environ d’un %.2f %s",
+    "de": "Vordere Seite ist zu hoch (%.2f mm).\nVordere Schraube etwa\n%.2f %s",
+    "es": "El lado delantero derecho está\ndemasiado alto (%.2f mm).\nEnrosque el tornillo delantero en\naprox. %.2f %s"
+  },
+  "Rear left side is too low.  (%.2f mm).\nPlease loosen the left knob\nclockwise by about %.2f %s.": {
+    "en": "Rear left side is too low.  (%.2f mm).\nPlease loosen the left knob\nclockwise by about %.2f %s.",
+    "pl": "Lewa tylna strona jest za nisko \n(%.2f mm).Odkręć lewą tylną śrubę\no około %.2f %s",
+    "fr": "Côté gauche arrière est trop bas\n(%.2f mm). Dévissez la vis gauche\narrière d’environ d’un \n%.2f %s",
+    "de": "Linke Seite hinten ist zu niedrig \n(%.2f mm). Linke Schraube hinten\netwa %.2f %s",
+    "es": "El lado trasero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo trasero\nizquierdo en aprox. %.2f %s"
+  },
+  "Rear left side is too high (%.2f mm).\nPlease tighten the left knob\ncounterclockwise by about\n%.2f %s": {
+    "en": "Rear left side is too high (%.2f mm).\nPlease tighten the left knob\ncounterclockwise by about\n%.2f %s",
+    "pl": "Lewa tylna strona jest za wysoko\n(%.2f mm). Dokręć lewą tylną śrubę \no około %.2f %s",
+    "fr": "Côté arrière gauche est trop haut \n(%.2f mm). Serrez la vis du côté\ngauche arrière d’environ\nd’un %.2f %s",
+    "de": "Linke Seite hinten ist zu hoch\n(%.2f mm). Linke Schraube hinten\netwa %.2f %s",
+    "es": "El lado trasero izquierdo está\ndemasiado alto (%.2f mm). \nEnrosque el tornillo trasero izquierdo\nen aprox. %.2f %s"
+  },
+  "Rear right side is too low (%.2f mm).\nPlease loosen the right knob clockwise\nby about %.2f %s.": {
+    "en": "Rear right side is too low (%.2f mm).\nPlease loosen the right knob clockwise\nby about %.2f %s.",
+    "pl": "Prawa tylna strona jest za nisko\n(%.2f mm). Odkręć prawą tylną śrubę\no około %.2f %s",
+    "fr": "Côté droit arrière est trop bas\n(%.2f mm).Dévissez la vis arrière\ndroite d’environ\nd’un %.2f %s",
+    "de": "Rechte Seite hinten ist zu niedrig\n(%.2f mm). Rechte Schraube hinten\netwa %.2f %s",
+    "es": "El lado trasero izquierdo está\ndemasiado bajo (%.2f mm).\nDesenrosque el tornillo trasero\nderecho en aprox. %.2f %s"
+  },
+  "Rear right side is too high (%.2f mm).\nPlease tighten the right knob \ncounterclockwise by about\n%.2f %s.": {
+    "en": "Rear right side is too high (%.2f mm).\nPlease tighten the right knob \ncounterclockwise by about\n%.2f %s.",
+    "pl": "Prawa tylna strona jest za wysoko \n(%.2f mm). Dokręć prawą tylną śrubę\no około %.2f %s",
+    "fr": "Côté droit arrière est trop haut\n(%.2f mm). Serrez la vis arrière\ndroite d’environ\nde %.2f %s",
+    "de": "Rechte Seite hinten ist zu hoch\n(%.2f mm). Rechte Schraube hinten\netwa %.2f %s",
+    "es": "El lado trasero derecho está\ndemasiado alto (%.2f mm).\nEnrosque el tornillo trasero derecho\nen aprox. %.2f %s"
+  },
+  "Error #041\nCalibration failed": {
+    "en": "Error #041\nCalibration failed",
+    "pl": "Błąd #041\nBłąd poziomowania",
+    "fr": "Erreur #041\nErreur de mise à niveau",
+    "de": "Fehler #041\nFehler beim Nivellieren",
+    "es": "Error #041\nError de nivelación"
+  },
+  "Error #042 Pad probing failed.\nEnsure small platform connector is\ninserted and the print bed is free of\ndebris.": {
+    "en": "Error #042 Pad probing failed.\nEnsure small platform connector is\ninserted and the print bed is free of\ndebris.",
+    "pl": "Błąd #042 Niepowodzenie\npróbkowania platformy. Upewnij się\nże mała wtyczka platformy jest\nwłożona prawidłowo a pole robocze\njest czyste",
+    "fr": "Erreur #042 de contact avec le\nplateau. S'assurer que le petit\nconnecteur est branché et que le\nplateau est propre.",
+    "de": "Error #042 Kontaktflächen\nAbtastung fehlgeschlagen. Prüfen\nSie das kleine Verbindungskabel der\nPlattform und befreien Sie die\nDruckplatte von Schmutz.",
+    "es": "Error #042 Pad falló el sondeo.\nGarantizar conector plataforma\npequeña se inserta y la cama de\nimpresión es libre de escombros."
+  },
+  "Calibration done.\nPress the button to continue": {
+    "en": "Calibration done.\nPress the button to continue",
+    "pl": "Poziomowanie zakończone\nNaciśnij przycisk, aby zakończyć",
+    "fr": "Mise à niveau achevé. Appuyez le\nbouton pour terminer",
+    "de": "Nivelliervorgang abgeschlossen\nTaste betätigen, um zu beenden",
+    "es": "Nivelación terminada Pulse el\nbotón para terminar"
+  },
+  "Center of the platform is bent.\nPlease follow maintenance\nprocedure and then repeat the\ncalibration.": {
+    "en": "Center of the platform is bent.\nPlease follow maintenance\nprocedure and then repeat the\ncalibration.",
+    "pl": "Środek platformy jest\nwybrzuszony. Przeprowadź\nkonserwację platformy i powtórz\nkalibrację",
+    "fr": "Le milieu de la plate-forme est\ngonflé. Effectuez la maintenance\nde la plate-forme et répétez la\ncalibration",
+    "de": "Mitte der Plattform ist\nausgebuchtet. Wartung der\nPlattform durchführen und\nKalibrierung wiederholen",
+    "es": "El medio de la plataforma está\nabombado. Realice el\nmantenimiento de la plataforma y\nrepita la calibración."
+  },
+  "turn": {
+    "en": "turn",
+    "pl": "obrót",
+    "fr": "tour",
+    "de": "Umdrehung",
+    "es": "giro"
+  },
+  "turns": {
+    "en": "turns",
+    "pl": "obrotów",
+    "fr": "tours",
+    "de": "der Umdrehungen",
+    "es": "de giros"
+  },
+  "of a turn": {
+    "en": "of a turn",
+    "pl": "obrotu",
+    "fr": "tours",
+    "de": "Umdrehungen",
+    "es": "giros"
+  }
+}

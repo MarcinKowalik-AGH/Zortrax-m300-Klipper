@@ -1,0 +1,90 @@
+name: Build M300 STM32F103 and host R15.6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-m300.yml'
+      - 'PORT.json'
+      - 'ci/**'
+      - 'mcu/**'
+      - 'host/**'
+      - 'tests/**'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m300-arm-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: F103 — ARM build, native tests and M3B
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout M300 sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install GNU ARM and native test compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libffi-dev
+          arm-none-eabi-gcc --version
+          test -f "$(arm-none-eabi-gcc --print-file-name=libc_nano.a)"
+
+      - name: Fetch checksum-pinned upstream Klipper
+        run: python ci/prepare_upstream.py
+
+      - name: Install pinned native Klippy test dependencies
+        run: python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
+
+      - name: Fresh complete STM32F103 build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python mcu/SOURCE_MCU/tools/build.py --archive mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip --work .ci/arm-build --output dist/mcu --jobs 4
+
+      - name: Validate host, startup, guards, cooling and actual Klippy FILEOUTPUT
+        run: python ci/run_checks.py --dictionary dist/mcu/klipper.dict
+
+      - name: Pack actual compiled M3B and matching Orange Pi host update
+        shell: bash
+        run: |
+          set -euo pipefail
+          python ci/package_release.py --build dist/mcu
+          cd dist/release
+          sha256sum -c SHA256SUMS
+
+      - name: Save compiled MCU and matching host artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: m300-r14_4-host-r15_6-${{ github.sha }}
+          path: dist/release/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Preserve diagnostics when a check fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m300-failed-build-diagnostics-${{ github.sha }}
+          path: |
+            .ci/reports/
+            .ci/fileoutput/
+            dist/mcu/FULL_ARM_BUILD.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14

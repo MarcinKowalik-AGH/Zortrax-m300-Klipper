@@ -1,0 +1,28 @@
+# Classic M300 P01 LAB build; does not identify the physical MCU/crystal.
+# Native F103 64 KiB application region and 20 KiB SRAM are kept conservative.
+CONFIG_LOW_LEVEL_OPTIONS=y
+CONFIG_MACH_STM32=y
+CONFIG_MACH_STM32F103=y
+CONFIG_M300_CLASSIC=y
+CONFIG_STM32_FLASH_START_8000=y
+CONFIG_STM32_CLOCK_REF_8M=y
+CONFIG_STM32_SERIAL_USART1=y
+CONFIG_SERIAL_BAUD=250000
+CONFIG_INITIAL_PINS=""
+# CONFIG_STM32F103GD_DISABLE_SWD is not set
+# CONFIG_WANT_STEPPER_OPTIMIZED_BOTH_EDGE is not set
+# Private TX-only OLED SPI2 remains in m300_panel.c. No generic bus takeover.
+# CONFIG_WANT_SPI is not set
+# CONFIG_WANT_SOFTWARE_SPI is not set
+# CONFIG_WANT_I2C is not set
+# CONFIG_WANT_SOFTWARE_I2C is not set
+# CONFIG_WANT_HARD_PWM is not set
+# CONFIG_WANT_BUTTONS is not set
+# CONFIG_WANT_TMCUART is not set
+# CONFIG_WANT_NEOPIXEL is not set
+# CONFIG_WANT_PULSE_COUNTER is not set
+# CONFIG_WANT_ST7920 is not set
+# CONFIG_WANT_HD44780 is not set
+# CONFIG_WANT_HX71X is not set
+# CONFIG_WANT_CS1237 is not set
+# CONFIG_WANT_TRIGGER_ANALOG is not set
