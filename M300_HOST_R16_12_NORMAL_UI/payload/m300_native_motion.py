@@ -20,10 +20,13 @@ class M300NativeMotion:
         self.home_xy = config.getfloatlist('home_xy', (150., 158.), count=2)
         self.travel_speed = config.getfloat('home_travel_speed', 50., above=0.)
         self.z_home_hotend_target = config.getfloat('z_home_hotend_target', 180., above=0.)
+        self.z_home_temperature_tolerance = config.getfloat(
+            'z_home_temperature_tolerance', 5., minval=.5, maxval=5.)
         self.clearance = config.getfloat('z_contact_clearance', 5., above=0.)
         self.lift_speed = config.getfloat('z_lift_speed', 5., above=0.)
         if not all(math.isfinite(v) for v in (*self.home_xy, self.travel_speed,
-                                              self.z_home_hotend_target, self.clearance,
+                                              self.z_home_hotend_target,
+                                              self.z_home_temperature_tolerance, self.clearance,
                                               self.lift_speed)):
             raise config.error('M300 native homing settings must be finite')
         self.token = self.phase_id = 0
@@ -287,7 +290,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.12-NATIVE-HOMING', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.12-NATIVE-HOMING-THERMAL1', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'phase_id': self.phase_id, 'session_token': self.token,
@@ -298,6 +301,7 @@ class M300NativeMotion:
                 'reason': self.reason, 'result': self.result,
                 'failure_phase': self.failure_phase,
                 'z_home_hotend_target_c': self.z_home_hotend_target,
+                'z_home_temperature_tolerance_c': self.z_home_temperature_tolerance,
                 'homing_speed_mm_s': self.homing_speeds,
                 'z_contact_clearance_mm': self.clearance,
                 'z_steps_per_mm': hardware['effective_z_steps_per_mm'],

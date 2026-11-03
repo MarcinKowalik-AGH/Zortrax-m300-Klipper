@@ -35,10 +35,17 @@ class M300ZRefinement:
         self.owner._check(self.token)
         self.owner.board.require_motion()
         self.owner.board.require_heating()
-        measured,target = self.owner.hotend.get_temp(self.owner.reactor.monotonic())
-        if (not math.isfinite(measured) or measured < self.owner._z_target-2.
-                or target != self.owner._z_target):
-            raise self.error('nozzle temperature changed during contact reference')
+        measured, target = self.owner.hotend.get_temp(self.owner.reactor.monotonic())
+        expected = self.owner._z_target
+        if target != expected:
+            raise self.error('nozzle target changed from %.1f C to %.1f C during contact reference'
+                             % (expected, target))
+        if not math.isfinite(measured) or measured == 0.:
+            raise self.error('no valid nozzle temperature during contact reference')
+        minimum = expected - self.owner.z_home_temperature_tolerance
+        if measured < minimum:
+            raise self.error('nozzle temperature %.2f C below contact minimum %.2f C (target %.1f C)'
+                             % (measured, minimum, expected))
         if self.owner.reactor.monotonic() > self.deadline:
             raise self.error('bounded contact/release deadline exceeded')
 
