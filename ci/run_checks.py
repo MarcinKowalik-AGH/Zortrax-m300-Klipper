@@ -55,6 +55,8 @@ def main():
         cwd=host, expected_tests=META['self_contained_host_tests'])
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
+    run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
+        '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])
     run('step_equivalence', [sys.executable, KIT / 'tools/test_stepfast.py',
                             '--upstream', pristine, '--report', report / 'STEP.json'])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',

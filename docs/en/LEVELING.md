@@ -1,6 +1,6 @@
-# Autocalibration and Z reference — R16.6
+# Autocalibration and Z reference — R16.7
 
-[Maintenance / Material](MAINTENANCE_MATERIAL.md) · [Validation](VALIDATION_R16_6.md)
+[Maintenance / Material](MAINTENANCE_MATERIAL.md) · [Validation](VALIDATION_R16_7.md)
 
 Autocalibration is a five-point contact procedure with manual adjustment of
 three screws. It does not invoke BED_MESH_CALIBRATE or install a height mesh.
@@ -113,4 +113,4 @@ contact/release bodies for both hardware scales. Separate native tests use
 the pinned HomingMove with modeled electrical/stepper boundaries. The original
 renderer matches 110 full reference frames; runtime uses the English subset.
 20,002 original quarter-turn vectors remain covered. Physical acceptance
-remains open; follow [the test sequence](VALIDATION_R16_6.md).
+remains open; follow [the test sequence](VALIDATION_R16_7.md).

@@ -1,36 +1,31 @@
-# Current status — R16.6 test release
+# Current status — R16.7 test release
 
-MCU: R14.5, unchanged. Host: R16.6, English only. Upstream:
-`ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
+MCU R14.5 remains unchanged. Host R16.7 and current documentation are English
+only. The pinned upstream remains ee2c6fb6b00b2b5d097ef70d0868df7d74943b51.
 
-The previous completion statement did not substitute for procedure validation.
-This iteration re-executes OEM 1.3.1 control flow and corrects confirmed gaps:
-Unload confirmation order, M07 Y-before-X and session offsets, ordinary
-five-update Z reference, native paused Change, M07/native-print exclusion,
-result return navigation, and runtime language consistency.
+Maintenance now includes Fan test with Back, Toggle upper fan and Toggle
+lower fan. It uses the recovered save/off/0–150/restore flow and original
+font/layout. The upper native thermostat remains a floor; its Cooling state
+is shown consistently on OLED and Fluidd. Four new macros share that owner.
+Heat and platform actions also expose the same English procedure identity
+and messages, without interrupting the acknowledged physical hold row.
 
-Implemented and software-tested: the two requested OEM submenus, shared
-OLED/Fluidd dialogs, seven procedure macros, bounded native motion/contact
-ownership, 260/258 and 240/238 thresholds, calibrated material transport,
-pause preservation and explicit Resume, error/cancel handling, exact command
-restoration and reversible migration.
+Software validation passes 258 host tests, 9 repository contracts, 17 check
+groups and 13 actual Klippy FILEOUTPUT cases. Independent original-firmware
+runs cover three fan sessions, two Heat branches, fifteen platform-selection
+cases and twelve complete fan-menu frames. The previous M07/material/Z
+regressions, 110 dialog frames and 20,002 arithmetic vectors remain covered.
 
-Validation: 233 host tests, 9 repository contracts, MCU/register/startup
-checks and 13 real Klippy FILEOUTPUT cases. Source evidence adds 5 executed
-material traces, 3 wizard traces, 2 five-contact Z profiles, 6 XY-offset seeds,
-110 renderer frames and 20,002 screw-turn vectors. Only modeled boundaries
-are covered by the procedure tests; there is no new physical UART/printer run.
+The audit fixed cursor reset after a fan toggle and loss of a fault reason
+at shutdown. It also reduced fan status reads from six cached MCU snapshots
+to one. Host-only latency measurements and their limits are in the report.
+No Orange Pi, UART, electrical duty, airflow or physical movement measurement
+was performed in this iteration.
 
-Status polling no longer copies a complete material transport plan. M07 and
-ordinary Z share the same bounded native probe capability and rounding policy.
-The obsolete post-retract WAIT_REMOVE path has been removed.
+Calibration, factory Z scale, PID/E, sensor includes, geometry and general
+motion limits retain their existing owners and upgrade rules. Full legacy
+M02/Z-code printing remains disabled. The installer accepts known earlier
+versions and provides exact rollback; physical acceptance remains pending.
 
-Native PID, sensors, factory Z scale, calibrated E, deliberate axis bounds,
-normal velocity/acceleration controls, OLED transport/refresh, sleep notice,
-MCU cooling and connection lifecycle remain under their existing owners.
-The legacy full OEM M02/Z-code print engine remains separately disabled.
-
-See [complete validation and acceptance](VALIDATION_R16_6.md),
-[Maintenance / Material](MAINTENANCE_MATERIAL.md), [M07 / Z](LEVELING.md),
-and [installation](INSTALL.md). Earlier printer photographs remain historical
-on-device evidence; they do not establish physical acceptance of R16.6.
+See [validation and performance](VALIDATION_R16_7.md),
+[menu/macro bindings](MAINTENANCE_MATERIAL.md) and [installation](INSTALL.md).

@@ -1,6 +1,6 @@
-# R16.6 features and acceptance boundaries
+# R16.7 features and acceptance boundaries
 
-[Installation](INSTALL.md) · [Validation](VALIDATION_R16_6.md)
+[Installation](INSTALL.md) · [Validation](VALIDATION_R16_7.md)
 
 | Function | Owner / presentation | Evidence / boundary |
 |---|---|---|
@@ -10,10 +10,11 @@
 | Ordinary Z homing | Native G28 adapter and five successive release references | 180°C minimum; actual HomingMove in modeled tests; physical acceptance pending |
 | Heat the extruder | Native maintenance owner and ZORTRAX_HEAT | OEM 260/258 readiness and confirmation-to-off flow |
 | Manual platform movement | Same native maintenance owner | OLED hold/release/freshness; finite Fluidd distance; genuine homed Z required |
+| Interactive upper/lower fan test | Shared native fan session and four macros | Original 0/150 duty, entry/Back flow and 12 complete cold-menu frames; upper thermostat and MCU cooling have priority |
 | Load / Unload | Native filament owner and matching macros | 240/238, confirmation-before-transport, nominal 130/110 mm, native calibrated E |
 | Change during pause | Real native pause/file owner | 110 mm out / 150 mm in, one insertion confirmation, preserved pause and explicit Resume |
 | English interface | Shared presenter and NVM-facing language policy | Old saved PL/FR/DE/ES choices cannot alter runtime text; release documents are English only |
-| Original dialogs / sprites | Recovered text, 13-pixel font and existing sprite decoder | 110 original-renderer reference frames retained as evidence |
+| Original dialogs / sprites | Recovered text, 13-pixel font and existing sprite decoder | 110 original dialog frames plus 12 English fan-menu frames retained as evidence |
 | Sleep / OLED transport | Existing frame/ACK and dim/off/wake controllers | Existing regressions retained; no hidden action on wake |
 | MCU supervision / offline cooling | Unchanged R14.5 code | Existing register-model and cooling tests |
 | Host startup recovery | Existing bounded lifecycle policy | One permitted recovery attempt; no automatic old motion/heater resume |
@@ -31,7 +32,7 @@ installer rule; other deliberate geometry, including Z315, is preserved.
 No additional general G1 velocity cap is introduced. FILEOUTPUT planning at
 300 mm/s and M220 150% does not measure physical F103 scheduling at that speed.
 
-233 host tests and 13 actual Klippy FILEOUTPUT scenarios support software
+258 host tests and 13 actual Klippy FILEOUTPUT scenarios support software
 integration. Electrical inputs and movement are modeled in the full procedure
-tests. Follow [the supervised acceptance sequence](VALIDATION_R16_6.md) for
+tests. Follow [the supervised acceptance sequence](VALIDATION_R16_7.md) for
 new contact homing, screw instructions, manual holds and material transport.

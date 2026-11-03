@@ -12,11 +12,13 @@ import os
 from .m300_material_ui_state import MESSAGES
 from .m300_leveling_oem import describe
 from .m300_oem_procedure_ui import describe as describe_service
+from .m300_maintenance_ui import describe as describe_maintenance
 
 OWNERS = ('m300_filament', 'm300_calibration', 'm300_maintenance',
           'm300_thermal', 'm300_fans', 'm300_job')
 TERMINAL = ('COMPLETE', 'CANCELLED', 'FAULT', 'ERROR')
-VERBS = ('CONFIRM', 'PURGE', 'PAUSE', 'RESUME', 'CONFIRM_CLEAN', 'CANCEL')
+VERBS = ('CONFIRM', 'PURGE', 'PAUSE', 'RESUME', 'CONFIRM_CLEAN', 'CANCEL',
+         'BACK', 'TOGGLE_UPPER', 'TOGGLE_LOWER')
 
 
 def clean(value, limit=160):
@@ -74,6 +76,13 @@ class M300Procedures:
             # A host-requested shutdown must retain the actual pad failure
             # explanation in Fluidd. All actions are revoked by live=False.
             self._prompt(self.view(self.reactor.monotonic(), owner_override='m300_calibration'))
+        else:
+            for name in ('m300_fans','m300_maintenance'):
+                status=self._read(name,self.reactor.monotonic())
+                if (status.get('state')=='FAULT' and status.get('reason')
+                        !='host lifecycle invalidated the service'):
+                    self._prompt(self.view(self.reactor.monotonic(),owner_override=name))
+                    break
 
     def _emit(self, line):
         # Native respond_raw bypasses a second G-code parse. This is the
@@ -106,7 +115,8 @@ class M300Procedures:
                 status['state'], status.get('resume_phase'), status.get('operation'),
                 tuple(status.get('can_' + v.lower()) is True for v in VERBS),
                 status.get('can_confirm_resume_clean') is True,
-                status.get('ready') is True)
+                status.get('ready') is True, status.get('upper_enabled'),
+                status.get('lower_enabled'), status.get('upper_cooling'))
 
     def view(self, now, owner_override=None):
         snapshots = {name: self._read(name, now) for name in OWNERS}
@@ -123,10 +133,12 @@ class M300Procedures:
         # parent print. Completing it never resumes that parent.
         active = [n for n in OWNERS if snapshots[n].get('busy') is True
                   and snapshots[n]['state'] not in TERMINAL
-                  and (n!='m300_maintenance' or snapshots[n].get('operation')=='HOTEND')]
+                  and (n!='m300_maintenance' or snapshots[n].get('operation')=='HOTEND'
+                       or snapshots[n].get('native_control'))]
         terminal = [n for n in OWNERS if snapshots[n]['state'] in TERMINAL
                     and snapshots[n].get('session_token') not in (None, 0, '')
-                    and (n!='m300_maintenance' or snapshots[n].get('operation')=='HOTEND')]
+                    and (n!='m300_maintenance' or snapshots[n].get('operation')=='HOTEND'
+                         or snapshots[n].get('native_control'))]
         recent = max(terminal, key=lambda n: self.changes[n], default=None)
         if recent and now - self.changes[recent] < 8. and (
                 not active or self.changes[recent] > max(self.changes[n] for n in active)):
@@ -153,6 +165,9 @@ class M300Procedures:
                            if status.get('can_' + a.lower()) is True]
                 if status.get('can_confirm_resume_clean') is True:
                     actions.insert(0, 'CONFIRM_CLEAN')
+            elif owner == 'm300_fans' and status.get('native_control'):
+                actions = [a for a in ('BACK', 'TOGGLE_UPPER', 'TOGGLE_LOWER')
+                           if status.get('can_'+a.lower()) is True]
             elif owner and type(status.get('phase_id')) is int and status['phase_id'] >= 0:
                 actions = [a for a in ('CONFIRM', 'PURGE', 'CANCEL')
                            if status.get('can_' + a.lower()) is True
@@ -179,9 +194,13 @@ class M300Procedures:
                     'UNLOAD':'Unload the material','CHANGE':'Change the material'}
             title = titles.get(owner,titles.get(status.get('operation'),'Zortrax M300'))
             message = screen['text']
+        maintenance_screen = describe_maintenance(owner, status)
+        if maintenance_screen:
+            title, message = maintenance_screen['title'], maintenance_screen['text']
         return {'owner': owner, 'state': state, 'title': clean(title),
                 'leveling_screen': screen,
-                'message': message if screen else clean(message), 'view_id': self.view_id,
+                'maintenance_screen': maintenance_screen,
+                'message': message if screen or maintenance_screen else clean(message), 'view_id': self.view_id,
                 'token': status.get('session_token'), 'phase': status.get('phase_id'),
                 'actions': actions, 'busy': status.get('busy') is True,
                 'reason': clean(status.get('reason') or status.get('resume_block_reason')),
@@ -195,6 +214,9 @@ class M300Procedures:
 
     def rows(self, now):
         view = self.view(now)
+        if (view.get('maintenance_screen') or {}).get('kind') == 'fan_menu':
+            return view['title'], [(self._action_label(view, action),
+                    ('procedure_action', view['view_id'], action)) for action in view['actions']]
         if view.get('leveling_screen') or view['owner']=='m300_calibration':
             screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
             rows = [(line, None) for line in screen['text'].split('\n')]
@@ -225,6 +247,9 @@ class M300Procedures:
 
     @staticmethod
     def _action_label(view, action):
+        screen = view.get('maintenance_screen') or {}
+        if screen.get('kind') == 'fan_menu':
+            return screen['labels'][('BACK', 'TOGGLE_UPPER', 'TOGGLE_LOWER').index(action)]
         if view.get('leveling_screen') or view['owner']=='m300_calibration':
             return 'Cancel' if action=='CANCEL' else 'Continue'
         return action.replace('_', ' ').title()
@@ -247,7 +272,12 @@ class M300Procedures:
                 else:
                     owner.cancel('shared operator view', token, phase)
             elif view['owner'] == 'm300_fans':
-                owner.cancel(token)
+                if action == 'BACK':
+                    owner.end_oem()
+                elif action in ('TOGGLE_UPPER', 'TOGGLE_LOWER'):
+                    owner.toggle(action[7:], token, phase)
+                else:
+                    owner.cancel(token)
             elif view['owner'] == 'm300_thermal':
                 owner.cancel(token, phase)
             elif action == 'CONFIRM_CLEAN':
@@ -275,6 +305,9 @@ class M300Procedures:
                 # Same rounded numbers as the physical five-point diagram.
                 for p in (4, 3, 2, 1, 0):
                     self._emit('prompt_text %s: %.1f mm' % (p, screen['diagram'][p]))
+        elif view.get('maintenance_screen'):
+            for line in view['maintenance_screen']['text'].split('\n'):
+                self._emit('prompt_text '+line)
         else:
             for line in (view['state'] + ': ' + view['message'],
                          'Session %s / Phase %s' % (view['token'], view['phase']), view['reason']):
@@ -284,7 +317,7 @@ class M300Procedures:
             color = 'error' if verb == 'CANCEL' else 'primary'
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
                        (self._action_label(view, verb), view['view_id'], verb, color))
-        if self.live and not view.get('leveling_screen'):
+        if self.live and not (view.get('leveling_screen') or view.get('maintenance_screen')):
             self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
         self._emit('prompt_show')
         self.last_prompt = view['view_id']
@@ -295,15 +328,30 @@ class M300Procedures:
         view = self.view(now)
         if view['owner']:
             if view['view_id'] != self.last_prompt:
-                finished_service=(view.get('leveling_screen') and view['owner'] in
-                    ('m300_maintenance','m300_filament','m300_calibration') and view['state'] in
+                finished_service=((view.get('maintenance_screen') or view.get('leveling_screen')) and view['owner'] in
+                    ('m300_maintenance','m300_filament','m300_calibration','m300_fans') and view['state'] in
                     ('COMPLETE','CANCELLED'))
                 if finished_service:
                     self._emit('prompt_end')
                     self.last_prompt=view['view_id']
                 else:
                     self._prompt(view)
-                if view.get('leveling_screen') and not finished_service and (view['owner']=='m300_calibration'
+                maintenance_screen = view.get('maintenance_screen')
+                if maintenance_screen and view['busy']:
+                    menu=self.printer.lookup_object('m300_menu',None)
+                    oled=self.printer.lookup_object('m300_oled',None)
+                    # A held platform must keep its acknowledged row; changing
+                    # that view would revoke the physical hold lease.
+                    if menu is not None and oled is not None and view['state']!='PLATFORM_HOLD':
+                        page='fan_test' if maintenance_screen['kind']=='fan_menu' else 'maintenance'
+                        if menu.page!=page or oled.page!='m04':
+                            menu._navigate(page)
+                            oled.page,oled.selection,oled.render_at='m04',0,0.
+                            if page=='maintenance':
+                                labels=[label for label,_ in menu.rows(now)[1]]
+                                if maintenance_screen['text'] in labels:
+                                    oled.selection=labels.index(maintenance_screen['text'])
+                elif view.get('leveling_screen') and not finished_service and (view['owner']=='m300_calibration'
                                                     or view['busy']):
                     # External console, Fluidd and the encoder all follow the
                     # same current owner/phase, including screw pictograms.
@@ -317,7 +365,7 @@ class M300Procedures:
                     # OEM Heat/Load/Unload return to the invoking submenu.
                     menu=self.printer.lookup_object('m300_menu',None)
                     oled=self.printer.lookup_object('m300_oled',None)
-                    if menu is not None and oled is not None and menu.page=='procedure':
+                    if menu is not None and oled is not None and menu.page in ('procedure','fan_test'):
                         operation=view['snapshots'][view['owner']].get('operation')
                         menu._navigate('native_job' if operation=='CHANGE' else
                                        'material' if view['owner']=='m300_filament' else 'maintenance')
@@ -331,6 +379,8 @@ class M300Procedures:
                 if view['owner'] == 'm300_job':
                     text = ('Clean nozzle' if 'CONFIRM_CLEAN' in view['actions'] else
                             view['state'].replace('_', ' ').title())
+                elif view.get('maintenance_screen'):
+                    text = view['maintenance_screen']['text']
                 elif view.get('leveling_screen'):
                     text = view['leveling_screen']['text']
                 else:
@@ -359,7 +409,7 @@ class M300Procedures:
         # the shared object small at normal subscription rates.
         view.pop('snapshots')
         return dict(view, installed=True, ready=self.live,
-                    revision='0.13.16.6-OEM-PROCEDURES', automatic_resume=False)
+                    revision='0.13.16.7-OEM-PROCEDURES', automatic_resume=False)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_PROCEDURE ' + json.dumps(
@@ -374,10 +424,20 @@ class M300Procedures:
 
     def cmd_start(self, gcmd):
         operation = gcmd.get('OP')
-        if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT'):
+        if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT',
+                             'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK'):
             raise self.printer.command_error('M300: unknown procedure')
         temp = gcmd.get_float('TEMP', None)
-        if operation == 'LEVEL':
+        if operation.startswith('FAN'):
+            owner=self.printer.lookup_object('m300_fans')
+            if operation=='FAN_BACK':
+                owner.end_oem()
+            else:
+                if owner.test is None:
+                    owner.start_oem()
+                if operation in ('FAN_UPPER','FAN_LOWER'):
+                    owner.toggle(operation[4:],owner.token,owner.phase)
+        elif operation == 'LEVEL':
             self.printer.lookup_object('m300_calibration').start(temp)
         elif operation=='HEAT':
             self.printer.lookup_object('m300_maintenance').start('HOTEND',temp)

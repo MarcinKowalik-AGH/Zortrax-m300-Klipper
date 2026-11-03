@@ -337,7 +337,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             ['Back','Models','Maintenance','Material','Settings','Information'])
         menu.page='maintenance';rows=menu.rows(1.)[1]
         self.assertEqual([name for name,_ in rows],['Back','Autocalibration','Heat the extruder',
-            'Move the platform up','Move the platform down'])
+            'Move the platform up','Move the platform down','Fan test'])
         self.assertTrue(require_rows(rows))
         menu.page='material';rows=menu.rows(1.)[1]
         self.assertEqual([name for name,_ in rows],['Back','Unload the material','Load the material'])

@@ -1,6 +1,6 @@
-# Install the R16.6 test release
+# Install the R16.7 test release
 
-[Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](VALIDATION_R16_6.md)
+[Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](VALIDATION_R16_7.md)
 
 This host update is for M300 Classic with the native Klipper port. It accepts
 recognized R15.3 and subsequent published baselines, including R16.5. Unknown
@@ -9,12 +9,12 @@ an already installed R14.5 **does not need flashing** for this update.
 
 ## Copy and verify
 
-Extract M300_HOST_R16_6_NORMAL_UI.zip into Downloads on the Mac. Run:
+Extract M300_HOST_R16_7_NORMAL_UI.zip into Downloads on the Mac. Run:
 
 ```bash
-scp -r "$HOME/Downloads/M300_HOST_R16_6_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
+scp -r "$HOME/Downloads/M300_HOST_R16_7_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
 ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_6_NORMAL_UI
+cd ~/M300_HOST_R16_7_NORMAL_UI
 python3 VERIFY.py
 python3 -m unittest discover -s tests -v
 python3 install.py \
@@ -22,7 +22,7 @@ python3 install.py \
   --config "$HOME/printer_data/config/printer.cfg"
 ```
 
-Expect package PASS, **233 tests OK** and PLAN_M300_R16_6. The plan is read
+Expect package PASS, **258 tests OK** and PLAN_M300_R16_7. The plan is read
 only. Inspect its file list before applying. Calibrated E, both saved PID
 blocks, sensor includes, deliberate motion limits and usable geometry remain.
 The HW05 factory profile still selects effective Z400 without rewriting the
@@ -39,7 +39,7 @@ python3 install.py \
 sudo systemctl start klipper.service
 ```
 
-Expect INSTALLED_M300_R16_6 and retain the exact RECEIPT.json path. Installation
+Expect INSTALLED_M300_R16_7 and retain the exact RECEIPT.json path. Installation
 does not run a motion/heating test. After Klipper reports Ready, update Fluidd:
 
 ```bash
@@ -47,7 +47,7 @@ python3 setup_fluidd.py
 python3 setup_fluidd.py --apply
 ```
 
-Refresh Fluidd. The seven procedure macros, including ZORTRAX_CHANGE, belong
+Refresh Fluidd. The eleven procedure macros, including ZORTRAX_CHANGE and four fan controls, belong
 to ZORTRAX M300; test aliases remain in TEST M300. Existing unrelated groups,
 visibility, colors and preferences are retained. The returned Fluidd backup
 can be restored with `python3 setup_fluidd.py --rollback /EXACT/BACKUP.json --apply`.
@@ -63,18 +63,23 @@ ZORTRAX_MOTION_STATUS
 ZORTRAX_CALIBRATION_STATUS
 ZORTRAX_FILAMENT_STATUS
 ZORTRAX_LINK_STATUS
+ZORTRAX_UI_STATUS
+ZORTRAX_FANS_STATUS
+ZORTRAX_MAINTENANCE_STATUS
+ZORTRAX_PROCEDURE_STATUS
 QUERY_PROBE
 ```
 
-Confirm Ready, the real HW05/Z400 identity, normal native control, the R16.6
-motion/calibration revisions and an open PC7 contact with physical clearance.
+Confirm Ready, the real HW05/Z400 identity, normal native control, R16.7 UI,
+fan/maintenance/procedure revisions and an open PC7 contact with clearance.
+Motion and calibration retain their R16.6 component revisions.
 The link lifecycle revision remains 0.13.16.2-LIFECYCLE-RECONNECT; this is normal.
 Targets are calibration/Heat 260°C, Load/Unload 240°C and ordinary Z home at
 least 180°C. A hotter pre-existing target during ordinary homing is retained.
 
-Follow the supervised sequence in [the validation report](VALIDATION_R16_6.md).
+Follow the supervised sequence in [the validation report](VALIDATION_R16_7.md).
 The first procedure checks are Heat and bounded platform movement, then
-Load/Unload, ordinary Z reference and Autocalibration. Change requires an
+Load/Unload, the interactive Fan test, ordinary Z reference and Autocalibration. Change requires an
 already paused native print. Do not treat generic PROBE_ACCURACY as the OEM
 wizard or a substitute for its owned measurement frame and release checks.
 

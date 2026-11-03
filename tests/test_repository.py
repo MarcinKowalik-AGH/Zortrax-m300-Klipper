@@ -84,7 +84,8 @@ class RepositoryContracts(unittest.TestCase):
         old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')
         new=methods(ROOT/'host/klippy/extras/m300_oled.py')
         self.assertEqual(set(old),set(new))
-        for name in old.keys()-{'_render','_panel'}:
+        # _select additionally preserves the interactive OEM fan-menu cursor.
+        for name in old.keys()-{'_render','_panel','_select'}:
             self.assertEqual(old[name],new[name],name)
 
     def test_published_host_and_mcu_sources_exclude_factory_dump_images(self):

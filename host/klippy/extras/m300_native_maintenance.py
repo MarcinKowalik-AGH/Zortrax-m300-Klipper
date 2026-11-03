@@ -31,9 +31,12 @@ class M300NativeMaintenance(M300Maintenance):
         self.gcode.register_command('ZORTRAX_PLATFORM',self.cmd_platform)
 
     def _stop_lifecycle(self, *args):
+        fault=(self.state,self.reason) if self.state=='FAULT' else None
         super()._stop_lifecycle(*args)
         self.lease.release()
         self._hold_context = self._hold_received = None
+        if fault is not None:
+            self.state,self.reason=fault
 
     def is_busy(self):
         return self.state not in ('IDLE','COMPLETE','CANCELLED') or self._executing
@@ -265,7 +268,7 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
-            revision='0.13.16.6-NATIVE-MAINTENANCE')
+            revision='0.13.16.7-NATIVE-MAINTENANCE')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

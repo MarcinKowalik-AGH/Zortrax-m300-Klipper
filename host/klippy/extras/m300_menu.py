@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.6-EN-OEM-VALIDATED"
+    MENU_REVISION = "0.13.16.7-OEM-MAINTENANCE"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -147,10 +147,18 @@ class M300Menu:
         self.page = 'main'
 
     def home(self):
+        if self.page == 'fan_test':
+            fans = self.printer.lookup_object('m300_fans', None)
+            if fans is not None and fans.test is not None:
+                fans.end_oem()
         self.invalidate()
         self.reason = ''
 
     def _navigate(self, page, remember=True):
+        if self.page == 'fan_test' and page != 'fan_test':
+            fans = self.printer.lookup_object('m300_fans', None)
+            if fans is not None and fans.test is not None:
+                fans.end_oem()
         if self.page == 'motion_jog' and page != 'motion_jog':
             self._leave_motion_jog()
         ui = self._ui()
@@ -225,7 +233,10 @@ class M300Menu:
                 (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
                 (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
-                (self.t('Move the platform down'), ('platform_hold',1))])
+                (self.t('Move the platform down'), ('platform_hold',1)),
+                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START'))])
+        if native and self.page == 'fan_test':
+            return self._service('m300_procedures').rows(now)
         if native and self.page == 'material':
             return self.t('Material'), self._notice(back + [
                 (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),

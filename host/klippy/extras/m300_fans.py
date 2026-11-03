@@ -138,28 +138,31 @@ class M300Fans:
             self.hotend.callback(now)
         self.thermal_ok = good
 
-    def _cooling(self, now):
+    def _cooling_snapshot(self, now):
         if self.board is None:
-            return None, False
+            return None, False, {}
         try:
             status = self.board.get_status(now)
+            local = status.get('local_cooling', {}) if self.policy == 3 else {}
             fresh = status.get('status_fresh') is True
             forced = status.get('forced_cooling')
             if self.policy == 3:
-                local = status.get('local_cooling', {})
                 if local.get('status_fresh') is not True:
-                    return None, False
+                    return None, False, local
                 if local.get('mode_code') == 2 and local.get('sample_valid') is not True:
-                    return None, False
+                    return None, False, local
                 # Both independent replies must agree before the host may
                 # take ordinary control. A local override can be cold OFF.
                 if local.get('mode_code') != 1:
-                    return True, fresh
+                    return True, fresh, local
             if fresh and type(forced) is bool:
-                return forced, True
+                return forced, True, local
         except Exception:
             pass
-        return None, False
+        return None, False, {}
+
+    def _cooling(self, now):
+        return self._cooling_snapshot(now)[:2]
 
     def _local_cooling(self, now):
         if self.board is None or self.policy != 3:
@@ -169,11 +172,11 @@ class M300Fans:
         except Exception:
             return {}
 
-    def _effective(self, channel, now, requested):
-        forced, fresh = self._cooling(now)
+    def _effective(self, channel, now, requested, snapshot=None):
+        forced, fresh, local = (self._cooling_snapshot(now)
+                                if snapshot is None else snapshot)
         if self.policy != 3:
             return 1. if forced else requested if fresh else None
-        local = self._local_cooling(now)
         if local.get('status_fresh') is not True:
             return None
         if local.get('mode_code') == 1:
@@ -348,14 +351,15 @@ class M300Fans:
         return min(now + .25, self.test['deadline'])
 
     def get_status(self, now):
-        forced, fresh = self._cooling(now)
+        snapshot = self._cooling_snapshot(now)
+        forced, fresh, local = snapshot
         channels = {}
         for channel, (name, pin) in CHANNELS.items():
             raw = self.sources[channel](now) if channel in self.sources else {}
             requested = raw.get('speed')
             channels[channel.lower()] = {'object': name, 'pin': pin,
                 'requested': requested,
-                'effective_duty': self._effective(channel, now, requested),
+                'effective_duty': self._effective(channel, now, requested, snapshot),
                 'rpm': raw.get('rpm'), 'forced_cooling': forced,
                 'speed_kind': 'electrical_duty_not_measured_airflow'}
         test = self.test or {}
@@ -373,7 +377,7 @@ class M300Fans:
                 'hotend_temperature_fresh': self.thermal_ok,
                 'marlin_reference_hotend_speed': 150. / 255.,
                 'mcu_fan_policy': self.policy, 'mcu_upgrade_required': self.policy < 2,
-                'local_cooling': self._local_cooling(now),
+                'local_cooling': local,
                 'autonomous_thermostat_available': self.policy == 3,
                 'hardware_qualified': False, 'automatic_arm': False,
                 'tachometer_verified': False}
@@ -428,4 +432,8 @@ class M300Fans:
 
 
 def load_config(config):
+    board = config.get_printer().load_object(config, 'm300_mcu')
+    if getattr(board, 'native_control', False):
+        from .m300_native_fans import M300NativeFans
+        return M300NativeFans(config)
     return M300Fans(config)

@@ -842,6 +842,7 @@ class M300OLED:
         started = self.reactor.monotonic()
         previous_wire = self._render_wire
         previous_context = self._presented_context
+        maintenance_wire = None
         ui = self.printer.lookup_object('m300_menu_ui', None)
         leveling_frame = getattr(ui, 'leveling_frame', None)
         leveling_wire = (leveling_frame(self.page, now, Frame)
@@ -873,17 +874,22 @@ class M300OLED:
                                                  now, self.page, pixels)
             else:
                 labels = [english_label(row[0]) for row in rows]
-            key = ('menu', tuple(labels), self.selection, sprite)
+            renderer = getattr(ui, 'maintenance_frame', None)
+            maintenance_wire = (renderer(self.page,rows,self.selection,Frame)
+                                if renderer is not None else None)
+            key = (('oem_menu',maintenance_wire) if maintenance_wire is not None
+                   else ('menu', tuple(labels), self.selection, sprite))
         if key != self._render_key:
             frame = Frame()
             if key[0] == 'notice':
                 frame.dialog(*(english_label(x) for x in self.message))
-            elif key[0] in ('klipper_default', 'leveling'):
+            elif key[0] in ('klipper_default', 'leveling', 'oem_menu'):
                 frame = None
             else:
                 frame.menu_full(labels, self.selection, keep_back_visible=True,
                                 sprite=sprite)
-            self._render_wire = ((leveling_wire if key[0] == 'leveling' else status_wire)
+            self._render_wire = ((leveling_wire if key[0] == 'leveling' else
+                                 maintenance_wire if key[0] == 'oem_menu' else status_wire)
                                  if frame is None else frame.wire_bytes())
             self._render_key = key
             self.render_last_ms = max(0., 1000.*(self.reactor.monotonic()-started))
@@ -897,7 +903,7 @@ class M300OLED:
             # displayed consent. Keep the previous actions until the operator
             # navigates/reviews a changed view. The next stale click is refused.
             self._presented_actions = (tuple(row[1] for row in rows)
-                                       if key[0] == 'menu' else None)
+                                       if key[0] in ('menu','oem_menu') else None)
         self._presented_context = context
         self._user_refresh_pending = False
 
@@ -930,8 +936,12 @@ class M300OLED:
             if not self.connected or not self.stream.enabled or not self.stream.ready:
                 menu.reason = 'Panel is not ready; action refused.'
                 return
+            previous_page, previous_selection = menu.page, self.selection
             page = menu.select(action, now)
-            self.page, self.selection = 'm04', 0
+            # OEM fan toggles update the two Enabled/Disabled fields in place.
+            # Keep the selected toggle, rather than moving it to Back.
+            self.page, self.selection = 'm04', (previous_selection
+                if previous_page == menu.page == 'fan_test' and not menu.reason else 0)
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None

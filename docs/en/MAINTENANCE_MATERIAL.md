@@ -1,6 +1,6 @@
-# Maintenance and Material — R16.6
+# Maintenance and Material — R16.7
 
-[Installation](INSTALL.md) · [M07 leveling](LEVELING.md) · [Validation](VALIDATION_R16_6.md)
+[Installation](INSTALL.md) · [M07 leveling](LEVELING.md) · [Validation](VALIDATION_R16_7.md)
 
 All current printer UI, Fluidd prompts, macros and release documentation use
 English. The retained multilingual firmware tables and reference frames are
@@ -19,13 +19,17 @@ Material, Settings, Information. Back follows the menu history.
 | Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
 | Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
 | Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
+| Maintenance | Fan test | `ZORTRAX_FAN_TEST_START` | Open the original interactive submenu |
+| Fan test | Back | `ZORTRAX_FAN_TEST_END` | Restore lower request and current upper thermostat policy |
+| Fan test | Toggle upper fan | `ZORTRAX_FAN_UPPER` | Toggle 0 / 150⁄255 request; automatic cooling has priority |
+| Fan test | Toggle lower fan | `ZORTRAX_FAN_LOWER` | Toggle 0 / 150⁄255 request |
 | Material | Back | Navigation | Return to parent |
 | Material | Unload the material | `ZORTRAX_UNLOAD` | 240°C → confirm removal → retract 110 mm → heater off |
 | Material | Load the material | `ZORTRAX_LOAD` | 240°C → insert and confirm → feed 130 mm → heater off |
 | Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Retract 110 mm → insert and confirm → feed 150 mm; remain paused |
 
-The two OEM submenus contain exactly the requested items. Change belongs to
-the paused-print context, not the idle Material submenu. The seven procedure
+Maintenance includes the requested Fan test submenu. Change belongs to
+the paused-print context, not the idle Material submenu. The eleven procedure
 macros are assigned to Fluidd's ZORTRAX M300 group by `setup_fluidd.py --apply`.
 The separate `TEST_ZORTRAX_LEVEL` alias remains in TEST M300. Existing macro
 visibility, colors and unrelated Fluidd preferences are preserved.
@@ -71,6 +75,35 @@ previous paused target and leaves the print paused. The operator separately
 chooses Resume. Cancel leaves the print paused with heating off. Cancellation
 or replacement of the paused parent revokes the material service.
 
+## Interactive Fan test
+
+The original menu is Maintenance → Fan test → Back / Toggle upper fan /
+Toggle lower fan. Entering saves the two OEM requests and starts the test
+with both requests off. Each toggle requests 0 or 150/255 (about 58.8%), not
+100%. It stays on the selected row. Back ends the session.
+
+The upper fan is channel 1 / PE14, the native hotend fan. The lower fan is
+channel 0 / PE13, native print cooling. R16.7 uses those existing fan queues,
+not new pins or PWM owners. The cold submenu reproduces all twelve original
+selection/state combinations byte for byte, including the font, Enabled /
+Disabled fields and left selection marker. No separate OEM fan-test picture
+was found in this path; the source draws a menu and two text fields.
+
+Fluidd shows the same three action labels and state text. Console macros
+use the same session, and direct upper/lower macros open it first if needed.
+Back, leaving the page, host restart, a fault or the existing 300-second
+service deadline revokes the session. A stale button cannot toggle a new phase.
+Pending native fan requests must drain before entry. Printing, pause, another
+service, queued movement and FILEOUTPUT cannot start a physical fan test.
+
+Upper automatic cooling is a floor: with a heater target, temperature above
+the native threshold, or invalid temperature evidence, the test cannot switch
+it off. The screen then says (Cooling) and Automatic upper-fan cooling; Fluidd
+uses those same words. Back restores the saved lower request and recomputes
+CURRENT upper thermostat policy instead of replaying an old OFF. Faults or
+stale MCU status never replay saved duty. Protective MCU cooling remains local.
+The configured native thermostat remains unchanged.
+
 ## Source evidence and corrections
 
 The supplied M300 Classic 1.3.1 application has SHA-256
@@ -85,6 +118,8 @@ comments and executed with declared hardware/UI boundaries.
 | Change during pause | `0x08015384` | Text 19 retract, text 20 insertion confirmation, text 22 load; 105600/144000 requests; return to pause menu |
 | Heat the extruder | `0x08015ed0` | 260/258, text 16 completion, heater off and Maintenance return |
 | Hold platform controls | `0x08015d1c` | Button hold chooses the up/down motor routines |
+| Interactive fan test | `0x08014940`, `0x080157f0`, `0x080157c8`, `0x08014980` | Save, requests off, independent 0/150 toggles, saved-request restoration |
+| Fan state fields | `0x0801846c` | Original Enabled/Disabled text at x190, y12/y24 |
 
 With the nominal OEM E scale of 960 units/mm, the transport counters give
 130, 110 and 150 mm. These are nominal program values, not independent
@@ -105,4 +140,9 @@ are port protections. They are not presented as literal firmware behavior.
 No raw TIM/GPIO motor loop is copied. Native planners, heater limits, sensors,
 MCU fault supervision and factory Z400/Z800 selection remain authoritative.
 Physical feed length, hold response and full procedure acceptance still need
-a supervised printer test. See [validation and acceptance](VALIDATION_R16_6.md).
+a supervised printer test. See [validation and acceptance](VALIDATION_R16_7.md).
+
+R16.7 also publishes platform movement through the shared procedure object:
+the OLED stays on the selected Maintenance row during a physical hold, while
+Fluidd names that same action. Finite macros select its corresponding OLED
+row. There is no invented OEM platform-progress icon or automatic homing.
