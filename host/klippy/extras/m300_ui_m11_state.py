@@ -10,6 +10,8 @@ import json
 import math
 import unicodedata
 
+from .m300_leveling_oem import width as oem_text_width
+
 LANGS = ('EN',)
 # All supported actions must be routed by m300_menu.select(), not by this
 # presentation-only state layer. Unknown actions fail closed in its audit.
@@ -49,10 +51,6 @@ def require_rows(rows):
     return True
 
 
-def label_pixel_width(label):
-    return sum(8 if ch == '©' else 6 for ch in label)
-
-
 def fit_label(label, width=216, offset=0):
     """Pixel-budgeted text window, never moves/cancels the selected action.
 
@@ -62,18 +60,20 @@ def fit_label(label, width=216, offset=0):
     label = clean_label(label, 240)
     if width < 18 or width > 252:
         raise ValueError('M11 width outside safe OLED region')
-    if label_pixel_width(label) <= width:
+    if oem_text_width(label) <= width:
         return label
     if offset < 0 or not isinstance(offset, int):
         raise ValueError('M11 scroll offset invalid')
     text = (label + '   ') * 3
     pos = offset % (len(label) + 3)
-    out = ''
+    out = []
+    pixels = -1  # The final glyph has no following space.
     for ch in text[pos:]:
-        if label_pixel_width(out+ch) > width:
+        pixels += oem_text_width(ch)+1
+        if pixels > width:
             break
-        out += ch
-    return out
+        out.append(ch)
+    return ''.join(out)
 
 
 class MenuHistory:

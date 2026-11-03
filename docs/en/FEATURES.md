@@ -24,7 +24,10 @@
 
 The first display remains the native Klipper status screen. The main groups
 are Klipper, Zortrax M300 and Service / Tests. The Zortrax menu groups
-Models, Maintenance, Material, Settings and Information in that order. Change is available from paused Print status. Fluidd
+Models, Maintenance, Material, Settings and Information in that order.
+OLED menu lists use the same original font as Settings. The cursor points
+left on Back, and Back in the main menu returns to the Klipper status screen.
+Change is available from paused Print status. Fluidd
 keeps Klipper / ZORTRAX M300 / TEST M300 categories and unrelated user settings.
 
 Existing 2 µs STEP, native XY profile, Z limits, E rotation distance, PID,

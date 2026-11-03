@@ -11,6 +11,7 @@ import textwrap
 
 from .m300_oled_render import Frame
 from .m300_oled_transport import EncoderSnapshots, OledStream, FastOledStream
+from .m300_settings_ui import SPRITE_LABEL_PIXELS, menu_frame, notice_frame
 from .m300_ui_labels import english_label
 
 PANEL_RESPONSE = ('m300_panel_state clock=%u sequence=%u position=%u pressed=%c'
@@ -879,7 +880,7 @@ class M300OLED:
             ui = self.printer.lookup_object('m300_menu_ui', None)
             sprite = (ui.get_oem_sprite(self.page, rows, self.selection, now)
                       if ui is not None else None)
-            pixels = 256-sprite[0]-4-20-6 if sprite else None
+            pixels = SPRITE_LABEL_PIXELS if sprite else None
             if ui is not None and self.page in ('home', 'm04'):
                 menu = self.printer.lookup_object('m300_menu', None)
                 if menu is not None:
@@ -899,18 +900,14 @@ class M300OLED:
             key = (('oem_menu',maintenance_wire) if maintenance_wire is not None
                    else ('menu', tuple(labels), self.selection, sprite))
         if key != self._render_key:
-            frame = Frame()
             if key[0] == 'notice':
-                frame.dialog(*(english_label(x) for x in self.message))
-            elif key[0] in ('klipper_default', 'leveling', 'oem_menu', 'native_print_context'):
-                frame = None
+                title, message = (english_label(x) for x in self.message)
+                wire = notice_frame(title, message, Frame)
+            elif key[0] == 'menu':
+                wire = menu_frame(tuple(labels), (), self.selection, Frame, sprite)
             else:
-                frame.menu_full(labels, self.selection, keep_back_visible=True,
-                                sprite=sprite)
-            self._render_wire = ((leveling_wire if key[0] == 'leveling' else
-                                 maintenance_wire if key[0] == 'oem_menu' else
-                                 print_wire if key[0] == 'native_print_context' else status_wire)
-                                 if frame is None else frame.wire_bytes())
+                wire = key[1]
+            self._render_wire = wire
             self._render_key = key
             self.render_last_ms = max(0., 1000.*(self.reactor.monotonic()-started))
             self.render_max_ms = max(self.render_max_ms, self.render_last_ms)

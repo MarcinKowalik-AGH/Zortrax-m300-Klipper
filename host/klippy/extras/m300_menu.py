@@ -200,11 +200,16 @@ class M300Menu:
             return
         if oled.page == 'm04' and self.page == page and oled.message is None:
             return
-        self._navigate(page, refresh_information=False)
+        self._navigate(page, remember=False, refresh_information=False)
         oled.page, oled.selection, oled.message = 'm04', 0, None
         oled.render_at = 0.
         oled._user_refresh_pending = True
         self.reactor.update_timer(oled.timer, self.reactor.NOW)
+
+    def return_from_procedure(self, owner, operation):
+        page = ('native_job' if operation == 'CHANGE' else
+                'material' if owner == 'm300_filament' else 'maintenance')
+        self._navigate(page, remember=False)
 
     def _service(self, name):
         obj = self.printer.lookup_object(name, None)
@@ -250,14 +255,14 @@ class M300Menu:
                 ('Zortrax M300', ('page', 'zortrax')),
                 ('Service / Tests', ('page', 'tests'))])
         if native and self.page == 'zortrax':
-            return 'Zortrax M300', self._notice(back + [
+            return 'Zortrax M300', self._notice([(self.t('Back'), ('page', 'main')),
                 (self.t('Models'), ('page', 'models')),
                 (self.t('Maintenance'), ('page', 'maintenance')),
                 (self.t('Material'), ('page', 'material')),
                 (self.t('Settings'), ('page', 'settings')),
                 (self.t('Information'), ('page', 'information'))])
         if native and self.page == 'maintenance':
-            return self.t('Maintenance'), self._notice(back + [
+            return self.t('Maintenance'), self._notice([(self.t('Back'), ('page', 'zortrax')),
                 (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
                 (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
@@ -274,7 +279,7 @@ class M300Menu:
                 title, rows = settings.rows(self.page, now)
                 return title, self._notice(rows)
         if native and self.page == 'material':
-            return self.t('Material'), self._notice(back + [
+            return self.t('Material'), self._notice([(self.t('Back'), ('page', 'zortrax')),
                 (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
                 (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))])
         if native and self.page == 'tests':

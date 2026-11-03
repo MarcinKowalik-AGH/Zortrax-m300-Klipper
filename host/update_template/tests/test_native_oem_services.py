@@ -525,6 +525,11 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
             self.assertEqual(menu.page,page)
             self.assertEqual(o.page,'m04');self.assertEqual(h.hotend.target,0.)
             self.assertEqual(h.lines[-1],'// action:prompt_end')
+            packet(False, 1, 1, 1)  # Refresh telemetry after simulated extrusion.
+            for clicks, expected in ((2, 'zortrax'), (3, 'main'), (4, 'status')):
+                o._render(h.now);display.pump()
+                packet(False, clicks, clicks, clicks)
+                self.assertEqual(o.page if expected == 'status' else menu.page, expected)
 
 
 if __name__=='__main__':unittest.main()

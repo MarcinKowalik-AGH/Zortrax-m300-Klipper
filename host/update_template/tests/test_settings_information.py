@@ -22,8 +22,8 @@ from payload.m300_browser import M300Browser
 from payload.m300_browser_state import Catalog, BrowserError
 from payload.m300_menu import sort_entries
 from payload.m300_display import M300Display
-from payload.m300_settings_ui import menu_frame
-from payload.m300_ui_m11_state import require_rows
+from payload.m300_settings_ui import SPRITE_LABEL_PIXELS, menu_frame
+from payload.m300_ui_m11_state import fit_label, require_rows
 
 
 @contextmanager
@@ -82,6 +82,34 @@ def browser(h):
 
 
 class SettingsTreeTests(unittest.TestCase):
+    def test_oled_menus_share_oem_font_and_keep_the_back_marker_visible(self):
+        with session() as h:
+            frame_type = test_display.renderer.Frame
+            for page in ('main', 'zortrax', 'maintenance', 'material', 'settings'):
+                with self.subTest(page=page):
+                    h.menu.page = page
+                    _, rows = h.oled._rows(h.now)
+                    labels = tuple(label for label, _ in rows)
+                    sprite = h.ui.get_oem_sprite('m04', rows, 0, h.now)
+                    h.oled.selection = 0
+                    h.oled._render(h.now)
+                    wire = h.oled._render_wire
+                    self.assertEqual(wire, menu_frame(labels, (), 0, frame_type, sprite))
+                    self.assertEqual(wire[7*128+2] & 15, 15)  # Back tip, x=5.
+                    self.assertEqual(wire[7*128+5] & 15, 0)   # x=11 is dark.
+                    h.oled.selection = len(labels)-1
+                    h.oled._render(h.now)
+                    for row in range(12):
+                        start = row*128+8
+                        self.assertEqual(h.oled._render_wire[start:start+22],
+                                         wire[start:start+22])
+            label = 'WWWWWWWWWWWWWWWWWWWWWWWWWW.gcode'
+            for offset in (0, 10, 25):
+                self.assertLessEqual(width(fit_label(label, SPRITE_LABEL_PIXELS, offset)),
+                                     SPRITE_LABEL_PIXELS)
+            self.assertNotEqual(fit_label(label, SPRITE_LABEL_PIXELS),
+                                fit_label(label, SPRITE_LABEL_PIXELS, 25))
+
     def test_exact_requested_tree_and_english_only_language(self):
         with session() as h:
             expected={'settings':['Back','Light','Buzzer','Sleep mode','Language','Models sorting'],
@@ -316,6 +344,22 @@ class IndicatorAndSleepTests(unittest.TestCase):
 
 
 class InformationTests(unittest.TestCase):
+    def test_back_reaches_the_status_screen_after_opening_a_fluidd_macro(self):
+        with session() as h:
+            for command, route in (
+                    ('ZORTRAX_HELP', ('help', 'information', 'zortrax', 'main')),
+                    ('ZORTRAX_MODELS_SORT', ('setting_sort_mode', 'settings', 'zortrax', 'main'))):
+                with self.subTest(command=command):
+                    h.run(command)
+                    for page in route:
+                        self.assertEqual((h.oled.page, h.menu.page), ('m04', page))
+                        h.oled._render(h.now)
+                        self.assertEqual(h.oled._rows(h.now)[1][0][0], 'Back')
+                        h.oled._select(h.now, h.oled._presented_actions)
+                        self.assertIsNone(h.oled.message)
+                    self.assertEqual(h.oled.page, 'status')
+                    self.assertFalse(h.ui.history.stack)
+
     def test_fluidd_navigation_invalidates_previous_panel_view_and_keeps_print_context(self):
         with session() as h:
             previous = h.oled._input_context()
