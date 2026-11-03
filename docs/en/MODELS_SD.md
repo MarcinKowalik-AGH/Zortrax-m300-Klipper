@@ -51,6 +51,13 @@ share its framing and CRC code when it gains a dedicated M300 output
 profile with the correct heater and motion records. Changing the header
 alone leaves different command semantics.
 
+The bundled M300 Classic OrcaSlicer profile starts the nozzle at 180 °C for
+contact homing. For files with that recognized startup block, the local
+execution snapshot sends the nozzle setpoint before the bed wait. This
+heats both at once while preserving the bed wait, homing and final nozzle
+temperature. The same applies to Fluidd jobs captured within the snapshot
+size limit. The original G-code remains on disk for other uses.
+
 ## Fluidd console
 
 ```gcode

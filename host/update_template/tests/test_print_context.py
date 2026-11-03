@@ -4,6 +4,9 @@ from types import SimpleNamespace as NS
 import unittest
 
 from payload.m300_print_ui import M300PrintUI
+from payload.m300_leveling_oem import draw_sprite, draw_text
+from payload.m300_oem_graphics import PAGES
+from test_display import renderer
 from test_settings_information import session
 
 
@@ -115,6 +118,19 @@ class PrintContextTests(unittest.TestCase):
             panel(h, sample(shorts=1), acknowledged(h))
             h.callbacks.pop(0)(h.now)
             self.assertEqual(h.commands, ['CANCEL_PRINT'])
+
+    def test_paused_oled_left_aligns_title_and_uses_original_information_sprite(self):
+        with printing() as h:
+            pause(h)
+            wire = acknowledged(h)[0]
+            frame = renderer.Frame()
+            draw_text(frame, 16, 1, 'PAUSE MENU')
+            draw_sprite(frame, h.ui.oem_sprites.get(PAGES['information'], h.now))
+            expected = frame.wire_bytes()
+            self.assertEqual(wire[:14 * 128], expected[:14 * 128])
+            for y in range(7, 57):
+                right = slice(y * 128 + 100, y * 128 + 125)
+                self.assertEqual(wire[right], expected[right])
 
     def test_old_pause_click_cannot_resume_next_file(self):
         with printing() as h:

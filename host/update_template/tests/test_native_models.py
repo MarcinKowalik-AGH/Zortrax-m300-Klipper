@@ -10,7 +10,7 @@ import unittest
 
 from payload.m300_binary import compile_m300
 from payload.m300_fat import _lfn_checksum
-from payload.m300_models import M300Models, ModelError
+from payload.m300_models import M300Models, ModelError, _copy_open_native_file
 from payload.m300_sd import M300SD, SDError, SNAPSHOT_BATCH_BYTES
 from test_settings_information import session, browser
 
@@ -138,6 +138,36 @@ def prepare(h, source='sd', directory='', name='part.zcode', run=True):
 
 
 class ModelsTests(unittest.TestCase):
+    def test_orca_preheat_reorders_only_known_startup_in_both_native_paths(self):
+        with model_session() as h:
+            path = h.files / 'orca.gcode'
+            for bed, wait, earlier, reorder in (
+                    (80, b'M190 S80', b'M73 P0 R10\r\n', True),
+                    (30, b'TEMPERATURE_WAIT SENSOR=heater_bed MINIMUM=29', b'', True),
+                    (80, b'M190 S80', b'M109 S160\r\n', False),
+                    (80, b'M190 S60', b'', False)):
+                with self.subTest(bed=bed, wait=wait, earlier=earlier):
+                    header = (b'; OrcaSlicer\r\n' + earlier +
+                              b'; M300 Classic / native Klipper\r\nG90\r\nM83\r\n'
+                              + b'M140 S%d\r\n' % bed)
+                    after = b'G28\r\nM109 S220\r\nG90\r\nM83\r\nG92 E0\r\nG1 X100\r\n'
+                    nozzle = b'M104 S180\r\n'
+                    wait += b'\r\n'
+                    source = header + wait + nozzle + after
+                    expected = header + nozzle + wait + after if reorder else source
+                    path.write_bytes(source)
+                    with path.open('rb') as original:
+                        raw, digest = _copy_open_native_file(original.fileno(), len(source))
+                        with raw:
+                            self.assertEqual(raw.read(), expected)
+                    self.assertEqual(digest, hashlib.sha256(source).hexdigest())
+                    token = prepare(h, source='host', name=path.name)
+                    self.assertEqual(h.models.preview.stream.read().encode(), expected)
+                    self.assertEqual(h.models.preview.source_sha256, digest)
+                    self.assertEqual(h.models.preview.size, len(source))
+                    h.models.cancel(token)
+                    self.assertEqual(path.read_bytes(), source)
+
     def test_models_hides_windows_metadata_at_sd_root(self):
         with model_session() as h:
             original = h.card.list_files

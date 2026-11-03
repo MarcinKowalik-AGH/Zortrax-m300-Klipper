@@ -104,6 +104,31 @@ class NativeFanContractTests(unittest.TestCase):
             self.assertEqual(h.p.view(h.now)['owner'],'m300_fans')
             self.assertEqual(getattr(h,which).speed,OEM_DUTY)
 
+    def test_fan_start_distinguishes_active_homing_from_released_fault_and_reopens(self):
+        h = FanHarness()
+        motion = dict(state='HOMING', busy=True, normal_control=True, ready=True)
+        h.objects['m300_motion'] = NS(get_status=lambda now: motion)
+        with self.assertRaisesRegex(native_gcode.CommandError, 'm300_motion owns resources'):
+            h.run('ZORTRAX_FAN_TEST_START')
+        self.assertIsNone(h.fans.test)
+        motion.update(state='FAULT', busy=False)
+        h.run('ZORTRAX_FAN_TEST_START')
+        h.run('ZORTRAX_FAN_LOWER')
+        h.p._tick(h.now)
+        token = h.fans.token
+        h.lines.clear()
+        h.run('ZORTRAX_FAN_TEST_START')
+        h.p._tick(h.now)
+        self.assertTrue(any('prompt_begin ZORTRAX M300 - Fan test' in line for line in h.lines))
+        self.assertEqual(h.fans.token, token)
+        self.assertEqual(h.lower.speed, OEM_DUTY)
+        h.run('ZORTRAX_FAN_TEST_END')
+        h.p._tick(h.now)
+        self.assertIsNone(h.fans.test)
+        self.assertEqual(h.lower.speed, 0.)
+        self.assertEqual(h.lines[-1], '// action:prompt_end')
+        h.assert_restored(self)
+
     def test_native_hotend_thermostat_is_a_floor_at_entry_and_every_toggle(self):
         for measured,target in ((51.,0.),(25.,230.),(float('nan'),0.),(0.,0.)):
             h=FanHarness();h.hotend.temperature=measured;h.hotend.target=target

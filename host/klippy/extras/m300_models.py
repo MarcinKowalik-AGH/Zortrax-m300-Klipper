@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import os
+import re
 import secrets
 import stat
 from typing import Optional
@@ -17,6 +18,15 @@ from .m300_maintenance import other_service
 from .m300_native_service import lock_command, require_idle_print
 
 MAX_LINE = 64 * 1024
+ORCA_HEADER_BYTES = 256 * 1024
+ORCA_PROFILE_START = re.compile(
+    rb'^; M300 Classic / native Klipper\r?\nG90\r?\nM83\r?\n'
+    rb'M140 S(?P<bed>[0-9]{1,3})\r?\n'
+    rb'(?P<wait>M190 S(?P=bed)\r?\n|'
+    rb'TEMPERATURE_WAIT SENSOR=heater_bed MINIMUM=(?P<minimum>[0-9]{1,3})\r?\n)'
+    rb'(?P<nozzle>M104 S180\r?\n)G28\r?\n'
+    rb'M109 S[0-9]{1,3}\r?\nG90\r?\nM83\r?\nG92 E0\r?\n',
+    re.MULTILINE)
 PEERS = ('m300_job', 'm300_filament', 'm300_calibration', 'm300_maintenance',
          'm300_motion', 'm300_fans', 'm300_thermal', 'm300_nvm')
 
@@ -74,6 +84,32 @@ def _copy_text(stream, target, max_bytes):
     return digest.hexdigest(), size
 
 
+def _parallel_orca_preheat(snapshot):
+    """Move the supplied Orca M300 profile's 180 C command before its bed wait."""
+    snapshot.seek(0)
+    header = snapshot.read(ORCA_HEADER_BYTES)
+    match = ORCA_PROFILE_START.search(header)
+    if match is None:
+        return
+    # Only slicer metadata can precede this startup block. Unknown macros
+    # may have their own thermal sequencing.
+    for line in header[:match.start()].splitlines():
+        command = line.split(b';', 1)[0].split(None, 1)
+        if command and command[0] not in (b'M73', b'SET_PRINT_STATS_INFO', b'EXCLUDE_OBJECT_DEFINE'):
+            return
+    bed = int(match['bed'])
+    minimum = match['minimum']
+    if (minimum is None and bed <= 35
+            or minimum is not None and not (0 < bed <= 35 and int(minimum) == bed - 1)):
+        return
+    # The source file, digest and total byte count stay intact. Replay uses
+    # the same immutable execution snapshot as the first print.
+    reordered = match['nozzle'] + match['wait']
+    snapshot.seek(match.start('wait'))
+    if snapshot.write(reordered) != len(reordered):
+        raise ModelError('incomplete parallel preheat snapshot write')
+
+
 def _build_snapshot(root, entry, physical, metadata, max_bytes, limits):
     """Disk I/O and conversion only. Runs in the virtual SD executor."""
     opened, before = (physical, None) if physical is not None else _open_source(root, entry.path)
@@ -109,6 +145,8 @@ def _build_snapshot(root, entry, physical, metadata, max_bytes, limits):
                      or metadata.get('sha256') != source_digest)):
                 raise ModelError('source size or SD snapshot identity changed')
             size = writer.tell()
+            if not binary:
+                _parallel_orca_preheat(writer)
         raw = _seal_snapshot(writer, temporary)
         writer = temporary = None
         return raw, size, source_digest, targets
@@ -139,6 +177,7 @@ def _copy_open_native_file(fd, size):
             position += len(data)
         if _file_identity(os.fstat(fd)) != _file_identity(before):
             raise ModelError('native source changed while making the snapshot')
+        _parallel_orca_preheat(writer)
         raw = _seal_snapshot(writer, temporary)
         writer = temporary = None
         return raw, digest.hexdigest()

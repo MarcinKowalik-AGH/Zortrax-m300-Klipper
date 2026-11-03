@@ -871,9 +871,10 @@ class M300OLED:
         previous_context = self._presented_context
         maintenance_wire = None
         print_ui = self.printer.lookup_object('m300_print_ui', None)
-        print_wire = (print_ui.render(now, self._input_context(), Frame,
-                                      show_status=self._show_status) if print_ui else None)
         ui = self.printer.lookup_object('m300_menu_ui', None)
+        print_wire = (print_ui.render(now, self._input_context(), Frame,
+                                      show_status=self._show_status,
+                                      sprites=getattr(ui, 'oem_sprites', None)) if print_ui else None)
         leveling_frame = getattr(ui, 'leveling_frame', None)
         leveling_wire = (leveling_frame(self.page, now, Frame)
                          if leveling_frame is not None and not self.message else None)

@@ -4,9 +4,11 @@ from collections import deque
 from functools import lru_cache
 import logging
 
-from .m300_leveling_oem import draw_text, width
+from .m300_leveling_oem import draw_sprite, draw_text
+from .m300_oem_graphics import PAGES
 from .m300_print_hold import PrintHold
-from .m300_ui_m11_state import clean_label
+from .m300_settings_ui import MENU_LABEL_PIXELS, SPRITE_LABEL_PIXELS
+from .m300_ui_m11_state import clean_label, fit_label
 
 COMMANDS = {'pause': 'PAUSE', 'resume': 'RESUME', 'change': 'ZORTRAX_CHANGE',
             'stop': 'CANCEL_PRINT'}
@@ -16,18 +18,18 @@ STOP_ROWS = (('No', 'keep'), ('Yes, stop the print', 'stop'))
 
 
 @lru_cache(maxsize=48)
-def frame_for(frame_type, title, lines, selected):
+def frame_for(frame_type, title, lines, selected, sprite):
     frame = frame_type()
-    draw_text(frame, (256 - width(title)) // 2, 1, title)
+    pixels = SPRITE_LABEL_PIXELS if sprite else MENU_LABEL_PIXELS
+    draw_text(frame, 16, 1, fit_label(title, pixels))
     for index, line in enumerate(lines):
-        # The stock font has variable-width glyphs. Reserve room for the cursor.
-        while width(line) > 230:
-            line = line[:-1]
         y = 17 + 12 * index
         if index == selected:
             for dy in range(-2, 3):
                 frame.pixel(6 + 3 - abs(dy), y + 7 + dy)
-        draw_text(frame, 16, y, line)
+        draw_text(frame, 16, y, fit_label(line, pixels))
+    if sprite:
+        draw_sprite(frame, sprite)
     return frame.wire_bytes()
 
 
@@ -107,7 +109,7 @@ class M300PrintUI:
                 return (key, token)
         return None
 
-    def render(self, now, panel_context, frame_type, *, show_status):
+    def render(self, now, panel_context, frame_type, *, show_status, sprites=None):
         view = self.view(now)
         if view is None:
             self.frames.clear()
@@ -149,7 +151,8 @@ class M300PrintUI:
                      'Press to close')
         if self.error:
             lines = (*lines[:3], clean_label(self.error, 80))
-        wire = frame_for(frame_type, title, lines, selected)
+        sprite = sprites.get(PAGES['information'], now) if sprites is not None else None
+        wire = frame_for(frame_type, title, lines, selected, sprite)
         self._remember_frame((wire, panel_context, key, rows, selected))
         return wire
 
