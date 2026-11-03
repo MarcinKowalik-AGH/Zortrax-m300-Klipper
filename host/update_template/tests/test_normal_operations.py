@@ -18,6 +18,7 @@ def motion_fixture():
     motion.homing_speeds = motion.failure_phase = None
     motion.home_xy, motion.travel_speed = (150., 158.), 50.
     motion.z_home_hotend_target, motion.clearance, motion.lift_speed = 180., 5., 5.
+    motion.z_home_temperature_tolerance = 5.
     motion.reactor = NS(monotonic=lambda: 1.)
     motion.events, motion.homed = [], set('xy')
     position = [100., 100., 299., 17.]

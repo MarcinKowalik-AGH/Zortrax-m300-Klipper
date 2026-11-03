@@ -13,11 +13,14 @@ from .m300_native_service import NativeServiceLease, require_idle_print
 PERIOD = .05
 PANEL_LEASE = .75
 QUANTUM = .1
+PLATFORM_STEP_MM = 1.
+PLATFORM_STEP_SECONDS = 1.
 
 
 class M300NativeMaintenance(M300Maintenance):
     def __init__(self, config):
         super().__init__(config)
+        self.platform_move_distance = self._number('max_platform_move_distance', 50., .1, 50.)
         self.phase_id = 0
         self.target = 0.
         self._bed_target = None
@@ -117,8 +120,9 @@ class M300NativeMaintenance(M300Maintenance):
 
     def platform(self,distance,speed=None):
         if (type(distance) not in (int,float) or not math.isfinite(distance)
-                or distance==0. or abs(distance)>self.jog_distance):
-            raise self._error('DISTANCE must be positive and within max_jog_distance')
+                or distance == 0. or abs(distance) > self.platform_move_distance):
+            raise self._error('DISTANCE must be positive and at most %g mm'
+                              % self.platform_move_distance)
         speed=self.jog_speed if speed is None else speed
         if type(speed) not in (int,float) or not math.isfinite(speed) or speed<=0.:
             raise self._error('SPEED must be finite and positive')
@@ -249,9 +253,17 @@ class M300NativeMaintenance(M300Maintenance):
                                 self.lease.move(self._z_endpoint(distance),self.jog_speed)
                                 self.toolhead.get_last_move_time()
                         elif self._pending_z is not None:
-                            endpoint,speed=self._pending_z
-                            self._pending_z=None
-                            self.lease.move(endpoint,speed)
+                            endpoint, speed = self._pending_z
+                            z = self.toolhead.get_position()[2]
+                            remaining = endpoint[2] - z
+                            step = min(PLATFORM_STEP_MM, speed * PLATFORM_STEP_SECONDS)
+                            if abs(remaining) <= step:
+                                self._pending_z = None
+                                position = endpoint
+                            else:
+                                position = list(endpoint)
+                                position[2] = z + math.copysign(step, remaining)
+                            self.lease.move(position, speed)
                             self.toolhead.get_last_move_time()
                         else:
                             self._finish('COMPLETE')
@@ -268,7 +280,8 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
-            revision='0.13.16.8-NATIVE-MAINTENANCE')
+            max_platform_move_distance_mm=self.platform_move_distance,
+            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM1')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

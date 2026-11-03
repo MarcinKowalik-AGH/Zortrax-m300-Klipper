@@ -77,12 +77,18 @@ Error #041 represents calibration failure; #042 represents pad probing failure.
 
 ## Ordinary Z homing is a separate routine
 
-Ordinary G28 Z retains the agreed **180°C minimum**. It uses the configured
+Ordinary G28 Z retains the agreed **180°C minimum target**. It uses the configured
 center, native coarse contact, then five successive contact/release reference
 updates following 0x0800ab90 / 0x0800ac10. The final reference comes from the
 **fifth release edge**, not an average of five values. Status reports the
 method and five observations. Final clearance is 5 mm from the newly established
 reference, without accumulation on repeated homing.
+
+During the five precise contacts, the nozzle may read up to 5°C below the
+active target (175°C at a target of 180°C). An absent temperature reading or a
+changed setpoint aborts the reference. A tighter allowance can be configured as
+`z_home_temperature_tolerance` in `[m300_motion]` (0.5–5°C). The native
+heater warm-up, temperature limits and MCU guards apply as before.
 
 The M07 wizard's initial center contact is a different source routine,
 0x0801456c. Its Y/X/center path does not call the ordinary five-update helper.

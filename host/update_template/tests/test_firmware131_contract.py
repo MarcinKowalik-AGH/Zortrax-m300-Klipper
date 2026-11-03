@@ -294,7 +294,7 @@ def precision_harness(profile):
             cb,h.on_drip=h.on_drip,None;cb()
     h.toolhead.drip_move=drip
     owner=NS(printer=h.printer,toolhead=h.toolhead,reactor=h.reactor,lift_speed=5.,
-        _z_target=180.,config=NS(error=RuntimeError),
+        _z_target=180.,z_home_temperature_tolerance=5.,config=NS(error=RuntimeError),
         board=NS(require_motion=lambda:None,require_heating=lambda:None,
                  hardware=NS(get_status=lambda:dict(effective_z_steps_per_mm=scale))),
         hotend=NS(get_temp=lambda now:(180.,180.)),
@@ -304,6 +304,31 @@ def precision_harness(profile):
 
 
 class NativeFiveContactTests(unittest.TestCase):
+    def test_five_contacts_accept_a_shortfall_to_the_configured_lower_limit(self):
+        for measured in (176., 175.):
+            with self.subTest(measured=measured):
+                h, ref = precision_harness(REFERENCE['z_references'][1])
+                ref.owner.hotend.get_temp = lambda now: (measured, 180.)
+                with patch.dict('sys.modules', {'payload.homing': homing}):
+                    self.assertEqual(ref.run(1)['contacts'], 5)
+
+    def test_bad_temperature_or_changed_target_refuses_motion_with_specific_reason(self):
+        for measured, target, tolerance, reason in (
+                (174.9, 180., 5., '174.90 C below contact minimum 175.00 C'),
+                (177., 180., 2., '177.00 C below contact minimum 178.00 C'),
+                (0., 180., 5., 'no valid nozzle temperature'),
+                (float('nan'), 180., 5., 'no valid nozzle temperature'),
+                (180., 0., 5., 'nozzle target changed from 180.0 C to 0.0 C')):
+            with self.subTest(measured=measured, target=target, tolerance=tolerance):
+                h, ref = precision_harness(REFERENCE['z_references'][1])
+                ref.owner.z_home_temperature_tolerance = tolerance
+                ref.owner.hotend.get_temp = lambda now: (measured, target)
+                with self.assertRaises(RuntimeError) as error:
+                    ref.run(1)
+                self.assertIn(reason, str(error.exception))
+                self.assertEqual(ref.references, [])
+                self.assertFalse(any(e[0] in ('move', 'contact') for e in h.events))
+
     def test_reclosing_pc7_after_full_retreat_is_not_accepted_as_a_reference(self):
         h,ref=precision_harness(REFERENCE['z_references'][1])
         query=h.endstop.query_endstop
