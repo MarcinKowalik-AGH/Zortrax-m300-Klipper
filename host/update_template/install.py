@@ -161,7 +161,8 @@ def plan(root, config):
                 text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
                 desired[target] = profile.convert_text(text).encode()
         existing.update(n.lower() for n, _ in profile.blocks(desired[target].decode())[1])
-        extra = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
+        extra = profile.convert_text(
+            profile.missing_macros((HERE / 'payload' / name).read_text(), existing))
         if profile.blocks(extra)[1]:
             desired[target] += ('\n' + extra).encode()
             existing.update(n.lower() for n, _ in profile.blocks(extra)[1])

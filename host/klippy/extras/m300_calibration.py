@@ -45,7 +45,10 @@ class M300Calibration:
         self.center_tolerance = self._option('center_tolerance', None, 0., 5.)
         self.directions = {key: config.get(key + '_positive_direction', None)
                            for key in ('rear_left', 'rear_right', 'front')}
-        self.travel_speed = self._option('travel_speed', 10., .1, 50.)
+        # OEM 1.3.1 sets F6000 for the XY hop in calibration_probe_one_point.
+        stock_xy = self.native_mode and self.workflow == 'M07_STOCK'
+        self.travel_speed = self._option('travel_speed', 100. if stock_xy else 10.,
+                                         .1, 100. if stock_xy else 50.)
         self.z_speed = self._option('z_speed', 1., .05, 5.)
         self.probe_speed = self._option('probe_speed', .5, .05, 2.)
         self.release_speed = self._option('release_speed', .5, .05, 2.)
@@ -800,6 +803,9 @@ class M300Calibration:
                       workflow=self.workflow, calibration_api_version=1,
                       model='M300_CLASSIC', qualified=self.qualified,
                       hardware_qualified=False, target=self._expected_hotend,
+                      xy_travel_speed_mm_s=self.travel_speed,
+                      z_lift_speed_mm_s=self.z_speed, z_probe_speed_mm_s=self.probe_speed,
+                      z_release_speed_mm_s=self.release_speed,
                       requested_target=self.target, last_rejection=self.last_rejection,
                       can_confirm=self.ready and self.machine.state in ('WAIT_PREPARE', 'WAIT_WARNING', 'WAIT_TIGHTEN', 'ADJUST', 'WAIT_RETRY', 'REVIEW'),
                       can_cancel=self.ready and self.machine.active)

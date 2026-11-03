@@ -187,6 +187,30 @@ class SettingsTreeTests(unittest.TestCase):
                 h.run(cmd);self.assertEqual(h.nvm.get_setting(key),value)
                 self.assertEqual((h.oled.page, h.menu.page), ('m04', 'setting_' + key))
 
+    def test_closed_choice_macros_open_buttons_without_editing_the_current_choice(self):
+        cases = (
+            ('ZORTRAX_LIGHT', ['Dynamic', 'White', 'Disabled']),
+            ('ZORTRAX_BUZZER', ['Enabled', 'Disabled']),
+            ('ZORTRAX_SLEEP_MODE', ['Enabled', 'Disabled']),
+            ('ZORTRAX_LANGUAGE', ['English']),
+            ('ZORTRAX_MODELS_SORT', ['Date', 'Name', 'Case-sensitive name', 'File size']),
+        )
+        with session() as h:
+            original = h.nvm.ui_snapshot()
+            for macro, choices in cases:
+                self.assertNotRegex(templates()[macro], r'params\.\w+')
+                h.lines.clear()
+                h.run(macro)
+                labels = [line.split('prompt_button ', 1)[1].split('|', 1)[0].removesuffix(' <')
+                          for line in h.lines if 'action:prompt_button ' in line]
+                self.assertEqual(labels, ['Back'] + choices)
+                self.assertEqual(h.nvm.ui_snapshot(), original)
+            h.run('ZORTRAX_LIGHT')
+            button = next(line.split('|')[1] for line in h.lines
+                          if 'action:prompt_button White|' in line)
+            h.run(button)
+            self.assertEqual(h.nvm.get_setting('light_mode'), 'WHITE')
+
     def test_stale_or_duplicate_fluidd_buttons_cannot_repeat_a_write(self):
         with session() as h:
             h.settings.show('setting_light_mode');token=h.settings._view_id()

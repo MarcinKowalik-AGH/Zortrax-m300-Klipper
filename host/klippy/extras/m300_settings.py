@@ -277,9 +277,14 @@ class M300Settings:
         gcmd.respond_info('M300_SETTINGS '+json.dumps(self.get_status(self.reactor.monotonic()),sort_keys=True))
 
     def cmd_setting(self,gcmd):
-        key=gcmd.get('NAME').lower();raw=gcmd.get('VALUE').upper()
+        key=gcmd.get('NAME').lower()
         aliases={'light':'light_mode','buzzer':'sound','sleep':'sleep_mode','sort':'sort_mode'}
         key=aliases.get(key,key)
+        raw=gcmd.get('VALUE',None)
+        if raw is None:
+            self.show('setting_' + key)
+            return
+        raw=raw.upper()
         if key=='sound':
             if raw not in ('ENABLED','DISABLED'):raise gcmd.error('Use Enabled or Disabled')
             value=raw=='ENABLED'

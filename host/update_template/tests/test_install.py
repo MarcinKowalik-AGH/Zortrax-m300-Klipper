@@ -10,6 +10,29 @@ import install
 
 
 class InstallerTests(unittest.TestCase):
+    def test_existing_fluidd_choices_are_migrated_inside_includes(self):
+        source = '[mcu]\nserial: /dev/ttyS1\n[include m300_operations.cfg]\n'
+        macros = (
+            "[gcode_macro ZORTRAX_LIGHT]\ngcode:\n"
+            "    ZORTRAX_SETTING NAME=light_mode VALUE={params.MODE|default('DYNAMIC')}\n"
+            "    M118 Retain custom command\n"
+            "[gcode_macro ZORTRAX_BUZZER]\ngcode:\n"
+            "    ZORTRAX_UI_SETTING NAME=buzzer VALUE={params.STATE|default('ENABLED')}\n"
+            "[gcode_macro ZORTRAX_SLEEP_MODE]\ngcode:\n"
+            "    ZORTRAX_UI_SETTING NAME=sleep VALUE={params.STATE|default('ENABLED')}\n"
+            "[gcode_macro ZORTRAX_MODELS_SORT]\ngcode:\n"
+            "    ZORTRAX_UI_SETTING NAME=sort VALUE={params.MODE|default('NAME')}\n"
+        )
+        self.config.write_text(source)
+        path = self.config.parent / 'm300_operations.cfg'
+        path.write_text(macros)
+        receipt = install.apply(self.root, self.config, install.plan(self.root, self.config))
+        self.assertIn('M118 Retain custom command', path.read_text())
+        self.assertNotRegex(path.read_text(), r'params\.(MODE|STATE|REFRESH)\b')
+        self.assertEqual(install.plan(self.root, self.config), [])
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(path.read_text(), macros)
+
     def test_r164_temperature_migration_updates_includes_and_rolls_back_exactly(self):
         source=('[mcu]\nserial: /dev/ttyS1\n'
                 '[m300_calibration]\nprocedure_temperature: 180\n'

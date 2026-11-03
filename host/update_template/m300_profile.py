@@ -8,6 +8,12 @@ HEADER = re.compile(r'^\[([^]\r\n]+)\]\s*(?:[#;].*)?$', re.M)
 MACRO_RENAMES = {'TEST_M300_LEVEL': 'TEST_ZORTRAX_LEVEL',
                  'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
                  'TEST_M300_XY': 'TEST_ZORTRAX_XY'}
+CHOICE_MACROS = {
+    'gcode_macro ZORTRAX_LIGHT': ('light_mode', 'MODE'),
+    'gcode_macro ZORTRAX_BUZZER': ('buzzer', 'STATE'),
+    'gcode_macro ZORTRAX_SLEEP_MODE': ('sleep', 'STATE'),
+    'gcode_macro ZORTRAX_MODELS_SORT': ('sort', 'MODE'),
+}
 PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
 DROP = {'m300_test01'} | {'gcode_macro ' + n for n in (
@@ -86,6 +92,10 @@ def convert_text(text):
             for key, value in defaults.items():
                 if option(block, key) is None:
                     block = set_option(block, key, value)
+            travel_speed = option(block, 'travel_speed')
+            if travel_speed is None or float(travel_speed) == 10.:
+                # Upgrade the old M07 commissioning value to OEM F6000.
+                block = set_option(block, 'travel_speed', 100)
             block = minimum(block, 'approach_distance',
                             float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
         elif section == 'm300_filament':
@@ -110,9 +120,20 @@ def convert_text(text):
         elif section == 'gcode_macro PID_SAVE':
             block = ('[gcode_macro PID_SAVE]\ndescription: Save native Klipper calibration\n'
                      'gcode:\n    SAVE_CONFIG\n\n')
-        elif section == 'gcode_macro ZORTRAX_LIGHT':
-            block = re.sub(r'^([ \t]*)ZORTRAX_SETTING(?=[ \t]+NAME=light_mode\b)',
-                           r'\1ZORTRAX_UI_SETTING', block, flags=re.MULTILINE)
+        elif section in CHOICE_MACROS:
+            key, param = CHOICE_MACROS[section]
+            old_command = (r'^([ \t]*)ZORTRAX_(?:UI_)?SETTING[ \t]+NAME=' + key
+                           + r'[ \t]+VALUE=\{params\.' + param
+                           + r"\s*\|\s*default\([^\r\n{}]*\)\}[ \t]*$")
+            command = ("ZORTRAX_UI_SETTING NAME=%s {%% if '%s' in params %%}"
+                       "VALUE={params['%s']}{%% endif %%}") % (key, param, param)
+            block = re.sub(old_command, lambda match: match[1] + command,
+                           block, flags=re.MULTILINE)
+        elif section == 'gcode_macro ZORTRAX_LANGUAGE':
+            block = re.sub(r'^(\s*ZORTRAX_UI_SETTING NAME=language) VALUE=EN[ \t]*$',
+                           r'\1', block, flags=re.MULTILINE)
+        elif section == 'gcode_macro ZORTRAX_INFORMATION':
+            block = block.replace('REFRESH={params.REFRESH|', "REFRESH={params['REFRESH']|")
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'

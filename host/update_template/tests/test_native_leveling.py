@@ -317,6 +317,19 @@ class NativeLevelingTests(unittest.TestCase):
         self.assertEqual(m300_profile.option(sections['m300_calibration'],'probe_search_margin'),'1')
         self.assertEqual(m300_profile.convert_text(new),new)
 
+    def test_oem_xy_speed_migration_leaves_contact_speeds_and_custom_xy_intact(self):
+        for previous, expected in ((10, 100), (35, 35), (100, 100)):
+            cfg = (f'[m300_calibration]\ntravel_speed: {previous}\n'
+                   'z_speed: 1\nprobe_speed: 0.5\nrelease_speed: 0.5\n')
+            new = m300_profile.convert_text(cfg)
+            h = Harness()
+            h.c.travel_speed = float(m300_profile.option(new, 'travel_speed'))
+            steps = list(h.c._point_steps(0))
+            self.assertEqual(steps[2][2], expected)
+            self.assertEqual((steps[0][2], steps[-2][2]), (1., 1.))
+            self.assertIn('probe_speed: 0.5\nrelease_speed: 0.5', new)
+            self.assertEqual(m300_profile.convert_text(new), new)
+
     def test_shared_presenter_is_live_for_native_board(self):
         h=Harness();p=M300Procedures.__new__(M300Procedures)
         p.reactor=h.reactor;p.timer='present';p.live=False

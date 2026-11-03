@@ -24,6 +24,13 @@ The host seeds a session from its monotonic clock rather than copying MCU
 SysTick state. Status and committed geometry expose the actual offset.
 Every resulting point is checked against native bounds before actuation.
 
+The OEM point routine (0x0800DD28 in firmware 1.3.1) sets F6000 for the
+horizontal move, equivalent to 100 mm/s. The native M07 default requests
+100 mm/s between points, subject to the Klipper planner limits. The host
+installer migrates the previous 10 mm/s setting and preserves other explicit
+XY settings. Z lift, contact approach and release use their separate speeds.
+`ZORTRAX_CALIBRATION_STATUS` reports all four requested speeds in mm/s.
+
 ## Wizard
 
 1. Start Maintenance → Autocalibration or `ZORTRAX_LEVEL`. Require an idle

@@ -5,6 +5,10 @@ Fluidd. Both surfaces use the same English labels, saved choices and action
 handlers. The `<` mark identifies the current choice. The encoder scrolls
 through the available rows.
 
+In Fluidd, the setting macros open button dialogs when called without
+arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`
+still apply the selected value directly.
+
 | Settings page | Choices | Fluidd macro |
 |---|---|---|
 | Light | Dynamic, White, Disabled | `ZORTRAX_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |

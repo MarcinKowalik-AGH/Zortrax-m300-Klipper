@@ -41,7 +41,7 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 **MCU R14.6 + host R16.11**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Stage the host update on Orange Pi from the `r16.11-factory-info` branch.
+Stage the host update on Orange Pi from the `r16.11-leveling-choices` branch.
 MCU R14.6 adds a read-only query for the factory serial and OEM print time.
 See [Settings and Information](docs/en/SETTINGS_INFORMATION.md).
 

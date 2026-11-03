@@ -82,7 +82,9 @@ def main():
         'ZORTRAX_SLEEP_MODE STATE=DISABLED\nZORTRAX_MODELS_SORT MODE=NAME_CASE\n'
         'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
         'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
-        'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n')
+        'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n'
+        'ZORTRAX_LIGHT\nZORTRAX_BUZZER\nZORTRAX_SLEEP_MODE\nZORTRAX_MODELS_SORT\n'
+        'ZORTRAX_SETTINGS_STATUS\n')
     model_fixtures = {
         'native_models_gcode': ('Model text.gcode',
             b'G90\nG28\nG1 X155 Y158 Z5 F600\nM400\nTURN_OFF_HEATERS', 'G-code'),
@@ -182,7 +184,7 @@ def main():
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
                         if 'M300_SETTINGS ' in line]
-            view = views[-2]
+            view = views[-3]
             assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',
                                             sort_mode='NAME_CASE', language='EN'), view
             displays = [json.loads(line.split('M300_DISPLAY ', 1)[1]) for line in text.splitlines()
@@ -190,6 +192,7 @@ def main():
             assert [d['sleep_enabled'] for d in displays] == [True, False, True], displays
             expected_release = json.loads(args.dictionary.read_text())['config']['M300_MCU_RELEASE']
             assert view['information']['mcu_release'] == expected_release
+            assert views[-2]['settings'] == views[-1]['settings'], views[-2:]
             assert 'M300_INFORMATION ' in text
             assert 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper' in text
         if name in model_fixtures:
