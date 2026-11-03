@@ -5,9 +5,9 @@
 This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.7.
 Factory serial and OEM print time require R14.6 or later.
 OLED hold-to-move with local button release stop requires R14.7.
-It accepts recognized R15.3 through R16.11 baselines, including the browser
-modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
-the existing module hashes before it writes anything.
+It accepts recognized baselines from R15.3 through the initial R16.12 build,
+including the browser modules from the M300 TEST01 v0.13.2 R2 install archive.
+The installer checks the existing module hashes before it writes anything.
 
 ## Install directly from Git on Orange Pi
 

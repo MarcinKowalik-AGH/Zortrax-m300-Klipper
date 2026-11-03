@@ -30,15 +30,22 @@ def motion_fixture():
         heater.target = target
         motion.events.append(('heat', target, wait))
     motion.heaters = NS(set_temperature=set_temperature)
+    rail = NS(get_range=lambda: (0., 315.), get_homing_info=lambda: NS(positive_dir=False))
     kin = NS(get_status=lambda now: {'homed_axes': ''.join(a for a in 'xyz' if a in motion.homed)},
-             rails=[None, None, NS(get_range=lambda: (0., 315.))],
+             rails=[None, None, rail],
              clear_homing_state=lambda axes: motion.homed.difference_update(axes))
+    def set_position(coords, homing_axes=''):
+        position[:] = coords
+        motion.homed.update(homing_axes)
     def manual_move(coords, speed):
+        if coords[2] is not None and 'z' not in motion.homed:
+            raise RuntimeError('Must home axis first')
         motion.events.append(('move', tuple(coords), speed))
         for i, value in enumerate(coords):
             if value is not None:
                 position[i] = value
     motion.toolhead = NS(get_kinematics=lambda: kin, manual_move=manual_move,
+                         set_position=set_position,
                          get_position=lambda: position[:], wait_moves=lambda: None,
                          get_last_move_time=lambda: 1., check_busy=lambda now: (1., 2., True))
     motion.printer = NS(command_error=RuntimeError, is_shutdown=lambda: False,
@@ -83,12 +90,30 @@ class NormalHomingTests(unittest.TestCase):
         ztargets = [e[1][2] for e in m.events if e[0] == 'move' and e[1][2] is not None]
         self.assertEqual(ztargets, [5., 5., 5.])
 
-    def test_active_pc7_without_known_z_refuses_before_heat_or_motion(self):
+    def test_active_pc7_without_known_z_releases_before_heat_and_xy(self):
+        m = motion_fixture()
+        m.homed.clear()
+        probe_states = iter([True, False, False, False])
+        z_homed_at_query = []
+        def query(print_time):
+            z_homed_at_query.append('z' in m.homed)
+            return next(probe_states)
+        m.precision.endstop.query_endstop.side_effect = query
+        m.home(axes='xyz')
+        self.assertEqual(z_homed_at_query, [False] * 4)
+        self.assertEqual(m.events[:4], [('move', (None, None, 300.), 1.),
+            ('heat', 180., False), ('home', 'Y'), ('home', 'X')])
+        self.assertEqual(m.events[-3:], [('home', 'Z'),
+            ('move', (None, None, 5.), 5.), ('heat', 0., False)])
+        self.assertEqual(m.get_status(1.)['homed_axes'], 'xyz')
+
+    def test_persistent_pc7_without_known_z_stops_after_one_retreat(self):
         m = motion_fixture()
         m.precision.endstop.query_endstop.return_value = True
-        with self.assertRaisesRegex(RuntimeError, 'INITIAL_ACTIVE'):
+        with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
             m.home(axes='xyz')
-        self.assertEqual(m.events, [])
+        self.assertEqual(m.events, [('move', (None, None, 300.), 1.)])
+        self.assertNotIn('z', m.homed)
         self.assertEqual(m.get_status(1.)['failure_phase'], 'Z_CHECK_CONTACT')
 
     def test_homed_active_pc7_gets_one_bounded_retreat_and_recheck(self):
@@ -96,7 +121,7 @@ class NormalHomingTests(unittest.TestCase):
             with self.subTest(reopens=reopens):
                 m = motion_fixture()
                 m.homed.add('z')
-                m.precision.endstop.query_endstop.side_effect = [True, not reopens, False]
+                m.precision.endstop.query_endstop.side_effect = [True, not reopens, False, False]
                 if reopens:
                     m.home(axes='z')
                     self.assertEqual(m.state, 'COMPLETE')
@@ -107,13 +132,42 @@ class NormalHomingTests(unittest.TestCase):
                 self.assertEqual(m.events[0], ('move', (None, None, 300.), 1.))
                 m.board.require_motion.assert_called_once()
 
-    def test_contact_that_closes_at_center_blocks_native_z_seek(self):
+    def test_contact_that_closes_at_center_releases_before_native_z_seek(self):
         m = motion_fixture()
-        m.precision.endstop.query_endstop.side_effect = [False, True]
-        with self.assertRaisesRegex(RuntimeError, 'INITIAL_ACTIVE'):
+        m.precision.endstop.query_endstop.side_effect = [False, False, True, False]
+        m.home(axes='z')
+        self.assertEqual(m.events[1:4], [('move', (150., 158., None), 50.),
+            ('move', (None, None, 300.), 1.), ('home', 'Z')])
+
+    def test_contact_reclosed_after_retreat_refuses_xy_and_another_retreat(self):
+        m = motion_fixture()
+        m.precision.endstop.query_endstop.side_effect = [True, False, True]
+        with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE: PC7 closed again'):
+            m.home(axes='xyz')
+        self.assertEqual(m.events, [('move', (None, None, 300.), 1.),
+            ('heat', 180., False), ('heat', 0., False)])
+        self.assertNotIn('z', m.homed)
+
+    def test_retreat_respects_native_z_limit(self):
+        for z, expected_moves in ((314.75, [('move', (None, None, 315.), 1.)]),
+                                  (315., [])):
+            with self.subTest(z=z):
+                m = motion_fixture()
+                m.toolhead.set_position([100., 100., z, 17.])
+                m.precision.endstop.query_endstop.return_value = True
+                with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
+                    m.home(axes='z')
+                self.assertEqual(m.events, expected_moves)
+                self.assertNotIn('z', m.homed)
+
+    def test_failed_retreat_discards_temporary_z_frame(self):
+        m = motion_fixture()
+        m.precision.endstop.query_endstop.return_value = True
+        m.toolhead.manual_move = Mock(side_effect=RuntimeError('move rejected'))
+        with self.assertRaisesRegex(RuntimeError, 'move rejected'):
             m.home(axes='z')
-        self.assertNotIn(('home', 'Z'), m.events)
-        self.assertEqual(m.get_status(1.)['failure_phase'], 'HOME_Z_NATIVE_PROBE')
+        self.assertEqual(m.events, [])
+        self.assertNotIn('z', m.homed)
 
     def test_default_idle_disables_xye_only_and_keeps_z_homed(self):
         m = motion_fixture()

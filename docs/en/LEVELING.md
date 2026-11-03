@@ -121,11 +121,13 @@ timing or measured travel on a stock board before changing those setpoints.
 `ZORTRAX_MOTION_STATUS` reports the installed rail speeds, Z cap and contact
 traverse, refinement and clearance speeds.
 
-R16.12 reads PC7 before the homing sequence and again at the Z seek. An
-already closed contact can receive one positive-Z retreat of at most 1 mm at
-1 mm/s only when all three axes have a known native reference. If Z is
-unknown or the contact stays closed, homing stops with an explicit reason.
-The previous native seek, retract and refinement speeds remain in place.
+Z homing reads PC7 before preheat, before XY motion and at the Z seek. A
+closed contact allows one positive-Z retreat per homing session, capped at
+1 mm and 1 mm/s and limited by the native Z travel range. When Z is unhomed,
+Klipper clears the temporary frame used to queue this move before checking
+PC7 again. Native homing continues after an open reading and establishes
+the Z reference through the normal contact sequence. A contact that stays
+closed or closes again after the retreat stops the session with `NO_RELEASE`.
 
 The default idle script shuts down heaters, releases X/Y/E and keeps an
 already energized Z motor. It clears the X/Y references. The installer
