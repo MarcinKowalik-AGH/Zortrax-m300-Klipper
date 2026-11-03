@@ -23,12 +23,16 @@ MODEL = 'M300_CLASSIC'
 DEFAULT_SETTINGS = dict(language='EN', light_mode='DYNAMIC', sound=True,
                         sleep_mode='15MIN', sleep_light=False,
                         sort_mode='NAME', full_platform_preheat=False)
+MAX_BRIGHTNESS = 16
+BRIGHTNESS_LEVELS = tuple(range(1, MAX_BRIGHTNESS + 1))
+BRIGHTNESS_KEYS = frozenset(('oled_brightness', 'led_brightness'))
 CHOICES = dict(language=('EN', 'PL', 'FR', 'DE', 'ES'),
                light_mode=('DYNAMIC', 'WHITE', 'DISABLE'),
                sound=(False, True), sleep_mode=('OFF', '15MIN', '30MIN', '60MIN'),
                sleep_light=(False, True),
                sort_mode=('NAME', 'NAME_CASE', 'DATE', 'SIZE'),
                full_platform_preheat=(False, True))
+CHOICES.update(dict.fromkeys(BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS))
 SLEEP_SECONDS = {'OFF': 0, '15MIN': 900, '30MIN': 1800, '60MIN': 3600}
 LABELS = {'DYNAMIC': 'Dynamic light', 'WHITE': 'White light',
           'DISABLE': 'Light disabled', 'OFF': 'Disabled', '15MIN': '15 minutes',
@@ -166,9 +170,10 @@ def _validate_payload(data):
     _identity(**data['identity'])
     if type(data['revision']) is not int or not 0 <= data['revision'] < 2**63:
         raise NVMError('invalid revision')
-    if set(data['settings']) != set(DEFAULT_SETTINGS):
+    settings = data['settings']
+    if not isinstance(settings, dict) or not DEFAULT_SETTINGS.keys() <= settings.keys() <= CHOICES.keys():
         raise NVMError('invalid settings keys')
-    for key, value in data['settings'].items():
+    for key, value in settings.items():
         validate_setting(key, value)
     if set(data['counters']) != {'completed_jobs', 'print_seconds'}:
         raise NVMError('invalid counters')
@@ -451,6 +456,8 @@ class M300NVM:
     def get_setting(self, name, default=None):
         if name == 'language':
             return 'EN'
+        if name in BRIGHTNESS_KEYS and default is None:
+            default = MAX_BRIGHTNESS
         return self.store._published['settings'].get(name, default)
 
     def is_busy(self):
@@ -526,7 +533,7 @@ class M300NVM:
             validate_setting(name, value)
         except NVMError as exc:
             raise self.printer.command_error(str(exc))
-        if self.store._published['settings'][name] == value:
+        if self.get_setting(name) == value:
             return self.ui_snapshot()
         result = self._write(lambda data: data['settings'].__setitem__(name, value))
         self.printer.send_event('m300:setting_changed', name, value)

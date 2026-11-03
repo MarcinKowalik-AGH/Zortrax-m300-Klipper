@@ -16,7 +16,7 @@ class DisplayStream:
             'normal': normal, 'dim': dim, 'mode': AWAKE, 'desired': AWAKE,
             'ops': deque(), 'pending': None, 'transaction': None,
             'wake_frame': None, 'restart': False, 'changes': 0,
-            'contrast': 159})
+            'contrast': 159, 'dim_override': None})
 
     def __getattr__(self, name):
         return getattr(self._base, name)
@@ -46,6 +46,24 @@ class DisplayStream:
     def display_changes(self):
         return self._local['changes']
 
+    @property
+    def display_contrast(self):
+        return self._local['contrast']
+
+    def set_contrast(self, normal, dim):
+        self._local.update(normal=normal, dim=dim)
+
+    def set_dim_override(self, contrast):
+        changed = self._local['dim_override'] != contrast
+        self._local['dim_override'] = contrast
+        return changed
+
+    def _target_contrast(self):
+        s = self._local
+        if s['desired'] == AWAKE:
+            return s['normal']
+        return s['dim'] if s['dim_override'] is None else s['dim_override']
+
     def set_mode(self, mode):
         if mode not in (AWAKE, DIM, OFF):
             raise ValueError('Unknown display mode')
@@ -55,7 +73,7 @@ class DisplayStream:
         s = self._local
         s['ops'].clear()
         s.update(pending=None, transaction=None, wake_frame=None, restart=False,
-                 mode=AWAKE, desired=AWAKE, contrast=159)
+                 mode=AWAKE, desired=AWAKE, contrast=159, dim_override=None)
 
     def start(self, now):
         # Never drop an outstanding command or its data byte before reinit.
@@ -89,8 +107,8 @@ class DisplayStream:
                 and not getattr(b, '_held', None)
                 and not b.restart_requested)
 
-    def _queue(self, goal, stage, operations):
-        self._local['transaction'] = (goal, stage)
+    def _queue(self, goal, stage, operations, contrast=None):
+        self._local['transaction'] = (goal, stage, contrast)
         self._local['ops'].extend(operations)
 
     def _finish(self):
@@ -98,9 +116,9 @@ class DisplayStream:
         transaction, s['transaction'] = s['transaction'], None
         if transaction is None:
             return
-        goal, stage = transaction
-        if goal != OFF:
-            s['contrast'] = s['normal'] if goal == AWAKE else s['dim']
+        goal, stage, contrast = transaction
+        if contrast is not None:
+            s['contrast'] = contrast
         if stage == 'prepare_wake':
             # Update visible RAM while AE is still in force, then send AF.
             self._base.previous = None
@@ -162,16 +180,15 @@ class DisplayStream:
                 s['wake_frame'] = None
             else:
                 return b.step(now)
-        target_contrast = s['normal'] if goal == AWAKE else s['dim']
+        target_contrast = self._target_contrast()
         if (goal != s['mode'] or
                 (goal != OFF and s['contrast'] != target_contrast)):
             if goal == OFF:
                 self._queue(goal, 'apply', [(0, bytes([0xae]))])
             else:
-                contrast = s['normal'] if goal == AWAKE else s['dim']
                 stage = 'prepare_wake' if s['mode'] == OFF else 'apply'
                 self._queue(goal, stage, [(0, bytes([0xc1])),
-                                          (1, bytes([contrast]))])
+                                          (1, bytes([target_contrast]))], target_contrast)
             return self._emit(now)
         # Preserve the host lease and encoder, but send no hidden RAM frames.
         if s['mode'] == OFF:
@@ -186,7 +203,7 @@ class DisplayStream:
             return max(now + .0001, getattr(b, 'budget_at', now))
         if s['wake_frame'] is not None:
             return b.next_wakeup(now) if hasattr(b, 'next_wakeup') else now + .002
-        contrast = s['normal'] if s['desired'] == AWAKE else s['dim']
+        contrast = self._target_contrast()
         if (b.enabled and b.ready and (s['mode'] != s['desired']
                 or (s['desired'] != OFF and s['contrast'] != contrast))):
             return now + .0001

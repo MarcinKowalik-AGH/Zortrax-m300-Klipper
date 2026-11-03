@@ -16,7 +16,7 @@ STOP_ROWS = (('No', 'keep'), ('Yes, stop the print', 'stop'))
 
 
 @lru_cache(maxsize=48)
-def frame_for(frame_type, title, lines, selected, percent):
+def frame_for(frame_type, title, lines, selected):
     frame = frame_type()
     draw_text(frame, (256 - width(title)) // 2, 1, title)
     for index, line in enumerate(lines):
@@ -28,12 +28,6 @@ def frame_for(frame_type, title, lines, selected, percent):
             for dy in range(-2, 3):
                 frame.pixel(6 + 3 - abs(dy), y + 7 + dy)
         draw_text(frame, 16, y, line)
-    if percent is not None:
-        filled = 232 * percent // 100
-        for y in range(56, 60):
-            for x in range(12, 244):
-                if x < 12 + filled or y in (56, 59) or x in (12, 243):
-                    frame.pixel(x, y, 15 if x < 12 + filled else 4)
     return frame.wire_bytes()
 
 
@@ -113,7 +107,7 @@ class M300PrintUI:
                 return (key, token)
         return None
 
-    def render(self, now, panel_context, frame_type):
+    def render(self, now, panel_context, frame_type, *, show_status):
         view = self.view(now)
         if view is None:
             self.frames.clear()
@@ -124,16 +118,15 @@ class M300PrintUI:
             self.selected = 0
             self.error = None
             self.last_key = key
+            if key[1] == 'PRINTING':
+                show_status()
         _, phase, filename, _ = key
+        if phase == 'PRINTING':
+            return None
         filename = clean_label(filename, 96)
         rows = ()
         selected = -1
-        percent = None
-        if phase == 'PRINTING':
-            percent = max(0, min(100, int(self.sd.progress() * 100)))
-            title = 'PRINTING'
-            lines = (filename, '%d%%' % percent, 'Hold knob 10 s to pause')
-        elif phase == 'PAUSED':
+        if phase == 'PAUSED':
             title = 'PAUSE MENU'
             rows = PAUSE_ROWS
             selected = self.selected
@@ -156,11 +149,18 @@ class M300PrintUI:
                      'Press to close')
         if self.error:
             lines = (*lines[:3], clean_label(self.error, 80))
-        wire = frame_for(frame_type, title, lines, selected, percent)
-        receipt = (wire, panel_context, key, rows, selected)
+        wire = frame_for(frame_type, title, lines, selected)
+        self._remember_frame((wire, panel_context, key, rows, selected))
+        return wire
+
+    def present_status(self, wire, panel_context):
+        key = self.last_key
+        if key is not None and key[1] == 'PRINTING':
+            self._remember_frame((wire, panel_context, key, (), -1))
+
+    def _remember_frame(self, receipt):
         if not self.frames or self.frames[-1] != receipt:
             self.frames.append(receipt)
-        return wire
 
     def receipt(self, stream, panel_context):
         if not stream.ready or not stream.enabled:
@@ -169,18 +169,20 @@ class M300PrintUI:
         return next((item for item in reversed(self.frames)
                      if item[0] == previous and item[1] == panel_context), None)
 
-    def panel(self, events, received_at, now, receipt, guard, *, reverse=False):
+    def panel(self, events, received_at, now, receipt, guard, *, reverse=False,
+              printing_status=False):
         view = self.view(now)
         key, token = view if view else (None, None)
         verified = (receipt is not None and receipt[2] == key and guard())
         phase = key[1] if key else None
-        wants_hold = phase == 'PRINTING' or phase == 'DONE' and token is not None
+        status_hold = phase == 'PRINTING' and printing_status
+        wants_hold = status_hold or phase == 'DONE' and token is not None
         consumed, fired = self.hold.update(events, received_at, now,
                                           receipt[1:3] if verified else None,
-                                          active=wants_hold)
+                                          active=wants_hold, allow_short=status_hold)
         if fired:
             self._schedule('pause' if phase == 'PRINTING' else 'reprint', key, guard)
-        if view is None:
+        if phase is None or phase == 'PRINTING':
             return consumed
         if verified and events is not None:
             if (phase == 'DONE' and not events['pressed'] and events['shorts'] == 1

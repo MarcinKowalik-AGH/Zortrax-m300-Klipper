@@ -11,6 +11,8 @@ import math
 import os
 import urllib.request
 
+from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS
+
 PROJECT_URL = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
 HOST_VERSION = 'R16.12'
 UPSTREAM = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
@@ -20,7 +22,9 @@ SETTINGS = (
     ('sleep_mode','Sleep mode',(('15MIN','Enabled'),('OFF','Disabled'))),
     ('language','Language',(('EN','English'),)),
     ('sort_mode','Models sorting',(('DATE','Date'),('NAME','Name'),
-                                  ('NAME_CASE','Case-sensitive name'),('SIZE','File size'))))
+                                  ('NAME_CASE','Case-sensitive name'),('SIZE','File size'))),
+    ('oled_brightness', 'OLED brightness', tuple((n, str(n)) for n in BRIGHTNESS_LEVELS)),
+    ('led_brightness', 'LED brightness', tuple((n, str(n)) for n in BRIGHTNESS_LEVELS)))
 CHOICES = {key:values for key,_,values in SETTINGS}
 TITLES = {key:title for key,title,_ in SETTINGS}
 PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
@@ -314,6 +318,10 @@ class M300Settings:
         elif key=='sleep_mode':
             if raw not in ('ENABLED','DISABLED'):raise gcmd.error('Use Enabled or Disabled')
             value='15MIN' if raw=='ENABLED' else 'OFF'
+        elif key in BRIGHTNESS_KEYS:
+            if raw not in {str(level) for level in BRIGHTNESS_LEVELS}:
+                raise gcmd.error('Use a brightness level from 1 to 16')
+            value = int(raw)
         else:value='DISABLE' if key=='light_mode' and raw=='DISABLED' else raw
         self.set_option(key,value)
         now = self.reactor.monotonic()

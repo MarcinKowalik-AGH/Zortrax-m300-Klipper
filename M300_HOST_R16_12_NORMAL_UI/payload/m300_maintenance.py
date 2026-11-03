@@ -8,6 +8,8 @@ import json
 import logging
 import math
 
+from .m300_nvm import MAX_BRIGHTNESS
+
 IDLE_JOB = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
 
 
@@ -385,12 +387,14 @@ class M300Maintenance:
         if name == 'sound' and not value:
             self._pin('m300_buzzer', 0)
             self._beep_until = 0.
-        if name == 'light_mode':
+        if name in ('light_mode', 'led_brightness'):
             self._indicators(self.reactor.monotonic())
 
     def _pin(self, name, value):
         output = self.printer.lookup_object('output_pin ' + name, None)
         if output is not None:
+            if not getattr(output, 'is_pwm', True):
+                value = bool(value)
             output.gcrq.send_async_request(float(value))
 
     def click(self):
@@ -402,23 +406,27 @@ class M300Maintenance:
     def _dynamic_lights(self, now):
         if self.state == 'FAULT':
             return (1, 0, 0)
-        thermal = self.printer.lookup_object('m300_thermal', None)
-        if thermal is not None and thermal.ready:
-            status = thermal.get_status(now)
-            rgb = thermal.led_rgb(now)
-            if (status['busy'] or status['state'] == 'FAULT' or rgb == (0, 0, 1)
-                    or status.get('native_heating') is True):
-                return rgb
         busy = self.is_busy()
+        paused = False
         stats = self.printer.lookup_object('print_stats', None)
         if stats is not None:
             try:
                 native_state = stats.get_status(now).get('state')
                 if native_state == 'error':
                     return (1, 0, 0)
-                busy = busy or native_state in ('printing', 'paused')
+                paused = native_state == 'paused'
+                busy = busy or native_state == 'printing'
             except Exception:
                 return (1, 0, 0)
+        thermal = self.printer.lookup_object('m300_thermal', None)
+        if thermal is not None and thermal.ready:
+            status = thermal.get_status(now)
+            rgb = thermal.led_rgb(now)
+            if status['state'] == 'FAULT' or rgb == (1, 0, 0):
+                return (1, 0, 0)
+            if not paused and (status['busy'] or rgb == (0, 0, 1)
+                               or status.get('native_heating') is True):
+                return rgb
         for name in ('m300_job', 'm300_filament', 'm300_calibration',
                      'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans'):
             obj = self.job if name == 'm300_job' else self.printer.lookup_object(name, None)
@@ -435,6 +443,8 @@ class M300Maintenance:
                 busy = busy or status['busy'] or state in ('SLEEP', 'SLEEPING')
             except Exception:
                 return (1, 0, 0)
+        if paused:
+            return (1, 0, 1)
         return (1, 1, 0) if busy else (0, 1, 0)
 
     def _indicators(self, now):
@@ -449,6 +459,8 @@ class M300Maintenance:
             values = (1, 1, 1)
         else:
             values = self._dynamic_lights(now)
+        brightness = self._setting('led_brightness', MAX_BRIGHTNESS) / MAX_BRIGHTNESS
+        values = tuple(value * brightness for value in values)
         if values != self._lights:
             for color, value in zip('rgb', values):
                 self._pin('m300_led_' + color, value)
