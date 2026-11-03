@@ -321,7 +321,8 @@ class M300OLED:
                 return
             if print_ui is not None and print_ui.panel(events, received_at, now,
                                                         print_receipt, print_guard,
-                                                        reverse=getattr(self, 'menu_reverse', False)):
+                                                        reverse=getattr(self, 'menu_reverse', False),
+                                                        printing_status=received_page == 'status'):
                 if events and any(events[k] for k in ('delta', 'shorts', 'longs')):
                     self.render_at = 0.
                 return
@@ -859,12 +860,13 @@ class M300OLED:
         previous_wire = self._render_wire
         previous_context = self._presented_context
         maintenance_wire = None
+        print_ui = self.printer.lookup_object('m300_print_ui', None)
+        print_wire = (print_ui.render(now, self._input_context(), Frame,
+                                      show_status=self._show_status) if print_ui else None)
         ui = self.printer.lookup_object('m300_menu_ui', None)
         leveling_frame = getattr(ui, 'leveling_frame', None)
         leveling_wire = (leveling_frame(self.page, now, Frame)
                          if leveling_frame is not None and not self.message else None)
-        print_ui = self.printer.lookup_object('m300_print_ui', None)
-        print_wire = print_ui.render(now, self._input_context(), Frame) if print_ui else None
         if print_wire is not None:
             key = ('native_print_context', print_wire)
         elif self.message:
@@ -915,6 +917,8 @@ class M300OLED:
         self.stream.request(self._render_wire,
                             urgent=self._user_refresh_pending)
         context = self._input_context()
+        if print_ui is not None and key[0] == 'klipper_default':
+            print_ui.present_status(self._render_wire, context)
         if context != previous_context or self._render_wire != previous_wire:
             # A new invisible token (or a changed offscreen row) is not a new
             # displayed consent. Keep the previous actions until the operator

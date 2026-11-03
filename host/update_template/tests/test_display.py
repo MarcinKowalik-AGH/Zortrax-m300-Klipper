@@ -68,6 +68,20 @@ class Harness:
 
 
 class StreamTests(unittest.TestCase):
+    def test_contrast_change_during_transaction_remembers_value_sent(self):
+        h = Harness()
+        h.stream.set_mode(DIM)
+        h.stream.set_dim_override(80)
+        self.assertIsNotNone(h.once())  # Send C1.
+        self.assertIsNotNone(h.once())  # Send the queued contrast value.
+        h.stream.set_dim_override(40)
+        h.once()
+        self.assertEqual(h.stream.display_contrast, 80)
+        h.once()
+        h.once()
+        self.assertEqual(h.stream.display_contrast, 40)
+        self.assertEqual(h.commands(), [0xc1, 0xc1])
+
     def test_dim_does_not_reset_gate_or_change_frame(self):
         for fast in (True, False):
             with self.subTest(fast=fast):
@@ -289,6 +303,23 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
         self.go_off()
         self.assertEqual(self.module.stream.requested_mode, OFF)
+
+    def test_moon_fades_over_acknowledged_notice_and_then_turns_off(self):
+        self.at(300.)
+        stream = self.module.stream
+        stream._base.ready = True
+        stream._base.previous = self.module.notice_wire
+        stream._local['mode'] = DIM
+        self.at(300.5)
+        start = stream._target_contrast()
+        self.at(305.5)
+        self.assertLess(stream._target_contrast(), start)
+        stream._local['pending'] = (123, 311., 0.)
+        self.at(310.25)
+        self.assertEqual(stream._target_contrast(), 1)
+        self.assertEqual(self.module._notice_shown_at, 300.5)
+        self.at(310.5)
+        self.assertEqual(stream.requested_mode, OFF)
 
     def test_printing_and_paused_dim_after_300_seconds(self):
         for state in ('printing', 'paused'):

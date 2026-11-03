@@ -20,10 +20,13 @@ def printing():
         h.sd.print_stats = NS(state='printing', filename='one.gcode')
         h.sd.current_file = NS(name='one.gcode')
         h.sd.work_timer = object()
-        h.sd.progress = lambda: .12
         h.ui_print = M300PrintUI(h.config)
         h.ui_print._ready()
         h.objects['m300_print_ui'] = h.ui_print
+        h.oled.page = 'status'
+        h.oled.menu_reverse = False
+        h.status_wire = bytes([17]) * 8192
+        h.oled.status_screen = NS(render=lambda now: h.status_wire)
         h.commands = []
         h.gcode.run_script_from_command = h.commands.append
         h.replayed = []
@@ -40,7 +43,8 @@ def acknowledged(h):
 
 
 def panel(h, event, receipt=None):
-    return h.ui_print.panel(event, h.now, h.now, receipt, lambda: True)
+    return h.ui_print.panel(event, h.now, h.now, receipt, lambda: True,
+                            printing_status=h.oled.page == 'status')
 
 
 def pause(h):
@@ -50,6 +54,29 @@ def pause(h):
 
 
 class PrintContextTests(unittest.TestCase):
+    def test_status_short_click_and_menu_navigation_during_print(self):
+        with printing() as h:
+            def deliver(event):
+                h.oled.encoder.update = lambda params, received: event
+                h.oled._panel({'#receive_time': h.now})
+                h.callbacks.pop(0)(h.now)
+                h.now += .25
+
+            h.oled.page, h.menu.page = 'm04', 'settings'
+            self.assertEqual(acknowledged(h)[0], h.status_wire)
+            self.assertEqual(h.oled.page, 'status')
+            deliver(sample(pressed=True, presses=1))
+            deliver(sample(shorts=1, releases=1))
+            self.assertEqual(h.oled.page, 'm04')
+            self.assertIsNone(acknowledged(h))
+            _, rows = h.menu.rows(h.now)
+            self.assertGreater(len(rows), 1)
+            old_selection = h.oled.selection
+            deliver(sample(delta=1))
+            self.assertNotEqual(h.oled.selection, old_selection)
+            self.assertFalse(h.commands)
+            self.assertEqual(h.sd.print_stats.state, 'printing')
+
     def test_oled_hold_calls_native_pause_once_and_consumes_release(self):
         with printing() as h:
             for i in range(42):

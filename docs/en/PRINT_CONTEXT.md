@@ -2,7 +2,7 @@
 
 | OLED context | Operator action | Shared native behavior |
 |---|---|---|
-| PRINTING | Hold the knob continuously for 10 seconds | PAUSE stops the native virtual SD worker and saves the pause state. Fluidd Pause leads to the same menu. |
+| Klipper status during printing | Short press to open the menu. Hold the knob for 10 seconds to pause. | PAUSE stops the native virtual SD worker and saves the pause state. Fluidd Pause leads to the same menu. |
 | PAUSE MENU | Resume the print | RESUME restores the saved position and resumes the same file. |
 | PAUSE MENU | Change the material | The existing CHANGE wizard owns the screen until the change ends. The print remains paused for explicit Resume. |
 | PAUSE MENU | Stop the print → Yes, stop the print | CANCEL_PRINT turns off the heaters and delegates cancellation to native Klipper. Fluidd Cancel uses the same command. |
@@ -20,6 +20,7 @@ frame for the current print. Releasing, losing the panel link, waking a
 hidden display or switching print identity ends the gesture. A release
 from the pause hold cannot select a row in the new menu. Ordinary menu
 navigation keeps its existing knob behavior.
+To pause from another OLED menu, return to Klipper status first.
 
 ## Fluidd
 

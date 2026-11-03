@@ -6,8 +6,9 @@ import math
 
 from .m300_display_stream import AWAKE, DIM, OFF, DisplayStream
 from .m300_display_oem import ENTERING_TEXT, load_moon, sleep_wire
+from .m300_nvm import MAX_BRIGHTNESS
 
-REVISION = '0.3.0-M300-SLEEP-SETTING'
+REVISION = '0.4.0-M300-BRIGHTNESS'
 
 
 class M300Display:
@@ -21,6 +22,7 @@ class M300Display:
             raise config.error('Display timeout must be finite')
         self.normal = config.getint('normal_contrast', 159, minval=1, maxval=159)
         self.dim = config.getint('dim_contrast', 32, minval=1, maxval=self.normal)
+        self.brightness = MAX_BRIGHTNESS
         self.notice_seconds = config.getfloat('notice_seconds', 10.,
                                              minval=1., maxval=60.)
         if not math.isfinite(self.notice_seconds):
@@ -35,6 +37,7 @@ class M300Display:
         self.phase = AWAKE
         self.notice_wire = None
         self._notice_shown_at = None
+        self._notice_start_contrast = None
         self._presentation_wait = False
         self._maintenance_asleep = False
         self._consume_gesture = False
@@ -145,6 +148,8 @@ class M300Display:
             self.connected, self.error = True, None
             nvm = self.printer.lookup_object('m300_nvm', None)
             self.sleep_enabled = nvm is None or nvm.get_setting('sleep_mode', '15MIN') != 'OFF'
+            if nvm is not None:
+                self._set_brightness(nvm.get_setting('oled_brightness', MAX_BRIGHTNESS))
             self._consume_gesture = False
             self.activity('ready')
             self.reactor.update_timer(self.timer, self.reactor.NOW)
@@ -171,6 +176,15 @@ class M300Display:
             self.sleep_enabled = value != 'OFF'
             # Use the existing notice/wake/ACK path; preserve configured times.
             self.activity('sleep_setting')
+        elif name == 'oled_brightness' and self.stream is not None:
+            self._set_brightness(value)
+            self.activity('brightness_setting')
+
+    def _set_brightness(self, value):
+        self.brightness = value
+        self.stream.set_contrast(
+            max(1, round(self.normal * value / MAX_BRIGHTNESS)),
+            max(1, round(self.dim * value / MAX_BRIGHTNESS)))
 
     def activity(self, source):
         if not self.connected:
@@ -191,6 +205,7 @@ class M300Display:
     def _leave_notice(self):
         if self.phase == 'ENTERING_SLEEP':
             self._notice_shown_at = None
+            self.stream.set_dim_override(None)
             self._presentation_wait = True
             self._invalidate_view()
 
@@ -205,7 +220,33 @@ class M300Display:
     def _begin_notice(self):
         self.phase = 'ENTERING_SLEEP'
         self._notice_shown_at = None
+        self._notice_start_contrast = self.stream.display_contrast
+        self.stream.set_dim_override(self._notice_start_contrast)
         self._invalidate_view()
+
+    def _notice_mode(self, now):
+        b = self.stream._base
+        if not b.ready or b.previous != self.notice_wire:
+            # Reinitialization requires a fresh acknowledged moon frame.
+            self._notice_shown_at = None
+            self.stream.set_dim_override(self._notice_start_contrast)
+            return DIM
+        if self._notice_shown_at is None:
+            if (self.stream.display_mode != DIM or b.operations is not None
+                    or self.stream.pending or self.stream.inflight):
+                return DIM
+            self._notice_shown_at = now
+        fraction = (now - self._notice_shown_at) / self.notice_seconds
+        if fraction >= 1.:
+            self.stream.set_dim_override(None)
+            self.phase = OFF
+            return OFF
+        step = int(fraction * MAX_BRIGHTNESS)
+        contrast = 1 + round((self._notice_start_contrast - 1)
+                             * (1. - step / (MAX_BRIGHTNESS - 1)))
+        if self.stream.set_dim_override(contrast):
+            self.reactor.update_timer(self.oled.timer, self.reactor.NOW)
+        return DIM
 
     def _maintenance_sleep(self, now):
         maintenance = self.printer.lookup_object('m300_maintenance', None)
@@ -271,22 +312,7 @@ class M300Display:
             desired = DIM if now - self.last_activity >= self.timeout else AWAKE
             self.phase = desired
         elif self.phase == 'ENTERING_SLEEP':
-            desired = DIM
-            # Start the visible notice duration only after the notice frame
-            # and its contrast have been acknowledged by the existing stream.
-            b = self.stream._base
-            if (b.ready and b.previous == self.notice_wire
-                    and self.stream.display_mode == DIM
-                    and b.operations is None and not self.stream.pending
-                    and not self.stream.inflight):
-                if self._notice_shown_at is None:
-                    self._notice_shown_at = now
-                elif now - self._notice_shown_at >= self.notice_seconds:
-                    self.phase, desired = OFF, OFF
-            else:
-                # A transport reinitialization may replace/clear the frame.
-                # Count only an uninterrupted, acknowledged visible notice.
-                self._notice_shown_at = None
+            desired = self._notice_mode(now)
         elif now - self.last_activity >= self.timeout:
             if self.phase == OFF:
                 desired = OFF
@@ -308,6 +334,8 @@ class M300Display:
                 'mode': self.stream.display_mode if self.stream else 'UNAVAILABLE',
                 'requested_mode': self.stream.requested_mode if self.stream else None,
                 'normal_contrast': self.normal, 'dim_contrast': self.dim,
+                'brightness': self.brightness,
+                'applied_contrast': self.stream.display_contrast if self.stream else None,
                 'phase': self.phase, 'notice_seconds': self.notice_seconds,
                 'sleep_enabled': self.sleep_enabled,
                 'notice': ENTERING_TEXT if self.phase == 'ENTERING_SLEEP' else None,

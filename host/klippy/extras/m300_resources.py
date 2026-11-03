@@ -138,6 +138,7 @@ class M300Resources:
             raise self.config.error('M300 all four drivers must share one active-HIGH PD14 enable object')
         if 'PD14' not in active or active['PD14']['invert']:
             raise self.config.error('M300 PD14 enable must be active HIGH')
+        rgb_pwm_count = 0
         for section, assignments in WIRING.items():
             cfg = self.config.getsection(section)
             for option, expected in assignments.items():
@@ -151,8 +152,11 @@ class M300Resources:
                     if not params['invert'] or params['pullup'] != 1:
                         raise self.config.error('M300 endstop/probe requires pullup and active LOW: ' + section)
                 if section.startswith('output_pin '):
-                    if params['invert'] or cfg.getboolean('pwm', False):
-                        raise self.config.error('M300 RGB/buzzer P01 uses active-HIGH digital outputs')
+                    pwm = cfg.getboolean('pwm', False)
+                    if (params['invert'] or pwm and (section == 'output_pin m300_buzzer'
+                                                     or cfg.getboolean('hardware_pwm', False))):
+                        raise self.config.error('M300 RGB/buzzer must be active HIGH; only RGB supports software PWM')
+                    rgb_pwm_count += int(pwm)
                     if cfg.getfloat('value', 0.) != 0. or cfg.getfloat('shutdown_value', 0.) != 0.:
                         raise self.config.error('M300 RGB/buzzer must start and shut down LOW')
         z_endstop = ppins.parse_pin(self.config.getsection('stepper_z').get('endstop_pin'), True, True)
@@ -182,7 +186,7 @@ class M300Resources:
             'kinematics': 'cartesian', 'adc_physical_count': 2,
             'adc_owner': 'native_heater_sensors', 'adc_diagnostics': 'same_objects_read_only',
             'adc_pins': ADC_PINS, 'heater_count': 2, 'fan_count': 2,
-            'software_pwm_count': 4, 'hardware_pwm_count': 0,
+            'software_pwm_count': 4 + rgb_pwm_count, 'hardware_pwm_count': 0,
             'physical_steppers': sorted(physical),
             'enable': 'PD14 active-HIGH, ONE shared native object',
             'z_endstop': 'probe:z_virtual_endstop -> one active-LOW PC7 object',

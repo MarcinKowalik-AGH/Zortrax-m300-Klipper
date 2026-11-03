@@ -112,12 +112,15 @@ class SettingsTreeTests(unittest.TestCase):
 
     def test_exact_requested_tree_and_english_only_language(self):
         with session() as h:
-            expected={'settings':['Back','Light','Buzzer','Sleep mode','Language','Models sorting'],
+            expected={'settings':['Back','Light','Buzzer','Sleep mode','Language','Models sorting',
+                                  'OLED brightness','LED brightness'],
                 'setting_light_mode':['Back','Dynamic','White','Disabled'],
                 'setting_sound':['Back','Enabled','Disabled'],
                 'setting_sleep_mode':['Back','Enabled','Disabled'],
                 'setting_language':['Back','English'],
                 'setting_sort_mode':['Back','Date','Name','Case-sensitive name','File size'],
+                'setting_oled_brightness':['Back'] + list(map(str, range(1, 17))),
+                'setting_led_brightness':['Back'] + list(map(str, range(1, 17))),
                 'information':['Back','Firmware version','Printer information','Help']}
             for page,labels in expected.items():
                 h.menu.page=page;title,rows=h.menu.rows(h.now)
@@ -160,7 +163,9 @@ class SettingsTreeTests(unittest.TestCase):
                     ('Buzzer', ('Disabled', 'Enabled')),
                     ('Sleep mode', ('Disabled', 'Enabled')),
                     ('Language', ('English',)),
-                    ('Models sorting', ('Date', 'Case-sensitive name', 'File size', 'Name'))):
+                    ('Models sorting', ('Date', 'Case-sensitive name', 'File size', 'Name')),
+                    ('OLED brightness', ('1', '16')),
+                    ('LED brightness', ('8', '16'))):
                 press(page)
                 for choice in choices:
                     press(choice)
@@ -251,7 +256,9 @@ class SettingsTreeTests(unittest.TestCase):
     def test_fluidd_and_oled_use_same_choice_text_and_checked_state(self):
         with session() as h:
             h.settings.set_option('light_mode','WHITE')
-            for page in ('setting_light_mode','setting_sound','setting_sleep_mode','setting_language','setting_sort_mode'):
+            for page in ('setting_light_mode', 'setting_sound', 'setting_sleep_mode',
+                         'setting_language', 'setting_sort_mode', 'setting_oled_brightness',
+                         'setting_led_brightness'):
                 h.settings.show(page);title,rows=h.settings.rows(page,h.now)
                 active=h.settings.active_rows(page)
                 for index,(label,action) in enumerate(rows):
@@ -295,9 +302,25 @@ class IndicatorAndSleepTests(unittest.TestCase):
             h.print_state='printing';h.m._indicators(h.now)
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,0.])
             h.print_state='paused';h.m._indicators(h.now)
-            self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,0.])
+            self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,0.,1.])
             h.print_state='error';h.m._indicators(h.now)
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,0.,0.])
+
+    def test_independent_brightness_choices_apply_and_persist(self):
+        with session() as h:
+            _, display = attach_display(h)
+            self.assertEqual(h.nvm.get_setting('oled_brightness'), 16)
+            self.assertEqual(h.nvm.get_setting('led_brightness'), 16)
+            h.settings.set_option('oled_brightness', 4)
+            h.settings.set_option('led_brightness', 8)
+            h.settings.set_option('light_mode', 'WHITE')
+            self.assertEqual(display.stream._local['normal'], 40)
+            self.assertEqual(display.stream._local['dim'], 8)
+            self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'], [.5, .5, .5])
+            store = HostNVM(str(h.tmp/'settings.json'), 'HOST-IDENTITY-NOT-SERIAL', 'TEST')
+            settings = store.snapshot()['settings']
+            self.assertEqual((settings['oled_brightness'], settings['led_brightness']), (4, 8))
+            self.assertEqual(h.settings.active_rows('setting_led_brightness'), (8,))
 
     def test_buzzer_disable_stops_active_pulse_and_suppresses_future_clicks(self):
         with session() as h:

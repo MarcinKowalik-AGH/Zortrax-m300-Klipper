@@ -80,6 +80,9 @@ def main():
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_SETTINGS\n'
         'ZORTRAX_LIGHT MODE=WHITE\nZORTRAX_BUZZER STATE=DISABLED\n'
         'ZORTRAX_SLEEP_MODE STATE=DISABLED\nZORTRAX_MODELS_SORT MODE=NAME_CASE\n'
+        'ZORTRAX_UI_SETTING NAME=oled_brightness VALUE=8\n'
+        'ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5\n'
+        'ZORTRAX_CONFIG_STATUS\n'
         'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
         'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
         'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n'
@@ -136,6 +139,10 @@ def main():
         assert cp.getfloat('m300_calibration', 'procedure_temperature') == 260
         assert cp.getfloat('m300_filament', 'procedure_temperature') == 240
         assert cp.getfloat('printer', 'max_velocity') >= 300
+        for color in 'rgb':
+            led = 'output_pin m300_led_' + color
+            assert cp.getboolean(led, 'pwm') and cp.getfloat(led, 'cycle_time') == .010
+        assert not cp.getboolean('output_pin m300_buzzer', 'pwm', fallback=False)
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
         if name in model_fixtures:
@@ -186,10 +193,15 @@ def main():
                         if 'M300_SETTINGS ' in line]
             view = views[-3]
             assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',
-                                            sort_mode='NAME_CASE', language='EN'), view
+                                            sort_mode='NAME_CASE', language='EN',
+                                            oled_brightness=8, led_brightness=5), view
+            resources = next(json.loads(line.split('M300_CONFIG ', 1)[1])
+                             for line in text.splitlines() if 'M300_CONFIG ' in line)
+            assert resources['software_pwm_count'] == 7, resources
             displays = [json.loads(line.split('M300_DISPLAY ', 1)[1]) for line in text.splitlines()
                         if 'M300_DISPLAY ' in line]
             assert [d['sleep_enabled'] for d in displays] == [True, False, True], displays
+            assert [d['brightness'] for d in displays] == [16, 8, 8], displays
             expected_release = json.loads(args.dictionary.read_text())['config']['M300_MCU_RELEASE']
             assert view['information']['mcu_release'] == expected_release
             assert views[-2]['settings'] == views[-1]['settings'], views[-2:]

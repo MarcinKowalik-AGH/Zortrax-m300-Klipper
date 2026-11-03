@@ -15,24 +15,30 @@ Back button closes the dialog and returns to the underlying Fluidd view.
 The Klipper page shows print state. Motion, temperature and print controls
 are on the Fluidd dashboard.
 
-| Settings page | Choices | Fluidd macro |
+| Settings page | Choices | Fluidd access |
 |---|---|---|
 | Light | Dynamic, White, Disabled | `ZORTRAX_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |
 | Buzzer | Enabled, Disabled | `ZORTRAX_BUZZER STATE=ENABLED` or `DISABLED` |
 | Sleep mode | Enabled, Disabled | `ZORTRAX_SLEEP_MODE STATE=ENABLED` or `DISABLED` |
 | Language | English | `ZORTRAX_LANGUAGE` |
 | Models sorting | Date, Name, Case-sensitive name, File size | `ZORTRAX_MODELS_SORT MODE=DATE`, `NAME`, `NAME_CASE` or `SIZE` |
+| OLED brightness | 1–16 | `ZORTRAX_SETTINGS` → OLED brightness |
+| LED brightness | 1–16 | `ZORTRAX_SETTINGS` → LED brightness |
 
 The existing host NVM saves choices. Selecting the active value avoids a disk
 write. Disabled Buzzer also ends an active host beep. Dynamic Light follows the
-printer, including native printing, pause and faults.
+printer, including purple during a native print pause and red on faults.
+LED brightness applies to both Dynamic and White. The two brightness settings
+are independent and default to level 16 on existing installations.
 
 Sleep mode gates the existing dim, moon notice, display off and encoder wake
 sequence. Its timeout, notice duration and contrast come from
-`m300_display.cfg`. Enabled uses that configuration. Disabled keeps the OLED
-awake. The first wake gesture is consumed when the existing display policy
-requires it. `ZORTRAX_DISPLAY_STATUS` reports the live state and configured
-timing.
+`m300_display.cfg`. Enabled dims the display during print inactivity and
+restores the selected brightness on an encoder press. When idle, the moon
+fades over the configured notice duration before the screen turns off.
+Disabled keeps the OLED awake. A wake gesture from an off screen or moon
+notice is consumed. `ZORTRAX_DISPLAY_STATUS` reports the applied contrast,
+selected brightness and configured timing.
 
 Model directories come first. Date and File size order entries newest and
 largest first. Name uses case-insensitive comparison with a stable spelling

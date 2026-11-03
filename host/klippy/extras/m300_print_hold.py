@@ -19,13 +19,13 @@ class PrintHold:
         self._started = None
         self._view = None
 
-    def update(self, events, received_at, now, view, *, active=True):
+    def update(self, events, received_at, now, view, *, active=True, allow_short=False):
         """Return (consumed, fired) for each delivered encoder snapshot.
 
         `events` comes from EncoderSnapshots after the OLED wake guard.
         `view` is the acknowledged semantic identity or None. `active` is
-        true on a hold-only page, including before it has an acknowledged
-        frame. Keep calling on other pages to swallow any trailing release.
+        true on a page with a hold action, even before its first frame ACK.
+        Keep calling on other pages to swallow any trailing release.
         """
         consumed = active or self._claimed
         previous = self._last_received
@@ -38,9 +38,13 @@ class PrintHold:
             return consumed, False
         self._last_received = received_at
         if events['pressed'] is not True:
+            short = (allow_short and self._started is not None and view == self._view
+                     and received_at - previous <= PANEL_FRESHNESS
+                     and events['shorts'] == events['releases'] == 1
+                     and not (events['presses'] or events['longs'] or events['delta']))
             self._claimed = False
             self._started = None
-            return consumed, False
+            return consumed and not short, False
         if not consumed:
             return False, False
 
