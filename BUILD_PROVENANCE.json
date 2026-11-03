@@ -1,0 +1,17 @@
+{
+  "model": "M300_CLASSIC",
+  "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
+  "mcu_release": "0.13.14.6-FACTORY-INFO-UART8",
+  "host_update": "R16.12",
+  "github_commit": "106805e2eb523a151660c1eb6087fc0266e36ac5",
+  "github_run_id": "41687464353",
+  "physical_hardware": false,
+  "flashed": false,
+  "factory_Z_requires_MCU_factory_ABI": 1,
+  "normal_motion": true,
+  "z_homing_temperature": 180,
+  "xy_velocity_profile": 300,
+  "calibration_temperature": 260,
+  "filament_temperature": 240,
+  "release_stage": "TEST_READY"
+}
