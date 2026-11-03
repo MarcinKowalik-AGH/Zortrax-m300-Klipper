@@ -198,11 +198,16 @@ class M300Menu:
         print_ui = self.printer.lookup_object('m300_print_ui', None)
         if print_ui is not None and print_ui.view(now) is not None:
             return
-        if oled.page == 'm04' and self.page == page and oled.message is None:
+        at_requested_page = (oled.page == 'status' if page == 'status'
+                             else oled.page == 'm04' and self.page == page)
+        if at_requested_page and oled.message is None:
             return
-        self._navigate(page, remember=False, refresh_information=False)
-        oled.page, oled.selection, oled.message = 'm04', 0, None
-        oled.render_at = 0.
+        if page == 'status':
+            oled._show_status()
+        else:
+            self._navigate(page, remember=False, refresh_information=False)
+            oled.page, oled.selection, oled.message = 'm04', 0, None
+            oled.render_at = 0.
         oled._user_refresh_pending = True
         self.reactor.update_timer(oled.timer, self.reactor.NOW)
 
