@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16.8 native R15.3-compatible update, 180C homing and separate TEST UI."""
+"""Plan/apply/rollback M300 R16.9 native R15.3-compatible update, 180C homing and separate TEST UI."""
 import argparse
 import ast
 import base64
@@ -38,6 +38,8 @@ NAMES += ('m300_native_service.py', 'm300_maintenance.py',
 NAMES += ('m300_settings.py', 'm300_settings_ui.py', 'm300_browser.py', 'm300_browser_state.py', 'm300_job.py')
 NAMES += ('m300_fans.py', 'm300_native_fans.py', 'm300_maintenance_ui.py')
 NAMES += ('m300_native_probe.py', 'm300_native_z.py', 'm300_stock_geometry.py', 'm300_nvm.py')
+NAMES += ('m300_models.py', 'm300_sd.py', 'm300_fat.py', 'm300_binary.py',
+          'm300_zcode.py', 'm300_job_sd.py')
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
 
@@ -63,6 +65,8 @@ def check_api(root):
         ('klippy/extras/m300_oled.py', 'M300OLED', {'_panel', '_tick', '_send_one'}),
         ('klippy/extras/m300_oled_render.py', 'Frame',
          {'text', 'original_sprite', 'wire_bytes'}),
+        ('klippy/extras/virtual_sdcard.py', 'VirtualSD',
+         {'do_resume', '_reset_file', 'work_handler'}),
         ('klippy/webhooks.py', 'WebHooks', {'register_endpoint'}),
         ('klippy/mcu.py', 'MCURestartHelper', {'_check_restart'})):
         p = root / rel
@@ -169,7 +173,7 @@ def plan(root, config):
     if not already_included(config, settings):
         additions.append('[include m300_display.cfg]\n')
     if additions:
-        addition = '\n# M300 R16.8 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 R16.9 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
@@ -298,8 +302,8 @@ def main():
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config)
-        result = {'status': 'PLAN_M300_R16_8' if changes else 'ALREADY_M300_R16_8',
-                  'host_update': 'R16.8',
+        result = {'status': 'PLAN_M300_R16_9' if changes else 'ALREADY_M300_R16_9',
+                  'host_update': 'R16.9',
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
@@ -310,7 +314,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16_8'
+            result['status'] = 'INSTALLED_M300_R16_9'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')

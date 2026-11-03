@@ -20,6 +20,7 @@ class M300Browser:
         self.nvm = self.printer.load_object(config, 'm300_nvm')
         self.catalog = Catalog(config.getint('max_entries', 50, minval=1, maxval=50))
         self.preview = None
+        self.card_cid = None
         self.ready = False
         self.io_busy = False
         self.session = 0
@@ -87,6 +88,8 @@ class M300Browser:
             entries=self._entries(source,directory,checkpoint)
             if session!=self.session:raise BrowserError('browser session changed during listing')
             generation=self.catalog.publish(source,directory,entries)
+            card = self.printer.lookup_object('m300_sd', None) if source == 'sd' else None
+            self.card_cid = (getattr(card, 'info', None) or {}).get('cid')
             self.preview=None
             return {'generation': generation, 'source':source, 'directory':directory,
                     'files':[dict(name=e.name, path=e.path, directory=e.is_dir,
@@ -140,6 +143,18 @@ class M300Browser:
                 'count':len(self.catalog.entries), 'preview':dict(self.preview or {}),
                 'owns_motion':False, 'owns_sd_spi':False, 'print_started':False}
 
+    def native_preview(self, generation, index):
+        self._ensure_ready()
+        models = self.printer.lookup_object('m300_models')
+        entry = self.catalog.file_entry(generation, index)
+        source, cid = self.catalog.source, self.card_cid
+
+        def checkpoint():
+            self._ensure_ready()
+            self.catalog.file_entry(generation, index)
+
+        return models.prepare(source, entry, cid, checkpoint)
+
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_BROWSER ' + json.dumps(self.get_status(self.reactor.monotonic()), sort_keys=True))
 
@@ -152,7 +167,12 @@ class M300Browser:
 
     def cmd_preview(self, gcmd):
         try:
-            result=self.preview_file(gcmd.get_int('GENERATION'),gcmd.get_int('INDEX'))
+            generation, index = gcmd.get_int('GENERATION'), gcmd.get_int('INDEX')
+            models = self.printer.lookup_object('m300_models', None)
+            if models is None:
+                result = self.preview_file(generation, index)
+            else:
+                result = self.native_preview(generation, index)
         except (BrowserError, ValueError, OSError) as exc:
             raise gcmd.error('M12: '+str(exc))
         gcmd.respond_info('ZORTRAX_BROWSER_PREVIEW '+json.dumps(result,sort_keys=True))

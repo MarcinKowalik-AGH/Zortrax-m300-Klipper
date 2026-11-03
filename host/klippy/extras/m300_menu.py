@@ -31,7 +31,7 @@ def card_entries(entries, mode):
             continue
         result.append(dict(name=entry['name'], path=entry['path'],
                            is_dir=entry['directory'], size=entry['size'],
-                           mtime=entry['modified']))
+                           mtime=entry['modified'], fingerprint=entry.get('fingerprint')))
     return sort_entries(result, mode)
 
 
@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.8-SETTINGS-INFORMATION"
+    MENU_REVISION = "0.13.16.9-NATIVE-SD-MODELS"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -81,6 +81,8 @@ class M300Menu:
         self.maintenance = self.printer.load_object(config, 'm300_maintenance')
         if getattr(self.job.board, 'native_control', False) and config.has_section('m300_settings'):
             self.printer.load_object(config, 'm300_settings')
+        if getattr(self.job.board, 'native_control', False) and config.has_section('m300_models'):
+            self.printer.load_object(config, 'm300_models')
         self.cycle = self.printer.lookup_object('m300_cycle', None)
         self.page, self.reason = 'main', ''
         self.generation = 0
@@ -325,6 +327,30 @@ class M300Menu:
                 return 'Fans', back + [('Fan service unavailable', None)]
             title, rows = service.rows(now)
             return title, self._notice(back + rows[1:])
+        models = self.printer.lookup_object('m300_models', None) if native else None
+        if models is not None and self.page == 'models':
+            card = self.printer.lookup_object('m300_sd', None)
+            sd_row = (('SD card', ('browse', 'sd', '')) if getattr(card, 'qualified', False)
+                      else ('SD card access is disabled', None))
+            return 'Models', self._notice(back + [sd_row, ('Host files', ('browse', 'host', ''))])
+        if models is not None and self.page == 'model_file':
+            view = models.get_status(now)
+            token = view['token']
+            rows = [('Back', ('model_cancel', token))]
+            if view['state'] == 'READY':
+                rows.append(('Start printing', ('model_start', token)))
+            rows.extend((line, None) for line in textwrap.wrap(self.clean(view['filename'] or '', 240), 34))
+            if view['state'] == 'IMPORTING':
+                rows += [('Reading model', None), ('Copied: %d bytes' % view['bytes_copied'], None)]
+            elif view['state'] == 'READY':
+                rows.append((view['format'], None))
+                for name, target in view['targets'].items():
+                    rows.append(('%s: %g C' % (name.title(), target), None))
+            elif view['error']:
+                rows.extend((line, None) for line in textwrap.wrap(self.clean(view['error'], 240), 34))
+            else:
+                rows.append(('Model selection unavailable', None))
+            return 'Model information', self._notice(rows)
         if self.page == 'models':
             rows = back + [('Host', ('browse', 'host', '')),
                            ('SD / SPI1', ('browse', 'sd', ''))]
@@ -333,13 +359,20 @@ class M300Menu:
             return self.t('Models'), self._notice(rows)
         if self.page == 'browser':
             parent = self._directory.rsplit('/', 1)[0] if '/' in self._directory else ''
-            action = ('browse', self._source, parent) if self._directory else ('page', 'models')
+            if self._directory:
+                action = ('browse', self._source, parent)
+            elif models is not None:
+                action = ('page', 'zortrax')
+            else:
+                action = ('page', 'models')
             rows = [(self.t('Up') if self._directory else self.t('Back'), action)]
             rows.extend((('> ' if x['is_dir'] else '') + self.clean(x['name'], 240),
                 ('directory' if x['is_dir'] else 'file', self._source, x['path'], self.generation))
                 for x in self._entries)
             if not self._entries:
                 rows.append((self.t('No models'), None))
+            if models is not None and self._source == 'sd' and not self._directory:
+                rows.append(('Host files', ('browse', 'host', '')))
             return ('SD:/' if self._source == 'sd' else 'Host:/') + self._directory, self._notice(rows)
         if self.page in ('preview', 'confirm_print'):
             p = self._preview
@@ -621,6 +654,19 @@ class M300Menu:
             self._busy = False
 
     def _select_file(self, source, path):
+        models = self.printer.lookup_object('m300_models', None)
+        if models is not None:
+            browser = self._service('m300_browser')
+            if (source != browser.catalog.source
+                    or self._browser_generation != browser.catalog.generation):
+                raise self._error('browser listing expired; reopen the directory')
+            index = next((i for i, entry in enumerate(browser.catalog.entries)
+                          if entry.path == path and not entry.is_dir), None)
+            if index is None:
+                raise self._error('file no longer belongs to the displayed listing')
+            browser.native_preview(self._browser_generation, index)
+            self._navigate('model_file')
+            return
         generation = self.generation
         self._repeat_identity = None
         self._busy = True
@@ -709,7 +755,29 @@ class M300Menu:
                 # The short/long event delivered on release never jogs twice.
                 return None
             elif kind == 'page':
-                self._navigate(action[1])
+                target = action[1]
+                card = self.printer.lookup_object('m300_sd', None)
+                if (target == 'models' and self.printer.lookup_object('m300_models', None) is not None
+                        and getattr(card, 'qualified', False)):
+                    self._navigate('models')
+                    self._browse('sd', '')
+                else:
+                    self._navigate(target)
+            elif kind == 'model_cancel':
+                if action[1] is not None:
+                    self._service('m300_models').cancel(action[1])
+                self._navigate('browser', remember=False)
+            elif kind == 'model_start':
+                generation = self.generation
+                self._busy = True
+                try:
+                    with self.gcode.get_mutex():
+                        if self.generation != generation or self.printer.is_shutdown():
+                            raise self._error('model start expired')
+                        self._service('m300_models').start(action[1])
+                    self._navigate('native_job')
+                finally:
+                    self._busy = False
             elif kind == 'procedure_action':
                 self._service('m300_procedures').action(action[1], action[2])
             elif kind == 'fan_test':

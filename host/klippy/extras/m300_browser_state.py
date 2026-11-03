@@ -6,6 +6,7 @@ opening an immutable snapshot. It expires on new listings and host lifecycle.
 """
 from dataclasses import dataclass
 import os
+from typing import Optional
 
 class BrowserError(ValueError):
     pass
@@ -33,6 +34,7 @@ class EntryProof:
     is_dir: bool
     size: int
     mtime: float
+    fingerprint: Optional[str] = None
 
     @classmethod
     def from_dict(cls, value):
@@ -55,7 +57,7 @@ class EntryProof:
             raise BrowserError('invalid entry type')
         if not is_dir and os.path.splitext(name)[1].lower() not in ALLOWED_EXTENSIONS:
             raise BrowserError('unsupported file extension')
-        return cls(name, path, is_dir, size, float(mtime))
+        return cls(name, path, is_dir, size, float(mtime), value.get('fingerprint'))
 
 
 class Catalog:

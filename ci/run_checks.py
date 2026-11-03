@@ -76,6 +76,10 @@ def main():
     run('factory_decoder_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                                     KIT / 'tests/test_m300_factory.c', '-o', factory])
     run('factory_decoder_execute', [factory])
+    sd_card = report / 'sd-card-test'
+    run('sd_card_model_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
+                                  ROOT / 'mcu/tests/test_m300_sd.c', '-o', sd_card])
+    run('sd_card_model_execute', [sd_card])
     if args.dictionary:
         host_tree = stage_host_tree(pristine)
         run('real_installer_migration', [sys.executable, ROOT / 'ci/validate_install.py',

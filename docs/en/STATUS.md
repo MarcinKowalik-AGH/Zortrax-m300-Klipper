@@ -1,13 +1,13 @@
-# Current status — R16.8 test release
+# Current status — R16.9 test release
 
-The English OLED and Fluidd menus share Settings and Information. R16.8 fixes
-Models browsing and preview, integrates the existing sleep policy with an
-Enabled/Disabled setting, and uses the project repository for Help.
+The Models menu opens the configured physical MCU SD reader, browses FAT16
+or FAT32 folders, and imports G-code and the audited M300 Z-code subset.
+The operator starts the ready local copy through native Klippy. R16.9
+includes the English Settings and Information menus from R16.8.
 
-The supported combination is MCU R14.5 and host R16.8. Software validation
-covers 289 host tests, 9 repository contracts, 18 check groups and 14 native
-Klippy FILEOUTPUT cases. The original firmware comparison covers 52 Settings
-and Information menu frames plus the prior 122 procedure and fan-menu frames.
-Physical acceptance is pending.
+The supported combination is MCU R14.5 and host R16.9. Software validation
+covers 299 host tests, 9 repository contracts, 16 native Klippy FILEOUTPUT
+cases and 28 MCU SD model scenarios. Real card and printer acceptance is
+pending.
 
-[Settings and Information](SETTINGS_INFORMATION.md) · [Validation](VALIDATION_R16_8.md) · [Install](INSTALL.md)
+[Models from SD](MODELS_SD.md) · [Validation](VALIDATION_R16_9.md) · [Install](INSTALL.md)

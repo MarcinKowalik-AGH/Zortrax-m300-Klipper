@@ -21,7 +21,7 @@ MENU_ACTION_KINDS = frozenset((
     'motion_home_z', 'motion_home_xyz', 'motion_stop', 'service', 'service_stop', 'cal_start', 'cal_refresh',
     'cal_confirm', 'cal_cancel', 'setting', 'set', 'ui_back',
     'atlas_item', 'atlas_open', 'procedure_action', 'fan_test', 'fan_cancel', 'fan_set', 'native_gcode',
-    'platform_hold',
+    'platform_hold', 'model_start', 'model_cancel',
 ))
 
 

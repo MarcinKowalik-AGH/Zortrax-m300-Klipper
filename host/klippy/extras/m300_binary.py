@@ -102,13 +102,14 @@ def _fmt(value):
 def compile_m300(data, *, heater_limits=None, axis_limits=None,
                  max_bytes=DEFAULT_MAX_BYTES,
                  max_records=DEFAULT_MAX_RECORDS,
-                 max_output_bytes=DEFAULT_MAX_OUTPUT_BYTES):
+                 max_output_bytes=DEFAULT_MAX_OUTPUT_BYTES, native=False):
     """Return Compilation after validating every byte, including the tail.
 
     Heater and axis limits should come from the actual Klipper configuration.
     ``requires_homing`` means a complete stock XYZ homing prefix was removed
-    from G-code and must be performed by qualified M02 native_contact startup.
-    The function does not authorize execution, even when it returns normally.
+    from the body. M02 uses that flag for its startup. The native form
+    always emits standard Klipper heat, home and cleanup commands
+    for the native virtual SD worker. The function never authorizes execution.
     """
     for name, value in (('max_bytes', max_bytes), ('max_records', max_records),
                         ('max_output_bytes', max_output_bytes)):
@@ -307,10 +308,18 @@ def compile_m300(data, *, heater_limits=None, axis_limits=None,
         raise BinaryRejected('both explicit initial heater targets are required')
     if not moved:
         raise BinaryRejected('file contains no supported motion')
-    prefix = ('; ' + PROFILE + '\nG90\nM82\nM220 S100\nM221 S100\n'
-              'START_PRINT EXTRUDER_TEMP=%d BED_TEMP=%d\n' %
-              (targets['hotend'], targets['bed'])).encode('ascii')
-    suffix = b'M400\nEND_PRINT\n'
+    mode = ('; ' + PROFILE + '\nG90\nM82\nM220 S100\nM221 S100\n').encode('ascii')
+    if native:
+        # Use the existing M300 native G28 path for the absolute source frame.
+        # G28 owns the 180C minimum, nozzle contact and final clearance.
+        prefix = mode + ('M140 S%d\nM104 S%d\nG28\nM190 S%d\nM109 S%d\n' %
+                         (targets['bed'], targets['hotend'],
+                          targets['bed'], targets['hotend'])).encode('ascii')
+        suffix = b'M400\nTURN_OFF_HEATERS\nM107\n'
+    else:
+        prefix = mode + ('START_PRINT EXTRUDER_TEMP=%d BED_TEMP=%d\n' %
+                         (targets['hotend'], targets['bed'])).encode('ascii')
+        suffix = b'M400\nEND_PRINT\n'
     if len(prefix) + output_size + len(suffix) > max_output_bytes:
         raise BinaryRejected('compiled G-code exceeds output byte limit')
     gcode = prefix + b''.join(lines) + suffix
@@ -329,8 +338,10 @@ def compile_m300(data, *, heater_limits=None, axis_limits=None,
         'intentional_adaptations': [
             'Native Klipper planner and bounded kinematics',
             'Whole-file preflight before any heating or movement',
-            'No stock fallback temperatures; M02 owns stable preheat',
-            'M02 owns qualified homing, pause, drain, cleanup and EOF',
+            ('Native heater waits and M300 G28 startup' if native
+             else 'No stock fallback temperatures; M02 owns stable preheat'),
+            ('Native pause/resume, drain and end-of-file' if native
+             else 'M02 owns qualified homing, pause, drain, cleanup and EOF'),
             'Z raw/headerZ converted to mm; stock intermediate step truncation omitted',
         ],
     })

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Actual pinned Klippy processes, FILEOUTPUT only: no printer UART or MCU execution."""
 import argparse
+import base64
 import configparser
 import io
 import json
@@ -10,6 +11,8 @@ import shutil
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import native_config
+
+ROOT = Path(__file__).resolve().parents[1]
 
 EXPECTED = {
     'toolhead.move': 'toolhead.ToolHead.move',
@@ -53,6 +56,11 @@ def flat_config(path):
     saved = native_config.split_saved(files[Path(path).resolve()])[1]
     return '\n'.join(sections) + saved
 
+def binary_print_fixture():
+    record = json.loads((ROOT / 'host/update_template/tests/reference/models_zcode.json').read_text())
+    return base64.b64decode(record['m300_stock_subset_synthetic']['base64'], validate=True)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root',type=Path,required=True)
@@ -75,6 +83,14 @@ def main():
         'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
         'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
         'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n')
+    model_fixtures = {
+        'native_models_gcode': ('Model text.gcode',
+            b'G90\nG28\nG1 X155 Y158 Z5 F600\nM400\nTURN_OFF_HEATERS', 'G-code'),
+        'native_models_zcode': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
+    }
+    shutil.copy2(Path(__file__).with_name('m300_ci_models_fixture.py'),
+                 args.root / 'klippy/extras/m300_ci_models_fixture.py')
+    model_script = 'ZORTRAX_NATIVE_STATUS\nZORTRAX_BROWSER_LIST SOURCE=HOST\nZORTRAX_CI_RUN_MODEL\n'
     cases=[
         ('native_settings_information',settings_script,False,None),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
@@ -89,6 +105,7 @@ def main():
         ('native_z_usable_range','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nG1 Z299 F1500\nG1 Z300\nM400\n',True,None),
         ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nTEST_ZORTRAX_XY SPEED=300\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
     ]
+    cases.extend((name, model_script, False, None) for name in model_fixtures)
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
         'factory_hw04_800': (0xe4, 0xaabb0103, 'factory', 800),
@@ -118,6 +135,11 @@ def main():
         assert cp.getfloat('printer', 'max_velocity') >= 300
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
+        if name in model_fixtures:
+            filename, data, _ = model_fixtures[name]
+            (dest / 'gcodes' / filename).write_bytes(data)
+            cp.add_section('m300_ci_models_fixture')
+            assert not cp.getboolean('m300_job', 'workflow_qualified')
         if synthetic:
             if not cp.has_section('force_move'):cp.add_section('force_move')
             cp.set('force_move','enable_force_move','True')
@@ -166,6 +188,16 @@ def main():
             assert view['information']['mcu_release'] == '0.13.14.5-FACTORY-Z-UART8'
             assert 'M300_INFORMATION ' in text
             assert 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper' in text
+        if name in model_fixtures:
+            result = next(json.loads(line.split('M300_CI_MODELS ', 1)[1])
+                          for line in text.splitlines() if 'M300_CI_MODELS ' in line)
+            filename, _, kind = model_fixtures[name]
+            assert result['state'] == 'complete' and result['file_consumed'], (name, result)
+            assert result['filename'] == filename and result['format'] == kind, result
+            assert result['targets'] == [0., 0.], result
+            assert result['explicit_resume'] == (kind == 'Z-code'), result
+            assert result['position'][:3] == ([155., 158., 5.] if kind == 'G-code'
+                                               else [110., 110., 10.]), result
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)

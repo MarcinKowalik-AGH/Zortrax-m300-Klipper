@@ -26,7 +26,9 @@ BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M22
 
 def require_idle_print(printer, now):
     stats = printer.lookup_object('print_stats', None)
-    if stats is not None and stats.get_status(now).get('state') in ('printing','paused'):
+    sd = printer.lookup_object('virtual_sdcard', None)
+    if (getattr(sd, 'work_timer', None) is not None
+            or stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')):
         raise printer.command_error('OEM service requires an idle native print')
 
 

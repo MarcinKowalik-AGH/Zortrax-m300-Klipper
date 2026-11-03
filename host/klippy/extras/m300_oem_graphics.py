@@ -18,7 +18,7 @@ MAIN = {'models':'0x0801c690','maintenance':'0x0801c958',
         'material':'0x0801cdd8','settings':'0x0801d3bc',
         'information':'0x0801dc08'}
 PAGES = {'models':'0x0801c690','browser':'0x0801c690',
-         'preview':'0x0801c690','confirm_print':'0x0801c690',
+         'preview':'0x0801c690','model_file':'0x0801c690','confirm_print':'0x0801c690',
          'maintenance':'0x0801c958','material':'0x0801cdd8',
          'material_status':'0x0801cdd8','settings':'0x0801d3bc',
          'information':'0x0801dc08','help':'0x0801de00',

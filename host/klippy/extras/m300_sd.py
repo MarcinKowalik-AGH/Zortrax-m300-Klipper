@@ -58,7 +58,8 @@ class M300SD:
         self.board = self.printer.load_object(config, 'm300_mcu')
         # Only disk I/O runs in the native executor. Card requests stay in the
         # cooperative reactor context so MCU completion callbacks remain safe.
-        self.executor = self.printer.load_object(config, 'virtual_sdcard').executor
+        self.v_sd = self.printer.load_object(config, 'virtual_sdcard')
+        self.executor = self.v_sd.executor
         self.mcu = self.board.get_mcu()
         self.qualified = config.getboolean('sd_qualified', False)
         self.rate = config.getint('spi_speed', 1000000, minval=500000, maxval=2000000)
@@ -209,6 +210,8 @@ class M300SD:
             self.external_checkpoint()
 
     def _check_services(self, owner):
+        if (self.v_sd.current_file is not None or self.v_sd.work_timer is not None):
+            raise SDError('physical SD requires an idle native print')
         job = self.printer.lookup_object('m300_job', None)
         job_sd = getattr(job, 'sd', None)
         if owner is not None and (owner is not job_sd or not owner.is_preparing):
@@ -231,7 +234,7 @@ class M300SD:
             obj = self.printer.lookup_object(name, None)
             if obj is not None:
                 try:
-                    status = obj.get_status(now)
+                    status = getattr(obj, 'get_ownership_status', obj.get_status)(now)
                 except Exception as exc:
                     raise SDError(name + ' ownership status unavailable: ' + str(exc))
                 if (not isinstance(status, dict) or status.get('busy') is not False
@@ -336,7 +339,8 @@ class M300SD:
             self._checkpoint()
             prefix = '/'.join(path_parts(path))
             return [{'name': e.name, 'path': (prefix + '/' if prefix else '') + e.name,
-                     'size': e.size, 'directory': e.directory, 'modified': e.modified}
+                     'size': e.size, 'directory': e.directory, 'modified': e.modified,
+                     'fingerprint': e.fingerprint}
                     for e in entries]
         except Exception as exc:
             error = exc
@@ -344,7 +348,7 @@ class M300SD:
         finally:
             self._end(error)
 
-    def get_snapshot(self, path, owner=None, checkpoint=None):
+    def get_snapshot(self, path, owner=None, checkpoint=None, expected=None):
         path_parts(path)
         self._begin('importing', owner, checkpoint)
         writer = raw = None
@@ -354,6 +358,10 @@ class M300SD:
             before_info = self._open()
             volume = FATVolume(self._read_sector, before_info['blocks'])
             entry = volume.resolve(path)
+            if expected is not None and (expected['cid'] != before_info['cid']
+                    or expected['fingerprint'] != entry.fingerprint
+                    or expected['size'] != entry.size):
+                raise SDError('SD card or selected file changed; reopen the directory')
             writer, temporary = self.executor.submit(_new_snapshot)
             self._checkpoint()
             digest = hashlib.sha256()

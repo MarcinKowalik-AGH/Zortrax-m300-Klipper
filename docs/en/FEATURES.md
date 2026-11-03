@@ -1,6 +1,6 @@
-# R16.8 features and acceptance boundaries
+# R16.9 features and acceptance boundaries
 
-[Installation](INSTALL.md) · [Validation](VALIDATION_R16_8.md)
+[Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
 | Function | Owner / presentation | Evidence / boundary |
 |---|---|---|
@@ -19,7 +19,8 @@
 | Settings and Information | Shared OLED and Fluidd menu | Persistent choices, actual available printer data and GitHub Help |
 | MCU supervision / offline cooling | Unchanged R14.5 code | Existing register-model and cooling tests |
 | Host startup recovery | Existing bounded lifecycle policy | One permitted recovery attempt; no automatic old motion/heater resume |
-| Full legacy OEM print / binary Z-code | Separate old M02 workflow | Remains unfinished and disabled; not enabled by these manual services |
+| Models from physical SD | Read-only MCU SPI1, FAT16/FAT32, native Klippy worker | Text G-code and validated M300 1.3.1 Z-code subset |
+| Legacy OEM job engine | Separate M02 workflow | Diagnostic configuration |
 
 The first display remains the native Klipper status screen. The main groups
 are Klipper, Zortrax M300 and Service / Tests. The Zortrax menu groups
@@ -33,7 +34,7 @@ installer rule; other deliberate geometry, including Z315, is preserved.
 No additional general G1 velocity cap is introduced. FILEOUTPUT planning at
 300 mm/s and M220 150% does not measure physical F103 scheduling at that speed.
 
-289 host tests and 14 actual Klippy FILEOUTPUT scenarios support software
+299 host tests and 16 actual Klippy FILEOUTPUT scenarios support software
 integration. Electrical inputs and movement are modeled in the full procedure
-tests. Follow [the supervised acceptance sequence](VALIDATION_R16_8.md) for
+tests. Follow [the supervised acceptance sequence](VALIDATION_R16_9.md) for
 new contact homing, screw instructions, manual holds and material transport.
