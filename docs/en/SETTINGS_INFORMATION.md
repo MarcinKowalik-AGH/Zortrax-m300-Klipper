@@ -37,19 +37,24 @@ Open **Zortrax M300 → Information** or run `ZORTRAX_INFORMATION` in Fluidd.
 | Printer information | Model, hardware version, serial number and total printing time on one screen |
 | Help | Project repository for documentation and issues |
 
-The R14.5 protocol exposes the factory hardware record. With that MCU the
-serial field shows **Unavailable** unless the operator enters the actual
-printer serial as `serial_number:` in the existing `[m300_settings]` section.
-The host identity is a separate value.
+MCU R14.6 exposes `M300_FACTORY_INFO_ABI=1`. It reads the factory serial
+from ID1 and the last complete ID0 print-time record from the active OEM NVM bank.
+The lifetime display adds the OEM minutes and the completed-job seconds
+stored in the Klipper host NVM. A native Fluidd or Models print contributes
+Klipper's `print_duration` at successful EOF. The legacy workflow retains
+its own completion hook. Both use the same durable host counter.
+
+On older MCU firmware, a configured `serial_number:` is a fallback.
+An unavailable OEM counter is shown as unavailable. `ZORTRAX_INFO` also
+reports the OEM and Klipper components separately.
 
 Opening Information or Printer information requests Moonraker history in the
 background. Fluidd's Printer information page has a Refresh button. In the console,
 `ZORTRAX_INFO REFRESH=0` reads the current cache and `ZORTRAX_INFO REFRESH=1`
 requests an update. The default endpoint is the local Moonraker server on
 port 7125 and can be set with `moonraker_url:` in `[m300_settings]`.
-The [Moonraker history API](https://moonraker.readthedocs.io/en/latest/external_api/history/)
-provides recorded print time. It covers the jobs in that Moonraker database.
-Fluidd identifies missing history and cached totals after a failed refresh.
+Moonraker's history total is reported separately as `history_print_seconds`.
+Earlier native prints from before host counter collection are not backfilled.
 
 OLED Help shows the project address across three rows. Fluidd Help shows the
 complete address. [Project GitHub](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper)

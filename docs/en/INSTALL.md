@@ -2,7 +2,8 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port and MCU R14.5.
+This host update is for M300 Classic with the native Klipper port and MCU R14.5 or R14.6.
+Factory serial and OEM print time require R14.6.
 It accepts recognized R15.3 through R16.10 baselines, including the browser
 modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
 the existing module hashes before it writes anything.
@@ -13,7 +14,7 @@ Clone the R16.11 branch into a separate directory on the Orange Pi. Run the
 following from the Orange Pi shell.
 
 ```bash
-git clone --branch r16.11 --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-r16.11-src" &&
+git clone --branch r16.11-factory-info --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-r16.11-src" &&
 cd "$HOME/m300-r16.11-src" &&
 python3 ci/stage_host_update.py &&
 cd .ci/host-update &&
@@ -27,7 +28,7 @@ python3 install.py \
   --config "$HOME/printer_data/config/printer.cfg"
 ```
 
-Expect package PASS, **322 tests OK** and PLAN_M300_R16_11. The plan is read
+Expect package PASS, **326 tests OK** and PLAN_M300_R16_11. The plan is read
 only. Inspect its file list before applying. Calibrated E, both saved PID
 blocks, sensor includes, deliberate motion limits and usable geometry remain.
 The HW05 factory profile still selects effective Z400 without rewriting the

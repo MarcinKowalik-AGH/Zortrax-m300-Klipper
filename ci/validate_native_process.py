@@ -188,7 +188,8 @@ def main():
             displays = [json.loads(line.split('M300_DISPLAY ', 1)[1]) for line in text.splitlines()
                         if 'M300_DISPLAY ' in line]
             assert [d['sleep_enabled'] for d in displays] == [True, False, True], displays
-            assert view['information']['mcu_release'] == '0.13.14.5-FACTORY-Z-UART8'
+            expected_release = json.loads(args.dictionary.read_text())['config']['M300_MCU_RELEASE']
+            assert view['information']['mcu_release'] == expected_release
             assert 'M300_INFORMATION ' in text
             assert 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper' in text
         if name in model_fixtures:

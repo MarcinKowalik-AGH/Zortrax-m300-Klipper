@@ -4,7 +4,7 @@
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.11**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.6 + Host R16.11**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -38,12 +38,12 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Test release
 
-**MCU R14.5 + host R16.11**, pinned Klipper
+**MCU R14.6 + host R16.11**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Stage the host update directly on Orange Pi from the `r16.11` branch. For
-build reports and the matching R14.5 MCU image, use the
-`m300-r14_5-host-r16_11-test-<commit>` artifact from GitHub Actions.
+Stage the host update on Orange Pi from the `r16.11-factory-info` branch.
+MCU R14.6 adds a read-only query for the factory serial and OEM print time.
+See [Settings and Information](docs/en/SETTINGS_INFORMATION.md).
 
 [Install on Orange Pi](docs/en/INSTALL.md). After Ready run
 `python3 setup_fluidd.py --apply` and refresh Fluidd. No procedure runs during

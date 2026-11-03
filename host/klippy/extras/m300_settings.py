@@ -128,18 +128,25 @@ class M300Settings:
         mcu=board.get_mcu() if board is not None else None
         try:version=mcu.get_status(now).get('mcu_version') if mcu is not None else None
         except Exception:version=None
-        serial=display_text(self.serial or hw.get('serial_number'),64) or None
+        factory_serial=hw.get('serial_number')
+        serial=display_text(factory_serial or self.serial,64) or None
+        factory_minutes=hw.get('factory_print_minutes')
+        counters=self.nvm.ui_snapshot()['counters']
+        klipper_seconds=counters['print_seconds']
+        total_seconds=(factory_minutes * 60 + klipper_seconds
+                       if factory_minutes is not None else None)
         version=display_text(version) or None
         return dict(host_version=HOST_VERSION,mcu_version=version,
             mcu_release=display_text(getattr(board, 'mcu_release', None)) or None, upstream_commit=UPSTREAM,
             oem_reference='1.3.1',printer_model='Zortrax M300 Classic',
             hardware_version=display_text(hw.get('hardware_label')) or None,serial_number=serial,
-            serial_source='Configured printer serial' if self.serial else
-                          'Factory record' if serial else 'Unavailable in current MCU API',
-            total_print_seconds=self.history_seconds,total_printing_time=duration(self.history_seconds),
-            time_source=('Moonraker history (cached)' if self.history_error else 'Moonraker history')
-                if self.history_seconds is not None else 'Unavailable',
-            time_note='Recorded Klipper jobs; factory lifetime is not inferred',
+            serial_source=('Factory record' if factory_serial else
+                           'Configured printer serial' if serial else 'Unavailable'),
+            factory_print_minutes=factory_minutes,klipper_print_seconds=klipper_seconds,
+            klipper_completed_jobs=counters['completed_jobs'],
+            total_print_seconds=total_seconds,total_printing_time=duration(total_seconds),
+            time_source='Factory NVM + Klipper completed jobs' if total_seconds is not None else 'Unavailable',
+            history_print_seconds=self.history_seconds,
             history_reading=self.reading,history_error=self.history_error,
             history_updated_at=self.history_stamp,project_url=PROJECT_URL)
 
@@ -229,6 +236,8 @@ class M300Settings:
             info = self.information(now)
             if info['total_print_seconds'] is not None:
                 emit('prompt_text ' + info['time_source'])
+            elif info['klipper_completed_jobs']:
+                emit('prompt_text Klipper print time: ' + duration(info['klipper_print_seconds']))
             if info['history_reading']:
                 emit('prompt_text Reading history')
             if info['history_error']:

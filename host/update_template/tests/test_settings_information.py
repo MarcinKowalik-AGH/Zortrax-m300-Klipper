@@ -313,12 +313,15 @@ class InformationTests(unittest.TestCase):
 
     def test_printer_information_uses_four_shared_rows_in_stock_order(self):
         with session('Z300-123456') as h:
-            h.settings.history_seconds = 9000.
+            h.board.hardware.get_status = lambda: dict(
+                hardware_label='HW05', serial_number='Z12345678', factory_print_minutes=120)
+            h.nvm.record_completed_job(1800.)
+            h.settings.history_seconds = 9000.  # Already overlaps the host counter.
             h.run('ZORTRAX_UI_SHOW PAGE=info_time')
             self.assertEqual(h.menu.page, 'info_printer')
             _, rows = h.menu.rows(h.now)
             expected = ['Model: Zortrax M300 Classic', 'Hardware version: HW05',
-                        'Serial number: Z300-123456', 'Total printing time: 2 h 30 min']
+                        'Serial number: Z12345678', 'Total printing time: 2 h 30 min']
             self.assertEqual(rows, [('Back', ('page', 'information'))]
                              + [(line, None) for line in expected])
             for line in expected:
@@ -350,7 +353,7 @@ class InformationTests(unittest.TestCase):
                 h.settings.request_refresh();h.settings.request_refresh()
                 self.assertEqual(len(h.callbacks),1);self.assertTrue(h.settings.reading)
                 h.callbacks.pop()(h.now);self.assertEqual(fetch.call_count,1)
-                self.assertEqual(h.settings.information(h.now)['total_printing_time'],'2 h 00 min')
+                self.assertEqual(h.settings.information(h.now)['history_print_seconds'],7200.)
                 for _ in range(100):h.settings.information(h.now);h.settings.get_status(h.now)
                 self.assertEqual(fetch.call_count,1)
                 h.now+=6.;h.settings.request_refresh();h.settings.invalidate();h.callbacks.pop()(h.now)
@@ -362,7 +365,8 @@ class InformationTests(unittest.TestCase):
             with patch('payload.m300_settings.history_totals',side_effect=OSError('not ready')):
                 h.settings.request_refresh();h.callbacks.pop()(h.now)
             info=h.settings.information(h.now)
-            self.assertEqual(info['total_print_seconds'],9000.);self.assertIn('cached',info['time_source'])
+            self.assertEqual(info['history_print_seconds'],9000.)
+            self.assertIsNone(info['total_print_seconds'])
             self.assertIn('unavailable',info['history_error'])
 
     def test_http_totals_are_bounded_and_validate_numeric_values(self):

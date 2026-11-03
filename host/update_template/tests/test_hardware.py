@@ -106,7 +106,24 @@ class HardwareTests(unittest.TestCase):
         hw.get_status(); hw.get_status()
         hw._query_factory.assert_called_once_with()
         events = hw.printer.register_event_handler.call_args_list
-        self.assertEqual([call.args[0] for call in events], ['klippy:mcu_identify'])
+        self.assertEqual([call.args[0] for call in events],
+                         ['klippy:mcu_identify', 'klippy:ready'])
+
+    def test_optional_factory_info_queries_once_and_keeps_field_validity_separate(self):
+        hw, _, _ = fixture()
+        constants = dict(hw.mcu.get_constants(), M300_FACTORY_INFO_ABI=1)
+        hw.mcu.get_constants = lambda: constants
+        hw.mcu.lookup_command = Mock(return_value=NS(send=Mock()))
+        hw.mcu.register_serial_response = Mock()
+        hw._identify()
+        hw._request_factory_info()
+        hw.mcu.lookup_command.return_value.send.assert_called_once_with()
+        hw._apply_factory_info(dict(serial=0x12345678, time_valid=0, print_minutes=0))
+        self.assertEqual(hw.get_status()['serial_number'], 'Z12345678')
+        self.assertIsNone(hw.get_status()['factory_print_minutes'])
+        hw._apply_factory_info(dict(serial=0, time_valid=1, print_minutes=0))
+        self.assertIsNone(hw.get_status()['serial_number'])
+        self.assertEqual(hw.get_status()['factory_print_minutes'], 0)
 
     def test_broken_or_erased_record_never_changes_step_scale(self):
         for response in (packet(0xff), packet(0xe5, 0xffffffff), packet(0xdf)):

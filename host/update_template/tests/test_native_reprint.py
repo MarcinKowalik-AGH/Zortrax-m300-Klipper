@@ -62,6 +62,26 @@ def finish(h, read_all=True):
 
 
 class NativeReprintTests(unittest.TestCase):
+    def test_native_fluidd_and_models_time_persist_once_per_completed_job(self):
+        with replay_session() as h:
+            stats = h.vsd.print_stats
+            stats.get_status = lambda now: {'print_duration': 123.5}
+            path = h.files / 'native.gcode'
+            path.write_text('G90\n')
+            h.run('SDCARD_PRINT_FILE FILENAME="native.gcode"')
+            stats.state = 'printing'
+            finish(h)
+            stats.note_complete()
+            self.assertEqual(h.nvm.ui_snapshot()['counters'],
+                             {'completed_jobs': 1, 'print_seconds': 123.5})
+
+            h.models.start(prepare(h))
+            stats.state = 'printing'
+            finish(h)
+            stats.note_complete()
+            self.assertEqual(h.nvm.ui_snapshot()['counters'],
+                             {'completed_jobs': 2, 'print_seconds': 247.})
+
     def test_physical_job_replays_same_bytes_and_uses_single_use_tokens(self):
         with replay_session() as h:
             h.models.start(prepare(h))

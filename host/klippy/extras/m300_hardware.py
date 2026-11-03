@@ -13,6 +13,7 @@ FACTORY_ADDRESS = 0x0803f848
 FACTORY_HEADER = 0xaabb0103
 FACTORY_FORMAT = ('m300_factory_state header=%u raw=%c valid=%c'
                   ' revision=%c z_steps=%hu')
+FACTORY_INFO_FORMAT = 'm300_factory_info serial=%u time_valid=%c print_minutes=%u'
 
 
 def decode_factory(header, raw):
@@ -35,10 +36,14 @@ class M300Hardware:
         self.state, self.error = 'NOT_READ', None
         self.factory = {'valid': False, 'revision': None, 'z_steps_per_mm': None}
         self.header = self.raw = None
+        self.serial_number = self.factory_print_minutes = None
+        self.factory_info_error = None
+        self._factory_info_query = None
         self.configured_rotation = self.effective_rotation = None
         self.effective_steps = None
         self.applied = False
         self.printer.register_event_handler('klippy:mcu_identify', self._identify)
+        self.printer.register_event_handler('klippy:ready', self._request_factory_info)
         board.gcode.register_command('ZORTRAX_HARDWARE_STATUS', self.cmd_status,
                                      when_not_ready=True)
 
@@ -62,7 +67,50 @@ class M300Hardware:
         query = self.mcu.lookup_query_command('m300_factory_query', FACTORY_FORMAT)
         return self.board.startup_transport._bounded('m300_factory_query', query.send)
 
+    def _configure_factory_info(self, constants):
+        if (constants.get('M300_MODEL') != 'M300_CLASSIC'
+                or constants.get('M300_FACTORY_INFO_ABI') != 1
+                or not self.mcu.check_valid_response(FACTORY_INFO_FORMAT)):
+            return
+        try:
+            query = self.mcu.lookup_command('m300_factory_info_query')
+            self.mcu.register_serial_response(self._receive_factory_info,
+                                              FACTORY_INFO_FORMAT)
+            self._factory_info_query = query
+        except Exception as exc:
+            self.factory_info_error = str(exc)
+
+    def _request_factory_info(self):
+        if self._factory_info_query is not None:
+            try:
+                self._factory_info_query.send()
+            except Exception as exc:
+                self.factory_info_error = str(exc)
+
+    def _receive_factory_info(self, result):
+        self.printer.get_reactor().register_async_callback(
+            lambda eventtime: self._apply_factory_info(result))
+
+    def _apply_factory_info(self, result):
+        try:
+            serial, valid, minutes = (result[key] for key in
+                                      ('serial', 'time_valid', 'print_minutes'))
+            if (type(serial) is not int or not 0 <= serial < 0xffffffff
+                    or type(valid) is not int or valid not in (0, 1)
+                    or type(minutes) is not int or not 0 <= minutes < 0xffffffff
+                    or not valid and minutes):
+                raise ValueError('invalid factory information response')
+            self.serial_number = 'Z%08X' % serial if serial else None
+            self.factory_print_minutes = minutes if valid else None
+            self.factory_info_error = None
+        except Exception as exc:
+            self.factory_info_error = str(exc)
+            logging.warning('M300 factory information unavailable: %s', exc)
+
     def _identify(self):
+        self.serial_number = self.factory_print_minutes = None
+        self.factory_info_error = None
+        self._factory_info_query = None
         self._snapshot_stepper()
         if self.mcu.is_fileoutput():
             self.state = 'FILEOUTPUT_NO_FACTORY_READ'
@@ -79,6 +127,7 @@ class M300Hardware:
                               'install the matching MCU application. z_profile=config '
                               'explicitly keeps an operator-selected Z configuration')
                 raise self.config.error(self.error)
+            self._configure_factory_info(constants)
             return
         try:
             self._apply_identity(self._query_factory())
@@ -86,6 +135,7 @@ class M300Hardware:
             self.state, self.error = 'ERROR', str(exc)
             raise self.config.error('M300 hardware identity: ' + self.error) from None
         logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
+        self._configure_factory_info(constants)
 
     def _apply_identity(self, response):
         """Shared with software tests; caller must be in MCU identification."""
@@ -136,6 +186,9 @@ class M300Hardware:
                 'hardware_revision': self.factory['revision'],
                 'hardware_label': ('HW%02d' % self.factory['revision']
                                    if self.factory['valid'] else None),
+                'serial_number': self.serial_number,
+                'factory_print_minutes': self.factory_print_minutes,
+                'factory_info_error': self.factory_info_error,
                 'stock_z_steps_per_mm': self.factory['z_steps_per_mm'],
                 'configured_rotation_distance': self.configured_rotation,
                 'effective_rotation_distance': self.effective_rotation,

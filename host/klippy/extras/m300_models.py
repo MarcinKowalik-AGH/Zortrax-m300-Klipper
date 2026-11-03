@@ -220,6 +220,7 @@ class M300Models:
         self.ready = False
         self.operation = self.token = self.preview = None
         self.filename = self.source = self.error = None
+        self.counter_error = None
         self.active = self.completed = self.completed_token = None
         self.native_load = self.native_print = None
         self.printer.register_event_handler('klippy:ready', self._ready)
@@ -241,8 +242,11 @@ class M300Models:
         native_complete, native_pause = stats.note_complete, stats.note_pause
 
         def complete():
+            was_printing = stats.state == 'printing'
             native_complete()
             self._record_complete()
+            if was_printing and stats.state == 'complete':
+                self._record_native_job_time(stats)
 
         def pause():
             native_pause()
@@ -328,6 +332,21 @@ class M300Models:
             self.completed_token = secrets.token_hex(16)
         else:
             model.stream.release()
+
+    def _record_native_job_time(self, stats):
+        sd = self.v_sd
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        if (nvm is None or not self.ready or self.printer.is_shutdown()
+                or sd.current_file is not None or sd.work_timer is not None
+                or sd.must_pause_work or sd.file_position != sd.file_size):
+            return
+        try:
+            seconds = stats.get_status(self.reactor.monotonic())['print_duration']
+            nvm.record_completed_job(seconds, native=True)
+            self.counter_error = None
+        except Exception as exc:
+            self.counter_error = str(exc)
+            logging.exception('M300 native completed job counter was not persisted')
 
     def _reprint_available(self, now):
         model = self.completed
@@ -529,6 +548,7 @@ class M300Models:
             state = 'ERROR' if self.error else 'IDLE'
         return dict(ready=self.ready, state=state, busy=self.operation is not None,
                     token=self.token, filename=self.filename, source=self.source, error=self.error,
+                    counter_error=self.counter_error,
                     bytes_copied=getattr(card, 'bytes_copied', 0) if self.operation else 0,
                     format=('Z-code' if preview.binary else 'G-code') if preview else None,
                     source_sha256=preview.source_sha256 if preview else None,

@@ -605,7 +605,7 @@ class M300NVM:
                 self.calibration_write_phase = 'IDLE'
                 self._busy = False
 
-    def record_completed_job(self, seconds, token=None):
+    def record_completed_job(self, seconds, token=None, *, native=False):
         try:
             _finite(seconds, 'completed duration', 0., 1.e9)
         except NVMError as exc:
@@ -613,6 +613,11 @@ class M300NVM:
         def mutate(data):
             data['counters']['completed_jobs'] += 1
             data['counters']['print_seconds'] += seconds
+        if native:
+            # Native Klippy already published EOF. Serialize this accounting
+            # write with other NVM updates without taking a printer resource
+            # lease, so a ready Reprint stays usable while the disk flushes.
+            return self.executor.submit(self.store.update, mutate)
         return self._write(mutate, completed_job=True, completion_token=token)
 
     def import_legacy(self, path, page=None):
