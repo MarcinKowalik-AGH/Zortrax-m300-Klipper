@@ -11,7 +11,7 @@ import urllib.request
 import uuid
 
 from install import atomic_write
-from m300_profile import MACRO_RENAMES
+from m300_profile import MACRO_RENAMES, RETIRED_LEVEL_MACROS
 
 GROUPS = ('Klipper', 'ZORTRAX M300', 'TEST M300')
 TEST_NAMES = {'ZORTRAX_PRINT', 'ZORTRAX_PROCEDURE', 'ZORTRAX_OLED_PERF',
@@ -45,6 +45,8 @@ def merge_groups(before, names):
     if any(not isinstance(m, dict) or not isinstance(m.get('name'), str) for m in stored):
         raise ValueError('Unsupported Fluidd stored macros')
     available = {n.upper() for n in names}
+    stored[:] = [row for row in stored if row['name'].upper()
+                 not in RETIRED_LEVEL_MACROS - available]
     for old, new in MACRO_RENAMES.items():
         old_rows = [m for m in stored if m['name'].upper() == old]
         new_rows = [m for m in stored if m['name'].upper() == new]

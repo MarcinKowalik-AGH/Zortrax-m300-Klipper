@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper R16.11
+# Zortrax M300 Classic — Klipper R16.12
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.6 + Host R16.11**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.6 + Host R16.12**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -26,6 +26,12 @@ Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Or
 
 ### Current implementation status
 
+R16.12 presents the five-point Autocalibration result graphically in the
+optional [M300 Fluidd build](docs/en/FLUIDD_M300.md). It retires the stock test
+duplicate, restores the OEM Y-before-X order, checks PC7 before the Z seek
+and retains an already-held Z on normal idle.
+[Homing comparison and validation](docs/en/LEVELING.md).
+
 R16.10 adds contextual OLED PRINTING, PAUSE MENU and PRINTING DONE screens.
 R16.11 batches local SD imports and transfers only the used bytes of the final
 file sector from the MCU to the host.
@@ -38,10 +44,10 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Test release
 
-**MCU R14.6 + host R16.11**, pinned Klipper
+**MCU R14.6 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Stage the host update on Orange Pi from the `r16.11-leveling-choices` branch.
+Stage the host update on Orange Pi from the `r16.12-homing-fluidd` branch.
 MCU R14.6 adds a read-only query for the factory serial and OEM print time.
 See [Settings and Information](docs/en/SETTINGS_INFORMATION.md).
 

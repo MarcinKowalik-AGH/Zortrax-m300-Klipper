@@ -1,4 +1,4 @@
-# Autocalibration and Z reference — R16.7
+# Autocalibration and Z reference — R16.12
 
 [Maintenance / Material](MAINTENANCE_MATERIAL.md) · [Validation](VALIDATION_R16_7.md)
 
@@ -49,8 +49,10 @@ XY settings. Z lift, contact approach and release use their separate speeds.
    pair of instructions. Subsequent pair order follows the recovered cursor.
 8. Compute front correction from the signed, truncating average of deviations
    at 0 and 1. Confirm the instruction and remeasure the front pair.
-9. Measure center point 2. Show the original five-deviation diagram with
-   millimeter values using the selected Z400/Z800 scale.
+9. Measure center point 2. Show the five-deviation diagram with millimeter
+   values using the selected Z400/Z800 scale. The
+   [M300 Fluidd build](FLUIDD_M300.md) draws those same values in the same
+   orientation inside the result prompt.
 10. Heating is off in result review. Confirm the complete result to commit the
     observation ledger, close the dialog and return to Maintenance. A failed,
     cancelled or incomplete measurement cannot publish a new height/result.
@@ -86,6 +88,46 @@ The M07 wizard's initial center contact is a different source routine,
 0x0801456c. Its Y/X/center path does not call the ordinary five-update helper.
 The host retains native coarse endstop acquisition for this initial home.
 Setting `[probe] samples: 5` is not a substitute for either sequence.
+
+## Homing speed comparison with 1.3.1
+
+The verified 1.3.1 application homes Y before X in both its normal dispatcher
+(0x0800B4CC) and M07. The R16.12 host now uses that order whenever both are
+selected. The normal contact-position traverse uses the configured
+`home_travel_speed`. Its default is 50 mm/s and is independent of the
+100 mm/s M07 point-to-point travel.
+
+| Phase | Firmware 1.3.1 binary | Klipper values in the supplied printer log |
+|---|---|---|
+| X and Y limit seek | 265 busy-loop counts per timer start (0x0800B504 / 0x0800B588). One limit seek per axis. | 30 mm/s seek, 10 mm/s retract, 15 mm/s second seek |
+| Ordinary coarse Z contact | 1555 scaled busy-loop counts (0x0800B608) | 5 mm/s seek, 5 mm/s retract, 2.5 mm/s second seek |
+| M07 coarse center contact | 1600 scaled busy-loop counts (0x0801456C) | Same native Z rail speeds |
+| Ordinary precise Z | 21550 scaled counts for approach, 11550 for release (0x0800AC10) | 0.5 mm/s for both |
+| Ordinary final Z clearance | 2555 scaled counts for the 5 mm segments (0x0800B608) | 5 mm/s default |
+| M07 horizontal motion between measurement points | F6000 (0x0800DD28) | 100 mm/s default |
+
+The Z helper at 0x0801820C scales loop counts by 800 divided by the active
+Z scale. The XY and Z helpers start the step timer and then spin in
+0x080192A2. The counts are CPU iterations. Actual pulse spacing also depends
+on timer behavior, branch/flash timing and interrupt service. The audit does
+not establish equal physical speeds in the homing rows. Use step pulse
+timing or measured travel on a stock board before changing those setpoints.
+`ZORTRAX_MOTION_STATUS` reports the installed rail speeds, Z cap and contact
+traverse, refinement and clearance speeds.
+
+R16.12 reads PC7 before the homing sequence and again at the Z seek. An
+already closed contact can receive one positive-Z retreat of at most 1 mm at
+1 mm/s only when all three axes have a known native reference. If Z is
+unknown or the contact stays closed, homing stops with an explicit reason.
+The previous native seek, retract and refinement speeds remain in place.
+
+The default idle script shuts down heaters, releases X/Y/E and keeps an
+already energized Z motor. It clears the X/Y references. The installer
+preserves custom idle scripts. Explicit M84/M18, restart, emergency or MCU
+shutdown and power loss can still release the platform. In the supplied
+`Timer too close` trace, the first Z movement coincided with late step
+scheduling and increased UART retransmissions. The physical cause still
+needs a repeat run with a fresh Klippy log.
 
 ## Bounded native acquisition
 

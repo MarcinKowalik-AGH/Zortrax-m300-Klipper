@@ -232,6 +232,10 @@ def main():
                 assert view['state'] == 'COMPLETE' and view['homed_axes'] == 'xyz'
                 assert abs(view['native_position'][2] - 5) < 1e-6
                 assert view['z_home_hotend_target_c'] == 180
+                assert view['failure_phase'] is None
+                speeds = view['homing_speed_mm_s']
+                assert speeds['native_rails']['z'] == {'seek': 4., 'retract': 4., 'second_seek': 2.}
+                assert speeds['xy_to_contact'] == 50. and speeds['z_precision'] == .5
         if name == 'native_300_thermal_display_planning':
             view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
                         if 'M300_MOTION ' in line)

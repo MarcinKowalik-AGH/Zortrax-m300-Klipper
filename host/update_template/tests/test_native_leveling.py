@@ -397,6 +397,22 @@ class NativeLevelingTests(unittest.TestCase):
             self.assertAlmostEqual(h.position[2],5.)
             self.assertEqual(h.c._frame_offset,0.)
 
+    def test_blocked_level_reopens_current_maintenance_prompt(self):
+        p = M300Procedures.__new__(M300Procedures)
+        p.reactor = NS(monotonic=lambda: 1.)
+        def refuse(temp):
+            raise RuntimeError('M300 calibration: m300_maintenance owns resources')
+        p.printer = NS(command_error=RuntimeError,
+                       lookup_object=lambda name: NS(start=refuse))
+        p._read = lambda name, now: {'busy': True}
+        p.view = lambda now, owner_override=None: {'owner': owner_override}
+        prompts = []
+        p._prompt = prompts.append
+        cmd = NS(get=lambda name: 'LEVEL', get_float=lambda name, default: default)
+        with self.assertRaisesRegex(RuntimeError, 'm300_maintenance owns resources'):
+            p.cmd_start(cmd)
+        self.assertEqual(prompts, [{'owner': 'm300_maintenance'}])
+
     def test_external_start_displays_same_prepare_prompt_and_oem_icon_and_rejects_stale_click(self):
         h=Harness();p=M300Procedures.__new__(M300Procedures)
         prompts=[];p.printer=h.printer;p.reactor=h.reactor;p.gcode=NS(respond_raw=prompts.append)

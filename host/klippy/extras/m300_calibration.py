@@ -128,7 +128,9 @@ class M300Calibration:
             webhooks.register_endpoint('m300/calibration/cancel', self._webhook_cancel)
 
     def _error(self, message):
-        return self.printer.command_error('M300 calibration: ' + str(message))
+        prefix = 'M300 calibration: '
+        message = str(message)
+        return self.printer.command_error(prefix + message.removeprefix(prefix))
 
     def _option(self, name, default, lo, hi):
         value = self.config.getfloat(name, default, minval=lo, maxval=hi)

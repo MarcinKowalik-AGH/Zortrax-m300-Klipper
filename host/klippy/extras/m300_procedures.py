@@ -10,7 +10,7 @@ import math
 import os
 
 from .m300_material_ui_state import MESSAGES
-from .m300_leveling_oem import describe
+from .m300_leveling_oem import describe, format_deviation
 from .m300_oem_procedure_ui import describe as describe_service
 from .m300_maintenance_ui import describe as describe_maintenance
 
@@ -221,7 +221,7 @@ class M300Procedures:
             screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
             rows = [(line, None) for line in screen['text'].split('\n')]
             if screen['diagram'] is not None:
-                rows.extend(('%s: %.1f mm' % (p, v), None)
+                rows.extend(('%s: %s mm' % (p, format_deviation(v)), None)
                             for p, v in enumerate(screen['diagram']))
             rows.extend((self._action_label(view, action),
                          ('procedure_action', view['view_id'], action))
@@ -304,7 +304,7 @@ class M300Procedures:
             if screen['diagram'] is not None:
                 # Same rounded numbers as the physical five-point diagram.
                 for p in (4, 3, 2, 1, 0):
-                    self._emit('prompt_text %s: %.1f mm' % (p, screen['diagram'][p]))
+                    self._emit('prompt_text %s: %s mm' % (p, format_deviation(screen['diagram'][p])))
         elif view.get('maintenance_screen'):
             for line in view['maintenance_screen']['text'].split('\n'):
                 self._emit('prompt_text '+line)
@@ -428,21 +428,32 @@ class M300Procedures:
                              'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK'):
             raise self.printer.command_error('M300: unknown procedure')
         temp = gcmd.get_float('TEMP', None)
-        if operation.startswith('FAN'):
-            owner=self.printer.lookup_object('m300_fans')
-            if operation=='FAN_BACK':
-                owner.end_oem()
+        try:
+            if operation.startswith('FAN'):
+                owner=self.printer.lookup_object('m300_fans')
+                if operation=='FAN_BACK':
+                    owner.end_oem()
+                else:
+                    if owner.test is None:
+                        owner.start_oem()
+                    if operation in ('FAN_UPPER','FAN_LOWER'):
+                        owner.toggle(operation[4:],owner.token,owner.phase)
+            elif operation == 'LEVEL':
+                self.printer.lookup_object('m300_calibration').start(temp)
+            elif operation=='HEAT':
+                self.printer.lookup_object('m300_maintenance').start('HOTEND',temp)
             else:
-                if owner.test is None:
-                    owner.start_oem()
-                if operation in ('FAN_UPPER','FAN_LOWER'):
-                    owner.toggle(operation[4:],owner.token,owner.phase)
-        elif operation == 'LEVEL':
-            self.printer.lookup_object('m300_calibration').start(temp)
-        elif operation=='HEAT':
-            self.printer.lookup_object('m300_maintenance').start('HOTEND',temp)
-        else:
-            self.printer.lookup_object('m300_filament').start(operation, temperature=temp)
+                self.printer.lookup_object('m300_filament').start(operation, temperature=temp)
+        except self.printer.command_error as exc:
+            # Closing the web dialog is not a procedure confirmation. Reopen
+            # the service that still owns the machine so it can be finished.
+            for name in OWNERS:
+                if str(exc).endswith(name + ' owns resources'):
+                    now = self.reactor.monotonic()
+                    if self._read(name, now).get('busy') is True:
+                        self._prompt(self.view(now, owner_override=name))
+                    break
+            raise
         self.reactor.update_timer(self.timer, self.reactor.NOW)
 
 

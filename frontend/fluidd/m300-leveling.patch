@@ -1,0 +1,338 @@
+diff --git a/components.d.ts b/components.d.ts
+index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef409403002695b47 100644
+--- a/components.d.ts
++++ b/components.d.ts
+@@ -65,6 +65,7 @@ declare module 'vue' {
+     KeyboardShortcutsDialog: typeof import('./src/components/common/KeyboardShortcutsDialog.vue')['default']
+     KlippyStatusCard: typeof import('./src/components/common/KlippyStatusCard.vue')['default']
+     Login: typeof import('./src/components/common/Login.vue')['default']
++    M300LevelingDiagram: typeof import('./src/components/common/M300LevelingDiagram.vue')['default']
+     ManualProbeDialog: typeof import('./src/components/common/ManualProbeDialog.vue')['default']
+     PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
+     PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
+@@ -79,84 +80,5 @@ declare module 'vue' {
+     SystemLayout: typeof import('./src/components/common/SystemLayout.vue')['default']
+     SystemPrinters: typeof import('./src/components/common/SystemPrinters.vue')['default']
+     UpdatingDialog: typeof import('./src/components/common/UpdatingDialog.vue')['default']
+-    VAlert: typeof import('vuetify/lib')['VAlert']
+-    VApp: typeof import('vuetify/lib')['VApp']
+-    VAppBar: typeof import('vuetify/lib')['VAppBar']
+-    VBadge: typeof import('vuetify/lib')['VBadge']
+-    VBreadcrumbs: typeof import('vuetify/lib')['VBreadcrumbs']
+-    VBreadcrumbsItem: typeof import('vuetify/lib')['VBreadcrumbsItem']
+-    VBtn: typeof import('vuetify/lib')['VBtn']
+-    VBtnToggle: typeof import('vuetify/lib')['VBtnToggle']
+-    VCard: typeof import('vuetify/lib')['VCard']
+-    VCardActions: typeof import('vuetify/lib')['VCardActions']
+-    VCardSubtitle: typeof import('vuetify/lib')['VCardSubtitle']
+-    VCardText: typeof import('vuetify/lib')['VCardText']
+-    VCardTitle: typeof import('vuetify/lib')['VCardTitle']
+-    VCheckbox: typeof import('vuetify/lib')['VCheckbox']
+-    VChip: typeof import('vuetify/lib')['VChip']
+-    VCol: typeof import('vuetify/lib')['VCol']
+-    VColorPicker: typeof import('vuetify/lib')['VColorPicker']
+-    VCombobox: typeof import('vuetify/lib')['VCombobox']
+-    VContainer: typeof import('vuetify/lib')['VContainer']
+-    VDataTable: typeof import('vuetify/lib')['VDataTable']
+-    VDialog: typeof import('vuetify/lib')['VDialog']
+-    VDivider: typeof import('vuetify/lib')['VDivider']
+-    VExpandTransition: typeof import('vuetify/lib')['VExpandTransition']
+-    VExpansionPanel: typeof import('vuetify/lib')['VExpansionPanel']
+-    VExpansionPanelContent: typeof import('vuetify/lib')['VExpansionPanelContent']
+-    VExpansionPanelHeader: typeof import('vuetify/lib')['VExpansionPanelHeader']
+-    VExpansionPanels: typeof import('vuetify/lib')['VExpansionPanels']
+-    VFadeTransition: typeof import('vuetify/lib')['VFadeTransition']
+-    VFooter: typeof import('vuetify/lib')['VFooter']
+-    VForm: typeof import('vuetify/lib')['VForm']
+-    VIcon: typeof import('vuetify/lib')['VIcon']
+-    VImg: typeof import('vuetify/lib')['VImg']
+-    VItemGroup: typeof import('vuetify/lib')['VItemGroup']
+-    VLayout: typeof import('vuetify/lib')['VLayout']
+-    VList: typeof import('vuetify/lib')['VList']
+-    VListGroup: typeof import('vuetify/lib')['VListGroup']
+-    VListItem: typeof import('vuetify/lib')['VListItem']
+-    VListItemAction: typeof import('vuetify/lib')['VListItemAction']
+-    VListItemContent: typeof import('vuetify/lib')['VListItemContent']
+-    VListItemGroup: typeof import('vuetify/lib')['VListItemGroup']
+-    VListItemIcon: typeof import('vuetify/lib')['VListItemIcon']
+-    VListItemSubtitle: typeof import('vuetify/lib')['VListItemSubtitle']
+-    VListItemTitle: typeof import('vuetify/lib')['VListItemTitle']
+-    VMain: typeof import('vuetify/lib')['VMain']
+-    VMenu: typeof import('vuetify/lib')['VMenu']
+-    VNavigationDrawer: typeof import('vuetify/lib')['VNavigationDrawer']
+-    VOverlay: typeof import('vuetify/lib')['VOverlay']
+-    VProgressCircular: typeof import('vuetify/lib')['VProgressCircular']
+-    VProgressLinear: typeof import('vuetify/lib')['VProgressLinear']
+-    VRadio: typeof import('vuetify/lib')['VRadio']
+-    VRadioGroup: typeof import('vuetify/lib')['VRadioGroup']
+-    VRow: typeof import('vuetify/lib')['VRow']
+-    VSelect: typeof import('vuetify/lib')['VSelect']
+-    VSheet: typeof import('vuetify/lib')['VSheet']
+-    VSimpleCheckbox: typeof import('vuetify/lib')['VSimpleCheckbox']
+-    VSimpleTable: typeof import('vuetify/lib')['VSimpleTable']
+-    VSlider: typeof import('vuetify/lib')['VSlider']
+-    VSnackbar: typeof import('vuetify/lib')['VSnackbar']
+-    VSpacer: typeof import('vuetify/lib')['VSpacer']
+-    VStepper: typeof import('vuetify/lib')['VStepper']
+-    VStepperContent: typeof import('vuetify/lib')['VStepperContent']
+-    VStepperHeader: typeof import('vuetify/lib')['VStepperHeader']
+-    VStepperItems: typeof import('vuetify/lib')['VStepperItems']
+-    VStepperStep: typeof import('vuetify/lib')['VStepperStep']
+-    VSubheader: typeof import('vuetify/lib')['VSubheader']
+-    VSwitch: typeof import('vuetify/lib')['VSwitch']
+-    VTab: typeof import('vuetify/lib')['VTab']
+-    VTabItem: typeof import('vuetify/lib')['VTabItem']
+-    VTabs: typeof import('vuetify/lib')['VTabs']
+-    VTabsItems: typeof import('vuetify/lib')['VTabsItems']
+-    VTextarea: typeof import('vuetify/lib')['VTextarea']
+-    VTextField: typeof import('vuetify/lib')['VTextField']
+-    VTimeline: typeof import('vuetify/lib')['VTimeline']
+-    VTimelineItem: typeof import('vuetify/lib')['VTimelineItem']
+-    VToolbar: typeof import('vuetify/lib')['VToolbar']
+-    VToolbarItems: typeof import('vuetify/lib')['VToolbarItems']
+-    VToolbarTitle: typeof import('vuetify/lib')['VToolbarTitle']
+-    VTooltip: typeof import('vuetify/lib')['VTooltip']
+-    VVirtualScroll: typeof import('vuetify/lib')['VVirtualScroll']
+   }
+ }
+diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
+index dbea2dfd657790c2ae599b2fa276a74f4f511b15..bec17ed44263e2a574d2e5ba339cf97b6893655c 100644
+--- a/src/components/common/ActionCommandPromptDialog.vue
++++ b/src/components/common/ActionCommandPromptDialog.vue
+@@ -7,10 +7,13 @@
+   >
+     <v-card-text>
+       <v-row
+-        v-for="item in dialog.items"
++        v-for="item in visibleItems"
+         :key="`item::${item.id}`"
+       >
+-        <v-col v-if="item.type === 'text'">
++        <v-col v-if="leveling && item.id === leveling.firstId">
++          <m300-leveling-diagram :points="leveling.points" />
++        </v-col>
++        <v-col v-else-if="item.type === 'text'">
+           {{ item.text }}
+         </v-col>
+         <v-col v-else-if="item.type === 'button'">
+@@ -56,15 +59,28 @@
+ 
+ <script lang="ts">
+ import { Component, Mixins } from 'vue-property-decorator'
++import M300LevelingDiagram from './M300LevelingDiagram.vue'
++import { readM300Leveling } from './m300Leveling'
+ import StateMixin from '@/mixins/state'
+ import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
+ 
+-@Component({})
++@Component({ components: { M300LevelingDiagram } })
+ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+   get dialog (): PromptDialog {
+     return this.$typedState.console.promptDialog
+   }
+ 
++  get leveling () {
++    return readM300Leveling(this.dialog)
++  }
++
++  get visibleItems () {
++    const replaced = this.leveling?.otherIds
++    return replaced
++      ? this.dialog.items.filter(item => !replaced.includes(item.id))
++      : this.dialog.items
++  }
++
+   get open (): boolean {
+     return this.dialog.open
+   }
+diff --git a/src/components/common/M300LevelingDiagram.vue b/src/components/common/M300LevelingDiagram.vue
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc344990bc
+--- /dev/null
++++ b/src/components/common/M300LevelingDiagram.vue
+@@ -0,0 +1,87 @@
++<template>
++  <svg
++    class="m300-platform"
++    viewBox="0 0 320 186"
++    role="img"
++    :aria-label="description"
++  >
++    <rect
++      x="9"
++      y="7"
++      width="302"
++      height="163"
++      rx="8"
++    />
++    <path
++      class="guide"
++      d="M160 20V157M24 89H296"
++    />
++
++    <g
++      v-for="point in points"
++      :key="point.id"
++    >
++      <circle
++        :cx="point.x"
++        :cy="point.y"
++        r="3.5"
++      />
++      <text
++        :x="point.x"
++        :y="point.y + 20"
++      >
++        {{ point.value }} mm
++      </text>
++    </g>
++
++    <text
++      class="front"
++      x="160"
++      y="184"
++    >
++      Front
++    </text>
++  </svg>
++</template>
++
++<script lang="ts">
++import { Component, Prop, Vue } from 'vue-property-decorator'
++import type { LevelingPoint } from './m300Leveling'
++
++@Component({})
++export default class M300LevelingDiagram extends Vue {
++  @Prop({ type: Array, required: true })
++  readonly points!: readonly LevelingPoint[]
++
++  get description () {
++    return 'Platform leveling. ' + this.points.map(point => `${point.name}: ${point.value} mm`).join(', ')
++  }
++}
++</script>
++
++<style scoped>
++  .m300-platform {
++    display: block;
++    width: 100%;
++    max-height: 216px;
++  }
++  rect, path {
++    fill: none;
++    stroke: currentColor;
++  }
++  .guide {
++    stroke-dasharray: 4 4;
++    opacity: 0.25;
++  }
++  circle, text {
++    fill: currentColor;
++  }
++  text {
++    text-anchor: middle;
++    font-size: 14px;
++    font-variant-numeric: tabular-nums;
++  }
++  .front {
++    font-size: 12px;
++  }
++</style>
+diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..149ddf56c5ef1c235cf48e8f57973ae372c1c2c6
+--- /dev/null
++++ b/src/components/common/m300Leveling.spec.ts
+@@ -0,0 +1,55 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// @vitest-environment jsdom
++import { describe, expect, it } from 'vitest'
++import { mount } from '@vue/test-utils'
++import M300LevelingDiagram from './M300LevelingDiagram.vue'
++import { readM300Leveling } from './m300Leveling'
++import type { PromptDialogItem } from '@/store/console/types'
++
++const title = 'ZORTRAX M300 - Platform leveling'
++const offsets = ['4: -0.1 mm', '3: 0.1 mm', '2: -0.1 mm', '1: -0.4 mm', '0: 0.0 mm']
++
++function dialog (rows = offsets) {
++  const text = ['Calibration done.', 'Press the button to continue', ...rows]
++  const items: PromptDialogItem[] = text.map((text, id) => ({ id, type: 'text', text }))
++  items.push({ id: 99, type: 'button', text: 'Continue', command: 'ZORTRAX_PROCEDURE_ACTION' })
++  return { title, items }
++}
++
++describe('M300 calibration result', () => {
++  it('places the OLED values on the matching physical locations and preserves the button', () => {
++    const source = dialog()
++    const result = readM300Leveling(source)
++    expect(result?.points.map(({ id, name, value }) => [id, name, value])).toEqual([
++      [4, 'Rear left', '-0.1'],
++      [3, 'Rear right', '0.1'],
++      [2, 'Center', '-0.1'],
++      [1, 'Front left', '-0.4'],
++      [0, 'Front right', '0.0']
++    ])
++    expect(result?.firstId).toBe(2)
++    expect(result?.otherIds).toEqual([3, 4, 5, 6])
++    expect(source.items.at(-1)).toMatchObject({ type: 'button', command: 'ZORTRAX_PROCEDURE_ACTION' })
++  })
++
++  it('renders five accessible readings and their physical orientation', () => {
++    const points = readM300Leveling(dialog())?.points
++    const diagram = mount(M300LevelingDiagram, { propsData: { points } })
++    expect(diagram.findAll('circle')).toHaveLength(5)
++    expect(diagram.find('svg').attributes('aria-label')).toContain('Front left: -0.4 mm')
++    expect(diagram.findAll('text').wrappers.map(row => row.text()))
++      .toEqual(['-0.1 mm', '0.1 mm', '-0.1 mm', '-0.4 mm', '0.0 mm', 'Front'])
++    expect(diagram.findAll('circle').at(0).attributes('cy')).toBe('31')
++    expect(diagram.findAll('circle').at(4).attributes('cy')).toBe('147')
++    diagram.destroy()
++  })
++
++  it('keeps standard text for unrelated or incomplete prompts and rejects malformed rows', () => {
++    expect(readM300Leveling({ ...dialog(), title: 'Different prompt' })).toBeNull()
++    expect(readM300Leveling(dialog())).not.toBeNull()
++    expect(readM300Leveling(dialog([]))).toBeNull()
++    expect(readM300Leveling(dialog(offsets.slice(0, 4)))).toBeNull()
++    expect(readM300Leveling(dialog([...offsets.slice(0, 4), '0: <svg> mm']))).toBeNull()
++    expect(readM300Leveling(dialog([...offsets.slice(0, 4), '1: 0.0 mm']))).toBeNull()
++  })
++})
+diff --git a/src/components/common/m300Leveling.ts b/src/components/common/m300Leveling.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad1a7914648556a44518b027f1b12d032fd1cb8d
+--- /dev/null
++++ b/src/components/common/m300Leveling.ts
+@@ -0,0 +1,31 @@
++// SPDX-License-Identifier: GPL-3.0-only
++import type { PromptDialog } from '@/store/console/types'
++
++const title = 'ZORTRAX M300 - Platform leveling'
++const points = [
++  { id: 4, name: 'Rear left', x: 58, y: 31 },
++  { id: 3, name: 'Rear right', x: 262, y: 31 },
++  { id: 2, name: 'Center', x: 160, y: 89 },
++  { id: 1, name: 'Front left', x: 58, y: 147 },
++  { id: 0, name: 'Front right', x: 262, y: 147 }
++] as const
++
++export type LevelingPoint = typeof points[number] & { value: string }
++
++export function readM300Leveling (dialog: Pick<PromptDialog, 'title' | 'items'>) {
++  if (dialog.title !== title) return null
++  const first = dialog.items.findIndex(item => item.type === 'text' && /^4: /.test(item.text))
++  if (first < 0) return null
++
++  const result: LevelingPoint[] = []
++  const ids: number[] = []
++  for (const [index, point] of points.entries()) {
++    const item = dialog.items[first + index]
++    if (item?.type !== 'text') return null
++    const match = /^([0-4]): (-?\d{1,4}\.\d) mm$/.exec(item.text)
++    if (match?.[1] !== String(point.id)) return null
++    result.push({ ...point, value: match[2] })
++    ids.push(item.id)
++  }
++  return { points: result, firstId: ids[0], otherIds: ids.slice(1) }
++}

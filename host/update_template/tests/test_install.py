@@ -51,7 +51,7 @@ class InstallerTests(unittest.TestCase):
         self.assertIn('procedure_temperature: 260',self.config.read_text())
         self.assertIn('procedure_temperature: 240',self.config.read_text())
         self.assertIn('filament_qualified: True',self.config.read_text())
-        self.assertIn('default(260)',path.read_text())
+        self.assertIn('default(180)',path.read_text())
         self.assertEqual(path.read_text().count('default(240)'),2)
         self.assertIn('M118 My retained command',path.read_text())
         self.assertEqual(install.plan(self.root,self.config),[])
@@ -80,12 +80,36 @@ class InstallerTests(unittest.TestCase):
                      'workflow_qualified: False','#*# pid_kp = 15.152','[include m300_sensors.cfg]'):
             self.assertIn(line,self.config.read_text())
         self.assertIn(original_macro.replace('TEST_M300_STATUS','TEST_ZORTRAX_STATUS'),macros.read_text())
-        self.assertIn('[gcode_macro TEST_ZORTRAX_LEVEL]',macros.read_text())
+        self.assertNotIn('[gcode_macro TEST_ZORTRAX_LEVEL]',macros.read_text())
         self.assertEqual(install.plan(self.root,self.config),[])
         install.rollback(receipt,self.root,self.config)
         self.assertEqual(self.config.read_text(),source)
         self.assertEqual(sensors.read_bytes(),sensor_data)
         self.assertEqual(macros.read_text(),original_macro)
+
+    def test_upgrade_retires_only_stock_duplicate_and_migrates_stock_idle(self):
+        self.config.write_text('[mcu]\nserial: /dev/ttyS1\n[include legacy.cfg]\n'
+                               '[idle_timeout]\ntimeout: 300\ngcode:\n    TURN_OFF_HEATERS\n    M84\n')
+        legacy = self.config.parent / 'legacy.cfg'
+        original = ('[gcode_macro TEST_M300_LEVEL]\ndescription: Old duplicate\ngcode:\n'
+                    '    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(180)|float}\n'
+                    '[gcode_macro TEST_ZORTRAX_LEVEL]\ngcode:\n    M118 My custom macro\n')
+        legacy.write_text(original)
+        receipt = install.apply(self.root, self.config, install.plan(self.root, self.config))
+        self.assertNotIn('[gcode_macro TEST_M300_LEVEL]', legacy.read_text())
+        self.assertIn('[gcode_macro TEST_ZORTRAX_LEVEL]\ngcode:\n    M118 My custom macro', legacy.read_text())
+        self.assertIn('ZORTRAX_IDLE_RELEASE_XYE', self.config.read_text())
+        self.assertIn('timeout: 300', self.config.read_text())
+        self.assertEqual(install.plan(self.root, self.config), [])
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(legacy.read_text(), original)
+        self.assertIn('    M84', self.config.read_text())
+
+    def test_deliberate_idle_script_and_native_homing_settings_are_retained(self):
+        source = ('[idle_timeout]\ntimeout: 425\ngcode:\n    TURN_OFF_HEATERS\n'
+                  '    M118 Custom park\n    M84\n'
+                  '[m300_motion]\nmode: native\nhome_travel_speed: 61\nz_lift_speed: 3\n')
+        self.assertEqual(install.profile.convert_text(source), source)
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

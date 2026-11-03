@@ -73,7 +73,10 @@ class M300Browser:
             card = self.printer.lookup_object('m300_sd', None)
             if card is None:
                 raise BrowserError('physical SD provider not configured')
-            entries=card_entries(card.list_files('/'+directory,checkpoint=checkpoint),mode)
+            entries = card_entries(card.list_files('/' + directory, checkpoint=checkpoint), mode)
+            if not directory:
+                entries = [entry for entry in entries if not (
+                    entry['is_dir'] and entry['name'].casefold() == 'system volume information')]
         else:raise BrowserError('unknown source')
         self._ensure_ready()
         if mode!=self._sorted_mode():raise BrowserError('sorting changed; refresh the directory')

@@ -140,6 +140,10 @@ def draw_sprite(frame, sprite):
         frame.raw[offset:offset + height] = pixels[column::stride]
 
 
+def format_deviation(value):
+    return '%.1f' % (0. if -.005 < value < 0. else value)
+
+
 def render(screen, sprites, frame_type, now=0.):
     sprite = (sprites.get(screen['sprite'], now)
               if screen.get('sprite') and sprites is not None else None)
@@ -166,8 +170,7 @@ def _compose(message, support, diagram, sprite, frame_type):
         for p in range(7, 58):
             for x, y in ((192+p, 7), (192+p, 57), (199, p), (249, p)):
                 frame.pixel(x, y)
-        values = ['%.1f' % (0. if -.005 < value < 0. else value)
-                  for value in diagram]
+        values = [format_deviation(value) for value in diagram]
         for point, y, align in ((4, 7, 'left'), (3, 7, 'right'),
                                 (2, 26, 'center'), (1, 44, 'left'), (0, 44, 'right')):
             line = values[point]

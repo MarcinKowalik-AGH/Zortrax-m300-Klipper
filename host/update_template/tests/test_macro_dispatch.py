@@ -58,10 +58,10 @@ class MacroDispatchTests(unittest.TestCase):
         p.printer=NS(lookup_object=lambda name:NS(start=lambda temp:calls.append(temp)))
         p.reactor=NS(NOW=0.,update_timer=lambda *args:None);p.timer='procedure'
         g.register_command('ZORTRAX_PROCEDURE_START',p.cmd_start)
-        template=ENV.from_string(templates()['TEST_ZORTRAX_LEVEL'])
-        g.register_command('TEST_ZORTRAX_LEVEL',lambda cmd:g.run_script_from_command(
+        template=ENV.from_string(templates()['ZORTRAX_LEVEL'])
+        g.register_command('ZORTRAX_LEVEL',lambda cmd:g.run_script_from_command(
             template.render(params=cmd.get_command_parameters())))
-        g.run_script_from_command('TEST_ZORTRAX_LEVEL')
+        g.run_script_from_command('ZORTRAX_LEVEL')
         self.assertEqual(calls,[260.]);self.assertEqual(output,[])
 
     def test_xy_button_renders_and_dispatches_all_seven_native_moves(self):
@@ -108,12 +108,16 @@ class MacroDispatchTests(unittest.TestCase):
         self.assertEqual(m300_profile.convert_text(result),result)
 
     def test_fluidd_migration_keeps_hidden_and_color_preferences(self):
-        before={'stored':[{'name':'TEST_M300_LEVEL','visible':False,'color':'red'}]}
-        after,assigned=merge_groups(before,['TEST_ZORTRAX_LEVEL'])
-        self.assertEqual(after['stored'][0]['name'],'TEST_ZORTRAX_LEVEL')
+        before={'stored':[{'name':'TEST_M300_STATUS','visible':False,'color':'red'},
+                          {'name':'TEST_M300_LEVEL','visible':True},
+                          {'name':'TEST_ZORTRAX_LEVEL','visible':True}]}
+        after,assigned=merge_groups(before,['TEST_ZORTRAX_STATUS','ZORTRAX_LEVEL'])
+        self.assertEqual(after['stored'][0]['name'],'TEST_ZORTRAX_STATUS')
         self.assertFalse(after['stored'][0]['visible']);self.assertEqual(after['stored'][0]['color'],'red')
-        self.assertEqual(assigned['TEST_ZORTRAX_LEVEL'],'TEST M300')
-        self.assertEqual(before['stored'][0]['name'],'TEST_M300_LEVEL')
+        self.assertEqual(assigned['TEST_ZORTRAX_STATUS'],'TEST M300')
+        self.assertEqual(assigned['ZORTRAX_LEVEL'],'ZORTRAX M300')
+        self.assertEqual([row['name'] for row in after['stored']], ['TEST_ZORTRAX_STATUS', 'ZORTRAX_LEVEL'])
+        self.assertEqual(len(before['stored']),3)
 
 
 if __name__=='__main__':unittest.main()

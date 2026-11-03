@@ -1,21 +1,21 @@
-# Install the R16.11 test release
+# Install the R16.12 test release
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
 This host update is for M300 Classic with the native Klipper port and MCU R14.5 or R14.6.
 Factory serial and OEM print time require R14.6.
-It accepts recognized R15.3 through R16.10 baselines, including the browser
+It accepts recognized R15.3 through R16.11 baselines, including the browser
 modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
 the existing module hashes before it writes anything.
 
 ## Stage and verify on Orange Pi
 
-Clone the R16.11 branch into a separate directory on the Orange Pi. Run the
+Clone the R16.12 branch into a separate directory on the Orange Pi. Run the
 following from the Orange Pi shell.
 
 ```bash
-git clone --branch r16.11-leveling-choices --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-r16.11-src" &&
-cd "$HOME/m300-r16.11-src" &&
+git clone --branch r16.12-homing-fluidd --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-r16.12-src" &&
+cd "$HOME/m300-r16.12-src" &&
 python3 ci/stage_host_update.py &&
 cd .ci/host-update &&
 python3 VERIFY.py &&
@@ -28,7 +28,7 @@ python3 install.py \
   --config "$HOME/printer_data/config/printer.cfg"
 ```
 
-Expect package PASS, **329 tests OK** and PLAN_M300_R16_11. The plan is read
+Expect package PASS, **337 tests OK** and PLAN_M300_R16_12. The plan is read
 only. Inspect its file list before applying. Calibrated E, both saved PID
 blocks, sensor includes, deliberate motion limits and usable geometry remain.
 The HW05 factory profile still selects effective Z400 without rewriting the
@@ -47,7 +47,7 @@ sudo systemctl stop klipper.service && {
 }
 ```
 
-Expect INSTALLED_M300_R16_11 and retain the exact RECEIPT.json path. Installation
+Expect INSTALLED_M300_R16_12 and retain the exact RECEIPT.json path. Installation
 does not run a motion/heating test. After Klipper reports Ready, update Fluidd:
 
 ```bash
@@ -56,7 +56,7 @@ python3 setup_fluidd.py --apply
 ```
 
 Refresh Fluidd. The procedure macros and the new Settings, Information and Help
-macros belong to ZORTRAX M300. Test aliases are grouped under TEST M300. Existing unrelated groups,
+macros belong to ZORTRAX M300. Diagnostics are grouped under TEST M300. The stock duplicate of ZORTRAX_LEVEL is retired. Existing unrelated groups,
 visibility, colors and preferences are retained. The returned Fluidd backup
 can be restored with `python3 setup_fluidd.py --rollback /EXACT/BACKUP.json --apply`.
 
@@ -80,9 +80,11 @@ ZORTRAX_INFO REFRESH=0
 QUERY_PROBE
 ```
 
-Confirm Ready, the real HW05/Z400 identity, normal native control, host R16.11,
+Confirm Ready, the real HW05/Z400 identity, normal native control, host R16.12,
 fan/maintenance/procedure revisions and an open PC7 contact with clearance.
-Motion and calibration retain their R16.6 component revisions.
+Motion reports the native rail speeds and a fault phase. Calibration still
+reports its four independent movement speeds. For the SVG in the same
+results dialog, install the [M300 Fluidd build](FLUIDD_M300.md).
 The link lifecycle revision remains 0.13.16.2-LIFECYCLE-RECONNECT; this is normal.
 Targets are calibration/Heat 260°C, Load/Unload 240°C and ordinary Z home at
 least 180°C. A hotter pre-existing target during ordinary homing is retained.

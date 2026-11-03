@@ -15,6 +15,7 @@ def motion_fixture():
     motion.token = motion.phase_id = 0
     motion.state = motion.phase = 'IDLE'
     motion.reason, motion.result, motion.ready = '', None, True
+    motion.homing_speeds = motion.failure_phase = None
     motion.home_xy, motion.travel_speed = (150., 158.), 50.
     motion.z_home_hotend_target, motion.clearance, motion.lift_speed = 180., 5., 5.
     motion.reactor = NS(monotonic=lambda: 1.)
@@ -27,14 +28,17 @@ def motion_fixture():
         heater.target = target
         motion.events.append(('heat', target, wait))
     motion.heaters = NS(set_temperature=set_temperature)
-    kin = NS(get_status=lambda now: {'homed_axes': ''.join(a for a in 'xyz' if a in motion.homed)})
+    kin = NS(get_status=lambda now: {'homed_axes': ''.join(a for a in 'xyz' if a in motion.homed)},
+             rails=[None, None, NS(get_range=lambda: (0., 315.))],
+             clear_homing_state=lambda axes: motion.homed.difference_update(axes))
     def manual_move(coords, speed):
         motion.events.append(('move', tuple(coords), speed))
         for i, value in enumerate(coords):
             if value is not None:
                 position[i] = value
     motion.toolhead = NS(get_kinematics=lambda: kin, manual_move=manual_move,
-                         get_position=lambda: position[:], wait_moves=lambda: None)
+                         get_position=lambda: position[:], wait_moves=lambda: None,
+                         get_last_move_time=lambda: 1., check_busy=lambda now: (1., 2., True))
     motion.printer = NS(command_error=RuntimeError, is_shutdown=lambda: False,
                         lookup_object=lambda name, default=None: default)
     motion.gcode = NS(create_gcode_command=lambda name, text, params: params)
@@ -44,8 +48,9 @@ def motion_fixture():
             position['XYZ'.index(axis)] = 0.
             motion.homed.add(axis.lower())
     motion.native_G28 = native_home
-    motion.precision = NS(run=lambda token:dict(contacts=0),probe=NS(get_offsets=lambda:(0.,0.,0.)))
-    motion.board = NS(hardware=NS(get_status=lambda: {'effective_z_steps_per_mm': 400,
+    motion.precision = NS(run=lambda token: dict(contacts=0), probe=NS(get_offsets=lambda:(0.,0.,0.)),
+                          endstop=NS(query_endstop=Mock(return_value=False)))
+    motion.board = NS(mcu=NS(is_fileoutput=lambda: False), require_motion=Mock(), hardware=NS(get_status=lambda: {'effective_z_steps_per_mm': 400,
                                                      'hardware_revision': 5}))
     return motion
 
@@ -55,14 +60,14 @@ class NormalHomingTests(unittest.TestCase):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xy')
-        self.assertEqual(m.events, [('home', 'XY')])
+        self.assertEqual(m.events, [('home', 'Y'), ('home', 'X')])
         self.assertEqual(m.toolhead.get_position()[2:], [299., 17.])
 
     def test_xyz_preheats_180_then_native_xy_native_z_and_five_mm_clearance(self):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xyz')
-        self.assertEqual(m.events, [('heat', 180., True), ('home', 'XY'),
+        self.assertEqual(m.events, [('heat', 180., True), ('home', 'Y'), ('home', 'X'),
             ('move', (150., 158., None), 50.), ('home', 'Z'),
             ('move', (None, None, 5.), 5.), ('heat', 0., False)])
         self.assertEqual(m.toolhead.get_position()[3], 17.)
@@ -75,6 +80,54 @@ class NormalHomingTests(unittest.TestCase):
             self.assertEqual(m.toolhead.get_position()[2], 5.)
         ztargets = [e[1][2] for e in m.events if e[0] == 'move' and e[1][2] is not None]
         self.assertEqual(ztargets, [5., 5., 5.])
+
+    def test_active_pc7_without_known_z_refuses_before_heat_or_motion(self):
+        m = motion_fixture()
+        m.precision.endstop.query_endstop.return_value = True
+        with self.assertRaisesRegex(RuntimeError, 'INITIAL_ACTIVE'):
+            m.home(axes='xyz')
+        self.assertEqual(m.events, [])
+        self.assertEqual(m.get_status(1.)['failure_phase'], 'Z_CHECK_CONTACT')
+
+    def test_homed_active_pc7_gets_one_bounded_retreat_and_recheck(self):
+        for reopens in (False, True):
+            with self.subTest(reopens=reopens):
+                m = motion_fixture()
+                m.homed.add('z')
+                m.precision.endstop.query_endstop.side_effect = [True, not reopens, False]
+                if reopens:
+                    m.home(axes='z')
+                    self.assertEqual(m.state, 'COMPLETE')
+                else:
+                    with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
+                        m.home(axes='z')
+                    self.assertEqual(len(m.events), 1)
+                self.assertEqual(m.events[0], ('move', (None, None, 300.), 1.))
+                m.board.require_motion.assert_called_once()
+
+    def test_contact_that_closes_at_center_blocks_native_z_seek(self):
+        m = motion_fixture()
+        m.precision.endstop.query_endstop.side_effect = [False, True]
+        with self.assertRaisesRegex(RuntimeError, 'INITIAL_ACTIVE'):
+            m.home(axes='z')
+        self.assertNotIn(('home', 'Z'), m.events)
+        self.assertEqual(m.get_status(1.)['failure_phase'], 'HOME_Z_NATIVE_PROBE')
+
+    def test_default_idle_disables_xye_only_and_keeps_z_homed(self):
+        m = motion_fixture()
+        m.homed.add('z')
+        motors = NS(get_steppers=lambda: ['stepper_x', 'stepper_y', 'stepper_z', 'extruder'],
+                    set_motors_enable=Mock())
+        stats = NS(get_status=Mock(return_value={'state': 'paused'}))
+        objects = {'stepper_enable': motors, 'print_stats': stats}
+        m.printer.lookup_object = objects.get
+        m.cmd_idle_release(None)
+        motors.set_motors_enable.assert_not_called()
+        stats.get_status.return_value = {'state': 'complete'}
+        m.cmd_idle_release(None)
+        motors.set_motors_enable.assert_called_once_with(['stepper_x', 'stepper_y', 'extruder'], False)
+        self.assertEqual(m.homed, {'z'})
+        self.assertEqual(m.events, [])
 
     def test_existing_hotter_user_target_is_kept(self):
         m = motion_fixture()
@@ -129,7 +182,7 @@ class NormalHomingTests(unittest.TestCase):
     def test_native_g28_x0_y0_selectors_are_accepted(self):
         m = motion_fixture()
         m.cmd_G28(NS(get_command_parameters=lambda: {'G': '28', 'X': '0', 'Y': '0'}, error=RuntimeError))
-        self.assertEqual(m.events, [('home', 'XY')])
+        self.assertEqual(m.events, [('home', 'Y'), ('home', 'X')])
 
     def test_stale_oem_job_cannot_start_homing(self):
         m = motion_fixture()

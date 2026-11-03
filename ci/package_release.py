@@ -51,9 +51,9 @@ def main():
     with zipfile.ZipFile(mcu / 'M300_R14_6_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.write(mcu / 'M300APP.M3B', 'M300APP.M3B')
     stage = stage_host_update(ROOT / '.ci/release-host-update')
-    host = release / 'M300_HOST_R16_11_NORMAL_UI'
+    host = release / 'M300_HOST_R16_12_NORMAL_UI'
     shutil.copytree(stage, host, ignore=shutil.ignore_patterns(OWNER, '__pycache__', '*.pyc'))
-    with zipfile.ZipFile(release / 'M300_HOST_R16_11_NORMAL_UI.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(release / 'M300_HOST_R16_12_NORMAL_UI.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(host.rglob('*')):
             if path.is_file():
                 archive.write(path, str(path.relative_to(release)))
@@ -78,7 +78,7 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'Use R14.6 MCU with the English-only R16.11 host; see INSTALL_EN.md.\n'
+        'Use R14.6 MCU with the English-only R16.12 host; see INSTALL_EN.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     (release / OWNER).unlink()

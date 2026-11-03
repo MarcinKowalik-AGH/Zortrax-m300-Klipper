@@ -1,14 +1,15 @@
-name: Build M300 STM32F103 and host R16.11
+name: Build M300 STM32F103 and host R16.12
 
 on:
   push:
-    branches: [main]
+    branches: [main, r16.12-homing-fluidd]
     paths:
       - '.github/workflows/build-m300.yml'
       - 'PORT.json'
       - 'ci/**'
       - 'mcu/**'
       - 'host/**'
+      - 'frontend/**'
       - 'tests/**'
       - 'docs/**'
   workflow_dispatch:
@@ -71,7 +72,7 @@ jobs:
       - name: Save compiled MCU and matching host artifact
         uses: actions/upload-artifact@v4
         with:
-          name: m300-r14_5-host-r16_11-test-${{ github.sha }}
+          name: m300-r14_6-host-r16_12-test-${{ github.sha }}
           path: dist/release/
           if-no-files-found: error
           retention-days: 30
@@ -88,3 +89,26 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
+
+  fluidd:
+    name: Fluidd v1.37.7 with M300 result diagram
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - name: Verify pinned Fluidd and build static site
+        run: bash ci/build_fluidd.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m300-fluidd-v1_37_7-r16_12-${{ github.sha }}
+          path: dist/fluidd/
+          if-no-files-found: error
+          retention-days: 30

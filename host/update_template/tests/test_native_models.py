@@ -138,6 +138,16 @@ def prepare(h, source='sd', directory='', name='part.zcode', run=True):
 
 
 class ModelsTests(unittest.TestCase):
+    def test_models_hides_windows_metadata_at_sd_root(self):
+        with model_session() as h:
+            original = h.card.list_files
+            name = 'System Volume Information'
+            h.card.list_files = lambda path, **kwargs: original(path, **kwargs) + [
+                dict(name=name, path=name, size=0, directory=True, modified=0)]
+            files = h.models_browser.list_files('sd')['files']
+            self.assertNotIn(name, [entry['name'] for entry in files])
+            self.assertIn('MODELS', [entry['name'] for entry in files])
+
     def test_card_import_fetches_only_the_last_sector_prefix(self):
         for bits, file_sector in ((16, 50), (32, 546)):
             with self.subTest(fat=bits), model_session(bits=bits) as h:

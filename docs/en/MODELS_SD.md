@@ -60,7 +60,9 @@ ZORTRAX_BROWSER_PREVIEW GENERATION=<listing generation> INDEX=<zero-based index>
 ZORTRAX_MODELS_STATUS
 ```
 
-Omit `PATH` for the root, or use a relative directory path such as
+The Models browser hides the Windows metadata folder `System Volume Information`
+at the physical SD root. A card with no supported files or user folders
+there will show an empty listing. Omit `PATH` for the root, or use a relative directory path such as
 `PATH=MODELS`. For files on the Orange Pi, use `SOURCE=HOST`.
 When status reports `READY`, use its token with
 `ZORTRAX_MODELS_START TOKEN=<token>`. To abandon the selection or stop

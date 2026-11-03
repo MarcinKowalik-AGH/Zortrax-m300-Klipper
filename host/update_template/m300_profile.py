@@ -5,9 +5,12 @@ import math
 import re
 
 HEADER = re.compile(r'^\[([^]\r\n]+)\]\s*(?:[#;].*)?$', re.M)
-MACRO_RENAMES = {'TEST_M300_LEVEL': 'TEST_ZORTRAX_LEVEL',
-                 'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
+MACRO_RENAMES = {'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
                  'TEST_M300_XY': 'TEST_ZORTRAX_XY'}
+RETIRED_LEVEL_MACROS = {'TEST_M300_LEVEL', 'TEST_ZORTRAX_LEVEL'}
+LEVEL_WRAPPER = re.compile(
+    r'ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=\{params\.TEMP\|default\((180|260)\)\|float\}')
+IDLE_GCODE = 'gcode:\n    TURN_OFF_HEATERS\n    ZORTRAX_IDLE_RELEASE_XYE\n'
 CHOICE_MACROS = {
     'gcode_macro ZORTRAX_LIGHT': ('light_mode', 'MODE'),
     'gcode_macro ZORTRAX_BUZZER': ('buzzer', 'STATE'),
@@ -56,6 +59,25 @@ def minimum(block, name, value):
     return set_option(block, name, max(value, current))
 
 
+def gcode_body(block):
+    match = re.search(r'^gcode[ \t]*[=:][ \t]*([^\r\n]*)(?:\r?\n|$)', block, re.M | re.I)
+    if match is None:
+        return None, []
+    lines = [line.split('#', 1)[0].split(';', 1)[0].strip()
+             for line in (match[1] + '\n' + block[match.end():]).splitlines()]
+    return match, [line for line in lines if line]
+
+
+def migrate_idle(block):
+    match, commands = gcode_body(block)
+    if match is None:
+        return block.rstrip() + '\n' + IDLE_GCODE + '\n'
+    if commands in (['TURN_OFF_HEATERS', 'M84'], ['TURN_OFF_HEATERS', 'M18']):
+        return re.sub(r'(?m)^([ \t]+)M(?:84|18)([ \t]*(?:[#;].*)?)$',
+                      r'\1ZORTRAX_IDLE_RELEASE_XYE\2', block, count=1)
+    return block
+
+
 def convert_text(text):
     prefix, chunks, saved = blocks(text)
     output = [prefix]
@@ -64,16 +86,24 @@ def convert_text(text):
             continue
         if section.startswith('gcode_macro '):
             old = section[12:]
+            if old in RETIRED_LEVEL_MACROS:
+                header_options = re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M)
+                _, commands = gcode_body(block)
+                if (set(header_options) <= {'description', 'gcode'} and len(commands) == 1
+                        and LEVEL_WRAPPER.fullmatch(commands[0])):
+                    continue
             if old in MACRO_RENAMES:
                 renamed = 'gcode_macro ' + MACRO_RENAMES[old]
                 block = block.replace('[' + section + ']', '[' + renamed + ']', 1)
                 section = renamed
-        if section == 'm300_motion':
+        if section == 'm300_motion' and option(block, 'mode') != 'native':
             # The complete old text stays in the installer's rollback receipt.
             block = ('[m300_motion]\nmode: native\nhome_xy: ' +
                      option(block, 'home_xy', '150, 158') +
                      '\nhome_travel_speed: 50\nz_home_hotend_target: 180\n'
                      'z_contact_clearance: 5\nz_lift_speed: 5\n\n')
+        elif section == 'idle_timeout':
+            block = migrate_idle(block)
         elif section == 'mcu':
             # The M300 direct UART has no Arduino DTR reset wire. Select the
             # native software reset used by both explicit and startup recovery.
@@ -143,13 +173,11 @@ def convert_text(text):
                      'description: Change material in a paused native print; explicit Resume\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=CHANGE '
                      '{% if params.TEMP is defined %}TEMP={params.TEMP|float}{% endif %}\n\n')
-        elif section in ('gcode_macro TEST_ZORTRAX_LEVEL', 'gcode_macro ZORTRAX_LOAD',
-                         'gcode_macro ZORTRAX_UNLOAD'):
+        elif section in ('gcode_macro ZORTRAX_LOAD', 'gcode_macro ZORTRAX_UNLOAD'):
             # Existing wrappers live in included files on installed R16.x.
             # Update the TEMP default while preserving their other commands.
-            target = '260' if section.endswith('_LEVEL') else '240'
             block = re.sub(r'params\.TEMP\s*\|\s*default\([^)]*\)',
-                           'params.TEMP|default(' + target + ')', block)
+                           'params.TEMP|default(240)', block)
         elif section == 'gcode_macro CANCEL_PRINT':
             block = ('[gcode_macro CANCEL_PRINT]\ndescription: Cancel native print and heaters\n'
                      'rename_existing: CANCEL_PRINT_BASE\ngcode:\n'
