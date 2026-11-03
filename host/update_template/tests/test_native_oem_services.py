@@ -292,15 +292,19 @@ class NativeMaintenanceTests(unittest.TestCase):
         self.assertEqual(h.gmove.base_position[2],3.)
         h.assert_restored(self)
 
-    def test_twenty_mm_platform_move_drains_one_segment_at_a_time(self):
-        h = Harness()
-        h.homed = 'z'
-        h.position[2] = 7.
-        h.run('ZORTRAX_PLATFORM_DOWN DISTANCE=20')
-        h.until(h.m, 'COMPLETE')
-        moves = [event[1] for event in h.events if event[0] == 'move']
-        self.assertEqual(moves, [(150., 158., float(z), 17.) for z in range(8, 28)])
-        h.assert_restored(self)
+    def test_platform_move_within_native_range_drains_one_segment_at_a_time(self):
+        for distance in (20, 100):
+            with self.subTest(distance=distance):
+                h = Harness()
+                h.homed = 'z'
+                h.position[2] = 7.
+                h.m.timeout = 2.
+                h.run('ZORTRAX_PLATFORM_DOWN DISTANCE=%d' % distance)
+                h.until(h.m, 'COMPLETE')
+                moves = [event[1] for event in h.events if event[0] == 'move']
+                self.assertEqual(moves, [(150., 158., float(z), 17.)
+                                         for z in range(8, 8 + distance)])
+                h.assert_restored(self)
 
     def test_cancel_platform_move_stops_after_the_current_segment(self):
         h = Harness()
@@ -320,7 +324,7 @@ class NativeMaintenanceTests(unittest.TestCase):
                                 ('z',0.,'ZORTRAX_PLATFORM_UP'),
                                 ('z',315.,'ZORTRAX_PLATFORM_DOWN'),
                                 ('z',300.,'ZORTRAX_PLATFORM_DOWN DISTANCE=20'),
-                                ('z',5.,'ZORTRAX_PLATFORM_DOWN DISTANCE=51')):
+                                ('z',5.,'ZORTRAX_PLATFORM_DOWN DISTANCE=311')):
             h=Harness();h.homed=homed;h.position[2]=z
             with self.assertRaises(native_gcode.CommandError):h.run(command)
             self.assertFalse(any(e[0]=='move' for e in h.events));h.assert_restored(self)

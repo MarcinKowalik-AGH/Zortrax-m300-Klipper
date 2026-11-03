@@ -49,8 +49,8 @@ issuing new moves. A release followed by a fresh press on an acknowledged
 row is required. At most one 0.1 mm native quantum remains queued. A long
 button event is part of this hold, not navigation. Z must actually be homed.
 
-Fluidd platform macros execute a finite distance. The default is 1 mm and
-`max_platform_move_distance` can reduce the default 50 mm cap:
+Fluidd platform macros execute a finite distance. The default is 1 mm.
+Supply any positive distance whose endpoint fits the homed Z travel:
 
 ```gcode
 ZORTRAX_PLATFORM_UP DISTANCE=1 SPEED=1
@@ -59,8 +59,9 @@ ZORTRAX_PLATFORM_DOWN DISTANCE=20 SPEED=1
 
 The full requested endpoint must fit the actual homed Z range. The service
 queues one segment of up to 1 mm at a time, so Cancel lets the current
-segment finish and stops the remaining distance. The OLED hold retains its
-0.1 mm quantum. Ordinary XYZ jogs remain native Klipper controls.
+segment finish and stops the remaining distance. The maintenance timeout
+bounds waiting for progress during the finite move. The OLED hold retains
+its 0.1 mm quantum. Ordinary XYZ jogs remain native Klipper controls.
 
 Load and Unload move E only; XYZ need not be homed. Native extrusion and
 heater checks remain active. Configured lengths, speeds and E calibration

@@ -20,7 +20,6 @@ PLATFORM_STEP_SECONDS = 1.
 class M300NativeMaintenance(M300Maintenance):
     def __init__(self, config):
         super().__init__(config)
-        self.platform_move_distance = self._number('max_platform_move_distance', 50., .1, 50.)
         self.phase_id = 0
         self.target = 0.
         self._bed_target = None
@@ -97,7 +96,8 @@ class M300NativeMaintenance(M300Maintenance):
         position[2]+=distance
         low,high=self.job._axis_bounds()
         if not low[2]<=position[2]<=high[2]:
-            raise self._error('platform move exceeds native Z axis limits')
+            raise self._error('platform move exceeds native Z axis limits (target %.2f, range %.2f to %.2f)'
+                              % (position[2], low[2], high[2]))
         return position
 
     def start(self,operation,value=None):
@@ -120,9 +120,8 @@ class M300NativeMaintenance(M300Maintenance):
 
     def platform(self,distance,speed=None):
         if (type(distance) not in (int,float) or not math.isfinite(distance)
-                or distance == 0. or abs(distance) > self.platform_move_distance):
-            raise self._error('DISTANCE must be positive and at most %g mm'
-                              % self.platform_move_distance)
+                or distance == 0.):
+            raise self._error('DISTANCE must be finite and positive')
         speed=self.jog_speed if speed is None else speed
         if type(speed) not in (int,float) or not math.isfinite(speed) or speed<=0.:
             raise self._error('SPEED must be finite and positive')
@@ -263,8 +262,14 @@ class M300NativeMaintenance(M300Maintenance):
                             else:
                                 position = list(endpoint)
                                 position[2] = z + math.copysign(step, remaining)
+                                if position[2] == z:
+                                    self.cancel('platform step is below Z coordinate resolution')
+                                    return now + PERIOD
                             self.lease.move(position, speed)
                             self.toolhead.get_last_move_time()
+                            # The finite endpoint bounds travel; the timeout bounds
+                            # waiting for progress, even on a full-height move.
+                            self._deadline = self.reactor.monotonic() + self.timeout
                         else:
                             self._finish('COMPLETE')
                 finally:
@@ -280,7 +285,6 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
-            max_platform_move_distance_mm=self.platform_move_distance,
             revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM1')
 
     def cmd_platform(self,gcmd):
