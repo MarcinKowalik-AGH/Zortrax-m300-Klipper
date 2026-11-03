@@ -47,14 +47,13 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 **MCU R14.6 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Stage the host update on Orange Pi from the `r16.12-homing-fluidd` branch.
+Download **M300_R16_12_FULL_ORANGE_PI** from the successful GitHub Actions run.
 MCU R14.6 adds a read-only query for the factory serial and OEM print time.
 See [Settings and Information](docs/en/SETTINGS_INFORMATION.md).
 
-[Install on Orange Pi](docs/en/INSTALL.md). After Ready run
-`python3 setup_fluidd.py --apply` and refresh Fluidd. No procedure runs during
-installation. The installer lists changes, refuses unknown runtime edits and
-provides exact rollback while preserving PID, E and deliberate geometry.
+[Install on Orange Pi](docs/en/INSTALL.md). The package includes the checked host,
+MCU application and compiled Fluidd. The installer refuses unknown runtime
+edits and preserves PID, E and deliberate geometry.
 
 Canonical runtime: host/klippy/extras. Configuration: host/config. Installer
 and self-contained tests: host/update_template. MCU: mcu/SOURCE_MCU. Current

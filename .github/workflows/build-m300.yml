@@ -1,8 +1,8 @@
-name: Build M300 STM32F103 and host R16.12
+name: M300 R16.12 full Orange Pi build
 
 on:
   push:
-    branches: [main, r16.12-homing-fluidd]
+    branches: [main]
     paths:
       - '.github/workflows/build-m300.yml'
       - 'PORT.json'
@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   build:
-    name: F103 — ARM build, native tests and M3B
+    name: Build and verify MCU, host and Fluidd
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -61,18 +61,30 @@ jobs:
       - name: Validate host, startup, guards, cooling and actual Klippy FILEOUTPUT
         run: python ci/run_checks.py --dictionary dist/mcu/klipper.dict
 
-      - name: Pack actual compiled M3B and matching Orange Pi host update
+      - name: Select Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+
+      - name: Build and test the Fluidd diagram
+        run: bash ci/build_fluidd.sh
+
+      - name: Assemble the complete Orange Pi artifact
         shell: bash
         run: |
           set -euo pipefail
-          python ci/package_release.py --build dist/mcu
+          python ci/package_release.py --build dist/mcu --fluidd dist/fluidd
           cd dist/release
           sha256sum -c SHA256SUMS
 
-      - name: Save compiled MCU and matching host artifact
+      - name: Upload the ready-to-install package
         uses: actions/upload-artifact@v4
         with:
-          name: m300-r14_6-host-r16_12-test-${{ github.sha }}
+          name: M300_R16_12_FULL_ORANGE_PI
           path: dist/release/
           if-no-files-found: error
           retention-days: 30
@@ -89,26 +101,3 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
-
-  fluidd:
-    name: Fluidd v1.37.7 with M300 result diagram
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.25.0
-      - name: Verify pinned Fluidd and build static site
-        run: bash ci/build_fluidd.sh
-      - uses: actions/upload-artifact@v4
-        with:
-          name: m300-fluidd-v1_37_7-r16_12-${{ github.sha }}
-          path: dist/fluidd/
-          if-no-files-found: error
-          retention-days: 30

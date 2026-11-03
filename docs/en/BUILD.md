@@ -28,7 +28,8 @@ python ci/prepare_upstream.py
 python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
 python mcu/SOURCE_MCU/tools/build.py --archive mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip --work .ci/arm-build --output dist/mcu --jobs 4
 python ci/run_checks.py --dictionary dist/mcu/klipper.dict
-python ci/package_release.py --build dist/mcu
+bash ci/build_fluidd.sh
+python ci/package_release.py --build dist/mcu --fluidd dist/fluidd
 ~~~
 
 For an existing owned ARM build directory, add --fresh to the builder.

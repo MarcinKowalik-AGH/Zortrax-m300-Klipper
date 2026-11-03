@@ -21,6 +21,7 @@ def module(name, path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build', type=Path, required=True)
+    parser.add_argument('--fluidd', type=Path, help='Tested Fluidd build and its SHA256SUMS')
     args = parser.parse_args()
     build = args.build.resolve()
     report = json.loads((build / 'BUILD_REPORT.json').read_text())
@@ -81,6 +82,16 @@ def main():
         'Use R14.6 MCU with the English-only R16.12 host; see INSTALL_EN.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
+    if args.fluidd:
+        frontend = args.fluidd / 'M300_FLUIDD_1_37_7_R16_12.zip'
+        expected = (args.fluidd / 'SHA256SUMS').read_text().split()
+        if expected != [digest(frontend), frontend.name]:
+            raise ValueError('Fluidd build checksum mismatch')
+        with zipfile.ZipFile(frontend) as archive:
+            if 'fluidd-m300/index.html' not in archive.namelist() or archive.testzip() is not None:
+                raise ValueError('Invalid compiled Fluidd artifact')
+        shutil.copy2(frontend, release / frontend.name)
+        shutil.copy2(ROOT / 'ci/install_orange_pi.py', release / 'install-orange-pi.py')
     (release / OWNER).unlink()
     hashes = {str(p.relative_to(release)): digest(p) for p in sorted(release.rglob('*'))
               if p.is_file() and p.name != 'SHA256SUMS'}
