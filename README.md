@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper R16.9
+# Zortrax M300 Classic — Klipper R16.10
 
-[Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/VALIDATION_R16_9.md)
+[Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.9**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.10**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -26,24 +26,21 @@ Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Or
 
 ### Current implementation status
 
-R16.9 adds Models browsing and printing from the physical MCU SD reader.
-Open the SD folder, choose G-code or supported Classic M300 Z-code, and
-start the checked local copy through native Klipper. The R16.8 Settings
-and Information menus are included.
+R16.10 adds contextual OLED PRINTING, PAUSE MENU and PRINTING DONE screens.
+A 10-second hold pauses the native print or reprints the verified completed
+copy after the model has been removed. OLED and Fluidd share the native print
+state, including the existing material change procedure. The R16.9 card reader
+and Models menu support G-code and the audited Classic M300 Z-code subset.
 
-Software validation includes **299 host tests**, **9 repository contracts**,
-**16 native Klippy FILEOUTPUT cases** and **28 modeled MCU SD scenarios**.
-Physical acceptance and representative Z-Suite export coverage are pending.
-
-[Models from SD](docs/en/MODELS_SD.md) · [Validation](docs/en/VALIDATION_R16_9.md)
+[Print contexts](docs/en/PRINT_CONTEXT.md) · [Procedure inventory](docs/en/PROCEDURE_INVENTORY.md) · [Models from SD](docs/en/MODELS_SD.md)
 
 ## Test release
 
-**MCU R14.5 + host R16.9**, pinned Klipper
+**MCU R14.5 + host R16.10**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Download `m300-r14_5-host-r16_9-test-<commit>` from a successful GitHub Actions
-run. It contains the verified `M300_HOST_R16_9_NORMAL_UI.zip`, build reports,
+Download `m300-r14_5-host-r16_10-test-<commit>` from a successful GitHub Actions
+run. It contains the verified `M300_HOST_R16_10_NORMAL_UI.zip`, build reports,
 provenance/checksums and a freshly compiled R14.5 application for older setups.
 An already installed R14.5 MCU can remain.
 

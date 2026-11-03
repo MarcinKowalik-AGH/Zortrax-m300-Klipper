@@ -8,11 +8,13 @@ import logging
 import math
 import os
 import secrets
+import stat
+from typing import Optional
 
 from .m300_binary import compile_m300, DEFAULT_MAX_BYTES
 from .m300_job_sd import ReadOnlySnapshot, _open_source, _new_snapshot, _seal_snapshot
 from .m300_maintenance import other_service
-from .m300_native_service import require_idle_print
+from .m300_native_service import lock_command, require_idle_print
 
 MAX_LINE = 64 * 1024
 PEERS = ('m300_job', 'm300_filament', 'm300_calibration', 'm300_maintenance',
@@ -32,6 +34,11 @@ class Preview:
     stream: ReadOnlySnapshot
     targets: dict
     binary: bool
+    virtual_name: Optional[str] = None
+
+    @property
+    def native_filename(self):
+        return self.virtual_name or self.filename
 
 
 def _file_identity(stat):
@@ -115,8 +122,80 @@ def _build_snapshot(root, entry, physical, metadata, max_bytes, limits):
                 pass
 
 
+def _copy_open_native_file(fd, size):
+    """Keep the bytes Klippy opened, without moving its source file offset."""
+    before = os.fstat(fd)
+    if not stat.S_ISREG(before.st_mode) or before.st_size != size:
+        raise ModelError('native source size changed')
+    writer, temporary = _new_snapshot()
+    try:
+        digest = hashlib.sha256()
+        position = 0
+        while position < size:
+            data = os.pread(fd, min(65536, size - position), position)
+            if not data or writer.write(data) != len(data):
+                raise ModelError('incomplete native source snapshot')
+            digest.update(data)
+            position += len(data)
+        if _file_identity(os.fstat(fd)) != _file_identity(before):
+            raise ModelError('native source changed while making the snapshot')
+        raw = _seal_snapshot(writer, temporary)
+        writer = temporary = None
+        return raw, digest.hexdigest()
+    finally:
+        if writer is not None:
+            writer.close()
+        if temporary is not None:
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
+
+
 class NativeModelStream(ReadOnlySnapshot):
-    """The native worker catches read errors internally. Escalate storage loss."""
+    """Hold a verified EOF stream for replay until the job is cleared."""
+    def __init__(self, stream, name, owner):
+        super().__init__(stream, name, owner)
+        self.begin()
+
+    def begin(self):
+        self.eligible = True
+        self.expected_seek = 0
+        self.eof = self.retained = False
+
+    def read(self, size=-1):
+        result = super().read(size)
+        if size > 0 and not result:
+            self.eof = True
+        return result
+
+    def seek(self, offset, whence=0):
+        if whence != 0 or offset != self.expected_seek:
+            self.eligible = False
+        self.expected_seek = None
+        self.eof = False
+        return super().seek(offset, whence)
+
+    def close(self):
+        owner = self._owner
+        active = owner.active
+        sd = owner.v_sd
+        if (active is not None and active.stream is self and self.eligible
+                and self.eof and sd.file_position == active.size
+                and not sd.must_pause_work and owner.ready
+                and not owner.printer.is_shutdown()):
+            # Native EOF closes the active file immediately before publishing
+            # print_stats.complete. Keep the descriptor for that transition.
+            self.retained = True
+            return
+        if active is not None and active.stream is self:
+            owner.active = None
+        super().close()
+
+    def release(self):
+        self.retained = self.eligible = False
+        super().close()
+
     def _io(self, operation, *args):
         try:
             return super()._io(operation, *args)
@@ -141,7 +220,10 @@ class M300Models:
         self.ready = False
         self.operation = self.token = self.preview = None
         self.filename = self.source = self.error = None
+        self.active = self.completed = self.completed_token = None
+        self.native_load = self.native_print = None
         self.printer.register_event_handler('klippy:ready', self._ready)
+        self.printer.register_event_handler('virtual_sdcard:reset_file', self._reset_print)
         for event in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
             self.printer.register_event_handler(event, self.invalidate)
         self.gcode.register_command('ZORTRAX_MODELS_STATUS', self.cmd_status, when_not_ready=True)
@@ -150,6 +232,139 @@ class M300Models:
 
     def _ready(self):
         self.ready = True
+        if (not self.job.board.native_control or self.native_load is not None
+                or not hasattr(self.v_sd, '_load_file')):
+            return
+        self.native_load = self.v_sd._load_file
+        self.v_sd._load_file = self._load_native_model
+        stats = self.v_sd.print_stats
+        native_complete, native_pause = stats.note_complete, stats.note_pause
+
+        def complete():
+            native_complete()
+            self._record_complete()
+
+        def pause():
+            native_pause()
+            active = self.active
+            if active is not None and self.v_sd.current_file is active.stream:
+                active.stream.expected_seek = self.v_sd.file_position
+
+        stats.note_complete, stats.note_pause = complete, pause
+        record = lock_command(self.gcode, 'SDCARD_PRINT_FILE', self._dispatch_print)
+        if record is not None:
+            self.native_print = record[1]
+
+    def _load_native_model(self, gcmd, filename, check_subdirs=False):
+        # The native loader resolves the exact file, retains standard filename
+        # reporting and initializes print statistics. Take a bounded immutable
+        # copy of that descriptor before native do_resume can start the worker.
+        self.native_load(gcmd, filename, check_subdirs=check_subdirs)
+        sd = self.v_sd
+        source, size = sd.current_file, sd.file_size
+        if source is None or not 0 < size <= self.max_gcode_bytes:
+            return
+        raw = None
+        try:
+            fd = source.fileno()
+            if sd.current_file is not source:
+                raise gcmd.error('native file selection changed before snapshot')
+            raw, digest = self.executor.submit(_copy_open_native_file, fd, size)
+            if sd.current_file is not source:
+                raise gcmd.error('native file selection changed during snapshot')
+            self._live()
+            stream = self._snapshot_stream(raw, source.name)
+            raw = None
+        except (ModelError, OSError, UnicodeError) as exc:
+            if not self.ready or self.printer.is_shutdown() or sd.current_file is not source:
+                raise gcmd.error('native file selection expired') from exc
+            logging.info('M300 cannot retain this native job for reprint: %s', exc)
+            return
+        finally:
+            if raw is not None:
+                self.executor.submit(raw.close)
+        self.active = Preview('host', sd.print_stats.filename, digest, size, stream, {}, False)
+        sd.current_file = stream
+        try:
+            source.close()
+        except OSError:
+            logging.exception('M300 native source close')
+        if not self.ready or self.printer.is_shutdown() or sd.current_file is not stream:
+            raise gcmd.error('native file selection expired')
+
+    def _dispatch_print(self, gcmd):
+        filename = gcmd.get('FILENAME')
+        physical = filename.removeprefix('/')
+        if not physical.startswith('sd:/'):
+            return self.native_print(gcmd)
+        # This name is reserved for a physical SD job recorded by Models.
+        # Stock Fluidd's Reprint passes the name, not an M300 token.
+        completed = self.completed
+        if (self.v_sd.cmd_from_sd or completed is None
+                or completed.source != 'sd' or completed.virtual_name != physical):
+            raise gcmd.error('No matching completed SD snapshot. Select the model again.')
+        try:
+            self.reprint(self.completed_token)
+        except ModelError as exc:
+            raise gcmd.error(str(exc)) from exc
+
+    def _reset_print(self, *args):
+        active, completed = self.active, self.completed
+        self.active = self.completed = self.completed_token = None
+        for model in (active, completed):
+            if model is not None:
+                model.stream.release()
+
+    def _record_complete(self):
+        model, self.active = self.active, None
+        if model is None:
+            return
+        sd = self.v_sd
+        if (self.ready and not self.printer.is_shutdown()
+                and sd.print_stats.state == 'complete' and sd.print_stats.filename == model.native_filename
+                and sd.current_file is None and sd.work_timer is None
+                and sd.file_position == model.size and model.stream.retained):
+            self.completed = model
+            self.completed_token = secrets.token_hex(16)
+        else:
+            model.stream.release()
+
+    def _reprint_available(self, now):
+        model = self.completed
+        sd = self.v_sd
+        if (model is None or self.operation is not None or self.preview is not None
+                or model.stream.closed or not self.ready or self.printer.is_shutdown()
+                or sd.current_file is not None or sd.work_timer is not None
+                or sd.print_stats.state != 'complete' or sd.print_stats.filename != model.native_filename):
+            return False
+        toolhead = self.printer.lookup_object('toolhead')
+        queued, estimated, empty = toolhead.check_busy(now)
+        return empty and queued <= estimated
+
+    def reprint_status(self, now):
+        available = self._reprint_available(now)
+        return dict(available=available, token=self.completed_token if available else None,
+                    filename=self.completed.filename if self.completed else None)
+
+    def reprint(self, token):
+        self._idle()
+        sd = self.v_sd
+        if (getattr(sd, 'cmd_from_sd', False) or token is None
+                or token != self.completed_token or not self._reprint_available(self.reactor.monotonic())):
+            raise ModelError('No completed model is ready to reprint')
+        model = self.completed
+        self._check_frame(model)
+        # The native reset invalidates any prior selection. Detach the one
+        # consumed token first, and close its stream if attaching fails.
+        self.completed = self.completed_token = None
+        try:
+            sd._reset_file()
+            self._idle()
+            self._attach(model)
+        except Exception:
+            model.stream.release()
+            raise
+        return model.filename
 
     def _discard(self):
         self.token = None
@@ -160,6 +375,7 @@ class M300Models:
     def invalidate(self, *args):
         self.ready = False
         self._discard()
+        self._reset_print()
 
     def _live(self):
         if (not self.ready or self.printer.is_shutdown()
@@ -184,6 +400,11 @@ class M300Models:
         return ({'hotend': (max(hotend.min_temp, hotend.min_extrude_temp),
                             min(hotend.max_temp, 300.)),
                  'bed': (bed.min_temp, min(bed.max_temp, 130.))}, self.job._axis_bounds())
+
+    def _snapshot_stream(self, raw, name):
+        wrapped = self.executor.wrap_obj(raw)
+        reader = io.TextIOWrapper(io.BufferedReader(wrapped), encoding='utf-8', newline='')
+        return NativeModelStream(reader, name, self)
 
     def prepare(self, source, entry, cid, checkpoint):
         self._idle()
@@ -230,11 +451,13 @@ class M300Models:
                 check()
                 self._idle()
                 display_name = ('sd:/' if source == 'sd' else '') + entry.path
-                wrapped = self.executor.wrap_obj(raw)
-                reader = io.TextIOWrapper(io.BufferedReader(wrapped), encoding='utf-8', newline='')
-                stream = NativeModelStream(reader, display_name, self)
+                stream = self._snapshot_stream(raw, display_name)
                 raw = None
-                self.preview = Preview(source, display_name, digest, size, stream, targets, binary)
+                # Stable for this snapshot and its repeats. A stale Fluidd
+                # history item for the same card pathname cannot select new bytes.
+                virtual_name = 'sd:/%s/%s' % (token, entry.path) if source == 'sd' else None
+                self.preview = Preview(source, display_name, digest, size, stream, targets, binary,
+                                       virtual_name)
                 stream = None
             except Exception as exc:
                 if token == self.token:
@@ -265,27 +488,35 @@ class M300Models:
         if (not self.token or token != self.token or self.operation is not None
                 or preview is None or preview.stream.closed):
             raise ModelError('choose a fully prepared model first')
+        self._check_frame(preview)
+        self.v_sd._reset_file()
+        self._idle()
+        if self.preview is not preview or self.token != token:
+            raise ModelError('model selection changed before start')
+        self.preview = self.token = None
+        self._attach(preview)
+        return preview.filename
+
+    def _check_frame(self, preview):
         if preview.binary:
             move = self.printer.lookup_object('gcode_move')
             for values in (move.base_position, move.homing_position):
                 if any(not math.isfinite(x) or abs(x) > 1.e-9 for x in values[:3]):
                     raise ModelError('M300 Z-code requires zero XYZ G-code offsets')
+
+    def _attach(self, model):
         sd = self.v_sd
-        sd._reset_file()
-        self._idle()
-        if self.preview is not preview or self.token != token:
-            raise ModelError('model selection changed before start')
-        sd.current_file = preview.stream
+        model.stream.begin()
+        self.active = model
+        sd.current_file = model.stream
         sd.file_position = sd.next_file_position = 0
-        sd.file_size = preview.size
-        self.preview = self.token = None
+        sd.file_size = model.size
         try:
-            sd.print_stats.set_current_file(preview.filename)
+            sd.print_stats.set_current_file(model.native_filename)
             sd.do_resume()
         except Exception:
             sd._reset_file()
             raise
-        return preview.filename
 
     def get_status(self, now):
         preview = self.preview

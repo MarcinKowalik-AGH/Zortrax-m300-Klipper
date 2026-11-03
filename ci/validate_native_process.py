@@ -86,6 +86,7 @@ def main():
     model_fixtures = {
         'native_models_gcode': ('Model text.gcode',
             b'G90\nG28\nG1 X155 Y158 Z5 F600\nM400\nTURN_OFF_HEATERS', 'G-code'),
+        'native_models_reprint': ('Repeat.gcode', b'M105\nZORTRAX_CI_REPLAY_MARK VALUE=ORIGINAL\n', 'G-code'),
         'native_models_zcode': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
     }
     shutil.copy2(Path(__file__).with_name('m300_ci_models_fixture.py'),
@@ -139,6 +140,8 @@ def main():
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)
             cp.add_section('m300_ci_models_fixture')
+            if name == 'native_models_reprint':
+                cp.set('m300_ci_models_fixture', 'replay', 'True')
             assert not cp.getboolean('m300_job', 'workflow_qualified')
         if synthetic:
             if not cp.has_section('force_move'):cp.add_section('force_move')
@@ -196,8 +199,12 @@ def main():
             assert result['filename'] == filename and result['format'] == kind, result
             assert result['targets'] == [0., 0.], result
             assert result['explicit_resume'] == (kind == 'Z-code'), result
-            assert result['position'][:3] == ([155., 158., 5.] if kind == 'G-code'
-                                               else [110., 110., 10.]), result
+            assert result['explicit_reprint'] == (name == 'native_models_reprint'), result
+            if name == 'native_models_reprint':
+                assert result['replay_marks'] == ['ORIGINAL', 'ORIGINAL'], result
+            else:
+                assert result['position'][:3] == ([155., 158., 5.] if kind == 'G-code'
+                                                   else [110., 110., 10.]), result
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)

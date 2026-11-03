@@ -16,6 +16,8 @@ def main():
     package = args.package.resolve()
     sys.path[:0] = [str(package), str(package / 'tests')]
     from test_settings_information import session
+    from test_print_context import printing, pause
+    from payload.m300_print_ui import frame_for
     from payload.m300_settings_ui import menu_frame
 
     with session() as printer:
@@ -50,6 +52,18 @@ def main():
         result['sort_menu_cold_oled'] = measure(cold, 150)
         assert allocations == tuple(printer.allocations)
         result['history_executors_allocated_during_render'] = 0
+    with printing() as printer:
+        def render_context():
+            printer.oled._render(printer.now)
+            assert len(printer.oled._render_wire) == 8192
+
+        result['print_context'] = {'printing': measure(render_context, 1000)}
+        pause(printer)
+        result['print_context']['pause_menu'] = measure(render_context, 1000)
+        printer.sd.print_stats.state = 'complete'
+        printer.sd.current_file = None
+        result['print_context']['printing_done'] = measure(render_context, 1000)
+        result['print_context']['cache_capacity'] = frame_for.cache_info().maxsize
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result))
 

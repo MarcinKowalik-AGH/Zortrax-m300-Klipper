@@ -1,13 +1,11 @@
-# Current status — R16.9 test release
+# Current status — R16.10 test release
 
-The Models menu opens the configured physical MCU SD reader, browses FAT16
-or FAT32 folders, and imports G-code and the audited M300 Z-code subset.
-The operator starts the ready local copy through native Klippy. R16.9
-includes the English Settings and Information menus from R16.8.
+R16.10 adds contextual PRINTING, PAUSE MENU and PRINTING DONE screens.
+The OLED and Fluidd share native pause, resume, cancel and job state.
+The configured SD reader and the Models menu support both G-code and the
+audited Classic M300 Z-code subset. English is the only interface language.
 
-The supported combination is MCU R14.5 and host R16.9. Software validation
-covers 299 host tests, 9 repository contracts, 16 native Klippy FILEOUTPUT
-cases and 28 MCU SD model scenarios. Real card and printer acceptance is
-pending.
+The supported combination is MCU R14.5 and host R16.10. Physical OLED,
+Fluidd browser and printer acceptance are pending.
 
-[Models from SD](MODELS_SD.md) · [Validation](VALIDATION_R16_9.md) · [Install](INSTALL.md)
+[Print contexts](PRINT_CONTEXT.md) · [Procedure inventory](PROCEDURE_INVENTORY.md) · [Install](INSTALL.md)

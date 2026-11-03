@@ -12,7 +12,7 @@ import os
 import urllib.request
 
 PROJECT_URL = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
-HOST_VERSION = 'R16.9'
+HOST_VERSION = 'R16.10'
 UPSTREAM = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 SETTINGS = (
     ('light_mode','Light',(('DYNAMIC','Dynamic'),('WHITE','White'),('DISABLE','Disabled'))),

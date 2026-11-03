@@ -1,5 +1,6 @@
 """FILEOUTPUT-only harness that starts a prepared file using public commands."""
 import json
+from pathlib import Path
 
 
 class ModelsFixture:
@@ -11,8 +12,15 @@ class ModelsFixture:
         self.sd = self.printer.load_object(config, 'virtual_sdcard')
         self.gcode.register_command('ZORTRAX_CI_RUN_MODEL', self.cmd_run)
         self.printer.register_event_handler('gcode:debuginput_exit', self.report)
+        self.replay = config.getboolean('replay', False)
+        self.replayed = False
+        self.marks = []
+        self.gcode.register_command('ZORTRAX_CI_REPLAY_MARK', self.mark)
         self.started = False
         self.resumed = False
+
+    def mark(self, gcmd):
+        self.marks.append(gcmd.get('VALUE'))
 
     def cmd_run(self, gcmd):
         if not self.board.get_mcu().is_fileoutput():
@@ -20,6 +28,11 @@ class ModelsFixture:
         browser = self.printer.lookup_object('m300_browser')
         models = self.printer.lookup_object('m300_models')
         assert len(browser.catalog.entries) == 1
+        if self.replay:
+            self.gcode.run_script_from_command('SDCARD_PRINT_FILE FILENAME="Repeat.gcode"')
+            assert self.sd.current_file is not None and self.sd.work_timer is not None
+            self.started, self.format = True, 'G-code'
+            return
         self.gcode.run_script_from_command(
             'ZORTRAX_BROWSER_PREVIEW GENERATION=%d INDEX=0' % browser.catalog.generation)
         assert self.sd.current_file is None and self.sd.work_timer is None
@@ -45,7 +58,34 @@ class ModelsFixture:
                 pause = self.printer.lookup_object('pause_resume')
                 assert pause.is_paused and self.sd.current_file is not None
                 self.resumed = True
-                self.reactor.register_callback(lambda eventtime: self.gcode.run_script('RESUME'))
+                ui = self.printer.lookup_object('m300_print_ui')
+                view = ui.view(now)
+                assert view[0][1] == 'PAUSED'
+                ui._schedule('resume', view[0], lambda: True)
+                return False
+            if self.replay and not self.replayed:
+                ui = self.printer.lookup_object('m300_print_ui')
+                toolhead = self.printer.lookup_object('toolhead')
+                check_busy = toolhead.check_busy
+                queued, _, empty = check_busy(now)
+                assert empty and self.marks == ['ORIGINAL']
+                # FILEOUTPUT's MCU estimated clock is zero. This fixture has
+                # no motion. Model only the estimated clock crossing EOF.
+                toolhead.check_busy = lambda eventtime: (queued, queued, True)
+                view = ui.view(now)
+                assert view[0][1] == 'DONE' and view[1]
+                path = Path(self.sd.sdcard_dirname) / 'Repeat.gcode'
+                path.write_text('ZORTRAX_CI_REPLAY_MARK VALUE=EDITED\n')
+                self.replayed = True
+                command = 'ZORTRAX_REPRINT_CONFIRM TOKEN=' + view[1]
+
+                def replay(eventtime):
+                    try:
+                        self.gcode.run_script(command)
+                    finally:
+                        toolhead.check_busy = check_busy
+
+                self.reactor.register_callback(replay)
                 return False
             self.started = False
             heaters = self.printer.lookup_object('heaters')
@@ -55,7 +95,8 @@ class ModelsFixture:
             self.gcode.respond_info('M300_CI_MODELS ' + json.dumps(dict(
                 state=stats['state'], filename=stats['filename'], format=self.format,
                 file_consumed=self.sd.current_file is None, targets=targets,
-                explicit_resume=self.resumed,
+                explicit_resume=self.resumed, explicit_reprint=self.replayed,
+                replay_marks=self.marks,
                 position=list(toolhead.get_position()))))
         return True
 

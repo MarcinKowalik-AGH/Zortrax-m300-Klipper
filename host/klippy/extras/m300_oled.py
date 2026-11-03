@@ -240,6 +240,15 @@ class M300OLED:
         presented_actions = (self._presented_actions
                              if self._presented_context == received_context else None)
         received_page = self.page
+        print_ui = self.printer.lookup_object('m300_print_ui', None)
+        print_receipt = print_ui.receipt(self.stream, received_context) if print_ui else None
+        received_stream = self.stream
+
+        def print_guard():
+            return (self.connected and received_stream is self.stream
+                    and received_context == self._input_context()
+                    and self.stream.enabled and self.stream.ready
+                    and getattr(self.stream, 'requested_mode', None) != 'OFF')
         received_menu = self.printer.lookup_object('m300_menu', None)
         received_menu_generation = getattr(received_menu, 'generation', None)
         received_menu_page = getattr(received_menu, 'page', None)
@@ -308,6 +317,12 @@ class M300OLED:
             if platform_panel is not None and platform_panel(
                     snapshot,received_at,received_platform,events,now):
                 self.render_at=0.
+                return
+            if print_ui is not None and print_ui.panel(events, received_at, now,
+                                                        print_receipt, print_guard,
+                                                        reverse=getattr(self, 'menu_reverse', False)):
+                if events and any(events[k] for k in ('delta', 'shorts', 'longs')):
+                    self.render_at = 0.
                 return
             if events is None:
                 return
@@ -847,7 +862,11 @@ class M300OLED:
         leveling_frame = getattr(ui, 'leveling_frame', None)
         leveling_wire = (leveling_frame(self.page, now, Frame)
                          if leveling_frame is not None and not self.message else None)
-        if self.message:
+        print_ui = self.printer.lookup_object('m300_print_ui', None)
+        print_wire = print_ui.render(now, self._input_context(), Frame) if print_ui else None
+        if print_wire is not None:
+            key = ('native_print_context', print_wire)
+        elif self.message:
             key = ('notice', tuple(self.message))
         elif leveling_wire is not None:
             key = ('leveling', leveling_wire)
@@ -883,13 +902,14 @@ class M300OLED:
             frame = Frame()
             if key[0] == 'notice':
                 frame.dialog(*(english_label(x) for x in self.message))
-            elif key[0] in ('klipper_default', 'leveling', 'oem_menu'):
+            elif key[0] in ('klipper_default', 'leveling', 'oem_menu', 'native_print_context'):
                 frame = None
             else:
                 frame.menu_full(labels, self.selection, keep_back_visible=True,
                                 sprite=sprite)
             self._render_wire = ((leveling_wire if key[0] == 'leveling' else
-                                 maintenance_wire if key[0] == 'oem_menu' else status_wire)
+                                 maintenance_wire if key[0] == 'oem_menu' else
+                                 print_wire if key[0] == 'native_print_context' else status_wire)
                                  if frame is None else frame.wire_bytes())
             self._render_key = key
             self.render_last_ms = max(0., 1000.*(self.reactor.monotonic()-started))

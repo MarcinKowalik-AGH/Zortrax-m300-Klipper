@@ -218,7 +218,8 @@ class M300Display:
 
     def _working(self, now):
         names = ('print_stats', 'm300_job', 'm300_filament',
-                 'm300_calibration', 'm300_motion', 'm300_thermal', 'm300_fans')
+                 'm300_calibration', 'm300_motion', 'm300_thermal', 'm300_fans',
+                 'm300_models', 'm300_sd')
         for name in names:
             obj = self.printer.lookup_object(name, None)
             if obj is None:

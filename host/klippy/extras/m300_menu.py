@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.9-NATIVE-SD-MODELS"
+    MENU_REVISION = "0.13.16.10-NATIVE-PRINT-CONTEXT"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -83,6 +83,8 @@ class M300Menu:
             self.printer.load_object(config, 'm300_settings')
         if getattr(self.job.board, 'native_control', False) and config.has_section('m300_models'):
             self.printer.load_object(config, 'm300_models')
+        if getattr(self.job.board, 'native_control', False) and config.has_section('m300_print_ui'):
+            self.printer.load_object(config, 'm300_print_ui')
         self.cycle = self.printer.lookup_object('m300_cycle', None)
         self.page, self.reason = 'main', ''
         self.generation = 0
@@ -284,6 +286,8 @@ class M300Menu:
             rows = back + [('State: ' + self.clean(state), None),
                            ('File: ' + self.clean(view.get('filename', '')), None),
                            ('Print time: %.0f s' % view.get('print_duration', 0.), None)]
+            if self.printer.lookup_object('m300_print_ui', None) is not None:
+                return 'Print status', rows
             if state == 'printing':
                 rows.append(('Pause', ('native_gcode', 'PAUSE')))
             if state == 'paused':
@@ -441,8 +445,8 @@ class M300Menu:
         if self.page in ('maintenance', 'klipper'):
             if native:
                 rows = back + [
-                    ('Hotend TEMP: ' + self._temperature_label('HOTEND'), ('temperatures', 'HOTEND', 'maintenance')),
-                    ('Bed TEMP: ' + self._temperature_label('BED'), ('temperatures', 'BED', 'maintenance')),
+                    ('Hotend TEMP: ' + self._temperature_label('HOTEND'), ('temperatures', 'HOTEND', 'klipper')),
+                    ('Bed TEMP: ' + self._temperature_label('BED'), ('temperatures', 'BED', 'klipper')),
                     ('Heat hotend', ('service', 'HOTEND')),
                     ('Heat bed', ('service', 'BED')),
                     ('Turn off heaters', ('native_gcode', 'TURN_OFF_HEATERS')),

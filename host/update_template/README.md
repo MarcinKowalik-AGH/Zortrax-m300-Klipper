@@ -1,12 +1,12 @@
-# M300 host R16.9
+# M300 host R16.10
 
 English test update for an installed native M300 Classic host with MCU R14.5.
-R16.9 adds Models browsing and printing from the M300 MCU SD slot.
-Select a G-code or supported Classic M300 Z-code model, wait for the checked
-local copy, then choose Start printing. The existing SD opt-in is documented
-in [Models from SD](docs/en/MODELS_SD.md).
+R16.10 adds contextual OLED printing, pause and completion screens.
+Hold the knob for 10 seconds to pause or reprint an eligible completed copy.
+The pause menu uses the existing native controls and material change procedure.
+[Print contexts](docs/en/PRINT_CONTEXT.md) · [Procedure inventory](docs/en/PROCEDURE_INVENTORY.md)
 
-Run `python3 VERIFY.py`, the 299 self-contained tests and `install.py` to
+Run `python3 VERIFY.py`, the 319 self-contained tests and `install.py` to
 inspect the plan. Stop Klipper before applying, then start it and update the
 Fluidd groups with `python3 setup_fluidd.py --apply`. Keep the rollback
 receipt.
@@ -14,4 +14,4 @@ receipt.
 [Install on Orange Pi](docs/en/INSTALL.md) ·
 [Settings and Information](docs/en/SETTINGS_INFORMATION.md) ·
 [Maintenance and Material](docs/en/MAINTENANCE_MATERIAL.md) ·
-[Validation](docs/en/VALIDATION_R16_9.md)
+[Validation](docs/en/PRINT_CONTEXT.md)

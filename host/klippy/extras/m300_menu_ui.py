@@ -266,7 +266,7 @@ class M300MenuUI:
                 'oled_spi_owner':'m300_oled',
                 'encoder_owner':'m300_oled',
                 'action_owner':'m300_menu_and_existing_services',
-                'host_ui_revision':'0.13.16.9-NATIVE-SD-MODELS',
+                'host_ui_revision':'0.13.16.10-NATIVE-PRINT-CONTEXT',
                 'operation_groups':['Klipper', 'Zortrax M300', 'Service / Tests'],
                 'menu_wrap':False,
                 'menu_reverse':self.oled.menu_reverse,
