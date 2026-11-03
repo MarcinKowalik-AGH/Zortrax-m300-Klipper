@@ -441,7 +441,9 @@ class M300Procedures:
                 else:
                     if owner.test is None:
                         owner.start_oem()
-                    if operation in ('FAN_UPPER','FAN_LOWER'):
+                    if operation == 'FANS':
+                        self.last_prompt = None  # Reopen the current session without resetting its switches.
+                    else:
                         owner.toggle(operation[4:],owner.token,owner.phase)
             elif operation == 'LEVEL':
                 self.printer.lookup_object('m300_calibration').start(temp)

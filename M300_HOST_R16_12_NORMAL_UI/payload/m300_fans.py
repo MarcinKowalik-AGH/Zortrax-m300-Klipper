@@ -225,7 +225,15 @@ class M300Fans:
             # compare their documented idle names without letter-case bias.
             state = status.get('state') if isinstance(status, dict) else None
             if (not isinstance(status, dict) or status.get('busy') is not False
-                    or not isinstance(state, str) or state.upper() not in IDLE):
+                    or not isinstance(state, str)):
+                raise self._error(name + ' owns resources')
+            # A completed native homing attempt can retain a fault for the
+            # operator even after releasing motion. The stationary fan test
+            # still requires Ready, fresh MCU protection and a drained queue.
+            historical_home_fault = (name == 'm300_motion' and state == 'FAULT'
+                                     and status.get('normal_control') is True
+                                     and status.get('ready') is True)
+            if state.upper() not in IDLE and not historical_home_fault:
                 raise self._error(name + ' owns resources')
         toolhead = self.printer.lookup_object('toolhead', None)
         if toolhead is not None:
