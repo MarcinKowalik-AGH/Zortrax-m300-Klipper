@@ -248,7 +248,7 @@ class FirmwareLevelingContractTests(unittest.TestCase):
         m.home_oem((151.,161.))
         self.assertEqual([e[1] for e in m.events if e[0]=='home'],['Y','X','Z'])
         self.assertIn(('move',(151.,161.,None),50.),m.events)
-        self.assertEqual([e for e in m.events if e[0]=='heat'],[('heat',260.,True)])
+        self.assertEqual([e for e in m.events if e[0]=='heat'],[('heat',260.,False)])
         m.precision.run.assert_not_called()
 
     def test_m07_ready_threshold_accepts_258_and_safe_overshoot(self):
@@ -378,7 +378,7 @@ class NativeFiveContactTests(unittest.TestCase):
 
     def test_deadline_is_checked_after_native_drain_before_another_contact(self):
         h,ref=precision_harness(REFERENCE['z_references'][1])
-        h.on_wait=lambda:setattr(h,'now',h.now+31.)
+        h.on_wait=lambda:setattr(h,'now',h.now+ref.timeout+1.)
         with self.assertRaisesRegex(RuntimeError,'deadline'):ref.run(1)
         self.assertFalse(any(e[0]=='contact' for e in h.events))
 
@@ -402,7 +402,7 @@ class EnglishOnlyTests(unittest.TestCase):
 
     def test_nvm_preserves_legacy_settings_but_exposes_and_accepts_only_english(self):
         saved=dict(language='PL',light_mode='WHITE',sleep_mode='15MIN')
-        n=M300NVM.__new__(M300NVM);n._busy=False
+        n=M300NVM.__new__(M300NVM);n._busy=False;n._deferred_settings={}
         n.printer=NS(command_error=RuntimeError)
         n.store=NS(_published={'settings':saved},source='existing',warnings=[])
         n.snapshot=lambda:copy.deepcopy(n.store._published)

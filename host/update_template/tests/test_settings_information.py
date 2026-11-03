@@ -284,6 +284,7 @@ class SettingsTreeTests(unittest.TestCase):
             self.assertEqual(h.oled._input_context(), context)
             self.assertEqual(h.hotend.target, 240.)
             h.f.cancel('test')
+            h.until(h.f, 'CANCELLED')
             h.nvm._save_deferred_settings(h.now)
             self.assertEqual(h.nvm.store._published['settings']['led_brightness'], 8)
 
