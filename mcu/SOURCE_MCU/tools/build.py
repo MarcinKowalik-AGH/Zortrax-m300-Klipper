@@ -23,6 +23,7 @@ NVM_START = 0x0803A000
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
+                     'm300_uart_rx_query',
                      'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',
                      'm300_sd_chunk ', 'm300_sd_close ',
@@ -122,11 +123,12 @@ def validate(work, output, env, log):
                           'M300_SD_ABI': 1, 'M300_SD_READ_ONLY': 1,
                           'M300_SD_MAX_CHUNK': 32, 'M300_SD_TASK_BYTES': 32,
                           'M300_SD_POLL_US': 1000, 'M300_UART_PERSIST_ABI': 1, 'M300_UART_RATE_COUNT': 8,
+                          'M300_UART_RX_DIAG_ABI': 1,
                           'M300_LOCAL_OLED_ABI': 1, 'M300_OLED_SPI_BURST_ABI': 1,
                           'M300_LOCAL_OLED_STARTUP_FIX': 1,
                           'M300_OLED_HOSTLINK_ABI': 1, 'M300_OLED_HOSTLINK_TIMEOUT_US': 1500000,
                           'M300_OLED_FAST_ABI': 1, 'M300_OLED_FAST_QUEUE': 4,
-                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.7-PANEL-STOP-UART8',
+                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.8-PANEL-STOP-UART8-RXDIAG',
                           'M300_PANEL_CAPTURE_ABI': 3, 'M300_PANEL_RELEASE_ABI': 1,
                           'M300_PANEL_IRQ_PRIORITY': 3, 'M300_OLED_DMA_IRQ_PRIORITY': 4,
                           'CLOCK_FREQ': 72000000}.items():
@@ -141,6 +143,9 @@ def validate(work, output, env, log):
     if ('m300_factory_info serial=%u time_valid=%c print_minutes=%u'
             not in dictionary['responses']):
         raise ValueError('Missing or incompatible factory information response')
+    if ('m300_uart_rx_state clock=%u overrun=%u framing=%u noise=%u buffer_drops=%u'
+            not in dictionary['responses']):
+        raise ValueError('Missing or incompatible UART RX diagnostic response')
     for prefix in REQUIRED_COMMANDS:
         if not any(command.startswith(prefix) for command in commands):
             raise ValueError('Missing MCU command prefix: ' + prefix)
@@ -162,7 +167,7 @@ def validate(work, output, env, log):
     stack_start = symbols['_stack_start']
     if bss_end >= stack_start:
         raise ValueError('Static data overlaps reserved MCU stack')
-    report = {'version': '0.13.14.7-PANEL-STOP-UART8',
+    report = {'version': '0.13.14.8-PANEL-STOP-UART8-RXDIAG',
               'mcu_stage': 'P01_LAB + M04_SD + R9_HOST_LEASE_LOCAL_WAITING', 'upstream_commit': PIN,
               'upstream_archive_sha256': ARCHIVE_SHA256,
               'model': 'M300_CLASSIC', 'abi': 1,

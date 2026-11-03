@@ -69,6 +69,10 @@ def main():
     run('native_heater_checks', [sys.executable, ROOT / 'mcu/tests/test_verify_gain.py',
                                 '--upstream', pristine])
     run('startup_epochs', [sys.executable, KIT / 'tests/test_startup_epoch.py'], expected_tests=5)
+    uart_rx = report / 'uart-rx-test'
+    run('uart_rx_compile', ['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
+                            KIT / 'tests/test_m300_uart_rx.c', '-o', uart_rx])
+    run('uart_rx_counters', [uart_rx])
     panel = report / 'panel-test'
     run('panel_compile', ['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
                           KIT / 'tests/test_panel.c', '-o', panel])

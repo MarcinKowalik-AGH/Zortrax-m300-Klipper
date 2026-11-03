@@ -29,6 +29,8 @@ STATE_FORMAT = (
 LOCAL_COOLING_FORMAT = (
     'm300_local_cooling_state clock=%u mode=%c reason=%c raw=%hu age=%u'
     ' valid=%c hotend_on=%c print_on=%c on_raw=%hu off_raw=%hu owner=%c')
+UART_RX_FORMAT = ('m300_uart_rx_state clock=%u overrun=%u framing=%u'
+                  ' noise=%u buffer_drops=%u')
 COOLING_MODES = {0: 'UNKNOWN_FAILSAFE', 1: 'NATIVE_HOST_PWM',
                  2: 'LOCAL_THERMOSTAT', 3: 'FAULT_COOLING'}
 COOLING_OWNERS = {0: 'none', 1: 'native_ADC1_observation', 2: 'local_ADC2'}
@@ -203,6 +205,7 @@ class M300MCU:
         self.state = {}
         self.uart_state = {}
         self._uart_query = None
+        self._uart_rx_query = None
         self.fan_policy = 1
         self.local_cooling_abi = 0
         self.cooling_state = {}
@@ -226,6 +229,8 @@ class M300MCU:
         self.printer.register_event_handler('gcode:request_restart', self._handle_restart)
         self.gcode.register_command('ZORTRAX_MCU_STATUS', self.cmd_status,
                                     when_not_ready=True)
+        self.gcode.register_command('ZORTRAX_UART_RX_STATUS',
+                                    self.cmd_uart_rx_status, when_not_ready=True)
         self.gcode.register_command('ZORTRAX_INPUTS', self.cmd_inputs,
                                     when_not_ready=True)
         self.gcode.register_command('ZORTRAX_NATIVE_STATUS', self.cmd_native_status,
@@ -292,6 +297,11 @@ class M300MCU:
             if not self.mcu.check_valid_response(fmt):
                 raise self.config.error('Missing M300 runtime UART response')
             self.mcu.register_serial_response(self._handle_uart, fmt)
+        if constants.get('M300_UART_RX_DIAG_ABI') == 1:
+            if not self.mcu.check_valid_response(UART_RX_FORMAT):
+                raise self.config.error('Missing M300 UART RX diagnostic response')
+            self._uart_rx_query = self.mcu.lookup_command('m300_uart_rx_query')
+            self.mcu.register_serial_response(self._handle_uart_rx, UART_RX_FORMAT)
         # Explicitly reject an incompatible native software-PWM protocol before
         # any config bytes are emitted. Native pins perform the same lookups.
         for fmt in ('set_digital_out_pwm_cycle oid=%c cycle_ticks=%u',
@@ -421,6 +431,24 @@ class M300MCU:
                 self.printer.invoke_async_shutdown('M300 host UART differs from MCU saved baud')
         self.reactor.register_async_callback(deliver)
 
+    def _handle_uart_rx(self, params):
+        sample = {key: params[key] for key in
+                  ('clock', 'overrun', 'framing', 'noise', 'buffer_drops')}
+
+        def deliver(now):
+            if self.connected:
+                self.gcode.respond_info('M300_UART_RX ' + json.dumps(sample, sort_keys=True))
+
+        self.reactor.register_async_callback(deliver)
+
+    def cmd_uart_rx_status(self, gcmd):
+        if self._uart_rx_query is None:
+            gcmd.respond_info('M300 UART RX counters require MCU diagnostic firmware')
+        elif not self.connected or self.mcu.is_fileoutput():
+            gcmd.respond_info('M300 UART RX counters require a live MCU connection')
+        else:
+            self._uart_rx_query.send()
+
     def _close_arm_session(self):
         self.arm_requested_at = None
         self.arm_request_clock = None
@@ -501,6 +529,11 @@ class M300MCU:
                 self._query_cmd.send()
             except Exception:
                 logging.exception('M300 could not read latched guard after shutdown')
+        if self.connected and self._uart_rx_query is not None and not self.mcu.is_fileoutput():
+            try:
+                self._uart_rx_query.send()
+            except Exception:
+                logging.exception('M300 could not read UART RX counters after shutdown')
 
     def _handle_restart(self, *args):
         # Stop authorizing commands immediately. A real MCU retains its latch or

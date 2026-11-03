@@ -16,10 +16,11 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.7-PANEL-STOP-UART8"
+VERSION = "M300_CLASSIC-0.13.14.8-PANEL-STOP-UART8-RXDIAG"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",
+    "src/generic/serial_irq.c": "d4d695e6b6c8ebc4b5d0393da075ebd2b571172392b40898ecc3facc69f33495",
     "src/Kconfig": "b085a73a30c492ff0185b57b17e0ca9e7e52a45d4ab5d853fde8030486e6a072",
     "src/stm32/Kconfig": "35891c81db96beecf45914b9e124cb748d0e4fe252b97883a4eb18d9674df817",
     "src/stm32/Makefile": "5047f8c0edcb12bcafaff88bc24971229f48cc9f5c9a12065f6cb6d2c8414f46",
@@ -78,6 +79,31 @@ endif
                      '#include "internal.h" // enable_pclock\n#if CONFIG_M300_CLASSIC\n#include "m300_uart.h"\n#endif\n', key + ":include")
     f[key] = replace(f[key], 'uint32_t div = DIV_ROUND_CLOSEST(pclk, CONFIG_SERIAL_BAUD);',
                      'uint32_t baud = CONFIG_SERIAL_BAUD;\n#if CONFIG_M300_CLASSIC\n    baud = m300_uart_baud();\n#endif\n    uint32_t div = DIV_ROUND_CLOSEST(pclk, baud);', key + ":baud")
+    f[key] = replace(f[key], '        serial_rx_byte(USARTx->DR);',
+                     '''        uint32_t data = USARTx->DR;
+#if CONFIG_M300_CLASSIC
+        if (sr & (USART_SR_ORE | USART_SR_FE | USART_SR_NE))
+            m300_uart_rx_note_error(sr & USART_SR_ORE, sr & USART_SR_FE,
+                                    sr & USART_SR_NE);
+#endif
+        serial_rx_byte(data);''', key + ":rx-errors")
+
+    key = "src/generic/serial_irq.c"
+    f[key] = replace(f[key], '#include "autoconf.h" // CONFIG_SERIAL_BAUD\n',
+                     '''#include "autoconf.h" // CONFIG_SERIAL_BAUD
+#if CONFIG_M300_CLASSIC
+#include "../stm32/m300_uart.h"
+#endif
+''', key + ":include")
+    f[key] = replace(f[key], '''    if (receive_pos >= sizeof(receive_buf))
+        // Serial overflow - ignore it as crc error will force retransmit
+        return;''', '''    if (receive_pos >= sizeof(receive_buf)) {
+#if CONFIG_M300_CLASSIC
+        m300_uart_rx_note_buffer_drop();
+#endif
+        // Serial overflow - ignore it as crc error will force retransmit
+        return;
+    }''', key + ":rx-buffer-drops")
 
     # F103-specific startup and pin mode gate; no STM32F2/F4 code is changed.
     key = "src/stm32/stm32f1.c"

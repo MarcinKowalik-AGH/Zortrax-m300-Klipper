@@ -2,7 +2,7 @@ name: M300 R16.12 full Orange Pi build
 
 on:
   push:
-    branches: [main]
+    branches: [main, uart-rx-diag]
     paths:
       - '.github/workflows/build-m300.yml'
       - 'PORT.json'
@@ -84,7 +84,7 @@ jobs:
       - name: Upload the ready-to-install package
         uses: actions/upload-artifact@v4
         with:
-          name: M300_R16_12_FULL_ORANGE_PI
+          name: M300_UART_RX_DIAG_ORANGE_PI
           path: dist/release/
           if-no-files-found: error
           retention-days: 30
@@ -116,7 +116,7 @@ jobs:
       - name: Retrieve the verified build
         uses: actions/download-artifact@v4
         with:
-          name: M300_R16_12_FULL_ORANGE_PI
+          name: M300_UART_RX_DIAG_ORANGE_PI
           path: dist/action-release
 
       - name: Publish the compact Git deployment

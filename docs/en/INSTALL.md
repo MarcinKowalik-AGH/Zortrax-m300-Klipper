@@ -2,12 +2,41 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.7.
+This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.8.
 Factory serial and OEM print time require R14.6 or later.
 OLED hold-to-move with local button release stop requires R14.7.
 It accepts recognized R15.3 through R16.11 baselines, including the browser
 modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
 the existing module hashes before it writes anything.
+
+## R14.8 UART RX diagnostic build
+
+Download `M300_UART_RX_DIAG_ORANGE_PI` from the diagnostic Actions run.
+Run `python3 install-orange-pi.py` from the extracted directory while the
+printer is Ready and idle. This installs the host command and reports a
+rollback receipt. Install `MCU/M300APP.M3B` separately through the existing
+M300Boot SD procedure. Keep the R14.7 application available for rollback.
+The diagnostic branch does not publish to the regular Orange Pi checkout.
+
+Keep the current baud, UART wiring, RX buffer size and OLED settings for
+the first comparison. In Fluidd, run `ZORTRAX_UART_RX_STATUS` at Ready and
+repeat after an idle interval. Compare the `M300_UART_RX` lines and the
+matching `bytes_retransmit` deltas in `klippy.log`. The host also requests
+the counters once on shutdown if the connection is still open. A second
+manual read is possible after shutdown if the MCU responds. Capture the
+result before restarting.
+
+| Counter | Meaning on the STM32 |
+| --- | --- |
+| `overrun` | USART ORE flags observed. The hardware could not accept a new received byte. |
+| `framing` | USART FE flags observed. The receiver detected a frame error. |
+| `noise` | USART NE flags observed. The receiver detected noise during sampling. |
+| `buffer_drops` | Bytes rejected by the full 192-byte software RX buffer. |
+
+These are cumulative 32-bit counts since the MCU boot. Use deltas in the
+same boot session. A hardware flag is not a count of all lost frames.
+Zero deltas do not exclude losses elsewhere or missed deadlines. An
+unanswered query produces no sample. FILEOUTPUT does not supply counters.
 
 ## Install directly from Git on Orange Pi
 
@@ -102,7 +131,7 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_7_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_8_RXDIAG_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. The full Actions artifact
