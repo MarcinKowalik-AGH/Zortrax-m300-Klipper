@@ -174,8 +174,8 @@ class M300MenuUI:
                 if 'CONFIRM' in view['actions']:
                     self.procedures.action(received_view, 'CONFIRM')
                 elif view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
-                    self.menu._navigate('native_job' if view['snapshots'][view['owner']].get('operation')=='CHANGE'
-                                        else 'maintenance' if view['owner']!='m300_filament' else 'material')
+                    self.menu.return_from_procedure(
+                        view['owner'], view['snapshots'][view['owner']].get('operation'))
                     self.oled.page, self.oled.selection = 'm04', 0
         self.oled.render_at = 0.
         return True

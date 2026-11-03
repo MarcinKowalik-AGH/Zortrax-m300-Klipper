@@ -367,8 +367,7 @@ class M300Procedures:
                     oled=self.printer.lookup_object('m300_oled',None)
                     if menu is not None and oled is not None and menu.page in ('procedure','fan_test'):
                         operation=view['snapshots'][view['owner']].get('operation')
-                        menu._navigate('native_job' if operation=='CHANGE' else
-                                       'material' if view['owner']=='m300_filament' else 'maintenance')
+                        menu.return_from_procedure(view['owner'], operation)
                         oled.page,oled.selection,oled.render_at='m04',0,0.
             display = self.printer.lookup_object('display_status', None)
             visible = (view['busy'] or view['state'] not in TERMINAL

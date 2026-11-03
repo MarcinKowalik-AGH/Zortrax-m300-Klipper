@@ -136,7 +136,7 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
         return '0x08020fb8' if state in ('PRINTING', 'COMPLETING') else '0x0801be48'
     if menu_page in ('main','zortrax') and rows and 0<=selected<len(rows):
         action=rows[selected][1]
-        if action in ('status', ('oled','status')):
+        if action in ('status', ('oled','status'), ('page','main')):
             return None  # There is no audited OEM Back pictogram.
         if isinstance(action,tuple) and len(action)>1 and action[0]=='page':
             return MAIN.get(action[1], '0x0801dc08')
