@@ -75,10 +75,19 @@ class Harness:
         self.hotend,self.bed=Heater(),Heater()
         self.board=NS(native_control=True,require_motion=lambda:None,require_heating=lambda:None,
             mcu=NS(is_fileoutput=lambda:False),get_mcu=lambda:NS(register_config_callback=lambda cb:None))
+        self.hold_rail_offset = [0., 0., 0.]
+        self.rails = [NS(get_name=lambda axis=axis: 'stepper_' + axis,
+                         get_commanded_position=lambda i=i: self.position[i] + self.hold_rail_offset[i],
+                         get_step_dist=lambda: .0025)
+                      for i, axis in enumerate('xyz')]
         kin=NS(max_z_velocity=25.,get_status=lambda now:dict(
-            homed_axes=self.homed,axis_minimum=[0.,0.,0.],axis_maximum=[305.,305.,315.]))
+            homed_axes=self.homed,axis_minimum=[0.,0.,0.],axis_maximum=[305.,305.,315.]),
+            get_steppers=lambda:self.rails,
+            calc_position=lambda positions:[positions['stepper_' + axis] for axis in 'xyz'])
         self.toolhead=NS(get_position=lambda:self.position[:],move=self.move,
-            manual_move=self.manual_move,drip_move=lambda *args:None,set_position=lambda *args:None,
+            manual_move=self.manual_move,drip_move=lambda *args:None,
+            set_position=lambda position:setattr(self,'position',list(position)),
+            flush_step_generation=lambda:None,
             get_kinematics=lambda:kin,get_extruder=lambda:NS(max_e_dist=50.),
             register_lookahead_callback=lambda cb:cb(self.now),get_last_move_time=lambda:self.busy_until,
             get_max_velocity=lambda:(300.,1000.),check_busy=lambda now:(self.busy_until,now,True))
@@ -127,7 +136,7 @@ class Harness:
                     t.render(params=cmd.get_command_parameters())))
         self.emit('klippy:connect');self.emit('klippy:ready')
         self.m.panel_release = NS(arm_cmd=True,
-            get_steppers=lambda:[NS(get_step_dist=lambda:.0025)],
+            get_steppers=lambda:[self.rails[2]],
             stop=lambda:self.hold_actions.append('stop'), move=self.model_hold_move)
         self.native_move=self.toolhead.move
         self.native_heat=self.hotend.set_temp
@@ -136,12 +145,13 @@ class Harness:
 
     def model_hold_move(self, printer, toolhead, target, speed, press_id):
         self.hold_actions.append((tuple(target), speed, press_id))
+        halt = [s.get_commanded_position() for s in self.rails] + target[3:]
+        step = self.rails[2].get_step_dist()
+        halt[2] += round((target[2] - halt[2]) / step) * step
         toolhead.drip_move(target, speed, None)
-        halt = list(target)
         if self.hold_sample is not None:
             halt[2] = self.hold_sample()
         toolhead.set_position(halt)
-        self.position = halt
 
     def start_hold_worker(self):
         self.callbacks.pop(0)(self.now)
@@ -379,6 +389,49 @@ class NativeMaintenanceTests(unittest.TestCase):
                 self.assertEqual(h.hold_actions, [((150., 158., limit, 17.), .5, 8)])
                 h.assert_restored(self)
 
+    def test_held_moves_use_rail_phase_at_both_limits_and_preserve_logical_xy(self):
+        for direction, limit, step in ((-1, 0., .0025), (1, 315., .0025),
+                                       (-1, 0., .00125), (1, 315., .00125)):
+            with self.subTest(direction=direction, step=step):
+                h = Harness()
+                h.homed = 'xyz'
+                h.position = [170., 161.43, limit - direction * 2. * step, 17.]
+                h.hold_rail_offset = [-.0005, .000625, direction * .32 * step]
+                h.rails[2].get_step_dist = lambda: step
+                h.m.hold(direction, 'view', h.now, lambda: True, 8)
+                h.step()
+                h.start_hold_worker()
+                self.assertFalse(h.shutdown)
+                self.assertEqual(h.m.state, 'CANCELLED')
+                self.assertEqual(h.position[:2], [170., 161.43])
+                self.assertEqual(h.position[3], 17.)
+                self.assertAlmostEqual(h.position[2], limit - direction * .68 * step)
+                self.assertEqual(h.hold_actions[0][1], 10.)
+                h.assert_restored(self)
+
+    def test_release_during_initial_step_flush_cannot_start_motion(self):
+        h = Harness()
+        h.homed = 'z'
+        h.toolhead.flush_step_generation = lambda: h.m.cancel('panel released')
+        h.m.hold(1, 'view', h.now, lambda: True, 8)
+        h.step()
+        h.start_hold_worker()
+        h.until(h.m, 'CANCELLED')
+        self.assertEqual(h.hold_actions, ['stop'])
+        self.assertEqual(h.position[2], 5.)
+        h.assert_restored(self)
+
+    def test_held_move_refuses_halt_outside_the_planned_step_range(self):
+        h = Harness()
+        h.homed = 'xyz'
+        h.hold_sample = lambda: 315.0025
+        h.m.hold(1, 'view', h.now, lambda: True, 8)
+        h.step()
+        h.start_hold_worker()
+        self.assertTrue(h.shutdown)
+        self.assertEqual(h.m.state, 'FAULT')
+        self.assertIn(('shutdown', 'M300 maintenance: native probe returned an invalid position'), h.events)
+
     def test_old_mcu_has_no_unprotected_panel_move_fallback(self):
         h = Harness()
         h.homed = 'z'
@@ -536,6 +589,26 @@ def physical_panel(h):
 
 
 class PhysicalPanelDispatchTests(unittest.TestCase):
+    def test_platform_hold_uses_oled_without_opening_fluidd_even_on_shutdown(self):
+        h = Harness()
+        h.homed = 'z'
+        oled, menu, _, display, packet = physical_panel(h)
+        display.pump()
+        packet(False)
+        packet(False)
+        packet(True, 1)
+        self.assertEqual(h.m.state, 'PLATFORM_HOLD')
+        h.objects['m300_settings'] = NS(brightness_prompt=lambda keys:['M300_BRIGHTNESS led_brightness 14'])
+        h.lines.clear()
+        h.p._tick(h.now)
+        h.run('ZORTRAX_PROCEDURE_SHOW')
+        self.assertFalse(any('action:prompt_begin' in line for line in h.lines))
+        self.assertEqual((menu.page, oled.page), ('maintenance', 'm04'))
+        h.m._fault('Native position failed')
+        h.emit('klippy:shutdown')
+        self.assertFalse(any('action:prompt_begin' in line for line in h.lines))
+        self.assertIn('// action:prompt_end', h.lines)
+
     def test_real_oled_hold_requires_acknowledged_row_and_complete_press_release_gesture(self):
         h=Harness();h.homed='z';o,menu,ui,display,packet=physical_panel(h)
         packet(False);packet(False)

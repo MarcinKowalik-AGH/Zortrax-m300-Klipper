@@ -86,6 +86,7 @@ class M300NativeMaintenance(M300Maintenance):
         self._hold_direction = None
         self._hold_validate = None
         self._hold_started = False
+        self._platform_panel_local = False
         mcu = self.board.get_mcu()
         self.panel_release = PanelRelease(mcu) if hasattr(mcu, 'create_oid') else None
         self._pending_z = None
@@ -149,6 +150,7 @@ class M300NativeMaintenance(M300Maintenance):
         self.token+=1
         self.phase_id+=1
         self.operation,self.state,self.reason=operation,state,''
+        self._platform_panel_local = state == 'PLATFORM_HOLD'
         self._deadline=self.reactor.monotonic()+self.timeout
         self._pending_z=None
         try:
@@ -256,25 +258,45 @@ class M300NativeMaintenance(M300Maintenance):
             # fallback sampling window to at most eight Z steps.
             speed = min(self.platform_speed, velocity, kinematics.max_z_velocity,
                         PLATFORM_HOLD_STEPS_PER_SECOND * step)
+            self.toolhead.flush_step_generation()
+            if self.state != 'PLATFORM_HOLD' or not self.ready or self.printer.is_shutdown():
+                return
             target = list(self.toolhead.get_position())
+            start_z = target[2]
+            # HomingMove reconstructs XYZ from the rail coordinates plus the
+            # halted step counts. The last native move may have left the rail
+            # coordinates a fraction of a step from the logical toolhead.
+            rail_start = kinematics.calc_position({
+                s.get_name(): s.get_commanded_position() for s in kinematics.get_steppers()
+            }) + target[3:]
+            rail_z = rail_start[2]
+            if not math.isfinite(rail_z) or abs(rail_z - start_z) > .5 * step + 1.e-6:
+                raise self._error('Z rail position does not match the toolhead')
             low, high = self.job._axis_bounds()
             bounds = low[2], high[2]
-            limit = bounds[self._hold_direction > 0]
-            steps = math.floor(abs(limit-target[2])/step)
-            if not steps:
+            direction = self._hold_direction
+            limit = bounds[direction > 0]
+            epsilon = 4. * math.ulp(max(1., abs(limit), abs(rail_z)))
+            steps = math.floor((direction * (limit - rail_z) + epsilon) / step)
+            target_z = rail_z + direction * steps * step
+            if steps < 1 or direction * (target_z - start_z) <= 0.:
                 self._finish('CANCELLED', 'native Z limit reached')
                 return
-            target[2] = boundary_z(target[2] + self._hold_direction * steps * step,
-                                   bounds, self._error)
+            target[2] = boundary_z(target_z, bounds, self._error)
 
             def check():
                 if (self.token != token or not self.ready or self.printer.is_shutdown()
                         or self.state not in ('PLATFORM_HOLD', 'CANCELLING')):
                     raise self._error('platform hold no longer owns Z')
 
+            def normalize_halt(z):
+                if abs(z - rail_z) <= 1.e-6:
+                    return start_z
+                return boundary_z(z, bounds, self._error)
+
             toolhead = BoundedProbeToolhead(self.toolhead, target, speed, check,
-                self._hold_drip, self._hold_set_position,
-                lambda z: boundary_z(z, bounds, self._error), self._error)
+                self._hold_drip, self._hold_set_position, normalize_halt,
+                self._error, halt_start=rail_start)
             release.move(self.printer, toolhead, target, speed, self._hold_press_id)
             check()
             self._finish('CANCELLED', self.reason or 'platform button released or native Z limit reached')
@@ -325,7 +347,7 @@ class M300NativeMaintenance(M300Maintenance):
         self.cancel(reason)
 
     def _fault(self,reason):
-        self.state,self.reason='FAULT',str(reason)
+        self.state,self.reason='FAULT',str(reason).removeprefix('M300 maintenance: ')
         self.phase_id+=1
         self._pending_z=None
         try:
@@ -333,7 +355,7 @@ class M300NativeMaintenance(M300Maintenance):
         finally:
             self.target=0.
             if not self.printer.is_shutdown():
-                self.printer.invoke_async_shutdown('M300 maintenance: '+str(reason))
+                self.printer.invoke_async_shutdown('M300 maintenance: ' + self.reason)
 
     def sleep(self):
         raise self._error('native idle_timeout owns inactivity')
@@ -417,8 +439,9 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
+            platform_panel_local=self._platform_panel_local,
             platform_speed_mm_s=self.platform_speed,
-            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM2')
+            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM3')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

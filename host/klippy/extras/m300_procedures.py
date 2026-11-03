@@ -79,8 +79,9 @@ class M300Procedures:
         else:
             for name in ('m300_fans','m300_maintenance'):
                 status=self._read(name,self.reactor.monotonic())
-                if (status.get('state')=='FAULT' and status.get('reason')
-                        !='host lifecycle invalidated the service'):
+                if (status.get('state') == 'FAULT'
+                        and status.get('reason') != 'host lifecycle invalidated the service'
+                        and not status.get('platform_panel_local')):
                     self._prompt(self.view(self.reactor.monotonic(),owner_override=name))
                     break
 
@@ -295,6 +296,8 @@ class M300Procedures:
             self.reactor.update_timer(self.timer, self.reactor.NOW)
 
     def _prompt(self, view):
+        if view['snapshots'].get(view['owner'], {}).get('platform_panel_local'):
+            return
         self._emit('prompt_end')
         self._emit('prompt_begin ' + ('Klipper - ' if view['owner'] == 'm300_thermal' else 'ZORTRAX M300 - ') + view['title'])
         if view.get('leveling_screen'):
@@ -318,7 +321,9 @@ class M300Procedures:
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
                        (self._action_label(view, verb), view['view_id'], verb, color))
         settings = self.printer.lookup_object('m300_settings', None)
-        if view['busy'] and settings is not None:
+        if (self.live and view['busy'] and view['state'] not in TERMINAL
+                and (view.get('maintenance_screen') or {}).get('kind') != 'platform'
+                and settings is not None):
             for line in settings.brightness_prompt(('oled_brightness', 'led_brightness')):
                 self._emit('prompt_text ' + line)
         if self.live and not (view.get('leveling_screen') or view.get('maintenance_screen')):
@@ -330,7 +335,7 @@ class M300Procedures:
         if not self.live:
             return self.reactor.NEVER
         view = self.view(now)
-        if view['owner']:
+        if view['owner'] and not view['snapshots'][view['owner']].get('platform_panel_local'):
             if view['view_id'] != self.last_prompt:
                 finished_service=((view.get('maintenance_screen') or view.get('leveling_screen')) and view['owner'] in
                     ('m300_maintenance','m300_filament','m300_calibration','m300_fans') and view['state'] in

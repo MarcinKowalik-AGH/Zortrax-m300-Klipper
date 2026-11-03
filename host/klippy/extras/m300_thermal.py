@@ -421,6 +421,10 @@ class M300Thermal:
             return (1, 0, 0)
         return (0, 1, 0)
 
+    def get_ownership_status(self, now):
+        return {'state': self.state if self.ready else 'FAULT',
+                'busy': self.active or self.running_native}
+
     def get_status(self, now):
         temperatures = {}
         if self.bound:

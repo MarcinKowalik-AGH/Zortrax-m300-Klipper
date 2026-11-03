@@ -19,8 +19,9 @@ def boundary_z(value, bounds, error):
 
 class BoundedProbeToolhead:
     def __init__(self, toolhead, target, speed, check, drip, set_position,
-                 normalize_z, error):
+                 normalize_z, error, *, halt_start=None):
         self.toolhead, self.start = toolhead, list(toolhead.get_position())
+        self.halt_start = self.start if halt_start is None else halt_start
         self.target, self.speed = list(target), speed
         self.check, self.drip, self.set_native = check, drip, set_position
         self.normalize_z, self.error, self.used = normalize_z, error, False
@@ -40,9 +41,11 @@ class BoundedProbeToolhead:
         p = list(position)
         if (args or kwargs or len(p) != 4
                 or any(type(v) not in (int, float) or not math.isfinite(v) for v in p)
-                or any(abs(p[i]-self.start[i]) > 1.e-6 for i in (0, 1, 3))
-                or not min(self.start[2], self.target[2])-1.e-6 <= p[2]
-                       <= max(self.start[2], self.target[2])+1.e-6):
+                or any(abs(p[i]-self.halt_start[i]) > 1.e-6 for i in (0, 1, 3))
+                or not min(self.halt_start[2], self.target[2])-1.e-6 <= p[2]
+                       <= max(self.halt_start[2], self.target[2])+1.e-6):
             raise self.error('native probe returned an invalid position')
         p[2] = self.normalize_z(p[2])
+        if self.halt_start is not self.start:
+            p[0], p[1], p[3] = self.start[0], self.start[1], self.start[3]
         return self.set_native(p)

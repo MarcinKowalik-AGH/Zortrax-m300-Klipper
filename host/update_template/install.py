@@ -36,7 +36,7 @@ NAMES += ('m300_filament.py', 'm300_filament_state.py')
 NAMES += ('m300_native_service.py', 'm300_maintenance.py',
           'm300_native_maintenance.py', 'm300_oem_procedure_ui.py')
 NAMES += ('m300_settings.py', 'm300_settings_ui.py', 'm300_browser.py', 'm300_browser_state.py', 'm300_job.py')
-NAMES += ('m300_fans.py', 'm300_native_fans.py', 'm300_maintenance_ui.py')
+NAMES += ('m300_fans.py', 'm300_native_fans.py', 'm300_thermal.py', 'm300_maintenance_ui.py')
 NAMES += ('m300_native_probe.py', 'm300_native_z.py', 'm300_stock_geometry.py', 'm300_nvm.py')
 NAMES += ('m300_models.py', 'm300_sd.py', 'm300_fat.py', 'm300_binary.py',
           'm300_zcode.py', 'm300_job_sd.py')

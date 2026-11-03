@@ -81,6 +81,28 @@ class FanHarness(Harness):
 
 
 class NativeFanContractTests(unittest.TestCase):
+    def test_native_thermal_telemetry_does_not_claim_the_fan_test_lease(self):
+        from payload.m300_thermal import M300Thermal
+
+        h = FanHarness()
+        thermal = M300Thermal(h.config)
+        thermal.board = h.board
+        thermal.heaters = {'extruder': h.hotend, 'heater_bed': h.bed}
+        thermal._ready()
+        h.objects['m300_thermal'] = thermal
+        self.assertEqual(thermal.get_status(h.now)['state'], 'NATIVE')
+        thermal.active = True
+        thermal.state = 'PID_RUNNING'
+        with self.assertRaisesRegex(native_gcode.CommandError, 'm300_thermal owns resources'):
+            h.run('ZORTRAX_FAN_TEST_START')
+        thermal.active = False
+        thermal.state = 'IDLE'
+        h.run('ZORTRAX_FAN_TEST_START')
+        h.run('ZORTRAX_FAN_LOWER')
+        self.assertEqual(h.lower.speed, OEM_DUTY)
+        h.run('ZORTRAX_FAN_TEST_END')
+        h.assert_restored(self)
+
     def test_original_save_off_toggle_150_and_restore_traces(self):
         for original in REFERENCE['fans']:
             h=FanHarness();initial=original['initial']
@@ -289,10 +311,12 @@ class MaintenancePresentationTests(unittest.TestCase):
     def test_macro_platform_messages_match_maintenance_row_without_breaking_hold(self):
         for direction in ('UP','DOWN'):
             h=FanHarness();h.homed='z';o,menu,ui,display,packet=physical_panel(h)
+            h.objects['m300_settings'] = NS(brightness_prompt=lambda keys:['M300_BRIGHTNESS led_brightness 14'])
             h.run('ZORTRAX_PLATFORM_'+direction);h.p._tick(h.now)
             view=h.p.view(h.now);label='Move the platform '+direction.lower()
             self.assertEqual(view['message'],label);self.assertEqual(menu.page,'maintenance')
             self.assertIn('// action:prompt_text '+label,h.lines)
+            self.assertFalse(any('M300_BRIGHTNESS' in line for line in h.lines))
             self.assertIn(label,[row[0] for row in menu.rows(h.now)[1]])
             h.until(h.m,'COMPLETE');h.assert_restored(self)
 

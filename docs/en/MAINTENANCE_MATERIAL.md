@@ -159,7 +159,9 @@ MCU fault supervision and factory Z400/Z800 selection remain authoritative.
 Physical feed length, hold response and full procedure acceptance still need
 a supervised printer test. See [validation and acceptance](VALIDATION_R16_7.md).
 
-R16.7 also publishes platform movement through the shared procedure object:
-the OLED stays on the selected Maintenance row during a physical hold, while
-Fluidd names that same action. Finite macros select its corresponding OLED
-row. There is no invented OEM platform-progress icon or automatic homing.
+The OLED stays on the selected Maintenance row during a physical hold. The
+hold is visible in the shared procedure status without opening a Fluidd
+dialog. Finite Fluidd macros open their own motion prompt and select the
+corresponding OLED row. At either Z limit the hold stops at the last whole
+step within native travel. The host preserves the existing logical X, Y and
+extruder coordinates when reconciling the halted Z step count.
