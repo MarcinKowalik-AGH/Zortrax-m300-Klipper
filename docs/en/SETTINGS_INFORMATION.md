@@ -9,6 +9,12 @@ In Fluidd, the setting macros open button dialogs when called without
 arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`
 still apply the selected value directly.
 
+Back from Settings or Information opens the Zortrax M300 menu in Fluidd.
+Back again opens the main menu with Klipper and Zortrax M300. The main menu's
+Back button closes the dialog and returns to the underlying Fluidd view.
+The Klipper page shows print state. Motion, temperature and print controls
+are on the Fluidd dashboard.
+
 | Settings page | Choices | Fluidd macro |
 |---|---|---|
 | Light | Dynamic, White, Disabled | `ZORTRAX_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |

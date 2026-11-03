@@ -7,6 +7,9 @@ diagram. Point 4 is rear left, 3 rear right, 2 center, 1 front left and 0
 front right. Continue and Cancel remain normal Fluidd buttons and keep their
 original shared procedure actions.
 
+Printer information in the M300 build uses compact text rows for the model,
+hardware version, serial number and printing time.
+
 ## Build
 
 The patch applies to [Fluidd v1.37.7](https://github.com/fluidd-core/fluidd/tree/b2edab5bc690f5265a5aa1e56ae3f67669053fd4).
@@ -41,5 +44,5 @@ static Fluidd site. Use the built ZIP or the matching GitHub Actions artifact.
    by restoring the original root path and reloading nginx.
 
 The diagram is limited to complete M300 leveling results. Incomplete reports
-and all other prompts keep the existing text rendering. The site neither
-interprets HTML from G-code nor makes extra requests to the printer.
+use the text rendering. The site neither interprets HTML from G-code nor
+makes extra requests to the printer.

@@ -27,6 +27,13 @@ PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
            'info_firmware':'information','info_printer':'information'}
 PARENTS.update({'setting_'+key:'settings' for key in CHOICES})
 PAGES = frozenset(PARENTS)
+WEB_MENU_ROWS = {
+    'main': ('Main menu', (('Back', ('close',)), ('Klipper', ('page', 'klipper')),
+                           ('Zortrax M300', ('page', 'zortrax')))),
+    'zortrax': ('Menu', (('Back', ('page', 'main')), ('Settings', ('page', 'settings')),
+                         ('Information', ('page', 'information')))),
+    'klipper': ('Klipper', (('Back', ('page', 'main')),)),
+}
 OLD_PRINTER_PAGES = frozenset(('info_model', 'info_hardware', 'info_serial', 'info_time'))
 
 
@@ -207,17 +214,30 @@ class M300Settings:
         if menu is not None:
             menu.present_information_page(page, now)
 
+    def _web_rows(self, now):
+        if self.page == 'klipper':
+            title, rows = WEB_MENU_ROWS[self.page]
+            stats = self.printer.lookup_object('print_stats', None)
+            state = stats.get_status(now).get('state') if stats is not None else None
+            return title, rows + (
+                ('Print state: ' + (display_text(state).capitalize() or 'Unavailable'), None),
+                ('Motion, temperatures and print controls are on the Fluidd dashboard.', None))
+        if self.page in WEB_MENU_ROWS:
+            return WEB_MENU_ROWS[self.page]
+        return self.rows(self.page, now)
+
     def show(self,page=None,refresh=False):
         self._live()
         if page is not None:
             if page in OLD_PRINTER_PAGES:
                 page = 'info_printer'
-            if page not in PAGES:raise self.printer.command_error('Unknown Settings/Information page')
+            if page not in PAGES and page not in WEB_MENU_ROWS:
+                raise self.printer.command_error('Unknown M300 menu page')
             self.page=page
         if refresh:self.request_refresh()
         self.generation+=1;self.consumed=None
         now = self.reactor.monotonic()
-        title,rows=self.rows(self.page,now)
+        title,rows=self._web_rows(now)
         if self._procedure_busy(now):
             self.gcode.respond_info('M300 UI '+json.dumps(dict(title=title,lines=[r[0] for r in rows])))
             return
@@ -246,21 +266,24 @@ class M300Settings:
         emit('prompt_show')
 
     def action(self,token,index):
-        self._live();title,rows=self.rows(self.page,self.reactor.monotonic())
+        self._live()
+        now = self.reactor.monotonic()
+        _, rows = self._web_rows(now)
         if (token!=self._view_id() or token==self.consumed or type(index) is not int
                 or not 0<=index<len(rows) or rows[index][1] is None):
             raise self.printer.command_error('Expired Settings view; refresh before choosing')
         self.consumed=token
         action=rows[index][1]
-        if action[0]=='set':self.set_option(action[1],action[2])
+        kind = action[0]
+        if kind == 'close':
+            if not self._procedure_busy(now):
+                self._present_on_oled('status', now)
+                self.gcode.respond_raw('// action:prompt_end')
+            return
+        if kind == 'set':
+            self.set_option(action[1], action[2])
         else:
-            page='setting_'+action[1] if action[0]=='setting' else action[1]
-            if page not in PAGES:
-                now = self.reactor.monotonic()
-                if not self._procedure_busy(now):
-                    self._present_on_oled(page, now)
-                self.gcode.respond_raw('// action:prompt_end');return
-            self.page=page
+            self.page = 'setting_' + action[1] if kind == 'setting' else action[1]
         self.show(refresh=self.page in ('information', 'info_printer'))
 
     def get_status(self,now):

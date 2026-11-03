@@ -96,16 +96,17 @@ index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef4094030
    }
  }
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
-index dbea2dfd657790c2ae599b2fa276a74f4f511b15..bec17ed44263e2a574d2e5ba339cf97b6893655c 100644
+index dbea2dfd657790c2ae599b2fa276a74f4f511b15..3a086a0cf05db8f95b703926d4d5841799704493 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -7,10 +7,13 @@
+@@ -7,10 +7,14 @@
    >
      <v-card-text>
        <v-row
 -        v-for="item in dialog.items"
 +        v-for="item in visibleItems"
          :key="`item::${item.id}`"
++        :class="{ 'm300-printer-info-row': compactPrinterInfo && item.type === 'text' }"
        >
 -        <v-col v-if="item.type === 'text'">
 +        <v-col v-if="leveling && item.id === leveling.firstId">
@@ -115,7 +116,7 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..bec17ed44263e2a574d2e5ba339cf97b
            {{ item.text }}
          </v-col>
          <v-col v-else-if="item.type === 'button'">
-@@ -56,15 +59,28 @@
+@@ -56,15 +60,32 @@
  
  <script lang="ts">
  import { Component, Mixins } from 'vue-property-decorator'
@@ -135,6 +136,10 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..bec17ed44263e2a574d2e5ba339cf97b
 +    return readM300Leveling(this.dialog)
 +  }
 +
++  get compactPrinterInfo () {
++    return this.dialog.title === 'ZORTRAX M300 - Printer information'
++  }
++
 +  get visibleItems () {
 +    const replaced = this.leveling?.otherIds
 +    return replaced
@@ -145,6 +150,25 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..bec17ed44263e2a574d2e5ba339cf97b
    get open (): boolean {
      return this.dialog.open
    }
+@@ -91,4 +112,18 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+       flex: 1 1 0;
+     }
+   }
++
++  .m300-printer-info-row + .m300-printer-info-row {
++    margin-top: 0;
++  }
++
++  .m300-printer-info-row {
++    margin-bottom: 0;
++
++    > .col {
++      padding-top: 0;
++      padding-bottom: 0;
++      line-height: 1.4;
++    }
++  }
+ </style>
 diff --git a/src/components/common/M300LevelingDiagram.vue b/src/components/common/M300LevelingDiagram.vue
 new file mode 100644
 index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc344990bc
@@ -240,17 +264,20 @@ index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc
 +</style>
 diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..149ddf56c5ef1c235cf48e8f57973ae372c1c2c6
+index 0000000000000000000000000000000000000000..d73ca4415a6198a9000d8f82d325a95f73ebcb24
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,86 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
-+import { describe, expect, it } from 'vitest'
-+import { mount } from '@vue/test-utils'
++import { describe, expect, it, vi } from 'vitest'
++import { mount, shallowMount } from '@vue/test-utils'
++import ActionCommandPromptDialog from './ActionCommandPromptDialog.vue'
 +import M300LevelingDiagram from './M300LevelingDiagram.vue'
 +import { readM300Leveling } from './m300Leveling'
 +import type { PromptDialogItem } from '@/store/console/types'
++
++vi.mock('@/mixins/state', async () => ({ default: (await import('vue')).default }))
 +
 +const title = 'ZORTRAX M300 - Platform leveling'
 +const offsets = ['4: -0.1 mm', '3: 0.1 mm', '2: -0.1 mm', '1: -0.4 mm', '0: 0.0 mm']
@@ -297,6 +324,34 @@ index 0000000000000000000000000000000000000000..149ddf56c5ef1c235cf48e8f57973ae3
 +    expect(readM300Leveling(dialog(offsets.slice(0, 4)))).toBeNull()
 +    expect(readM300Leveling(dialog([...offsets.slice(0, 4), '0: <svg> mm']))).toBeNull()
 +    expect(readM300Leveling(dialog([...offsets.slice(0, 4), '1: 0.0 mm']))).toBeNull()
++  })
++})
++
++describe('M300 information prompt', () => {
++  it.each([
++    ['ZORTRAX M300 - Printer information', 2],
++    ['ZORTRAX M300 - Help', 0]
++  ] as const)('compacts only information text in %s', (title, compactRows) => {
++    const info = {
++      title,
++      open: true,
++      items: [
++        { id: 1, type: 'button', text: 'Back', command: 'ZORTRAX_UI_ACTION' },
++        { id: 2, type: 'text', text: 'Model: Zortrax M300 Classic' },
++        { id: 3, type: 'text', text: 'Hardware version: HW05' }
++      ],
++      footerButtons: [{ id: 4, text: 'Refresh', command: 'ZORTRAX_UI_SHOW' }]
++    }
++    const slot = { template: '<div><slot /><slot name="actions" /></div>' }
++    const wrapper = shallowMount(ActionCommandPromptDialog, {
++      mocks: { $typedState: { console: { promptDialog: info } } },
++      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot, 'app-btn': slot }
++    })
++    expect(wrapper.findAll('.m300-printer-info-row')).toHaveLength(compactRows)
++    expect(wrapper.text()).toContain('Model: Zortrax M300 Classic')
++    expect(wrapper.text()).toContain('Hardware version: HW05')
++    expect(wrapper.text()).toContain('Back')
++    wrapper.destroy()
 +  })
 +})
 diff --git a/src/components/common/m300Leveling.ts b/src/components/common/m300Leveling.ts

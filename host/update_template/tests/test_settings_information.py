@@ -344,6 +344,50 @@ class IndicatorAndSleepTests(unittest.TestCase):
 
 
 class InformationTests(unittest.TestCase):
+    def test_fluidd_back_opens_parent_menus_until_the_dashboard(self):
+        with session() as h:
+            def click(label):
+                prefix = '// action:prompt_button ' + label + '|'
+                line = next(line for line in reversed(h.lines) if line.startswith(prefix))
+                command = line.split('|')[1]
+                h.lines.clear()
+                h.run(command)
+                return command
+
+            def assert_page(page, title):
+                self.assertIn('// action:prompt_begin ZORTRAX M300 - ' + title, h.lines)
+                self.assertEqual(h.lines[-1], '// action:prompt_show')
+                self.assertEqual((h.settings.page, h.menu.page, h.oled.page), (page, page, 'm04'))
+
+            h.run('ZORTRAX_LIGHT')
+            assert_page('setting_light_mode', 'Light')
+            click('Back')
+            assert_page('settings', 'Settings')
+            click('Back')
+            assert_page('zortrax', 'Menu')
+            click('Information')
+            assert_page('information', 'Information')
+            click('Back')
+            assert_page('zortrax', 'Menu')
+            click('Back')
+            assert_page('main', 'Main menu')
+            click('Klipper')
+            assert_page('klipper', 'Klipper')
+            self.assertIn('// action:prompt_text Print state: Standby', h.lines)
+            click('Back')
+            assert_page('main', 'Main menu')
+            click('Zortrax M300')
+            assert_page('zortrax', 'Menu')
+            click('Back')
+            assert_page('main', 'Main menu')
+            close = click('Back')
+            self.assertEqual(h.lines, ['// action:prompt_end'])
+            self.assertEqual(h.oled.page, 'status')
+            with self.assertRaisesRegex(h.printer.command_error, 'Expired Settings view'):
+                h.run(close)
+            self.assertEqual(h.position, [150., 158., 5., 17.])
+            self.assertEqual(h.hotend.target, 0.)
+
     def test_back_reaches_the_status_screen_after_opening_a_fluidd_macro(self):
         with session() as h:
             for command, route in (
