@@ -110,6 +110,9 @@ def convert_text(text):
         elif section == 'gcode_macro PID_SAVE':
             block = ('[gcode_macro PID_SAVE]\ndescription: Save native Klipper calibration\n'
                      'gcode:\n    SAVE_CONFIG\n\n')
+        elif section == 'gcode_macro ZORTRAX_LIGHT':
+            block = re.sub(r'^([ \t]*)ZORTRAX_SETTING(?=[ \t]+NAME=light_mode\b)',
+                           r'\1ZORTRAX_UI_SETTING', block, flags=re.MULTILINE)
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'

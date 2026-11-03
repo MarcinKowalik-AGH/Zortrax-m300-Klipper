@@ -156,7 +156,7 @@ def plan(root, config):
         target = config.parent / name
         if target not in desired:
             if target.exists():
-                desired[target] = target.read_bytes()
+                desired[target] = profile.convert_text(target.read_text()).encode()
             else:
                 text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
                 desired[target] = profile.convert_text(text).encode()

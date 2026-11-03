@@ -15,6 +15,7 @@ from test_native_maintenance_contract import FanHarness
 from test_native_oem_services import physical_panel
 from test_macro_dispatch import templates, ENV
 from payload.m300_oem_graphics import OEMGraphics, STOCK_SHA256, choose_icon
+from payload.m300_leveling_oem import width
 from payload.m300_nvm import M300NVM, HostNVM
 from payload.m300_settings import M300Settings, PAGES, PROJECT_URL, history_totals
 from payload.m300_browser import M300Browser
@@ -89,8 +90,7 @@ class SettingsTreeTests(unittest.TestCase):
                 'setting_sleep_mode':['Back','Enabled','Disabled'],
                 'setting_language':['Back','English'],
                 'setting_sort_mode':['Back','Date','Name','Case-sensitive name','File size'],
-                'information':['Back','Firmware version','Printer information','Help'],
-                'info_printer':['Back','Printer model','Hardware version','Serial number','Total printing time']}
+                'information':['Back','Firmware version','Printer information','Help']}
             for page,labels in expected.items():
                 h.menu.page=page;title,rows=h.menu.rows(h.now)
                 self.assertEqual([r[0] for r in rows],labels);self.assertTrue(require_rows(rows))
@@ -142,10 +142,8 @@ class SettingsTreeTests(unittest.TestCase):
             press('Firmware version')
             press('Back')
             press('Printer information')
-            for label in ('Printer model', 'Hardware version', 'Serial number',
-                          'Total printing time'):
-                press(label)
-                press('Back')
+            self.assertEqual([action for _, action in h.menu.rows(h.now)[1]],
+                             [('page', 'information'), None, None, None, None])
             press('Back')
             press('Help')
             press('Back')
@@ -187,6 +185,7 @@ class SettingsTreeTests(unittest.TestCase):
                     ('ZORTRAX_MODELS_SORT MODE=NAME_CASE','sort_mode','NAME_CASE'),
                     ('ZORTRAX_LANGUAGE','language','EN')):
                 h.run(cmd);self.assertEqual(h.nvm.get_setting(key),value)
+                self.assertEqual((h.oled.page, h.menu.page), ('m04', 'setting_' + key))
 
     def test_stale_or_duplicate_fluidd_buttons_cannot_repeat_a_write(self):
         with session() as h:
@@ -213,8 +212,11 @@ class SettingsTreeTests(unittest.TestCase):
             with self.assertRaisesRegex(h.printer.command_error,'blocked by'):
                 h.settings.set_option('light_mode','WHITE')
             self.assertEqual(h.nvm.store._published['revision'],before)
+            h.p._tick(h.now)
+            context = h.oled._input_context()
             h.lines.clear();h.settings.show('settings')
             self.assertFalse(any('prompt_begin' in line for line in h.lines))
+            self.assertEqual(h.oled._input_context(), context)
             self.assertEqual(h.hotend.target,240.)
 
     def test_non_english_languages_and_old_interval_choices_are_not_ui_actions(self):
@@ -290,6 +292,43 @@ class IndicatorAndSleepTests(unittest.TestCase):
 
 
 class InformationTests(unittest.TestCase):
+    def test_fluidd_navigation_invalidates_previous_panel_view_and_keeps_print_context(self):
+        with session() as h:
+            previous = h.oled._input_context()
+            h.run('ZORTRAX_INFORMATION REFRESH=0')
+            self.assertEqual((h.oled.page, h.menu.page), ('m04', 'information'))
+            self.assertNotEqual(h.oled._input_context(), previous)
+            self.assertNotIn('m300-information', h.allocations)
+            h.settings.action(h.settings._view_id(), 2)
+            self.assertEqual(h.menu.page, 'info_printer')
+            h.settings.action(h.settings._view_id(), 0)
+            self.assertEqual(h.menu.page, 'information')
+            h.settings.action(h.settings._view_id(), 0)
+            self.assertEqual(h.menu.page, 'zortrax')
+            h.run('ZORTRAX_SETTINGS')
+            self.assertEqual(h.menu.page, 'settings')
+            h.objects['m300_print_ui'] = NS(view=lambda now: ('PRINTING', None))
+            h.run('ZORTRAX_HELP')
+            self.assertEqual(h.menu.page, 'settings')
+
+    def test_printer_information_uses_four_shared_rows_in_stock_order(self):
+        with session('Z300-123456') as h:
+            h.settings.history_seconds = 9000.
+            h.run('ZORTRAX_UI_SHOW PAGE=info_time')
+            self.assertEqual(h.menu.page, 'info_printer')
+            _, rows = h.menu.rows(h.now)
+            expected = ['Model: Zortrax M300 Classic', 'Hardware version: HW05',
+                        'Serial number: Z300-123456', 'Total printing time: 2 h 30 min']
+            self.assertEqual(rows, [('Back', ('page', 'information'))]
+                             + [(line, None) for line in expected])
+            for line in expected:
+                self.assertIn('// action:prompt_text ' + line, h.lines)
+                self.assertLessEqual(width(line), h.ui.row_pixels)
+            h.oled._render(h.now)
+            self.assertEqual(h.oled._render_wire, menu_frame(tuple(label for label, _ in rows),
+                             (), 0, test_display.renderer.Frame))
+            self.assertIsNone(choose_icon(menu_page='info_printer'))
+
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
@@ -345,7 +384,8 @@ class InformationTests(unittest.TestCase):
         with session() as h:
             h.run('ZORTRAX_HELP')
             self.assertTrue(any(PROJECT_URL in line for line in h.lines))
-            h.menu.page='help';joined=''.join(label for label,_ in h.menu.rows(h.now)[1][1:4])
+            self.assertEqual((h.oled.page, h.menu.page), ('m04', 'help'))
+            joined=''.join(label for label,_ in h.menu.rows(h.now)[1][1:4])
             self.assertEqual('https://'+joined,PROJECT_URL)
             self.assertFalse(any('zortrax.com' in line for line in h.lines))
 

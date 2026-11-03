@@ -34,25 +34,22 @@ Open **Zortrax M300 → Information** or run `ZORTRAX_INFORMATION` in Fluidd.
 | Page | Displayed data |
 |---|---|
 | Firmware version | Host release, MCU release, pinned Klipper revision and OEM reference |
-| Printer information → Printer model | Zortrax M300 Classic |
-| Printer information → Hardware version | Reported factory profile such as HW05 |
-| Printer information → Serial number | Available factory serial or explicitly configured printer serial |
-| Printer information → Total printing time | Recorded Moonraker print history |
+| Printer information | Model, hardware version, serial number and total printing time on one screen |
 | Help | Project repository for documentation and issues |
 
 The R14.5 protocol exposes the factory hardware record. With that MCU the
-serial page shows **Unavailable** unless the operator enters the actual
+serial field shows **Unavailable** unless the operator enters the actual
 printer serial as `serial_number:` in the existing `[m300_settings]` section.
 The host identity is a separate value.
 
-Opening Information requests Moonraker history in the background. Fluidd's
-Total printing time page has a Refresh button. In the console,
+Opening Information or Printer information requests Moonraker history in the
+background. Fluidd's Printer information page has a Refresh button. In the console,
 `ZORTRAX_INFO REFRESH=0` reads the current cache and `ZORTRAX_INFO REFRESH=1`
 requests an update. The default endpoint is the local Moonraker server on
 port 7125 and can be set with `moonraker_url:` in `[m300_settings]`.
 The [Moonraker history API](https://moonraker.readthedocs.io/en/latest/external_api/history/)
 provides recorded print time. It covers the jobs in that Moonraker database.
-The view identifies missing history and cached totals after a failed refresh.
+Fluidd identifies missing history and cached totals after a failed refresh.
 
 OLED Help shows the project address across three rows. Fluidd Help shows the
 complete address. [Project GitHub](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper)

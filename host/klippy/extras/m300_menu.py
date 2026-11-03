@@ -160,7 +160,7 @@ class M300Menu:
         self.invalidate()
         self.reason = ''
 
-    def _navigate(self, page, remember=True):
+    def _navigate(self, page, remember=True, *, refresh_information=True):
         if self.page == 'fan_test' and page != 'fan_test':
             fans = self.printer.lookup_object('m300_fans', None)
             if fans is not None and fans.test is not None:
@@ -172,7 +172,7 @@ class M300Menu:
             ui.entered(self.page, page, remember)
         self.generation += 1
         self.page, self.reason, self._confirm = page, '', None
-        if page == 'information':
+        if refresh_information and page in ('information', 'info_printer'):
             settings = self.printer.lookup_object('m300_settings', None)
             if settings is not None:
                 settings.request_refresh()
@@ -187,6 +187,24 @@ class M300Menu:
                     # Rendering will show unavailability. Page entry never
                     # recovers, acknowledges or changes a procedure owner.
                     pass
+
+    def present_information_page(self, page, now):
+        """Show a remote menu selection without taking over a modal panel."""
+        oled = self.printer.lookup_object('m300_oled', None)
+        if (oled is None or not oled.connected or self._busy
+                or self.page in ('motion_jog', 'fan_test')
+                or self.maintenance.get_status(now).get('platform_held')):
+            return
+        print_ui = self.printer.lookup_object('m300_print_ui', None)
+        if print_ui is not None and print_ui.view(now) is not None:
+            return
+        if oled.page == 'm04' and self.page == page and oled.message is None:
+            return
+        self._navigate(page, refresh_information=False)
+        oled.page, oled.selection, oled.message = 'm04', 0, None
+        oled.render_at = 0.
+        oled._user_refresh_pending = True
+        self.reactor.update_timer(oled.timer, self.reactor.NOW)
 
     def _service(self, name):
         obj = self.printer.lookup_object(name, None)

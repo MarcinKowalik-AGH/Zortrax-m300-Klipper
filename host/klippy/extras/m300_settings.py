@@ -24,10 +24,10 @@ SETTINGS = (
 CHOICES = {key:values for key,_,values in SETTINGS}
 TITLES = {key:title for key,title,_ in SETTINGS}
 PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
-           'info_firmware':'information','info_printer':'information',
-           **{page:'info_printer' for page in ('info_model','info_hardware','info_serial','info_time')}}
+           'info_firmware':'information','info_printer':'information'}
 PARENTS.update({'setting_'+key:'settings' for key in CHOICES})
 PAGES = frozenset(PARENTS)
+OLD_PRINTER_PAGES = frozenset(('info_model', 'info_hardware', 'info_serial', 'info_time'))
 
 
 def display_text(value, limit=160):
@@ -155,23 +155,18 @@ class M300Settings:
         if page=='information':
             return 'Information',back+[(title,('page',target)) for title,target in (
                 ('Firmware version','info_firmware'),('Printer information','info_printer'),('Help','help'))]
-        if page=='info_printer':
-            return 'Printer information',back+[(title,('page',target)) for title,target in (
-                ('Printer model','info_model'),('Hardware version','info_hardware'),
-                ('Serial number','info_serial'),('Total printing time','info_time'))]
         info=self.information(now)
         if page=='info_firmware':
             title='Firmware version'
             lines=['Host '+info['host_version'],'MCU '+str(info['mcu_release'] or info['mcu_version'] or 'Unavailable'),
                    'Klipper '+UPSTREAM[:12],'OEM reference 1.3.1']
-        elif page=='info_model':title,lines='Printer model',[info['printer_model']]
-        elif page=='info_hardware':title,lines='Hardware version',[info['hardware_version'] or 'Unavailable']
-        elif page=='info_serial':title,lines='Serial number',[info['serial_number'] or 'Unavailable',info['serial_source']]
-        elif page=='info_time':
-            title='Total printing time'
-            lines=[info['total_printing_time'],info['time_source']]
-            if info['history_reading']:lines.append('Reading history')
-            if info['history_error']:lines.append(info['history_error'])
+        elif page=='info_printer':
+            # Stock 1.3.1, menu_printer_information_screen (0x080154D8).
+            title = 'Printer information'
+            lines = ['Model: ' + info['printer_model'],
+                     'Hardware version: ' + (info['hardware_version'] or 'Unavailable'),
+                     'Serial number: ' + (info['serial_number'] or 'Unavailable'),
+                     'Total printing time: ' + info['total_printing_time']]
         else:
             title='Help';lines=['github.com/','MarcinKowalik-AGH/','Zortrax-m300-Klipper','Project documentation and issues']
         return title,back+[(line,None) for line in lines]
@@ -196,18 +191,30 @@ class M300Settings:
         revision=self.nvm.ui_snapshot()['revision']
         return hashlib.sha256(('%s:%s:%s:%s'%(self.epoch,self.generation,self.page,revision)).encode()).hexdigest()[:24]
 
+    def _procedure_busy(self, now):
+        procedures = self.printer.lookup_object('m300_procedures', None)
+        return procedures is not None and procedures.get_status(now).get('busy')
+
+    def _present_on_oled(self, page, now):
+        menu = self.printer.lookup_object('m300_menu', None)
+        if menu is not None:
+            menu.present_information_page(page, now)
+
     def show(self,page=None,refresh=False):
         self._live()
         if page is not None:
+            if page in OLD_PRINTER_PAGES:
+                page = 'info_printer'
             if page not in PAGES:raise self.printer.command_error('Unknown Settings/Information page')
             self.page=page
         if refresh:self.request_refresh()
         self.generation+=1;self.consumed=None
-        title,rows=self.rows(self.page,self.reactor.monotonic())
-        procedure=self.printer.lookup_object('m300_procedures',None)
-        if procedure is not None and procedure.get_status(self.reactor.monotonic()).get('busy'):
+        now = self.reactor.monotonic()
+        title,rows=self.rows(self.page,now)
+        if self._procedure_busy(now):
             self.gcode.respond_info('M300 UI '+json.dumps(dict(title=title,lines=[r[0] for r in rows])))
             return
+        self._present_on_oled(self.page, now)
         def emit(line):self.gcode.respond_raw('// action:'+line)
         emit('prompt_end');emit('prompt_begin ZORTRAX M300 - '+title)
         token=self._view_id()
@@ -218,8 +225,15 @@ class M300Settings:
             else:emit('prompt_button %s|ZORTRAX_UI_ACTION VIEW=%s INDEX=%d|primary'%(label,token,index))
         if self.page == 'help':
             emit('prompt_text ' + PROJECT_URL)
-        if self.page == 'info_time':
-            emit('prompt_footer_button Refresh|ZORTRAX_UI_SHOW PAGE=info_time REFRESH=1|info')
+        if self.page == 'info_printer':
+            info = self.information(now)
+            if info['total_print_seconds'] is not None:
+                emit('prompt_text ' + info['time_source'])
+            if info['history_reading']:
+                emit('prompt_text Reading history')
+            if info['history_error']:
+                emit('prompt_text ' + info['history_error'])
+            emit('prompt_footer_button Refresh|ZORTRAX_UI_SHOW PAGE=info_printer REFRESH=1|info')
         emit('prompt_show')
 
     def action(self,token,index):
@@ -233,9 +247,12 @@ class M300Settings:
         else:
             page='setting_'+action[1] if action[0]=='setting' else action[1]
             if page not in PAGES:
+                now = self.reactor.monotonic()
+                if not self._procedure_busy(now):
+                    self._present_on_oled(page, now)
                 self.gcode.respond_raw('// action:prompt_end');return
             self.page=page
-        self.show(refresh=self.page=='information')
+        self.show(refresh=self.page in ('information', 'info_printer'))
 
     def get_status(self,now):
         settings={key:choice_value(self.nvm,key) for key in CHOICES}
@@ -261,7 +278,11 @@ class M300Settings:
             if raw not in ('ENABLED','DISABLED'):raise gcmd.error('Use Enabled or Disabled')
             value='15MIN' if raw=='ENABLED' else 'OFF'
         else:value='DISABLE' if key=='light_mode' and raw=='DISABLED' else raw
-        self.set_option(key,value);self.cmd_status(gcmd)
+        self.set_option(key,value)
+        now = self.reactor.monotonic()
+        if not self._procedure_busy(now):
+            self._present_on_oled('setting_' + key, now)
+        self.cmd_status(gcmd)
 
     def cmd_show(self,gcmd):
         self.show(gcmd.get('PAGE','settings').lower(),bool(gcmd.get_int('REFRESH',0,minval=0,maxval=1)))
