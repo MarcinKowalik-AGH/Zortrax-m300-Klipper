@@ -1,0 +1,103 @@
+name: Publish M300 R16.12 test release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-m300-r16-12.yml
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: m300-r16-12-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: '41723550215'
+      SOURCE_SHA: d5a040f22dccfe45380f9550080fd224f15f2ff4
+      ARTIFACT: M300_R16_12_FULL_ORANGE_PI
+      TAG: R16.12
+    steps:
+      - name: Download and verify the successful Orange Pi build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json
+          jq -e --arg sha "$SOURCE_SHA" '
+            .head_sha == $sha and .head_branch == "main" and
+            .path == ".github/workflows/build-m300.yml" and
+            .status == "completed" and .conclusion == "success"
+          ' run.json >/dev/null
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name "$ARTIFACT" --dir "$ARTIFACT"
+          (
+            cd "$ARTIFACT"
+            jq -e --arg sha "$SOURCE_SHA" --arg run "$SOURCE_RUN" '
+              .github_commit == $sha and (.github_run_id | tostring) == $run and
+              .host_update == "R16.12" and .release_stage == "TEST_READY"
+            ' BUILD_PROVENANCE.json >/dev/null
+            sha256sum -c --quiet SHA256SUMS
+            test -f install-orange-pi.py
+            test -f MCU/M300APP.M3B
+          )
+          zip -q -r "$ARTIFACT.zip" "$ARTIFACT"
+          sha256sum "$ARTIFACT.zip" > M300_R16_12_RELEASE_SHA256SUMS.txt
+
+      - name: Publish the pre-release with the verified bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$TAG" \
+            --jq ".[] | select(.ref == \"refs/tags/$TAG\") | .object.sha")
+          if [[ -n "$existing" && "$existing" != "$SOURCE_SHA" ]]; then
+            echo "The release tag already points to another object." >&2
+            exit 1
+          fi
+          cat > release-notes.md <<'NOTES'
+          Test release for the **classic Zortrax M300**. Source commit
+          `d5a040f22dccfe45380f9550080fd224f15f2ff4`. The full Orange Pi package
+          comes from the successful [build and deployment run](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/41723550215).
+
+          ## Changes
+
+          - Restored the OEM M07 travel profile and synchronized the five-point leveling result between OLED and Fluidd. Improved native Z homing deadlines and temperature handling.
+          - Unified the OLED menu font and Back navigation. Condensed Printer information and added factory identity and tracked native print time.
+          - Added separate 16-level OLED and LED brightness controls, idle fade and a native print status screen with pause access. Cosmetic settings can be used during supported procedures.
+          - Added an MCU-local stop on encoder release for OLED platform holds. The host now reconciles the halted step count at either Z limit and keeps OLED holds separate from Fluidd motion dialogs. Fluidd distance macros retain their separate confirmation and travel checks.
+          - Fixed fan-test ownership when native thermal telemetry is idle. Automatic hotend cooling retains priority. Polished the OLED pause menu and added parallel bed and hotend warmup for the recognized OrcaSlicer start sequence.
+
+          ## Install on Orange Pi
+
+          With the printer idle and Klipper Ready, update the existing deployment:
+
+          ```bash
+          git -C "$HOME/m300-orange-pi" pull --ff-only &&
+          python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+          ```
+
+          For a new checkout, see the [installation guide](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d5a040f22dccfe45380f9550080fd224f15f2ff4/docs/en/INSTALL.md).
+          The ZIP contains the host installer, compiled Fluidd, MCU
+          `0.13.14.7-PANEL-STOP-UART8`, provenance and checksums. MCU flashing
+          is a separate operation. The host update preserves the configured
+          UART baud, including 1,500,000 baud.
+
+          ## Validation
+
+          The build passed 363 host tests, native Klippy FILEOUTPUT validation,
+          STM32F103 and Fluidd builds, and the Git deployment. Hardware
+          acceptance of the new platform and fan paths and investigation of
+          the earlier intermittent `Timer too close` failure are still open.
+          NOTES
+          gh release create "$TAG" "$ARTIFACT.zip" M300_R16_12_RELEASE_SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease \
+            --title 'M300 Classic R16.12 — Orange Pi test release' \
+            --notes-file release-notes.md
