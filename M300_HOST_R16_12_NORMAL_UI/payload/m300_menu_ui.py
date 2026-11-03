@@ -221,7 +221,8 @@ class M300MenuUI:
         was_held=service.state=='PLATFORM_HOLD'
         consume=getattr(self,'_platform_gesture',False)
         if was_held:
-            service.refresh_hold(context,received_at,pressed,visible and fresh)
+            same_press = pressed and fresh and not events['releases']
+            service.refresh_hold(context, received_at, same_press, visible and fresh)
         if not fresh or not visible:
             self._platform_released=False
             if not pressed:
@@ -239,7 +240,8 @@ class M300MenuUI:
             if may_start:
                 try:
                     service.hold(context[2],context,received_at,
-                        lambda:context==self._platform_context() and self._platform_visible())
+                        lambda:context==self._platform_context() and self._platform_visible(),
+                        snapshot['presses'])
                 except Exception as exc:
                     self.menu.reason=str(exc)
             self.oled.render_at=0.

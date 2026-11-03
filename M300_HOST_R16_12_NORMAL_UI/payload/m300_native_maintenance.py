@@ -1,20 +1,76 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """OEM Maintenance on the existing native Klipper heaters and Z rail.
 
-The panel holds a short motion lease; only one bounded native move can be
-outstanding. Releasing, leaving the acknowledged view or losing panel freshness
-stops further steps. No homing, raw GPIO or coordinate/limit overrides.
+The MCU stops the native Z move on a local button release. The host reconciles
+the halted position using Klipper's native probe-move position accounting.
 """
 import math
 
 from .m300_maintenance import M300Maintenance, other_service
+from .m300_native_probe import BoundedProbeToolhead, boundary_z
 from .m300_native_service import NativeServiceLease, require_idle_print
 
 PERIOD = .05
 PANEL_LEASE = .75
-QUANTUM = .1
 PLATFORM_STEP_MM = 1.
 PLATFORM_STEP_SECONDS = 1.
+
+
+class PanelRelease:
+    """One same-MCU stop signal, tied to the panel's physical press counter."""
+    def __init__(self, mcu):
+        from mcu import MCU_trsync, TriggerDispatch
+        self.mcu = mcu
+        self.dispatch = TriggerDispatch(mcu)
+        self.reasons = MCU_trsync
+        self.arm_cmd = None
+        self.active = self.stop_requested = False
+        mcu.register_config_callback(self._build_config)
+
+    def _build_config(self):
+        if self.mcu.get_constants().get('M300_PANEL_RELEASE_ABI') != 1:
+            return
+        queue = self.dispatch.get_command_queue()
+        self.arm_cmd = self.mcu.lookup_command('m300_panel_release_arm oid=%c press=%u', cq=queue)
+        self.disarm_cmd = self.mcu.lookup_command('m300_panel_release_disarm oid=%c', cq=queue)
+        self.stop_cmd = self.mcu.lookup_command('trsync_trigger oid=%c reason=%c', cq=queue)
+
+    def home_start(self, print_time, sample_time, sample_count, rest_time, triggered=True):
+        completion = self.dispatch.start(print_time)
+        self.active = True
+        clock = self.mcu.print_time_to_clock(print_time)
+        self.arm_cmd.send([self.dispatch.get_oid(), self.press_id], reqclock=clock)
+        if self.stop_requested:
+            self.stop()
+        return completion
+
+    def home_wait(self, end_time):
+        try:
+            self.dispatch.wait_end(end_time)
+        finally:
+            self.active = False
+            self.disarm_cmd.send([self.dispatch.get_oid()])
+            reason = self.dispatch.stop()
+        if reason >= self.reasons.REASON_COMMS_TIMEOUT:
+            raise self.mcu.get_printer().command_error('Communication timeout during platform hold')
+        # The caller needs the actual halt count. No trigger timestamp is used
+        # as a position reference for this manual move.
+        return 0.
+
+    def get_steppers(self):
+        return self.dispatch.get_steppers()
+
+    def stop(self):
+        self.stop_requested = True
+        if self.active:
+            self.stop_cmd.send([self.dispatch.get_oid(), self.reasons.REASON_HOST_REQUEST])
+
+    def move(self, printer, toolhead, target, speed, press_id):
+        from .homing import HomingMove
+        self.press_id = press_id
+        self.stop_requested = False
+        HomingMove(printer, [(self, 'panel release')], toolhead).homing_move(
+            target, speed, probe_pos=True, check_triggered=False)
 
 
 class M300NativeMaintenance(M300Maintenance):
@@ -26,11 +82,23 @@ class M300NativeMaintenance(M300Maintenance):
         self._hold_context = self._hold_received = None
         self._hold_direction = None
         self._hold_validate = None
+        self._hold_started = False
+        mcu = self.board.get_mcu()
+        self.panel_release = PanelRelease(mcu) if hasattr(mcu, 'create_oid') else None
         self._pending_z = None
         self._idle_saved = None
         self.lease = NativeServiceLease(self, lambda:(self.token,self.phase_id),
                                        self._move_guard,self.cancel)
         self.gcode.register_command('ZORTRAX_PLATFORM',self.cmd_platform)
+
+    def _connect(self):
+        super()._connect()
+        release = self.panel_release
+        if release is not None and release.arm_cmd is not None:
+            steppers = [s for s in self.toolhead.get_kinematics().get_steppers()
+                        if s.get_name() == 'stepper_z' and s.get_mcu() is release.mcu]
+            for stepper in steppers:
+                release.dispatch.add_stepper(stepper)
 
     def _stop_lifecycle(self, *args):
         fault=(self.state,self.reason) if self.state=='FAULT' else None
@@ -81,7 +149,11 @@ class M300NativeMaintenance(M300Maintenance):
         self._deadline=self.reactor.monotonic()+self.timeout
         self._pending_z=None
         try:
-            self.lease.acquire(self.toolhead,self.gcode_move,(self.hotend,self.bed))
+            # The hold worker can yield to its watchdog and to operator Cancel.
+            # Prevent a different command from flushing or disabling its rail.
+            hold_commands = ('G4', 'M400', 'SET_STEPPER_ENABLE') if state == 'PLATFORM_HOLD' else ()
+            self.lease.acquire(self.toolhead, self.gcode_move, (self.hotend,self.bed),
+                               extra_commands=hold_commands)
             self._idle_saved=self.job.idle.idle_timeout
             self.job._set_idle(max(self._idle_saved,self.timeout+60.))
         except Exception:
@@ -130,14 +202,24 @@ class M300NativeMaintenance(M300Maintenance):
         self._begin('PLATFORM_UP' if distance<0. else 'PLATFORM_DOWN','MOVING')
         self._pending_z=(endpoint,speed)
 
-    def hold(self,direction,context,received_at,validate):
+    def hold(self,direction,context,received_at,validate,press_id):
         if direction not in (-1,1):
             raise self._error('invalid platform direction')
         if self.gcode.get_mutex().test():
             raise self._error('wait for the current Klipper command before holding the platform button')
+        release = self.panel_release
+        if release is None or release.arm_cmd is None or len(release.get_steppers()) != 1:
+            raise self._error('platform hold needs MCU firmware with local panel release stop')
+        if type(press_id) is not int or not 0 <= press_id <= 0xffffffff:
+            raise self._error('invalid physical panel press counter')
+        self._z_endpoint(0.)
+        self._hold_drip = self.toolhead.drip_move
+        self._hold_set_position = self.toolhead.set_position
         self._begin('PLATFORM_UP' if direction<0 else 'PLATFORM_DOWN','PLATFORM_HOLD')
         self._hold_direction,self._hold_context=direction,context
         self._hold_received,self._hold_validate=received_at,validate
+        self._hold_press_id = press_id
+        self._hold_started = False
 
     def refresh_hold(self,context,received_at,pressed,visible):
         if self.state!='PLATFORM_HOLD':
@@ -150,6 +232,53 @@ class M300NativeMaintenance(M300Maintenance):
             self.cancel('platform button released or view/panel lease expired')
         else:
             self._hold_received=received_at
+
+    def _run_hold(self, now, token):
+        if token != self.token or self.state != 'PLATFORM_HOLD':
+            return
+        if now-self._hold_received > PANEL_LEASE or not self._hold_validate():
+            self.cancel('platform view/panel lease expired')
+            return
+        if self.gcode.get_mutex().test():
+            self._hold_started = False
+            return
+        self._executing = True
+        try:
+            self._authority(True)
+            release = self.panel_release
+            step = release.get_steppers()[0].get_step_dist()
+            velocity, _ = self.toolhead.get_max_velocity()
+            kinematics = self.toolhead.get_kinematics()
+            # At 1 kHz the MCU can see release within one sample. Keep the
+            # step rate within 4000 pulses/s on either factory Z scale.
+            speed = min(self.jog_speed, velocity, kinematics.max_z_velocity, 4000. * step)
+            target = list(self.toolhead.get_position())
+            low, high = self.job._axis_bounds()
+            bounds = low[2], high[2]
+            limit = bounds[self._hold_direction > 0]
+            steps = math.floor(abs(limit-target[2])/step)
+            if not steps:
+                self._finish('CANCELLED', 'native Z limit reached')
+                return
+            target[2] = boundary_z(target[2] + self._hold_direction * steps * step,
+                                   bounds, self._error)
+
+            def check():
+                if (self.token != token or not self.ready or self.printer.is_shutdown()
+                        or self.state not in ('PLATFORM_HOLD', 'CANCELLING')):
+                    raise self._error('platform hold no longer owns Z')
+
+            toolhead = BoundedProbeToolhead(self.toolhead, target, speed, check,
+                self._hold_drip, self._hold_set_position,
+                lambda z: boundary_z(z, bounds, self._error), self._error)
+            release.move(self.printer, toolhead, target, speed, self._hold_press_id)
+            check()
+            self._finish('CANCELLED', self.reason or 'platform button released or native Z limit reached')
+        except Exception as exc:
+            if not self.printer.is_shutdown() and self.ready:
+                self._fault(str(exc))
+        finally:
+            self._executing = False
 
     def _finish(self,state,reason=''):
         # A pending short native move must drain before ownership is restored.
@@ -177,6 +306,8 @@ class M300NativeMaintenance(M300Maintenance):
             raise self._error('expired maintenance cancellation')
         if not self.is_busy() or self.state=='FAULT':
             return
+        if self.state == 'PLATFORM_HOLD' and self._executing:
+            self.panel_release.stop()
         if self.operation=='HOTEND':
             self.lease.heat(self.hotend,0.)
             self.target=0.
@@ -211,7 +342,7 @@ class M300NativeMaintenance(M300Maintenance):
             return self.reactor.NEVER
         try:
             self._indicators(now)
-            if not self.is_busy() or self._executing:
+            if not self.is_busy():
                 return now+.5
             if self.state=='FAULT':
                 return self.reactor.NEVER
@@ -220,6 +351,8 @@ class M300NativeMaintenance(M300Maintenance):
                 self.cancel('platform view/panel lease expired')
             if now>=self._deadline and self.state!='CANCELLING':
                 self.cancel('maintenance deadline expired')
+            if self._executing:
+                return now+PERIOD
             if self.gcode.get_mutex().test():
                 return now+PERIOD
             with self.gcode.get_mutex():
@@ -237,21 +370,16 @@ class M300NativeMaintenance(M300Maintenance):
                         if self.state=='HEATING' and measured>=self.target-2.:
                             self.state='WAIT_CONFIRM'
                             self.phase_id+=1
-                    elif self.state in ('MOVING','PLATFORM_HOLD'):
+                    elif self.state == 'PLATFORM_HOLD':
+                        if not self._hold_started and self.job._queue_drained(now):
+                            self._hold_started = True
+                            self.reactor.register_callback(
+                                lambda eventtime, token=self.token: self._run_hold(eventtime, token))
+                    elif self.state == 'MOVING':
                         self._authority(True)
                         if not self.job._queue_drained(now):
                             return now+PERIOD
-                        if self.state=='PLATFORM_HOLD':
-                            low,high=self.job._axis_bounds()
-                            z=self.toolhead.get_position()[2]
-                            distance=self._hold_direction*min(QUANTUM,
-                                z-low[2] if self._hold_direction<0 else high[2]-z)
-                            if abs(distance)<1.e-6:
-                                self.cancel('native Z limit reached')
-                            else:
-                                self.lease.move(self._z_endpoint(distance),self.jog_speed)
-                                self.toolhead.get_last_move_time()
-                        elif self._pending_z is not None:
+                        if self._pending_z is not None:
                             endpoint, speed = self._pending_z
                             z = self.toolhead.get_position()[2]
                             remaining = endpoint[2] - z
@@ -285,7 +413,7 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
-            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM1')
+            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM2')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.6-FACTORY-INFO-UART8",
+  "mcu_release": "0.13.14.7-PANEL-STOP-UART8",
   "host_update": "R16.12",
-  "github_commit": "6dc763122f3d02533b88ba6850bf8a0b89de4274",
-  "github_run_id": "41700139646",
+  "github_commit": "8b9293c0d0aa5065b37effd62f66838697c307cf",
+  "github_run_id": "41703048413",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,

@@ -75,7 +75,7 @@ class NativeServiceLease:
         self.methods.append((obj,name,getattr(obj,name),replacement))
         setattr(obj,name,replacement)
 
-    def acquire(self,toolhead,gcode_move,heaters):
+    def acquire(self,toolhead,gcode_move,heaters,*,extra_commands=()):
         if self.methods:
             raise self.printer.command_error('OEM native service lease already active')
         self.toolhead,self.gcode_move=toolhead,gcode_move
@@ -105,7 +105,7 @@ class NativeServiceLease:
                     self.cancel('external heater-off')
                 return original_heat(value)
             self._own(heater,'set_temp',heat)
-        for name in BLOCKED:
+        for name in (*BLOCKED, *extra_commands):
             def locked_command(gcmd,name=name):
                 raise self.printer.command_error('OEM service owns resources; '+name+' refused')
             record=lock_command(self.gcode,name,locked_command)
