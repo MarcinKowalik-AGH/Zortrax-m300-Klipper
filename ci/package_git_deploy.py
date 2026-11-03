@@ -27,7 +27,7 @@ def package(release, output, commit):
     subprocess.run([sys.executable, '-B', 'VERIFY.py'], cwd=output / HOST, check=True)
 
     (output / 'MCU').mkdir()
-    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_R14_6_SD.zip',
+    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_R14_7_SD.zip',
                  'install-orange-pi.py', 'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)

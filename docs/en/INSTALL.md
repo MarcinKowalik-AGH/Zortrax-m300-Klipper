@@ -2,8 +2,9 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port and MCU R14.5 or R14.6.
-Factory serial and OEM print time require R14.6.
+This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.7.
+Factory serial and OEM print time require R14.6 or later.
+OLED hold-to-move with local button release stop requires R14.7.
 It accepts recognized R15.3 through R16.11 baselines, including the browser
 modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
 the existing module hashes before it writes anything.
@@ -101,7 +102,7 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_6_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_7_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. The full Actions artifact

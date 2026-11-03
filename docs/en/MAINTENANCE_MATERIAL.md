@@ -43,11 +43,19 @@ a macro or console opens the same OLED dialog as starting from the menu.
 Completion closes the Fluidd prompt and returns to Maintenance, Material or
 the paused native Print status, as appropriate.
 
-On the OLED, select a platform direction and hold the button. Releasing it,
-leaving the visible row or losing fresh panel input for 0.75 seconds stops
-issuing new moves. A release followed by a fresh press on an acknowledged
-row is required. At most one 0.1 mm native quantum remains queued. A long
-button event is part of this hold, not navigation. Z must actually be homed.
+On the OLED, select a platform direction and hold the button. MCU R14.7
+detects the raw encoder button's rising edge and samples the button every
+millisecond as a fallback. On release it triggers
+Klipper's native same-MCU stop to discard queued Z pulses, before debounce
+and before any UART notification. At the allowed maximum of 4,000 step
+pulses/s, a nominal 1 ms sample interval represents four step pulses.
+The host reconciles Z from the halted step count. The stop latency is
+modeled in software and has yet to be measured on hardware.
+
+A fresh press on an acknowledged row and homed Z are required. A stale
+press counter cannot arm motion. Leaving the row or losing panel snapshots
+for 0.75 seconds requests a stop from the host. The move ends at the native Z
+limit if reached first. Earlier MCU versions refuse this panel hold.
 
 Fluidd platform macros execute a finite distance. The default is 1 mm.
 Supply any positive distance whose endpoint fits the homed Z travel:
@@ -60,8 +68,7 @@ ZORTRAX_PLATFORM_DOWN DISTANCE=20 SPEED=1
 The full requested endpoint must fit the actual homed Z range. The service
 queues one segment of up to 1 mm at a time, so Cancel lets the current
 segment finish and stops the remaining distance. The maintenance timeout
-bounds waiting for progress during the finite move. The OLED hold retains
-its 0.1 mm quantum. Ordinary XYZ jogs remain native Klipper controls.
+bounds waiting for progress during the finite move.
 
 Load and Unload move E only; XYZ need not be homed. Native extrusion and
 heater checks remain active. Configured lengths, speeds and E calibration

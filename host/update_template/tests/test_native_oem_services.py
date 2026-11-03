@@ -70,16 +70,18 @@ class Harness:
             getfloat=lambda name,default,**kw:default)
         self.gcode=native_gcode.GCodeDispatch(self.printer)
         self.gcode.register_output_handler(self.lines.append)
-        for name in ('G28','M109'):
+        for name in ('G28','M109','G4','M400','SET_STEPPER_ENABLE'):
             self.gcode.register_command(name,lambda cmd:None)
         self.hotend,self.bed=Heater(),Heater()
         self.board=NS(native_control=True,require_motion=lambda:None,require_heating=lambda:None,
             mcu=NS(is_fileoutput=lambda:False),get_mcu=lambda:NS(register_config_callback=lambda cb:None))
-        kin=NS(get_status=lambda now:dict(homed_axes=self.homed,axis_minimum=[0.,0.,0.],axis_maximum=[305.,305.,315.]))
+        kin=NS(max_z_velocity=25.,get_status=lambda now:dict(
+            homed_axes=self.homed,axis_minimum=[0.,0.,0.],axis_maximum=[305.,305.,315.]))
         self.toolhead=NS(get_position=lambda:self.position[:],move=self.move,
             manual_move=self.manual_move,drip_move=lambda *args:None,set_position=lambda *args:None,
             get_kinematics=lambda:kin,get_extruder=lambda:NS(max_e_dist=50.),
-            register_lookahead_callback=lambda cb:cb(self.now),get_last_move_time=lambda:self.busy_until)
+            register_lookahead_callback=lambda cb:cb(self.now),get_last_move_time=lambda:self.busy_until,
+            get_max_velocity=lambda:(300.,1000.),check_busy=lambda now:(self.busy_until,now,True))
         self.idle=NS(idle_timeout=600.)
         self.job=NS(board=self.board,toolhead=self.toolhead,hotend=self.hotend,bed=self.bed,
             idle=self.idle,fan=None,workflow_qualified=False,
@@ -112,6 +114,8 @@ class Harness:
         self.f=M300Filament(self.config)
         self.objects['m300_filament']=self.f
         self.m=M300NativeMaintenance(self.config)
+        self.hold_actions = []
+        self.hold_sample = None
         self.objects['m300_maintenance']=self.m
         self.p=M300Procedures(self.config)
         self.objects['m300_procedures']=self.p
@@ -122,10 +126,25 @@ class Harness:
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))
         self.emit('klippy:connect');self.emit('klippy:ready')
+        self.m.panel_release = NS(arm_cmd=True,
+            get_steppers=lambda:[NS(get_step_dist=lambda:.0025)],
+            stop=lambda:self.hold_actions.append('stop'), move=self.model_hold_move)
         self.native_move=self.toolhead.move
         self.native_heat=self.hotend.set_temp
         self.native_commands=dict(self.gcode.ready_gcode_handlers)
         self.events.clear();self.lines.clear()
+
+    def model_hold_move(self, printer, toolhead, target, speed, press_id):
+        self.hold_actions.append((tuple(target), speed, press_id))
+        toolhead.drip_move(target, speed, None)
+        halt = list(target)
+        if self.hold_sample is not None:
+            halt[2] = self.hold_sample()
+        toolhead.set_position(halt)
+        self.position = halt
+
+    def start_hold_worker(self):
+        self.callbacks.pop(0)(self.now)
 
     def emit(self,event,*args):
         for cb in self.handlers[event]:cb(*args)
@@ -329,22 +348,45 @@ class NativeMaintenanceTests(unittest.TestCase):
             with self.assertRaises(native_gcode.CommandError):h.run(command)
             self.assertFalse(any(e[0]=='move' for e in h.events));h.assert_restored(self)
 
-    def test_hold_release_drains_only_one_quantum_without_extra_movement(self):
-        h=Harness();h.homed='z'
-        h.m.hold(-1,'view',h.now,lambda:True);h.step()
-        self.assertAlmostEqual(h.position[2],4.9)
-        h.m.refresh_hold('view',h.now,False,True)
-        h.until(h.m,'CANCELLED')
-        self.assertAlmostEqual(h.position[2],4.9);h.assert_restored(self)
+    def test_stale_panel_and_lost_view_stop_before_the_hold_worker_runs(self):
+        for kind in ('stale', 'lost_view'):
+            h = Harness()
+            h.homed = 'z'
+            visible = [True]
+            h.m.hold(1, 'view', h.now, lambda: visible[0], 1)
+            h.step()
+            if kind == 'stale':
+                h.now += .8
+            else:
+                visible[0] = False
+            h.start_hold_worker()
+            h.until(h.m, 'CANCELLED')
+            self.assertEqual(h.hold_actions, [])
+            self.assertEqual(h.position[2], 5.)
+            h.assert_restored(self)
 
-    def test_stale_panel_and_lost_view_stop_before_issuing_a_new_quantum(self):
-        for kind in ('stale','lost_view'):
-            h=Harness();h.homed='z';visible=[True]
-            h.m.hold(1,'view',h.now,lambda:visible[0]);h.step()
-            if kind=='stale':h.now+=.8
-            else:visible[0]=False
-            h.step();h.until(h.m,'CANCELLED')
-            self.assertAlmostEqual(h.position[2],5.1);h.assert_restored(self)
+    def test_held_moves_clip_to_native_speed_and_travel_limits(self):
+        for direction, limit in ((-1, 0.), (1, 315.)):
+            with self.subTest(direction=direction):
+                h = Harness()
+                h.homed = 'z'
+                h.position[2] = limit - direction * .25
+                h.toolhead.get_kinematics().max_z_velocity = .5
+                h.m.hold(direction, 'view', h.now, lambda: True, 8)
+                h.step()
+                h.start_hold_worker()
+                self.assertAlmostEqual(h.position[2], limit)
+                self.assertEqual(h.hold_actions, [((150., 158., limit, 17.), .5, 8)])
+                h.assert_restored(self)
+
+    def test_old_mcu_has_no_unprotected_panel_move_fallback(self):
+        h = Harness()
+        h.homed = 'z'
+        h.m.panel_release.arm_cmd = None
+        with self.assertRaisesRegex(native_gcode.CommandError, 'local panel release'):
+            h.m.hold(1, 'view', h.now, lambda: True, 1)
+        self.assertEqual(h.position[2], 5.)
+        h.assert_restored(self)
 
     def test_extended_handlers_restore_after_calibration_using_real_native_dispatcher(self):
         from test_native_leveling import Harness as LevelHarness
@@ -392,6 +434,25 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             self.assertEqual(choose_icon(rows=[('',('native_gcode',script))]),icon)
         for direction,icon in ((-1,'0x0801cb24'),(1,'0x0801cc24')):
             self.assertEqual(choose_icon(rows=[('',('platform_hold',direction))]),icon)
+
+    def test_main_menu_uses_two_distinct_project_sprites(self):
+        h = Harness()
+        oled, menu, ui, _, _ = physical_panel(h)
+        menu.page = 'main'
+        frames = []
+        for label, icon in (('Klipper', 'project-klipper'), ('Zortrax M300', 'project-zortrax')):
+            _, rows = oled._rows(h.now)
+            oled.selection = next(i for i, row in enumerate(rows) if row[0] == label)
+            oled._render(h.now)
+            self.assertEqual(ui.last_sprite, icon)
+            width, height, pixels = ui.oem_sprites.get(icon)
+            self.assertEqual((width, height, len(pixels)), (50, 50, 1250))
+            self.assertTrue(any(pixels))
+            frames.append(pixels)
+        self.assertNotEqual(*frames)
+        oled.selection = 0
+        oled._render(h.now)
+        self.assertIsNone(ui.last_sprite)
 
     def test_fluidd_reassigns_all_six_macros_without_unhiding_user_choices(self):
         names=['ZORTRAX_'+name for name in ('LEVEL','HEAT','PLATFORM_UP','PLATFORM_DOWN','LOAD','UNLOAD')]
@@ -484,13 +545,70 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         display.pump();packet(False,1,1,1)
         packet(True,2,1,1)
         self.assertEqual(h.m.state,'PLATFORM_HOLD')
-        h.step();self.assertAlmostEqual(h.position[2],4.9)
-        packet(True,2,1,1,1)
-        self.assertEqual(menu.page,'maintenance')
-        self.assertEqual(o.page,'m04')
-        packet(False,2,2,1,1);h.until(h.m,'CANCELLED')
-        self.assertAlmostEqual(h.position[2],4.9)
-        self.assertEqual(menu.page,'maintenance');h.assert_restored(self)
+        h.step()
+        def release():
+            packet(True, 2, 1, 1, 1)
+            self.assertEqual((menu.page, o.page), ('maintenance', 'm04'))
+            packet(False, 2, 2, 1, 1)
+            self.assertEqual(h.m.state, 'CANCELLING')
+            return 4.75
+        h.hold_sample = release
+        h.start_hold_worker()
+        self.assertEqual(h.position[2], 4.75)
+        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 1., 2), 'stop'])
+        h.assert_restored(self)
+
+    def test_both_oled_directions_reconcile_actual_position_after_release(self):
+        for row, direction, limit in ((3, -1, 0.), (4, 1, 315.)):
+            with self.subTest(direction=direction):
+                h = Harness()
+                h.homed = 'z'
+                oled, _, _, display, packet = physical_panel(h)
+                oled.selection = row
+                oled._render(h.now)
+                display.pump()
+                packet(False)
+                packet(False)
+                packet(True, 1)
+                h.step()
+                stopped = 5. + direction * .25
+                def release():
+                    for command in ('G4 P100', 'M400', 'SET_STEPPER_ENABLE STEPPER=stepper_z ENABLE=0'):
+                        with self.assertRaisesRegex(native_gcode.CommandError, 'owns resources'):
+                            h.run(command)
+                    for _ in range(12):
+                        packet(True, 1)
+                        h.step(.05)
+                        self.assertEqual(h.m.state, 'PLATFORM_HOLD')
+                    packet(False, 1, 1, 1)
+                    return stopped
+                h.hold_sample = release
+                h.start_hold_worker()
+                self.assertEqual(h.m.state, 'CANCELLED')
+                self.assertEqual(h.position[2], stopped)
+                self.assertEqual(h.hold_actions, [((150., 158., limit, 17.), 1., 1), 'stop'])
+                h.assert_restored(self)
+
+    def test_coalesced_release_and_repress_stops_without_restarting(self):
+        h = Harness()
+        h.homed = 'z'
+        _, _, _, display, packet = physical_panel(h)
+        display.pump()
+        packet(False)
+        packet(False)
+        packet(True, 1)
+        h.step(.05)
+        def release():
+            packet(True, 2, 1, 1)
+            self.assertEqual(h.m.state, 'CANCELLING')
+            return 4.75
+        h.hold_sample = release
+        h.start_hold_worker()
+        packet(True, 2, 1, 1)
+        self.assertEqual(h.m.state, 'CANCELLED')
+        self.assertEqual(h.position[2], 4.75)
+        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 1., 1), 'stop'])
+        h.assert_restored(self)
 
     def test_selection_change_between_receipt_and_callback_cannot_arm_new_row(self):
         h=Harness();h.homed='z';o,menu,ui,display,packet=physical_panel(h)

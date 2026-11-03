@@ -53,6 +53,16 @@ typedef unsigned long irqstatus_t;
 static irqstatus_t irq_level;
 static irqstatus_t irq_save(void) { irqstatus_t old=irq_level;irq_level=1;return old; }
 static void irq_restore(irqstatus_t flag) { irq_level=flag; }
+struct trsync { unsigned hits; };
+static struct trsync release_trigger;
+static struct trsync *trsync_oid_lookup(uint8_t oid) {
+    assert(oid == 11);
+    return &release_trigger;
+}
+static void trsync_do_trigger(struct trsync *sync, uint8_t reason) {
+    assert(reason == 1);
+    sync->hits++;
+}
 struct timer { struct timer *next; uint_fast8_t (*func)(struct timer*); uint32_t waketime; };
 struct task_wake { uint8_t wake; };
 enum { SF_DONE, SF_RESCHEDULE };
@@ -236,6 +246,34 @@ int main(void) {
     set_button(0,5);assert(releases==2 && shorts==1);
     assert(panel_wake.wake);m300_panel_task();assert(snapshot_count==1);
     command_m300_panel_query(NULL);assert(snapshot_count==2);
+
+    reset_encoder(0);
+    set_button(1,5);
+    uint32_t arm_release[] = {11, presses};
+    command_m300_panel_release_arm(arm_release);
+    assert(panel_release_sync == &release_trigger && !release_trigger.hits);
+    GPIOC->IDR |= 1u << 5;
+    EXTI->PR = PANEL_EXTI_RELEASE;
+    m300_encoder_irq();
+    assert(pressed && release_trigger.hits == 1 && !panel_release_sync);
+    set_button(1,1);
+    command_m300_panel_release_arm(arm_release);
+    assert(release_trigger.hits == 2 && !panel_release_sync);
+    set_button(0,5);
+    set_button(1,5);
+    command_m300_panel_release_arm(arm_release);
+    assert(release_trigger.hits == 3 && !panel_release_sync);
+    arm_release[1] = presses;
+    command_m300_panel_release_arm(arm_release);
+    set_button(0,1);
+    assert(pressed && release_trigger.hits == 4 && !panel_release_sync);
+    set_button(0,5);
+    set_button(1,5);
+    arm_release[1] = presses;
+    command_m300_panel_release_arm(arm_release);
+    command_m300_panel_release_disarm(arm_release);
+    set_button(0,5);
+    assert(release_trigger.hits == 4 && !panel_release_sync);
 
     reset_encoder(1);sample_n(700);assert(longs==0 && shorts==0);
     set_button(0,5);assert(shorts==0 && releases==0);

@@ -69,6 +69,10 @@ def main():
     run('native_heater_checks', [sys.executable, ROOT / 'mcu/tests/test_verify_gain.py',
                                 '--upstream', pristine])
     run('startup_epochs', [sys.executable, KIT / 'tests/test_startup_epoch.py'], expected_tests=5)
+    panel = report / 'panel-test'
+    run('panel_compile', ['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
+                          KIT / 'tests/test_panel.c', '-o', panel])
+    run('panel_release', [panel])
     timer = report / 'timer-test'
     run('timer_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                           KIT / 'tests/test_m300_timer_deadline.c', '-o', timer])

@@ -72,7 +72,8 @@ def main():
     result['frame_cache_max_entries']=fan_frame.cache_info().maxsize
     result['platform_tick_seconds']=.05
     result['platform_panel_freshness_seconds']=.75
-    result['platform_max_queued_quantum_mm']=.1
+    result['platform_stop_nominal_sample_seconds']=.001
+    result['platform_stop_max_pulse_rate']=4000
     result['active_fan_watchdog_seconds']=.1
     result['native_thermostat_seconds']=1.
     result['notes']='No absolute timing threshold is used as a proxy for physical printer acceptance.'

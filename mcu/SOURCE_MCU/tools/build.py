@@ -25,7 +25,8 @@ REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
                      'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',
-                     'm300_sd_chunk ', 'm300_sd_close ')
+                     'm300_sd_chunk ', 'm300_sd_close ',
+                     'm300_panel_release_arm ', 'm300_panel_release_disarm ')
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -125,8 +126,8 @@ def validate(work, output, env, log):
                           'M300_LOCAL_OLED_STARTUP_FIX': 1,
                           'M300_OLED_HOSTLINK_ABI': 1, 'M300_OLED_HOSTLINK_TIMEOUT_US': 1500000,
                           'M300_OLED_FAST_ABI': 1, 'M300_OLED_FAST_QUEUE': 4,
-                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.6-FACTORY-INFO-UART8',
-                          'M300_PANEL_CAPTURE_ABI': 3,
+                          'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': '0.13.14.7-PANEL-STOP-UART8',
+                          'M300_PANEL_CAPTURE_ABI': 3, 'M300_PANEL_RELEASE_ABI': 1,
                           'M300_PANEL_IRQ_PRIORITY': 3, 'M300_OLED_DMA_IRQ_PRIORITY': 4,
                           'CLOCK_FREQ': 72000000}.items():
         if constants.get(key) != expected:
@@ -161,7 +162,7 @@ def validate(work, output, env, log):
     stack_start = symbols['_stack_start']
     if bss_end >= stack_start:
         raise ValueError('Static data overlaps reserved MCU stack')
-    report = {'version': '0.13.14.6-FACTORY-INFO-UART8',
+    report = {'version': '0.13.14.7-PANEL-STOP-UART8',
               'mcu_stage': 'P01_LAB + M04_SD + R9_HOST_LEASE_LOCAL_WAITING', 'upstream_commit': PIN,
               'upstream_archive_sha256': ARCHIVE_SHA256,
               'model': 'M300_CLASSIC', 'abi': 1,

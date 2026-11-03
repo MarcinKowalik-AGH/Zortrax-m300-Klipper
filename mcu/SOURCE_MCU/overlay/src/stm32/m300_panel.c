@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Classic M300 SSD1322 and encoder. Private raw F103 GPIO ownership.
-// No motion, heaters, Flash writes, bootloader API or SPI2 MISO ownership.
+// The button can revoke an already armed native stepper trigger.
 #ifndef M300_PANEL_TEST
 #include <string.h>
 #include "m300_uart.h"
@@ -12,6 +12,7 @@
 #include "command.h"
 #include "internal.h"
 #include "sched.h"
+#include "trsync.h"
 #endif
 #include "m300_sched.h"
 
@@ -23,12 +24,15 @@ DECL_CONSTANT("M300_OLED_FAST_ABI", 1);
 DECL_CONSTANT("M300_OLED_FAST_QUEUE", 4);
 DECL_CONSTANT("M300_OLED_FAST_WIRE", 256);
 DECL_CONSTANT("M300_PANEL_CAPTURE_ABI", 3);
+DECL_CONSTANT("M300_PANEL_RELEASE_ABI", 1);
 DECL_CONSTANT("M300_PANEL_IRQ_PRIORITY", 3);
 DECL_CONSTANT("M300_OLED_DMA_IRQ_PRIORITY", 4);
 #define PANEL_EXTI_GROUP (31u << 5)
 #define PANEL_EXTI_AB ((1u << 7) | (1u << 8))
+#define PANEL_EXTI_RELEASE (1u << 5)
+#define PANEL_EXTI_USED (PANEL_EXTI_AB | PANEL_EXTI_RELEASE)
 DECL_CONSTANT("M300_LOCAL_OLED_ABI", 1);
-DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.6-FACTORY-INFO-UART8");
+DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.7-PANEL-STOP-UART8");
 DECL_CONSTANT("M300_OLED_HOSTLINK_ABI", 1);
 DECL_CONSTANT("M300_OLED_HOSTLINK_TIMEOUT_US", 1500000);
 DECL_CONSTANT("M300_LOCAL_OLED_STARTUP_FIX", 1);
@@ -37,6 +41,7 @@ DECL_CONSTANT("M300_PANEL_REPORT_US", 20000);
 DECL_CONSTANT("M300_PANEL_LONG_US", 600000);
 
 static uint8_t oled_configured, panel_configured, panel_fault;
+static struct trsync *volatile panel_release_sync;
 static uint32_t spi_cr1;
 static uint32_t panel_spi_hz;
 static void local_oled_init(void);
@@ -98,7 +103,8 @@ m300_panel_shutdown(void)
     // A native clear_shutdown may clear the scheduler latch, but it must not
     // revive a previous display session. Only a complete MCU reset clears this.
     panel_fault = 1;
-    EXTI->IMR &= ~((1u << 7) | (1u << 8));
+    panel_release_sync = NULL;
+    EXTI->IMR &= ~PANEL_EXTI_USED;
     oled_dma_shutdown();
     oled_host_shutdown();
     // Only mark pending work here. The local Waiting/Shutdown screen is
@@ -236,6 +242,7 @@ static int8_t nav_partial;
 static uint8_t nav_steps, panel_nav_enabled;
 static uint8_t last_ab, pressed, candidate, debounce_count;
 static uint8_t button_armed, long_sent;
+static volatile uint8_t continuous_press;
 static volatile uint8_t changed;
 
 static uint8_t
@@ -273,17 +280,32 @@ panel_sample_ab(void)
     }
 }
 
-// EXTI captures both edges at their source, including changes between 1ms
-// button samples. No UART, allocation, SPI or event queue in this IRQ.
+static void
+panel_release_stop(void)
+{
+    irqstatus_t flag = irq_save();
+    continuous_press = 0;
+    struct trsync *sync = panel_release_sync;
+    panel_release_sync = NULL;
+    if (sync)
+        trsync_do_trigger(sync, 1); // Native REASON_ENDSTOP_HIT.
+    irq_restore(flag);
+}
+
+// Encoder edges and raw button release are handled before any UART report.
 void
 m300_encoder_irq(void)
 {
     uint32_t pending = EXTI->PR & PANEL_EXTI_GROUP;
     // This private F103 profile is the sole owner of EXTI9_5. A stale enabled
-    // line 5/6/9 must not leave the shared vector permanently asserted.
-    EXTI->IMR &= ~(pending & ~PANEL_EXTI_AB);
+    // line 6/9 must not leave the shared vector permanently asserted.
+    EXTI->IMR &= ~(pending & ~PANEL_EXTI_USED);
     EXTI->PR = pending;
-    if ((pending & PANEL_EXTI_AB) && panel_configured && !panel_fault)
+    if (!panel_configured || panel_fault)
+        return;
+    if (pending & PANEL_EXTI_RELEASE)
+        panel_release_stop();
+    if (pending & PANEL_EXTI_AB)
         panel_sample_ab();
 }
 
@@ -291,6 +313,8 @@ static void
 panel_sample(uint32_t now)
 {
     uint8_t raw_pressed = !(GPIOC->IDR & (1u << 5));
+    if (!raw_pressed && (continuous_press || panel_release_sync))
+        panel_release_stop();
     if (candidate != raw_pressed) {
         candidate = raw_pressed;
         debounce_count = 1;
@@ -303,6 +327,7 @@ panel_sample(uint32_t now)
         if (pressed) {
             if (button_armed) {
                 presses++;
+                continuous_press = 1;
                 press_time = now;
                 long_sent = 0;
             }
@@ -325,6 +350,33 @@ panel_sample(uint32_t now)
         changed = 1;
     }
 }
+
+void
+command_m300_panel_release_arm(uint32_t *args)
+{
+    struct trsync *sync = trsync_oid_lookup(args[0]);
+    irqstatus_t flag = irq_save();
+    if (panel_configured && !panel_fault && continuous_press
+        && !(GPIOC->IDR & (1u << 5)) && presses == args[1]
+        && !panel_release_sync)
+        panel_release_sync = sync;
+    else
+        trsync_do_trigger(sync, 1);
+    irq_restore(flag);
+}
+DECL_COMMAND(command_m300_panel_release_arm,
+             "m300_panel_release_arm oid=%c press=%u");
+
+void
+command_m300_panel_release_disarm(uint32_t *args)
+{
+    struct trsync *sync = trsync_oid_lookup(args[0]);
+    irqstatus_t flag = irq_save();
+    if (panel_release_sync == sync)
+        panel_release_sync = NULL;
+    irq_restore(flag);
+}
+DECL_COMMAND(command_m300_panel_release_disarm, "m300_panel_release_disarm oid=%c");
 
 static uint_fast8_t
 panel_event(struct timer *timer)
@@ -358,6 +410,7 @@ panel_configure(uint8_t steps, uint8_t navigation)
     last_ab = panel_ab();
     pressed = candidate = !(GPIOC->IDR & (1u << 5));
     button_armed = !pressed;
+    continuous_press = 0;
     debounce_count = 0;
     last_report = timer_read_time();
     panel_timer.func = panel_event;
@@ -366,16 +419,17 @@ panel_configure(uint8_t steps, uint8_t navigation)
     irqstatus_t flag = irq_save();
     EXTI->IMR &= ~PANEL_EXTI_GROUP;
     RCC->APB2ENR |= 1u; // AFIO clock; preserve SWJ/remap and unrelated EXTI
-    AFIO->EXTICR[1] = (AFIO->EXTICR[1] & ~(15u << 12)) | (4u << 12);
+    AFIO->EXTICR[1] = (AFIO->EXTICR[1] & ~((15u << 12) | (15u << 4)))
+        | (4u << 12) | (2u << 4); // PE7 and PC5.
     AFIO->EXTICR[2] = (AFIO->EXTICR[2] & ~15u) | 4u; // PE7 / PE8 only
-    EXTI->RTSR = (EXTI->RTSR & ~PANEL_EXTI_GROUP) | PANEL_EXTI_AB;
+    EXTI->RTSR = (EXTI->RTSR & ~PANEL_EXTI_GROUP) | PANEL_EXTI_USED;
     EXTI->FTSR = (EXTI->FTSR & ~PANEL_EXTI_GROUP) | PANEL_EXTI_AB;
     EXTI->PR = PANEL_EXTI_GROUP;
     NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
     // Pinned armcm_timer sets SysTick to 2, UART is 0. Both preempt encoder 3.
-    // Only EXTI writes its phase/position; the 1ms timer handles the button.
+    // Only EXTI writes encoder phase; the timer debounces button UI events.
     armcm_enable_irq(m300_encoder_irq, EXTI9_5_IRQn, 3);
-    EXTI->IMR |= (1u << 7) | (1u << 8);
+    EXTI->IMR |= PANEL_EXTI_USED;
     irq_restore(flag);
     sched_add_timer(&panel_timer);
 }

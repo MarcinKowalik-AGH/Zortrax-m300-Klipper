@@ -14,7 +14,29 @@ from pathlib import Path
 import zlib
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
-MAIN = {'models':'0x0801c690','maintenance':'0x0801c958',
+# Two project-drawn 50x50 grayscale marks, separate from the audited OEM data.
+# Klipper uses the ribbon from the supplied logo; Zortrax uses a Z-SUITE-style Z.
+PROJECT_MENU_ICONS = {
+    name: (50, 50, zlib.decompress(base64.b64decode(data)))
+    for name, data in {
+        'project-klipper': (
+            'eNrt0UFLwmAYwPHHxGh26V7fQIrA91AzSth7qQ4FderaBzDqXocOdbOrSuwQQZS4gSOCDS3sEpSC0iUQ'
+            'D9ElvRZuU+zZ5sJt7yeInsvG8+e38W4Af2VCmUvfZiebtC5cr7Xn2Y/3a7J1jVb4rieklJgduMZh62x'
+            'kP9HvJoZhrWeMhHRNcYMgVeXfPdczqRsob7an3FAoK26oUEEqPQz3k58mGYZog1LeaDokVJKKlC7ZIaI'
+            'TJPm6HWbeEAhp52CpCyR6dR5vx5oiggXdeWzEsEjuHW/nnmzgHmujaBEpCeF2egQAhDsUSfYLVu48AG'
+            'D50SLituEF1juRiJnBlQ8AzL4Suqif+gGeq7qF5MSkPgAw/UEoP1D8AKe8S4WXIMAv9k0EjQQBgHiA'
+            'IQjwj3bjGmEAgKNjjSTuGSFaxyAzAscOq9lCgxkk7XmfGc5z12qHskJeVW/jMcajblScUjCsq/Zswv'
+            '/8AA7wrLE='),
+        'project-zortrax': (
+            'eNpjYBhoIIgK4OLe71DBVqg4+98ZHSjgfANEwn8imlES3yASe4WUUIHiHrA440sMiXoFsMQLDIl8SiSM'
+            'EQBFQvkewnuGKBLv/8NBMqoEQkcLFon/uCRA4D2KhJIZKPDaa/69e/87BUVC2AUITM+/e/dvWjKGBx'
+            'V9gRqupxlhSIgD7f6TFoQRJELr3/37vywFI6wUbYAGvUhzwpAQBbr4b1kyRugq9v/7935bKkboKmoB'
+            'DfoFNghVQuQ+0AutyUIYEnkQL2DGB9BmILqHJT5AYUtGfJAgAYkPCCjBjA8IcCYnJUISNcMeDIm9k'
+            'PwR34iWccS+QyQ4fpelIYP0/QugmTDnPyq4Ds+2aHYMePHCAACGiz6f'),
+    }.items()
+}
+MAIN = {'klipper':'project-klipper','zortrax':'project-zortrax',
+        'models':'0x0801c690','maintenance':'0x0801c958',
         'material':'0x0801cdd8','settings':'0x0801d3bc',
         'information':'0x0801dc08'}
 PAGES = {'models':'0x0801c690','browser':'0x0801c690',
@@ -56,6 +78,8 @@ class OEMGraphics:
 
     def get(self, addr, now=0.):
         addr=str(addr).lower()
+        if addr in PROJECT_MENU_ICONS:
+            return PROJECT_MENU_ICONS[addr]
         desc=self.frames.get(addr)
         if desc is None:
             return None
@@ -81,7 +105,7 @@ class OEMGraphics:
 
 def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                 calibration=None, filament=None, job=None):
-    """Return OEM image DESCRIPTOR, never actions. All inputs are read-only snapshots."""
+    """Select a sprite from read-only menu and procedure snapshots."""
     if (menu_page in ('settings', 'information', 'help') or
             menu_page.startswith(('setting_', 'info_'))):
         return PAGES.get(menu_page)
