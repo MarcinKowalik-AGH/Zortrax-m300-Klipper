@@ -127,28 +127,44 @@ class M300NativeMotion:
         cmd = self.gcode.create_gcode_command('G28', 'G28 ' + ' '.join(params), params)
         return self.native_G28(cmd)
 
-    def _check_z_contact(self, token, allow_release=False):
+    def _check_z_contact(self, token, release_used=False):
         if self.board.mcu.is_fileoutput():
-            return
+            return release_used
         self.toolhead.wait_moves()
         self._check(token)
         endstop = self.precision.endstop
         active = endstop.query_endstop(self.toolhead.get_last_move_time())
         self._check(token)
         if not active:
-            return
-        kin = self.toolhead.get_kinematics()
-        homed = kin.get_status(self.reactor.monotonic())['homed_axes']
-        if not allow_release or not all(axis in homed for axis in 'xyz'):
+            return release_used
+        if release_used:
             raise self.printer.command_error(
-                'M300 homing INITIAL_ACTIVE: PC7 is closed. Check nozzle clearance and QUERY_PROBE.')
-        z = self.toolhead.get_position()[2]
-        _, upper = kin.rails[2].get_range()
-        retreat = min(1., upper - z)
+                'M300 homing NO_RELEASE: PC7 closed again after the bounded retreat. Check QUERY_PROBE.')
+        kin = self.toolhead.get_kinematics()
+        rail = kin.rails[2]
+        if rail.get_homing_info().positive_dir:
+            raise self.printer.command_error(
+                'M300 homing NO_RELEASE: expected Z homing toward the minimum.')
+        unhomed = 'z' not in kin.get_status(self.reactor.monotonic())['homed_axes']
+        position = self.toolhead.get_position()
+        lower, upper = rail.get_range()
+        if unhomed:
+            position[2] = max(lower, position[2])
+        retreat = min(1., upper - position[2])
         if retreat <= 0.:
             raise self.printer.command_error('M300 homing NO_RELEASE: no room to lower the platform')
         self.board.require_motion()
-        self.toolhead.manual_move([None, None, z + retreat], min(self.lift_speed, 1.))
+        try:
+            if unhomed:
+                # Open a temporary native Z frame solely to queue the retreat.
+                # PC7 being closed does not establish a Z reference.
+                self.toolhead.set_position(position, homing_axes='z')
+                self._check(token)
+            self.toolhead.manual_move([None, None, position[2] + retreat],
+                                      min(self.lift_speed, 1.))
+        finally:
+            if unhomed:
+                kin.clear_homing_state('z')
         self.toolhead.wait_moves()
         self._check(token)
         active = endstop.query_endstop(self.toolhead.get_last_move_time())
@@ -156,6 +172,7 @@ class M300NativeMotion:
         if active:
             raise self.printer.command_error(
                 'M300 homing NO_RELEASE: PC7 is still closed after the bounded retreat. Check QUERY_PROBE.')
+        return True
 
     def cmd_idle_release(self, gcmd):
         # This is the default idle script's motor stage. Preserve a held Z
@@ -220,7 +237,7 @@ class M300NativeMotion:
         try:
             if 'z' in axes:
                 self._phase('Z_CHECK_CONTACT')
-                self._check_z_contact(token, allow_release=True)
+                release_used = self._check_z_contact(token)
                 self._phase('Z_PREHEAT')
                 _, previous_target = self.hotend.get_temp(self.reactor.monotonic())
                 target = max(previous_target, self.z_home_hotend_target)
@@ -228,6 +245,8 @@ class M300NativeMotion:
                 if target != previous_target:
                     owned_target = target
                 self._preheat(token, target)
+                self._phase('Z_CHECK_CONTACT')
+                release_used = self._check_z_contact(token, release_used)
             # Both OEM G28/Z-code and M07 home Y before X.
             for axis in 'yx':
                 if axis in axes:
@@ -243,7 +262,7 @@ class M300NativeMotion:
                 self.toolhead.wait_moves()
                 self._check(token)
                 self._phase('HOME_Z_NATIVE_PROBE')
-                self._check_z_contact(token)
+                self._check_z_contact(token, release_used)
                 self._native_home('z')
                 self._check(token)
                 # M07's 0x0801456c is its own initial coarse contact. Ordinary
@@ -312,7 +331,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.12-NATIVE-HOMING-THERMAL1', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.12-NATIVE-HOMING-PC7-RELEASE', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'phase_id': self.phase_id, 'session_token': self.token,

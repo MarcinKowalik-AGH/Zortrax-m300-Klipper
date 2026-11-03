@@ -1,7 +1,7 @@
 {
   "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
   "README.md": "2865bba6aadab728c82e4eb8a48a23f98ebdae545fd9398622a3fb96a2042813",
-  "SUPPORTED_BASELINES.json": "ce80a9e45792e63fd9edc132dd5ef43435ab42300647eb33bdc3b2e3db847a34",
+  "SUPPORTED_BASELINES.json": "d48aada5397688fa05fdf3f51b36047461973891ace92b43cce473d1095d1238",
   "VERIFY.py": "29d0a03b6fad2a211e1e5779c43147c4bf64ecb894217855820326ed0d59248b",
   "install.py": "ab5b9c626187f01672be95639572d3483f031bf1f37cf98e112c800ac192110d",
   "m300_profile.py": "6d71627baeb4c125d83145ee3cabfbfb5303150864fda78ea559d4cf1e971efa",
@@ -38,7 +38,7 @@
   "payload/m300_motion.py": "f95e13a05fa19abbcdb7b71e022a0593519be66c8cff5ca6d8757673cc072c45",
   "payload/m300_native_fans.py": "41e492c97b091e2e0b48843d09be4983551cee6f6e283cbcd700958451a43805",
   "payload/m300_native_maintenance.py": "a819d33ace8424628ac717198bb189f18766793e3102ccf204108d2801b8f56f",
-  "payload/m300_native_motion.py": "4f061323302dee3026d7606fa8c2f836e68879d29f0d93c37497e01325d0b5f1",
+  "payload/m300_native_motion.py": "56ab8931ff3e83c431e523c0a5485738534e8e76c89562515cf1f173fbb379f4",
   "payload/m300_native_probe.py": "777dfa8ec95fed0b38f2148df36552a99e0226d830cc0e8f46fb05ddedbfca6f",
   "payload/m300_native_service.py": "f1559e29512a9b791e2719e970fa7b1f6eca9c17beac3813436f98af20d5c833",
   "payload/m300_native_z.py": "e734026a01413e54a1e05d3870b11b3a4d36b17c88e3a8a04f765468eeabc597",
