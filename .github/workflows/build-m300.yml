@@ -101,3 +101,23 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
+
+  deploy-git:
+    name: Publish ready Orange Pi files over Git
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Retrieve the verified build
+        uses: actions/download-artifact@v4
+        with:
+          name: M300_R16_12_FULL_ORANGE_PI
+          path: dist/action-release
+
+      - name: Publish the compact Git deployment
+        run: bash ci/publish_git_deploy.sh dist/action-release

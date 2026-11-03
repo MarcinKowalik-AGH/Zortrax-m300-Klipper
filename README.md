@@ -47,7 +47,7 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 **MCU R14.6 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Download **M300_R16_12_FULL_ORANGE_PI** from the successful GitHub Actions run.
+GitHub Actions publishes the tested build for direct Git deployment on Orange Pi.
 MCU R14.6 adds a read-only query for the factory serial and OEM print time.
 See [Settings and Information](docs/en/SETTINGS_INFORMATION.md).
 

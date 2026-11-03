@@ -8,23 +8,27 @@ It accepts recognized R15.3 through R16.11 baselines, including the browser
 modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
 the existing module hashes before it writes anything.
 
-## Install the complete GitHub Actions package
+## Install directly from Git on Orange Pi
 
-Open the successful [M300 R16.12 Actions run](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml)
-and download **M300_R16_12_FULL_ORANGE_PI** under Artifacts. This is one ZIP
-containing the host installer, compiled Fluidd and the MCU R14.6 application.
-
-Copy the ZIP to the Orange Pi and run the following over SSH as the Klipper user
-while the printer is idle:
+GitHub Actions builds and verifies the host, Fluidd and MCU. The same run
+publishes a compact checkout with the ready-to-install files. Run this on the
+Orange Pi as the Klipper user while the printer is idle:
 
 ```bash
-cd "$HOME" &&
-python3 -m zipfile -e M300_R16_12_FULL_ORANGE_PI.zip m300-r16.12-install &&
-cd m300-r16.12-install &&
-python3 install-orange-pi.py
+m300_dir="$HOME/m300-orange-pi"
+if [ -d "$m300_dir/.git" ]; then
+  git -C "$m300_dir" pull --ff-only
+else
+  git clone --depth 1 --single-branch --no-tags --branch orange-pi \
+    https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
+fi &&
+python3 "$m300_dir/install-orange-pi.py"
 ```
 
-The installer checks the archive's file hashes, reads the active Klipper paths
+The full build archive and test reports are also available in the successful
+[GitHub Actions run](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml).
+
+The installer checks the delivered file hashes, reads the active Klipper paths
 from Moonraker, updates the host and macro groups, and deploys the compiled
 Fluidd to the existing nginx web root on port 4080. It saves the old web files
 and preserves config.json. A host already on the same R16.12 files skips its
@@ -100,5 +104,5 @@ For the frontend, restore the saved web directory to the reported
 The included `MCU/M300APP.M3B` and `MCU/M300_R14_6_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
-BUILD_PROVENANCE.json identifies the tested source, and HOST_SOURCE is a
-source snapshot.
+BUILD_PROVENANCE.json identifies the tested source. The full Actions artifact
+also contains the HOST_SOURCE snapshot.
