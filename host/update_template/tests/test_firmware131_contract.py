@@ -244,11 +244,15 @@ class FirmwareLevelingContractTests(unittest.TestCase):
 
     def test_oem_calibration_homes_y_then_x_and_uses_its_offset_center(self):
         m=motion_fixture();m.homed.clear();m.hotend.target=260.
+        m.hotend.measured = 260.
+        m.hotend.check_busy = Mock(return_value=False)
         m.precision.run=Mock(side_effect=AssertionError('ordinary five-contact routine is not the M07 coarse contact'))
         m.home_oem((151.,161.))
         self.assertEqual([e[1] for e in m.events if e[0]=='home'],['Y','X','Z'])
         self.assertIn(('move',(151.,161.,None),50.),m.events)
         self.assertEqual([e for e in m.events if e[0]=='heat'],[('heat',260.,False)])
+        m.hotend.check_busy.assert_called_once()
+        m.precision.check_temperature.assert_not_called()
         m.precision.run.assert_not_called()
 
     def test_m07_ready_threshold_accepts_258_and_safe_overshoot(self):
@@ -294,7 +298,8 @@ def precision_harness(profile):
             cb,h.on_drip=h.on_drip,None;cb()
     h.toolhead.drip_move=drip
     owner=NS(printer=h.printer,toolhead=h.toolhead,reactor=h.reactor,lift_speed=5.,
-        _z_target=180.,z_home_temperature_tolerance=5.,config=NS(error=RuntimeError),
+        _z_target=180.,z_home_hotend_target=180.,z_home_temperature_tolerance=5.,
+        config=NS(error=RuntimeError),
         board=NS(require_motion=lambda:None,require_heating=lambda:None,
                  hardware=NS(get_status=lambda:dict(effective_z_steps_per_mm=scale))),
         hotend=NS(get_temp=lambda now:(180.,180.)),
@@ -305,10 +310,11 @@ def precision_harness(profile):
 
 class NativeFiveContactTests(unittest.TestCase):
     def test_five_contacts_accept_a_shortfall_to_the_configured_lower_limit(self):
-        for measured in (176., 175.):
-            with self.subTest(measured=measured):
+        for measured, target in ((176., 180.), (175., 180.), (181., 240.), (175., 240.)):
+            with self.subTest(measured=measured, target=target):
                 h, ref = precision_harness(REFERENCE['z_references'][1])
-                ref.owner.hotend.get_temp = lambda now: (measured, 180.)
+                ref.owner._z_target = target
+                ref.owner.hotend.get_temp = lambda now: (measured, target)
                 with patch.dict('sys.modules', {'payload.homing': homing}):
                     self.assertEqual(ref.run(1)['contacts'], 5)
 

@@ -23,8 +23,8 @@ def motion_fixture():
     motion.reactor = NS(monotonic=lambda: 1.)
     motion.events, motion.homed = [], set('xy')
     position = [100., 100., 299., 17.]
-    hotend = NS(target=0., check_busy=lambda now: False)
-    hotend.get_temp = lambda now: (22., hotend.target)
+    hotend = NS(target=0., measured=180., check_busy=lambda now: False)
+    hotend.get_temp = lambda now: (hotend.measured, hotend.target)
     motion.hotend = hotend
     def set_temperature(heater, target, wait=False):
         heater.target = target
@@ -57,7 +57,8 @@ def motion_fixture():
             position['XYZ'.index(axis)] = 0.
             motion.homed.add(axis.lower())
     motion.native_G28 = native_home
-    motion.precision = NS(run=lambda token: dict(contacts=0), probe=NS(get_offsets=lambda:(0.,0.,0.)),
+    motion.precision = NS(run=lambda token: dict(contacts=0), check_temperature=Mock(),
+                          probe=NS(get_offsets=lambda:(0.,0.,0.)),
                           endstop=NS(query_endstop=Mock(return_value=False)))
     motion.board = NS(mcu=NS(is_fileoutput=lambda: False), require_motion=Mock(), hardware=NS(get_status=lambda: {'effective_z_steps_per_mm': 400,
                                                      'hardware_revision': 5}))
@@ -187,10 +188,46 @@ class NormalHomingTests(unittest.TestCase):
 
     def test_existing_hotter_user_target_is_kept(self):
         m = motion_fixture()
-        m.hotend.target = 220.
+        m.hotend.target = 240.
+        m.hotend.measured = 200.
+        m.hotend.check_busy = Mock(return_value=True)
         m.home(axes='z')
-        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 220., False)])
-        self.assertEqual(m.hotend.target, 220.)
+        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 240., False)])
+        self.assertEqual(m.hotend.target, 240.)
+        m.hotend.check_busy.assert_not_called()
+
+    def test_nozzle_above_minimum_does_not_wait_to_cool(self):
+        for target in (0., 180.):
+            with self.subTest(target=target):
+                m = motion_fixture()
+                m.hotend.target, m.hotend.measured = target, 240.
+                m.hotend.check_busy = Mock(return_value=True)
+                m.reactor.pause = Mock(side_effect=AssertionError('waited for cooldown'))
+                m.home(axes='z')
+                self.assertEqual(m.hotend.target, target)
+                self.assertIn(('home', 'Z'), m.events)
+                m.hotend.check_busy.assert_not_called()
+
+    def test_cold_nozzle_waits_until_measured_minimum(self):
+        m = motion_fixture()
+        m.hotend.measured = 179.9
+        def warm(until):
+            self.assertEqual(m.events, [('heat', 180., False)])
+            m.hotend.measured = 180.
+            return until
+        m.reactor.pause = Mock(side_effect=warm)
+        m.home(axes='xyz')
+        m.reactor.pause.assert_called_once()
+        self.assertIn(('home', 'Z'), m.events)
+
+    def test_lost_temperature_after_xy_blocks_coarse_z(self):
+        m = motion_fixture()
+        m.precision.check_temperature.side_effect = RuntimeError('below contact minimum')
+        with self.assertRaisesRegex(RuntimeError, 'below contact minimum'):
+            m.home(axes='xyz')
+        self.assertIn(('home', 'X'), m.events)
+        self.assertNotIn(('home', 'Z'), m.events)
+        self.assertEqual(m.hotend.target, 0.)
 
     def test_z_with_unknown_xy_is_rejected_before_heating_or_movement(self):
         m = motion_fixture()
@@ -243,7 +280,7 @@ class NormalHomingTests(unittest.TestCase):
             clock[0] = until
             return until
         m.reactor.pause = pause
-        m.hotend.check_busy = lambda now: True
+        m.hotend.measured = 0.
         with self.assertRaisesRegex(RuntimeError, 'preheat timed out after 600 s'):
             m.home(axes='z')
         self.assertEqual(clock[0], 600.)
