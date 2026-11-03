@@ -938,10 +938,11 @@ class M300OLED:
                 return
             previous_page, previous_selection = menu.page, self.selection
             page = menu.select(action, now)
-            # OEM fan toggles update the two Enabled/Disabled fields in place.
-            # Keep the selected toggle, rather than moving it to Back.
-            self.page, self.selection = 'm04', (previous_selection
-                if previous_page == menu.page == 'fan_test' and not menu.reason else 0)
+            # OEM fan and Settings choices redraw in place with the same cursor.
+            in_place = previous_page == menu.page and not menu.reason and (
+                menu.page == 'fan_test' or
+                (menu.page.startswith('setting_') and action and action[0] == 'set'))
+            self.page, self.selection = 'm04', previous_selection if in_place else 0
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None

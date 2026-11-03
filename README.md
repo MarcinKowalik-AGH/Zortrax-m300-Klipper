@@ -33,7 +33,7 @@ sleep sequence. The menu audit fixes Models listing and preview, preserves
 mandatory procedure instructions and removes large calibration data copies
 from ownership checks.
 
-Software evidence includes **288 host tests**, **9 repository contracts**,
+Software evidence includes **289 host tests**, **9 repository contracts**,
 **14 actual Klippy FILEOUTPUT cases**, **174 original-renderer frames** and
 **20,002 turn vectors**. Physical validation is pending. The photographs above
 show the historical printer setup.

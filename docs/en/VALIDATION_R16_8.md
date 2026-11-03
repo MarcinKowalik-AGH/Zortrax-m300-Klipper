@@ -24,7 +24,7 @@ evidence. Its frame hashes are included in the self-contained tests. The
 previous release's 110 procedure frames, 12 fan-menu frames and 20,002
 quarter-turn vectors are retained.
 
-**Software checks:** 288 host tests, 9 repository contracts, 18 check groups
+**Software checks:** 289 host tests, 9 repository contracts, 18 check groups
 and 14 actual Klippy FILEOUTPUT cases. The build report includes
 `MENU_PERFORMANCE.json` with per-page render timings. Those numbers describe
 the executor's CPU. Physical OLED latency, cooling, Z contact, filament

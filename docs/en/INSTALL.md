@@ -22,7 +22,7 @@ python3 install.py \
   --config "$HOME/printer_data/config/printer.cfg"
 ```
 
-Expect package PASS, **288 tests OK** and PLAN_M300_R16_8. The plan is read
+Expect package PASS, **289 tests OK** and PLAN_M300_R16_8. The plan is read
 only. Inspect its file list before applying. Calibrated E, both saved PID
 blocks, sensor includes, deliberate motion limits and usable geometry remain.
 The HW05 factory profile still selects effective Z400 without rewriting the

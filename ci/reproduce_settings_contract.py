@@ -36,10 +36,13 @@ def run_choice(fw, choice):
     key, label, address, mirror, expected, record = choice
     model = fw.Firmware()
     model.w(mirror, 0 if expected else (16 if key == 'sort_mode' else 1), 1)
-    model.w(0x200004e0, NODES['setting_' + key])
+    node = NODES['setting_' + key]
+    model.w(0x200004e0, node)
+    model.w(node + 13, 1, 1)
     for boundary in (0x0800a750, 0x0800e37c, 0x080125dc, 0x08018c40):
         model.stub(boundary, label='boundary')
     model.call(address, limit=3_000_000)
+    assert model.u(0x200004e0) == node and model.u(node + 13, 1) == 1
     assert model.u(mirror, 1) == expected, (choice, model.u(mirror, 1))
     writes = [e['args'][0] for e in model.events if e['call'] == '0x800a750']
     assert writes == [record], (choice, writes)

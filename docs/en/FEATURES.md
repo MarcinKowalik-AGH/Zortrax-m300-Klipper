@@ -33,7 +33,7 @@ installer rule; other deliberate geometry, including Z315, is preserved.
 No additional general G1 velocity cap is introduced. FILEOUTPUT planning at
 300 mm/s and M220 150% does not measure physical F103 scheduling at that speed.
 
-288 host tests and 14 actual Klippy FILEOUTPUT scenarios support software
+289 host tests and 14 actual Klippy FILEOUTPUT scenarios support software
 integration. Electrical inputs and movement are modeled in the full procedure
 tests. Follow [the supervised acceptance sequence](VALIDATION_R16_8.md) for
 new contact homing, screw instructions, manual holds and material transport.

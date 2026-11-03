@@ -108,6 +108,52 @@ class SettingsTreeTests(unittest.TestCase):
             self.assertEqual(h.position,before);self.assertEqual(h.hotend.target,target)
             self.assertNotIn('m300-information',h.allocations)
 
+    def test_oled_routes_keep_setting_cursor_and_navigate_every_information_page(self):
+        with session() as h:
+            visited = set()
+
+            def press(label):
+                _, rows = h.menu.rows(h.now)
+                index = [row[0] for row in rows].index(label)
+                h.oled.selection = index
+                h.oled._render(h.now)
+                h.oled._select(h.now, tuple(action for _, action in rows))
+                self.assertFalse(h.menu.reason)
+                self.assertIsNone(h.oled.message)
+                if rows[index][1][0] == 'set':
+                    self.assertEqual(h.oled.selection, index)
+                    self.assertIn(index, h.settings.active_rows(h.menu.page))
+                visited.add(h.menu.page)
+
+            h.menu.page = 'zortrax'
+            press('Settings')
+            for page, choices in (
+                    ('Light', ('White', 'Disabled', 'Dynamic')),
+                    ('Buzzer', ('Disabled', 'Enabled')),
+                    ('Sleep mode', ('Disabled', 'Enabled')),
+                    ('Language', ('English',)),
+                    ('Models sorting', ('Date', 'Case-sensitive name', 'File size', 'Name'))):
+                press(page)
+                for choice in choices:
+                    press(choice)
+                press('Back')
+            press('Back')
+            press('Information')
+            press('Firmware version')
+            press('Back')
+            press('Printer information')
+            for label in ('Printer model', 'Hardware version', 'Serial number',
+                          'Total printing time'):
+                press(label)
+                press('Back')
+            press('Back')
+            press('Help')
+            press('Back')
+            press('Back')
+            self.assertEqual(visited, set(PAGES) | {'zortrax'})
+            self.assertEqual(h.menu.page, 'zortrax')
+            self.assertEqual(h.hotend.target, 0.)
+
     def test_saved_settings_survive_restart_and_leave_identity_counters_and_observation_untouched(self):
         with session() as h:
             before=h.nvm.snapshot()

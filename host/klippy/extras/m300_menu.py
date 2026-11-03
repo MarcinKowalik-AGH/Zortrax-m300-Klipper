@@ -896,16 +896,17 @@ class M300Menu:
                 self._navigate('setting_' + action[1])
             elif kind == 'set':
                 generation = self.generation
+                settings = self.printer.lookup_object('m300_settings', None)
+                shared = settings is not None and getattr(self.job.board, 'native_control', False)
                 self._busy = True
                 try:
-                    settings = self.printer.lookup_object('m300_settings', None)
-                    if settings is not None and getattr(self.job.board, 'native_control', False):
+                    if shared:
                         settings.set_option(action[1], action[2])
                     else:
                         self.nvm.set_setting(action[1], action[2])
                 finally:
                     self._busy = False
-                if generation == self.generation:
+                if not shared and generation == self.generation:
                     self._navigate('settings')
             else:
                 raise self._error('unsupported menu action')
