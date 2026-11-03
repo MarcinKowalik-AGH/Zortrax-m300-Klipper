@@ -102,7 +102,7 @@ class M300NativeMotion:
             raise self.printer.command_error(
                 'M300 homing session ended: ' + (self.reason or 'host or MCU is unavailable'))
 
-    def _preheat(self, token, target):
+    def _preheat(self, token, target, oem_leveling):
         self.heaters.set_temperature(self.hotend, target, wait=False)
         self._check(token)
         if self.board.mcu.is_fileoutput():
@@ -114,7 +114,11 @@ class M300NativeMotion:
             measured, requested = self.hotend.get_temp(now)
             if requested != target:
                 raise self.printer.command_error('M300 homing nozzle target changed during preheat')
-            if not self.hotend.check_busy(now):
+            if oem_leveling:
+                ready = not self.hotend.check_busy(now)
+            else:
+                ready = math.isfinite(measured) and measured >= self.z_home_hotend_target
+            if ready:
                 return
             if now >= deadline:
                 raise self.printer.command_error(
@@ -244,7 +248,7 @@ class M300NativeMotion:
                 self._z_target = target
                 if target != previous_target:
                     owned_target = target
-                self._preheat(token, target)
+                self._preheat(token, target, oem_leveling)
                 self._phase('Z_CHECK_CONTACT')
                 release_used = self._check_z_contact(token, release_used)
             # Both OEM G28/Z-code and M07 home Y before X.
@@ -263,6 +267,8 @@ class M300NativeMotion:
                 self._check(token)
                 self._phase('HOME_Z_NATIVE_PROBE')
                 self._check_z_contact(token, release_used)
+                if not oem_leveling and not self.board.mcu.is_fileoutput():
+                    self.precision.check_temperature()
                 self._native_home('z')
                 self._check(token)
                 # M07's 0x0801456c is its own initial coarse contact. Ordinary
@@ -331,7 +337,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.12-NATIVE-HOMING-PC7-RELEASE', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.12-NATIVE-HOMING-MIN-TEMP', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'phase_id': self.phase_id, 'session_token': self.token,

@@ -31,10 +31,7 @@ class M300ZRefinement:
     def error(self, message):
         return self.printer.command_error('M300 precision Z: '+message)
 
-    def check(self):
-        self.owner._check(self.token)
-        self.owner.board.require_motion()
-        self.owner.board.require_heating()
+    def check_temperature(self):
         measured, target = self.owner.hotend.get_temp(self.owner.reactor.monotonic())
         expected = self.owner._z_target
         if target != expected:
@@ -42,10 +39,17 @@ class M300ZRefinement:
                              % (expected, target))
         if not math.isfinite(measured) or measured == 0.:
             raise self.error('no valid nozzle temperature during contact reference')
-        minimum = expected - self.owner.z_home_temperature_tolerance
+        minimum = (self.owner.z_home_hotend_target
+                   - self.owner.z_home_temperature_tolerance)
         if measured < minimum:
             raise self.error('nozzle temperature %.2f C below contact minimum %.2f C (target %.1f C)'
                              % (measured, minimum, expected))
+
+    def check(self):
+        self.owner._check(self.token)
+        self.owner.board.require_motion()
+        self.owner.board.require_heating()
+        self.check_temperature()
         if self.owner.reactor.monotonic() > self.deadline:
             raise self.error('bounded contact/release deadline exceeded')
 
