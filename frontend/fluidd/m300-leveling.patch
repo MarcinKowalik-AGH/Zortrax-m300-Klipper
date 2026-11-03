@@ -96,42 +96,190 @@ index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef4094030
    }
  }
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
-index dbea2dfd657790c2ae599b2fa276a74f4f511b15..3a086a0cf05db8f95b703926d4d5841799704493 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -7,10 +7,14 @@
-   >
-     <v-card-text>
-       <v-row
+@@ -7,88 +7,218 @@
+-  >
+-    <v-card-text>
+-      <v-row
 -        v-for="item in dialog.items"
-+        v-for="item in visibleItems"
-         :key="`item::${item.id}`"
-+        :class="{ 'm300-printer-info-row': compactPrinterInfo && item.type === 'text' }"
-       >
+-        :key="`item::${item.id}`"
+-      >
 -        <v-col v-if="item.type === 'text'">
+-          {{ item.text }}
+-        </v-col>
+-        <v-col v-else-if="item.type === 'button'">
+-          <app-btn
+-            :color="item.color"
+-            block
+-            @click="handleClick(item)"
+-          >
+-            {{ item.text }}
+-          </app-btn>
+-        </v-col>
+-        <v-col
+-          v-else-if="item.type === 'button_group'"
+-          class="prompt-button-group"
+-        >
+-          <app-btn
+-            v-for="button in item.buttons"
+-            :key="`button::${button.id}`"
+-            :color="button.color"
+-            @click="handleClick(button)"
+-          >
+-            {{ button.text }}
+-          </app-btn>
+-        </v-col>
+-      </v-row>
+-    </v-card-text>
+-
+-    <template #actions>
+-      <v-spacer />
+-
+-      <app-btn
+-        v-for="button in dialog.footerButtons"
+-        :key="`button::${button.id}`"
+-        :color="button.color ?? 'primary'"
+-        type="button"
+-        @click="handleClick(button)"
+-      >
+-        {{ button.text }}
+-      </app-btn>
+-    </template>
+-  </app-dialog>
+-</template>
+-
+-<script lang="ts">
+-import { Component, Mixins } from 'vue-property-decorator'
+-import StateMixin from '@/mixins/state'
+-import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
+-
+-@Component({})
+-export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+-  get dialog (): PromptDialog {
+-    return this.$typedState.console.promptDialog
+-  }
+-
+-  get open (): boolean {
+-    return this.dialog.open
+-  }
+-
+-  set open (value: boolean) {
+-    if (!value) {
+-      this.sendGcode('RESPOND TYPE=command MSG="action:prompt_end"')
+-    }
+-  }
+-
+-  handleClick (button: PromptDialogButton) {
+-    this.sendGcode(button.command || button.text)
+-  }
+-}
+-</script>
+-
+-<style lang="scss" scoped>
+-  .prompt-button-group {
+-    display: flex;
+-    flex-wrap: wrap;
+-    gap: 16px;
+-
+-    .v-btn {
+-      flex: 1 1 0;
+-    }
+-  }
+-</style>
++  >
++    <v-card-text>
++      <v-row
++        v-for="item in visibleItems"
++        :key="`item::${item.id}`"
++        :class="{ 'm300-printer-info-row': compactPrinterInfo && item.type === 'text' }"
++      >
 +        <v-col v-if="leveling && item.id === leveling.firstId">
 +          <m300-leveling-diagram :points="leveling.points" />
 +        </v-col>
++        <v-col v-else-if="brightnessById[item.id]">
++          <label class="m300-brightness-control">
++            <span>{{ brightnessById[item.id].label }}</span>
++            <div class="m300-brightness-bar">
++              <span
++                v-for="segment in 16"
++                :key="segment"
++                :class="{ filled: segment <= brightnessLevel(brightnessById[item.id]) }"
++                aria-hidden="true"
++              />
++              <input
++                type="range"
++                min="1"
++                max="16"
++                step="1"
++                :aria-label="brightnessById[item.id].label"
++                :value="brightnessLevel(brightnessById[item.id])"
++                @input="previewBrightness(brightnessById[item.id], $event)"
++                @change="applyBrightness(brightnessById[item.id], $event)"
++              >
++            </div>
++          </label>
++        </v-col>
 +        <v-col v-else-if="item.type === 'text'">
-           {{ item.text }}
-         </v-col>
-         <v-col v-else-if="item.type === 'button'">
-@@ -56,15 +60,32 @@
- 
- <script lang="ts">
- import { Component, Mixins } from 'vue-property-decorator'
++          {{ item.text }}
++        </v-col>
++        <v-col v-else-if="item.type === 'button'">
++          <app-btn
++            :color="item.color"
++            block
++            @click="handleClick(item)"
++          >
++            {{ item.text }}
++          </app-btn>
++        </v-col>
++        <v-col
++          v-else-if="item.type === 'button_group'"
++          class="prompt-button-group"
++        >
++          <app-btn
++            v-for="button in item.buttons"
++            :key="`button::${button.id}`"
++            :color="button.color"
++            @click="handleClick(button)"
++          >
++            {{ button.text }}
++          </app-btn>
++        </v-col>
++      </v-row>
++    </v-card-text>
++
++    <template #actions>
++      <v-spacer />
++
++      <app-btn
++        v-for="button in dialog.footerButtons"
++        :key="`button::${button.id}`"
++        :color="button.color ?? 'primary'"
++        type="button"
++        @click="handleClick(button)"
++      >
++        {{ button.text }}
++      </app-btn>
++    </template>
++  </app-dialog>
++</template>
++
++<script lang="ts">
++import { Component, Mixins, Watch } from 'vue-property-decorator'
 +import M300LevelingDiagram from './M300LevelingDiagram.vue'
-+import { readM300Leveling } from './m300Leveling'
- import StateMixin from '@/mixins/state'
- import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
- 
--@Component({})
++import { readM300Brightness, readM300Leveling } from './m300Leveling'
++import type { BrightnessControl } from './m300Leveling'
++import StateMixin from '@/mixins/state'
++import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
++
 +@Component({ components: { M300LevelingDiagram } })
- export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
-   get dialog (): PromptDialog {
-     return this.$typedState.console.promptDialog
-   }
- 
++export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
++  brightnessDraft: Record<string, number> = {}
++
++  get dialog (): PromptDialog {
++    return this.$typedState.console.promptDialog
++  }
++
 +  get leveling () {
 +    return readM300Leveling(this.dialog)
 +  }
@@ -140,20 +288,108 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..3a086a0cf05db8f95b703926d4d58417
 +    return this.dialog.title === 'ZORTRAX M300 - Printer information'
 +  }
 +
-+  get visibleItems () {
-+    const replaced = this.leveling?.otherIds
-+    return replaced
-+      ? this.dialog.items.filter(item => !replaced.includes(item.id))
-+      : this.dialog.items
++  get brightness () {
++    return readM300Brightness(this.dialog)
 +  }
 +
-   get open (): boolean {
-     return this.dialog.open
-   }
-@@ -91,4 +112,18 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
-       flex: 1 1 0;
-     }
-   }
++  get brightnessById (): Record<number, BrightnessControl> {
++    return Object.fromEntries(this.brightness.map(control => [control.id, control]))
++  }
++
++  @Watch('brightness')
++  clearBrightnessDraft () {
++    this.brightnessDraft = {}
++  }
++
++  brightnessLevel (control: BrightnessControl): number {
++    return this.brightnessDraft[control.key] ?? control.level
++  }
++
++  previewBrightness (control: BrightnessControl, event: Event) {
++    if (event.target instanceof HTMLInputElement) {
++      this.$set(this.brightnessDraft, control.key, event.target.valueAsNumber)
++    }
++  }
++
++  applyBrightness (control: BrightnessControl, event: Event) {
++    this.previewBrightness(control, event)
++    const level = this.brightnessLevel(control)
++    if (Number.isInteger(level) && level >= 1 && level <= 16) {
++      this.sendGcode(`ZORTRAX_UI_SETTING NAME=${control.key} VALUE=${level}`)
++    }
++  }
++
++  get visibleItems () {
++    const replaced = this.leveling?.otherIds ?? []
++    const singleBrightness = this.brightness.some(control => this.dialog.title === `ZORTRAX M300 - ${control.label}`)
++    return this.dialog.items.filter(item => !replaced.includes(item.id) &&
++      !(singleBrightness && item.type === 'button' && /^(?:[1-9]|1[0-6])(?: <)?$/.test(item.text)))
++  }
++
++  get open (): boolean {
++    return this.dialog.open
++  }
++
++  set open (value: boolean) {
++    if (!value) {
++      this.sendGcode('RESPOND TYPE=command MSG="action:prompt_end"')
++    }
++  }
++
++  handleClick (button: PromptDialogButton) {
++    this.sendGcode(button.command || button.text)
++  }
++}
++</script>
++
++<style lang="scss" scoped>
++  .prompt-button-group {
++    display: flex;
++    flex-wrap: wrap;
++    gap: 16px;
++
++    .v-btn {
++      flex: 1 1 0;
++    }
++  }
++
++  .m300-brightness-control {
++    display: block;
++    cursor: pointer;
++  }
++
++  .m300-brightness-bar {
++    position: relative;
++    display: grid;
++    grid-template-columns: repeat(16, 1fr);
++    gap: 3px;
++    height: 26px;
++    padding: 5px 0;
++
++    span {
++      border: 1px solid currentColor;
++      border-radius: 2px;
++      opacity: .45;
++    }
++
++    .filled {
++      background: currentColor;
++      opacity: 1;
++    }
++
++    input {
++      position: absolute;
++      inset: 0;
++      width: 100%;
++      opacity: 0;
++      cursor: pointer;
++    }
++
++    &:focus-within {
++      outline: 1px solid currentColor;
++      outline-offset: 3px;
++    }
++  }
 +
 +  .m300-printer-info-row + .m300-printer-info-row {
 +    margin-top: 0;
@@ -168,7 +404,7 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..3a086a0cf05db8f95b703926d4d58417
 +      line-height: 1.4;
 +    }
 +  }
- </style>
++</style>
 diff --git a/src/components/common/M300LevelingDiagram.vue b/src/components/common/M300LevelingDiagram.vue
 new file mode 100644
 index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc344990bc
@@ -264,17 +500,16 @@ index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc
 +</style>
 diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..d73ca4415a6198a9000d8f82d325a95f73ebcb24
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,103 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import { describe, expect, it, vi } from 'vitest'
 +import { mount, shallowMount } from '@vue/test-utils'
 +import ActionCommandPromptDialog from './ActionCommandPromptDialog.vue'
 +import M300LevelingDiagram from './M300LevelingDiagram.vue'
-+import { readM300Leveling } from './m300Leveling'
++import { readM300Brightness, readM300Leveling } from './m300Leveling'
 +import type { PromptDialogItem } from '@/store/console/types'
 +
 +vi.mock('@/mixins/state', async () => ({ default: (await import('vue')).default }))
@@ -354,12 +589,28 @@ index 0000000000000000000000000000000000000000..d73ca4415a6198a9000d8f82d325a95f
 +    wrapper.destroy()
 +  })
 +})
++
++describe('M300 brightness controls', () => {
++  it('reads both controls while preserving other procedure text', () => {
++    expect(readM300Brightness({
++      title: 'ZORTRAX M300 - Platform leveling',
++      items: [
++        { id: 1, type: 'text', text: 'Heating' },
++        { id: 2, type: 'text', text: 'M300_BRIGHTNESS oled_brightness 16' },
++        { id: 3, type: 'text', text: 'M300_BRIGHTNESS led_brightness 5' },
++        { id: 4, type: 'text', text: 'M300_BRIGHTNESS led_brightness 17' }
++      ]
++    })).toEqual([
++      { id: 2, key: 'oled_brightness', label: 'OLED brightness', level: 16 },
++      { id: 3, key: 'led_brightness', label: 'LED brightness', level: 5 }
++    ])
++  })
++})
 diff --git a/src/components/common/m300Leveling.ts b/src/components/common/m300Leveling.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..ad1a7914648556a44518b027f1b12d032fd1cb8d
 --- /dev/null
 +++ b/src/components/common/m300Leveling.ts
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,58 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +import type { PromptDialog } from '@/store/console/types'
 +
@@ -390,4 +641,31 @@ index 0000000000000000000000000000000000000000..ad1a7914648556a44518b027f1b12d03
 +    ids.push(item.id)
 +  }
 +  return { points: result, firstId: ids[0], otherIds: ids.slice(1) }
++}
++
++const brightnessLabels = {
++  oled_brightness: 'OLED brightness',
++  led_brightness: 'LED brightness'
++} as const
++
++export interface BrightnessControl {
++  id: number;
++  key: keyof typeof brightnessLabels;
++  label: string;
++  level: number;
++}
++
++export function readM300Brightness (dialog: Pick<PromptDialog, 'title' | 'items'>): BrightnessControl[] {
++  if (!dialog.title?.startsWith('ZORTRAX M300 - ')) return []
++  const controls: BrightnessControl[] = []
++  for (const item of dialog.items) {
++    if (item.type !== 'text') continue
++    const match = /^M300_BRIGHTNESS (oled_brightness|led_brightness) ([1-9]|1[0-6])$/.exec(item.text)
++    if (!match) continue
++    const key = match[1] as keyof typeof brightnessLabels
++    if (!controls.some(control => control.key === key)) {
++      controls.push({ id: item.id, key, label: brightnessLabels[key], level: Number(match[2]) })
++    }
++  }
++  return controls
 +}

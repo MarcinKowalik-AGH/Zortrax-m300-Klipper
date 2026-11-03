@@ -19,10 +19,11 @@ def motion_fixture():
     motion.home_xy, motion.travel_speed = (150., 158.), 50.
     motion.z_home_hotend_target, motion.clearance, motion.lift_speed = 180., 5., 5.
     motion.z_home_temperature_tolerance = 5.
+    motion.z_home_heat_timeout = 600.
     motion.reactor = NS(monotonic=lambda: 1.)
     motion.events, motion.homed = [], set('xy')
     position = [100., 100., 299., 17.]
-    hotend = NS(target=0.)
+    hotend = NS(target=0., check_busy=lambda now: False)
     hotend.get_temp = lambda now: (22., hotend.target)
     motion.hotend = hotend
     def set_temperature(heater, target, wait=False):
@@ -68,7 +69,7 @@ class NormalHomingTests(unittest.TestCase):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xyz')
-        self.assertEqual(m.events, [('heat', 180., True), ('home', 'Y'), ('home', 'X'),
+        self.assertEqual(m.events, [('heat', 180., False), ('home', 'Y'), ('home', 'X'),
             ('move', (150., 158., None), 50.), ('home', 'Z'),
             ('move', (None, None, 5.), 5.), ('heat', 0., False)])
         self.assertEqual(m.toolhead.get_position()[3], 17.)
@@ -134,7 +135,7 @@ class NormalHomingTests(unittest.TestCase):
         m = motion_fixture()
         m.hotend.target = 220.
         m.home(axes='z')
-        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 220., True)])
+        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 220., False)])
         self.assertEqual(m.hotend.target, 220.)
 
     def test_z_with_unknown_xy_is_rejected_before_heating_or_movement(self):
@@ -160,8 +161,8 @@ class NormalHomingTests(unittest.TestCase):
         def interrupted(heater, target, wait=False):
             heater.target = target
             m.events.append(('heat', target, wait))
-            if wait:
-                m._stop()
+            if target > 0.:
+                m._stop('gcode:request_restart')
         m.heaters.set_temperature = interrupted
         with self.assertRaisesRegex(RuntimeError, 'session ended'):
             m.home(axes='z')
@@ -178,7 +179,22 @@ class NormalHomingTests(unittest.TestCase):
         m.native_G28 = interrupted
         with self.assertRaises(RuntimeError):
             m.home(axes='z')
-        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 180., True)])
+        self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 180., False)])
+
+    def test_preheat_has_its_own_deadline_and_never_moves_on_timeout(self):
+        m = motion_fixture()
+        clock = [0.]
+        m.reactor.monotonic = lambda: clock[0]
+        def pause(until):
+            clock[0] = until
+            return until
+        m.reactor.pause = pause
+        m.hotend.check_busy = lambda now: True
+        with self.assertRaisesRegex(RuntimeError, 'preheat timed out after 600 s'):
+            m.home(axes='z')
+        self.assertEqual(clock[0], 600.)
+        self.assertEqual(m.failure_phase, 'Z_PREHEAT')
+        self.assertEqual(m.events, [('heat', 180., False), ('heat', 0., False)])
 
     def test_native_g28_x0_y0_selectors_are_accepted(self):
         m = motion_fixture()

@@ -555,7 +555,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         h.hold_sample = release
         h.start_hold_worker()
         self.assertEqual(h.position[2], 4.75)
-        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 1., 2), 'stop'])
+        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 10., 2), 'stop'])
         h.assert_restored(self)
 
     def test_both_oled_directions_reconcile_actual_position_after_release(self):
@@ -586,7 +586,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 h.start_hold_worker()
                 self.assertEqual(h.m.state, 'CANCELLED')
                 self.assertEqual(h.position[2], stopped)
-                self.assertEqual(h.hold_actions, [((150., 158., limit, 17.), 1., 1), 'stop'])
+                self.assertEqual(h.hold_actions, [((150., 158., limit, 17.), 10., 1), 'stop'])
                 h.assert_restored(self)
 
     def test_coalesced_release_and_repress_stops_without_restarting(self):
@@ -607,7 +607,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         packet(True, 2, 1, 1)
         self.assertEqual(h.m.state, 'CANCELLED')
         self.assertEqual(h.position[2], 4.75)
-        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 1., 1), 'stop'])
+        self.assertEqual(h.hold_actions, [((150., 158., 0., 17.), 10., 1), 'stop'])
         h.assert_restored(self)
 
     def test_selection_change_between_receipt_and_callback_cannot_arm_new_row(self):

@@ -15,8 +15,9 @@ from .m300_oem_graphics import OEMGraphics, choose_icon
 from .m300_ui_labels import english_label
 from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
-from .m300_settings import PAGES as SETTINGS_PAGES
-from .m300_settings_ui import menu_frame
+from .m300_settings import PAGES as SETTINGS_PAGES, TITLES
+from .m300_nvm import BRIGHTNESS_KEYS
+from .m300_settings_ui import brightness_frame, menu_frame
 
 
 class M300MenuUI:
@@ -38,6 +39,8 @@ class M300MenuUI:
         self.oem_sprites = OEMGraphics() if self.oem_graphics_enabled else None
         self.last_sprite = None
         self._leveling_frames = deque(maxlen=16)
+        self.leveling_settings = False
+        self._brightness_presented = None
         self.history = MenuHistory(self.menu_max_depth)
         path = os.path.join(os.path.dirname(__file__), 'm300_m11_stock_atlas.json')
         with open(path,encoding='utf-8') as stream:
@@ -58,9 +61,13 @@ class M300MenuUI:
         self.history.clear()
         self._present_generation = None
         self._leveling_frames.clear()
+        self.leveling_settings = False
+        self._brightness_presented = None
 
     def entered(self, old, new, remember=True):
         self.history.entered(old, new, remember)
+        if new != 'settings' and not new.startswith('setting_'):
+            self.leveling_settings = False
 
     def parent(self, current):
         return self.history.parent(current)
@@ -151,6 +158,12 @@ class M300MenuUI:
         if self.menu.page in SETTINGS_PAGES:
             settings = self.printer.lookup_object('m300_settings', None)
             if settings is not None:
+                key = self.menu.page[8:]
+                if key in BRIGHTNESS_KEYS:
+                    level = selected or self.menu.nvm.get_setting(key)
+                    wire = brightness_frame(TITLES[key], level, selected == 0, frame_type)
+                    self._brightness_presented = self.menu.generation, selected, wire
+                    return wire
                 return menu_frame(tuple(labels or [r[0] for r in rows]),
                     settings.active_rows(self.menu.page), selected, frame_type, sprite)
         if self.menu.page != 'fan_test' or len(rows) != 3:return None
@@ -158,6 +171,17 @@ class M300MenuUI:
         lower=rows[2][0][len(FAN_LABELS[2])+1:]
         note='Automatic upper-fan cooling' if upper=='(Cooling)' else ''
         return fan_frame(upper,lower,note,selected,frame_type)
+
+    def brightness_selection(self):
+        key = self.menu.page[8:]
+        return self.menu.nvm.get_setting(key) if key in BRIGHTNESS_KEYS else None
+
+    def brightness_receipt(self, stream):
+        frame = getattr(self, '_brightness_presented', None)
+        if (frame is not None and stream.enabled and stream.ready
+                and frame[2] == stream.previous):
+            return frame[:2]
+        return None
 
     def leveling_panel(self, events, received_view, now):
         if self.oled.page != 'm04' or self.menu.page != 'procedure':
@@ -177,6 +201,11 @@ class M300MenuUI:
                     self.menu.return_from_procedure(
                         view['owner'], view['snapshots'][view['owner']].get('operation'))
                     self.oled.page, self.oled.selection = 'm04', 0
+            elif events.get('delta') and not events.get('pressed') and view['busy']:
+                if self.printer.lookup_object('m300_settings', None) is not None:
+                    self.leveling_settings = True
+                    self.menu._navigate('settings', remember=False)
+                    self.oled.selection = 0
         self.oled.render_at = 0.
         return True
 

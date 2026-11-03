@@ -22,7 +22,7 @@ from payload.m300_browser import M300Browser
 from payload.m300_browser_state import Catalog, BrowserError
 from payload.m300_menu import sort_entries
 from payload.m300_display import M300Display
-from payload.m300_settings_ui import SPRITE_LABEL_PIXELS, menu_frame
+from payload.m300_settings_ui import SPRITE_LABEL_PIXELS, brightness_frame, menu_frame
 from payload.m300_ui_m11_state import fit_label, require_rows
 
 
@@ -265,18 +265,49 @@ class SettingsTreeTests(unittest.TestCase):
                     rendered=label+(' <' if index in active else '')
                     self.assertTrue(any('prompt_button '+rendered+'|' in line for line in h.lines))
 
-    def test_setting_write_during_active_procedure_is_refused_before_storage(self):
+    def test_cosmetic_settings_apply_during_procedure_and_save_afterwards(self):
         with session() as h:
-            h.run('ZORTRAX_LOAD');before=h.nvm.store._published['revision']
-            with self.assertRaisesRegex(h.printer.command_error,'blocked by'):
-                h.settings.set_option('light_mode','WHITE')
-            self.assertEqual(h.nvm.store._published['revision'],before)
+            h.run('ZORTRAX_LOAD')
+            before = h.nvm.store._published['revision']
+            h.settings.set_option('led_brightness', 8)
+            h.settings.set_option('light_mode', 'WHITE')
+            self.assertEqual(h.pins['m300_led_r'], .5)
+            self.assertEqual(h.nvm.store._published['revision'], before)
+            with self.assertRaisesRegex(h.printer.command_error, 'blocked by'):
+                h.settings.set_option('sort_mode', 'SIZE')
             h.p._tick(h.now)
+            self.assertTrue(any('M300_BRIGHTNESS led_brightness 8' in line for line in h.lines))
             context = h.oled._input_context()
-            h.lines.clear();h.settings.show('settings')
+            h.lines.clear()
+            h.settings.show('settings')
             self.assertFalse(any('prompt_begin' in line for line in h.lines))
             self.assertEqual(h.oled._input_context(), context)
-            self.assertEqual(h.hotend.target,240.)
+            self.assertEqual(h.hotend.target, 240.)
+            h.f.cancel('test')
+            h.nvm._save_deferred_settings(h.now)
+            self.assertEqual(h.nvm.store._published['settings']['led_brightness'], 8)
+
+    def test_web_settings_bypass_busy_gcode_for_one_cosmetic_command_only(self):
+        with session() as h, h.gcode.get_mutex():
+            h.objects['m300_motion'] = NS(get_status=lambda now: dict(state='HOMING', busy=True))
+            self.assertTrue(h.settings.try_web_script('ZORTRAX_SETTINGS'))
+            command = 'ZORTRAX_UI_SETTING NAME=led_brightness VALUE=7'
+            self.assertTrue(h.settings.try_web_script(command))
+            self.assertEqual(h.nvm.get_setting('led_brightness'), 7)
+            self.assertFalse(h.settings.try_web_script(command + '\nG28'))
+            self.assertFalse(h.settings.try_web_script('ZORTRAX_UI_SETTING NAME=sleep_mode VALUE=DISABLED'))
+            self.assertFalse(h.settings.try_web_script('G1 Z10'))
+
+    def test_brightness_oled_uses_a_sixteen_segment_bar(self):
+        with session() as h:
+            h.menu.page = 'setting_led_brightness'
+            h.oled.selection = 8
+            h.oled._render(h.now)
+            frame = h.oled._render_wire
+            self.assertEqual(frame, brightness_frame('LED brightness', 8, False, test_display.renderer.Frame))
+            for segment in range(16):
+                x = 16 + 14 * segment + 4
+                self.assertEqual(frame[57 * 128 + x // 2] & 15, 15 if segment < 8 else 0)
 
     def test_non_english_languages_and_old_interval_choices_are_not_ui_actions(self):
         with session() as h:

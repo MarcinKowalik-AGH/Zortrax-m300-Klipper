@@ -2,8 +2,10 @@
 
 Open **Zortrax M300 → Settings** on the OLED or run `ZORTRAX_SETTINGS` in
 Fluidd. Both surfaces use the same English labels, saved choices and action
-handlers. The `<` mark identifies the current choice. The encoder scrolls
-through the available rows.
+handlers. The `<` mark identifies the current choice on list pages.
+Brightness uses two independent 16-segment controls. Turn the encoder to
+adjust and press to save. Hold to go back. In the M300 build of Fluidd,
+drag the segmented control and release to apply.
 
 In Fluidd, the setting macros open button dialogs when called without
 arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`
@@ -30,6 +32,11 @@ write. Disabled Buzzer also ends an active host beep. Dynamic Light follows the
 printer, including purple during a native print pause and red on faults.
 LED brightness applies to both Dynamic and White. The two brightness settings
 are independent and default to level 16 on existing installations.
+Turn the knob on an active leveling screen to open Settings. Back returns
+to the wizard. Fluidd offers brightness controls inside the procedure
+dialog. Brightness, light mode and buzzer can change while a service owns
+motion or heaters. The host saves these changes when the service releases
+its resources.
 
 Sleep mode gates the existing dim, moon notice, display off and encoder wake
 sequence. Its timeout, notice duration and contrast come from

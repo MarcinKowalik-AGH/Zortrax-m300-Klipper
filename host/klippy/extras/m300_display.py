@@ -83,10 +83,16 @@ class M300Display:
                     def observed(request, original=original, endpoint=endpoint):
                         # This is the external API boundary. G-code from
                         # virtual_sdcard/macros never traverses this hook.
-                        if endpoint != 'gcode/script' or any(
-                                line.split(';', 1)[0].strip()
-                                for line in request.get_str('script').splitlines()):
+                        if endpoint != 'gcode/script':
                             self.activity('operator_command')
+                        else:
+                            script = request.get_str('script')
+                            if any(line.split(';', 1)[0].strip() for line in script.splitlines()):
+                                self.activity('operator_command')
+                            settings = self.printer.lookup_object('m300_settings', None)
+                            handle = getattr(settings, 'try_web_script', None)
+                            if handle is not None and handle(script):
+                                return
                         return original(request)
                     hooks[endpoint] = observed
                 original = self.oled.encoder.update

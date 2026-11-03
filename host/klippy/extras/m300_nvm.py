@@ -9,6 +9,7 @@ and the storage device remain separate qualification work.
 import copy
 import hashlib
 import json
+import logging
 import math
 import os
 import stat
@@ -26,6 +27,7 @@ DEFAULT_SETTINGS = dict(language='EN', light_mode='DYNAMIC', sound=True,
 MAX_BRIGHTNESS = 16
 BRIGHTNESS_LEVELS = tuple(range(1, MAX_BRIGHTNESS + 1))
 BRIGHTNESS_KEYS = frozenset(('oled_brightness', 'led_brightness'))
+COSMETIC_SETTINGS = BRIGHTNESS_KEYS | {'light_mode', 'sound'}
 CHOICES = dict(language=('EN', 'PL', 'FR', 'DE', 'ES'),
                light_mode=('DYNAMIC', 'WHITE', 'DISABLE'),
                sound=(False, True), sleep_mode=('OFF', '15MIN', '30MIN', '60MIN'),
@@ -435,6 +437,8 @@ class M300NVM:
             raise config.error('M300 NVM: ' + str(exc))
         self.executor = self.printer.load_object(config, 'aio_executor').allocate_executor('m300-nvm')
         self._busy = False
+        self._deferred_settings = {}
+        self._settings_timer = self.reactor.register_timer(self._save_deferred_settings)
         for name, fn in (('ZORTRAX_SETTING', self.cmd_setting),
                          ('ZORTRAX_NVM_IMPORT', self.cmd_import),
                          ('ZORTRAX_NVM_STATUS', self.cmd_status)):
@@ -446,7 +450,7 @@ class M300NVM:
     def ui_snapshot(self):
         """Small independent UI snapshot; do not copy the observation ledger."""
         data = self.store._published
-        return dict(revision=data['revision'], settings=dict(data['settings']),
+        return dict(revision=data['revision'], settings=dict(data['settings'], **self._deferred_settings),
                     identity=dict(data['identity']), counters=dict(data['counters']),
                     source=self.store.source)
 
@@ -458,7 +462,7 @@ class M300NVM:
             return 'EN'
         if name in BRIGHTNESS_KEYS and default is None:
             default = MAX_BRIGHTNESS
-        return self.store._published['settings'].get(name, default)
+        return self._deferred_settings.get(name, self.store._published['settings'].get(name, default))
 
     def is_busy(self):
         return self._busy
@@ -535,9 +539,40 @@ class M300NVM:
             raise self.printer.command_error(str(exc))
         if self.get_setting(name) == value:
             return self.ui_snapshot()
+        if name in COSMETIC_SETTINGS:
+            try:
+                self._guard()
+            except self.printer.command_error:
+                if self.printer.is_shutdown():
+                    raise
+                self._deferred_settings[name] = value
+                self.reactor.update_timer(self._settings_timer, self.reactor.NOW)
+                self.printer.send_event('m300:setting_changed', name, value)
+                return self.ui_snapshot()
+        previous = self._deferred_settings.get(name)
         result = self._write(lambda data: data['settings'].__setitem__(name, value))
-        self.printer.send_event('m300:setting_changed', name, value)
+        if self._deferred_settings.get(name) == previous:
+            self._deferred_settings.pop(name, None)
+        self.printer.send_event('m300:setting_changed', name, self.get_setting(name))
         return result
+
+    def _save_deferred_settings(self, now):
+        if not self._deferred_settings or self.printer.is_shutdown():
+            return self.reactor.NEVER
+        try:
+            self._guard()
+        except self.printer.command_error:
+            return now + 1.
+        pending = dict(self._deferred_settings)
+        try:
+            self._write(lambda data: data['settings'].update(pending))
+        except self.printer.command_error as exc:
+            logging.warning('M300 UI settings awaiting storage: %s', exc)
+            return self.reactor.monotonic() + 5.
+        for key, value in pending.items():
+            if self._deferred_settings.get(key) == value:
+                del self._deferred_settings[key]
+        return self.reactor.monotonic() + 1. if self._deferred_settings else self.reactor.NEVER
 
     def commit_calibration(self, record, token=None, phase=None):
         try:

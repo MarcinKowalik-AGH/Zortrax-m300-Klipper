@@ -71,11 +71,15 @@ class MacroDispatchTests(unittest.TestCase):
         g.register_command('G1',lambda cmd:moves.append(cmd.get_command_parameters()))
         toolhead=NS(homed_axes='xyz',axis_minimum=NS(x=0.,y=0.),axis_maximum=NS(x=300.,y=300.))
         def fail(message):raise RuntimeError(message)
-        script=ENV.from_string(templates()['TEST_ZORTRAX_XY']).render(
-            params={'SPEED':'300'},printer=NS(toolhead=toolhead),action_raise_error=fail)
+        template = ENV.from_string(templates()['TEST_ZORTRAX_XY'])
+        context = dict(printer=NS(toolhead=toolhead, print_stats=NS(state='standby'),
+                                  gcode_move=NS(speed_factor=1.5)), action_raise_error=fail)
+        with self.assertRaisesRegex(RuntimeError, 'at most 60'):
+            template.render(params={'SPEED': '200'}, **context)
+        script = template.render(params={}, **context)
         g.run_script_from_command(script)
         self.assertEqual(len(moves),7)
-        self.assertEqual(float(moves[0]['F']),18000.)
+        self.assertEqual(float(moves[0]['F']),2000.)
         self.assertEqual(output,[])
 
     def test_load_unload_buttons_default_to_240_and_forward_explicit_temp(self):

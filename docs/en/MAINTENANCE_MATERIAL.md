@@ -1,5 +1,12 @@
 # Maintenance and Material — R16.7
 
+Native Z homing allows up to 600 seconds for nozzle preheat by default.
+Each precision contact and release cycle has a 45-second deadline.
+Maintenance platform movement defaults to 10 mm/s, subject to native
+Z limits. The OLED hold keeps the MCU's local button-release stop.
+The XY diagnostic defaults to 50 mm/s and accepts up to 60 mm/s.
+These values apply to the diagnostic, independent of the print speed override.
+
 [Installation](INSTALL.md) · [M07 leveling](LEVELING.md) · [Validation](VALIDATION_R16_7.md)
 
 All current printer UI, Fluidd prompts, macros and release documentation use

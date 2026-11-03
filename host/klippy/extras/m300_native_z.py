@@ -16,7 +16,7 @@ class M300ZRefinement:
     release = 1.
     margin = 1.
     speed = .5
-    timeout = 30.
+    timeout = 45.
 
     def __init__(self, owner, probe):
         self.owner, self.printer = owner, owner.printer

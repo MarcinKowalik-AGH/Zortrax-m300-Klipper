@@ -20,12 +20,14 @@ class M300NativeMotion:
         self.home_xy = config.getfloatlist('home_xy', (150., 158.), count=2)
         self.travel_speed = config.getfloat('home_travel_speed', 50., above=0.)
         self.z_home_hotend_target = config.getfloat('z_home_hotend_target', 180., above=0.)
+        self.z_home_heat_timeout = config.getfloat(
+            'z_home_heat_timeout', 600., minval=60., maxval=1800.)
         self.z_home_temperature_tolerance = config.getfloat(
             'z_home_temperature_tolerance', 5., minval=.5, maxval=5.)
         self.clearance = config.getfloat('z_contact_clearance', 5., above=0.)
         self.lift_speed = config.getfloat('z_lift_speed', 5., above=0.)
         if not all(math.isfinite(v) for v in (*self.home_xy, self.travel_speed,
-                                              self.z_home_hotend_target,
+                                              self.z_home_hotend_target, self.z_home_heat_timeout,
                                               self.z_home_temperature_tolerance, self.clearance,
                                               self.lift_speed)):
             raise config.error('M300 native homing settings must be finite')
@@ -41,7 +43,7 @@ class M300NativeMotion:
         self.printer.register_event_handler('klippy:connect', self._connect)
         self.printer.register_event_handler('klippy:ready', self._ready)
         for name in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
-            self.printer.register_event_handler(name, self._stop)
+            self.printer.register_event_handler(name, lambda *args, event=name: self._stop(event))
         self.gcode.register_command('ZORTRAX_MOTION_STATUS', self.cmd_status,
                                      when_not_ready=True)
         self.gcode.register_command('ZORTRAX_HOME', self.cmd_home)
@@ -84,19 +86,41 @@ class M300NativeMotion:
     def _ready(self):
         self.ready = True
 
-    def _stop(self, *args):
+    def _stop(self, event='host lifecycle'):
         self.token += 1
         self.ready = False
         if self.is_busy():
+            self.failure_phase = self.phase
             self.state, self.phase = 'CANCELLED', 'INVALIDATED'
-            self.reason = 'host lifecycle ended the homing session'
+            self.reason = '%s during %s' % (event, self.failure_phase)
 
     def _phase(self, name):
         self.phase, self.phase_id = name, self.phase_id + 1
 
     def _check(self, token):
         if token != self.token or not self.ready or self.printer.is_shutdown():
-            raise self.printer.command_error('M300 homing session ended')
+            raise self.printer.command_error(
+                'M300 homing session ended: ' + (self.reason or 'host or MCU is unavailable'))
+
+    def _preheat(self, token, target):
+        self.heaters.set_temperature(self.hotend, target, wait=False)
+        self._check(token)
+        if self.board.mcu.is_fileoutput():
+            return
+        now = self.reactor.monotonic()
+        deadline = now + self.z_home_heat_timeout
+        while True:
+            self._check(token)
+            measured, requested = self.hotend.get_temp(now)
+            if requested != target:
+                raise self.printer.command_error('M300 homing nozzle target changed during preheat')
+            if not self.hotend.check_busy(now):
+                return
+            if now >= deadline:
+                raise self.printer.command_error(
+                    'M300 homing preheat timed out after %.0f s (%.1f / %.1f C)'
+                    % (self.z_home_heat_timeout, measured, target))
+            now = self.reactor.pause(min(now + 1., deadline))
 
     def _native_home(self, axes):
         params = {axis.upper(): '0' for axis in axes}
@@ -203,9 +227,7 @@ class M300NativeMotion:
                 self._z_target = target
                 if target != previous_target:
                     owned_target = target
-                # Native heater wait/verify_heater and MCU guard remain owners.
-                self.heaters.set_temperature(self.hotend, target, wait=True)
-                self._check(token)
+                self._preheat(token, target)
             # Both OEM G28/Z-code and M07 home Y before X.
             for axis in 'yx':
                 if axis in axes:
@@ -301,6 +323,7 @@ class M300NativeMotion:
                 'reason': self.reason, 'result': self.result,
                 'failure_phase': self.failure_phase,
                 'z_home_hotend_target_c': self.z_home_hotend_target,
+                'z_home_heat_timeout_s': self.z_home_heat_timeout,
                 'z_home_temperature_tolerance_c': self.z_home_temperature_tolerance,
                 'homing_speed_mm_s': self.homing_speeds,
                 'z_contact_clearance_mm': self.clearance,

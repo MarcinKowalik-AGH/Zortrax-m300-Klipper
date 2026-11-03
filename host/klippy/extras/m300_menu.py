@@ -207,6 +207,9 @@ class M300Menu:
         else:
             self._navigate(page, remember=False, refresh_information=False)
             oled.page, oled.selection, oled.message = 'm04', 0, None
+            select = getattr(self._ui(), 'brightness_selection', None)
+            if select is not None:
+                oled.selection = select() or 0
             oled.render_at = 0.
         oled._user_refresh_pending = True
         self.reactor.update_timer(oled.timer, self.reactor.NOW)
@@ -282,6 +285,10 @@ class M300Menu:
                 if settings is None:
                     return 'Settings / Information', back+[('Settings service unavailable', None)]
                 title, rows = settings.rows(self.page, now)
+                if self.page == 'settings' and getattr(self._ui(), 'leveling_settings', False):
+                    view = self._service('m300_procedures').view(now)
+                    target = 'maintenance' if view['state'] in ('COMPLETE', 'CANCELLED', 'IDLE') else 'procedure'
+                    rows[0] = ('Back', ('page', target))
                 return title, self._notice(rows)
         if native and self.page == 'material':
             return self.t('Material'), self._notice([(self.t('Back'), ('page', 'zortrax')),
@@ -296,8 +303,8 @@ class M300Menu:
                 ('TEST: OEM print / SD', ('page', 'models')),
                 ('Current test procedure', ('page', 'procedure')),
                 ('Read test status', ('native_gcode', 'TEST_ZORTRAX_STATUS')),
-                ('TEST XY 200 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=200')),
-                ('TEST XY 300 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=300'))])
+                ('TEST XY 50 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=50')),
+                ('TEST XY 60 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=60'))])
         if native and self.page == 'native_pid':
             stats = self.printer.lookup_object('print_stats', None)
             busy = stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')

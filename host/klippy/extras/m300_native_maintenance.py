@@ -14,6 +14,8 @@ PERIOD = .05
 PANEL_LEASE = .75
 PLATFORM_STEP_MM = 1.
 PLATFORM_STEP_SECONDS = 1.
+PLATFORM_SPEED = 10.
+PLATFORM_HOLD_STEPS_PER_SECOND = 8000.
 
 
 class PanelRelease:
@@ -76,6 +78,7 @@ class PanelRelease:
 class M300NativeMaintenance(M300Maintenance):
     def __init__(self, config):
         super().__init__(config)
+        self.platform_speed = self._number('platform_speed', PLATFORM_SPEED, .1, 25.)
         self.phase_id = 0
         self.target = 0.
         self._bed_target = None
@@ -194,7 +197,7 @@ class M300NativeMaintenance(M300Maintenance):
         if (type(distance) not in (int,float) or not math.isfinite(distance)
                 or distance == 0.):
             raise self._error('DISTANCE must be finite and positive')
-        speed=self.jog_speed if speed is None else speed
+        speed=self.platform_speed if speed is None else speed
         if type(speed) not in (int,float) or not math.isfinite(speed) or speed<=0.:
             raise self._error('SPEED must be finite and positive')
         self._authority(True)
@@ -249,9 +252,10 @@ class M300NativeMaintenance(M300Maintenance):
             step = release.get_steppers()[0].get_step_dist()
             velocity, _ = self.toolhead.get_max_velocity()
             kinematics = self.toolhead.get_kinematics()
-            # At 1 kHz the MCU can see release within one sample. Keep the
-            # step rate within 4000 pulses/s on either factory Z scale.
-            speed = min(self.jog_speed, velocity, kinematics.max_z_velocity, 4000. * step)
+            # The MCU stops on the raw release edge. Limit the 1 kHz
+            # fallback sampling window to at most eight Z steps.
+            speed = min(self.platform_speed, velocity, kinematics.max_z_velocity,
+                        PLATFORM_HOLD_STEPS_PER_SECOND * step)
             target = list(self.toolhead.get_position())
             low, high = self.job._axis_bounds()
             bounds = low[2], high[2]
@@ -413,6 +417,7 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
+            platform_speed_mm_s=self.platform_speed,
             revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM2')
 
     def cmd_platform(self,gcmd):
@@ -421,4 +426,4 @@ class M300NativeMaintenance(M300Maintenance):
             raise gcmd.error('DIRECTION must be UP or DOWN')
         distance=gcmd.get_float('DISTANCE',1.,above=0.)
         self.platform((-1 if direction=='UP' else 1)*distance,
-                      gcmd.get_float('SPEED',self.jog_speed,above=0.))
+                      gcmd.get_float('SPEED',self.platform_speed,above=0.))
