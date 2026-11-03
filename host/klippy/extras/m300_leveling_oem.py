@@ -131,6 +131,15 @@ def draw_text(frame, x, y, line):
         x += advance+1
 
 
+def draw_sprite(frame, sprite):
+    """Blit the audited 50 x 50 packed OEM frame at (200, 7)."""
+    width, height, pixels = sprite
+    stride = width // 2
+    for column in range(stride):
+        offset = (100 + column) * 64 + 7
+        frame.raw[offset:offset + height] = pixels[column::stride]
+
+
 def render(screen, sprites, frame_type, now=0.):
     sprite = (sprites.get(screen['sprite'], now)
               if screen.get('sprite') and sprites is not None else None)
@@ -165,9 +174,5 @@ def _compose(message, support, diagram, sprite, frame_type):
             x = 10 if align == 'left' else 55-width(line) if align == 'right' else int((64-width(line))/2)+2
             draw_text(frame, 192+x, y, line)
     elif sprite:
-        w, h, pixels = sprite
-        for y in range(h):
-            for x in range(w):
-                index = y*w+x
-                frame.pixel(200+x, 7+y, (pixels[index//2] >> (0 if index & 1 else 4)) & 15)
+        draw_sprite(frame, sprite)
     return frame.wire_bytes()

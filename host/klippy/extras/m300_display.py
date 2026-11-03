@@ -7,7 +7,7 @@ import math
 from .m300_display_stream import AWAKE, DIM, OFF, DisplayStream
 from .m300_display_oem import ENTERING_TEXT, load_moon, sleep_wire
 
-REVISION = '0.2.0-M300-OEM-SLEEP'
+REVISION = '0.3.0-M300-SLEEP-SETTING'
 
 
 class M300Display:
@@ -31,6 +31,7 @@ class M300Display:
         self.last_activity = self.reactor.monotonic()
         self.last_source = 'startup'
         self.busy = False
+        self.sleep_enabled = True
         self.phase = AWAKE
         self.notice_wire = None
         self._notice_shown_at = None
@@ -47,6 +48,7 @@ class M300Display:
         self.gcode.register_command('ZORTRAX_DISPLAY_STATUS', self.cmd_status,
                                    when_not_ready=True)
         self.gcode.register_command('ZORTRAX_DISPLAY_WAKE', self.cmd_wake)
+        self.printer.register_event_handler('m300:setting_changed', self._setting_changed)
 
     def _ready(self):
         # Optional UI failure must not block native printer startup.
@@ -141,6 +143,8 @@ class M300Display:
                     motion.panel_update = panel_update
                 self._hooks_installed = True
             self.connected, self.error = True, None
+            nvm = self.printer.lookup_object('m300_nvm', None)
+            self.sleep_enabled = nvm is None or nvm.get_setting('sleep_mode', '15MIN') != 'OFF'
             self._consume_gesture = False
             self.activity('ready')
             self.reactor.update_timer(self.timer, self.reactor.NOW)
@@ -161,6 +165,12 @@ class M300Display:
 
     def _command_error(self, *args):
         self.activity('command_error')
+
+    def _setting_changed(self, name, value):
+        if name == 'sleep_mode':
+            self.sleep_enabled = value != 'OFF'
+            # Use the existing notice/wake/ACK path; preserve configured times.
+            self.activity('sleep_setting')
 
     def activity(self, source):
         if not self.connected:
@@ -250,9 +260,12 @@ class M300Display:
         asleep = self._maintenance_sleep(now)
         entered_sleep = asleep and not self._maintenance_asleep
         self._maintenance_asleep = asleep
-        if entered_sleep and not self.busy:
+        if entered_sleep and not self.busy and self.sleep_enabled:
             self._begin_notice()
-        if self.busy:
+        if not self.sleep_enabled:
+            self._leave_notice()
+            self.phase, desired = AWAKE, AWAKE
+        elif self.busy:
             self._leave_notice()
             desired = DIM if now - self.last_activity >= self.timeout else AWAKE
             self.phase = desired
@@ -295,6 +308,7 @@ class M300Display:
                 'requested_mode': self.stream.requested_mode if self.stream else None,
                 'normal_contrast': self.normal, 'dim_contrast': self.dim,
                 'phase': self.phase, 'notice_seconds': self.notice_seconds,
+                'sleep_enabled': self.sleep_enabled,
                 'notice': ENTERING_TEXT if self.phase == 'ENTERING_SLEEP' else None,
                 'oem_moon_descriptor': '0x0801d908',
                 'ui_guarded': self.phase == 'ENTERING_SLEEP' or self._presentation_wait,

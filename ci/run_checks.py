@@ -57,6 +57,8 @@ def main():
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
         '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])
+    run('menu_performance', [sys.executable, ROOT/'ci/benchmark_menu.py',
+        '--package',host,'--output',report/'MENU_PERFORMANCE.json'])
     run('step_equivalence', [sys.executable, KIT / 'tools/test_stepfast.py',
                             '--upstream', pristine, '--report', report / 'STEP.json'])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',

@@ -875,7 +875,7 @@ class M300OLED:
             else:
                 labels = [english_label(row[0]) for row in rows]
             renderer = getattr(ui, 'maintenance_frame', None)
-            maintenance_wire = (renderer(self.page,rows,self.selection,Frame)
+            maintenance_wire = (renderer(self.page,rows,self.selection,Frame, labels=labels, sprite=sprite)
                                 if renderer is not None else None)
             key = (('oem_menu',maintenance_wire) if maintenance_wire is not None
                    else ('menu', tuple(labels), self.selection, sprite))

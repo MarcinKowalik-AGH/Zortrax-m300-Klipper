@@ -438,6 +438,16 @@ class M300NVM:
     def snapshot(self):
         return self.store.snapshot()
 
+    def ui_snapshot(self):
+        """Small independent UI snapshot; do not copy the observation ledger."""
+        data = self.store._published
+        return dict(revision=data['revision'], settings=dict(data['settings']),
+                    identity=dict(data['identity']), counters=dict(data['counters']),
+                    source=self.store.source)
+
+    def get_ownership_status(self, eventtime):
+        return dict(state='WRITING' if self._busy else 'IDLE',busy=self._busy)
+
     def get_setting(self, name, default=None):
         if name == 'language':
             return 'EN'
@@ -508,13 +518,19 @@ class M300NVM:
             self._busy = False
 
     def set_setting(self, name, value):
+        if name == 'light_mode' and value == 'DISABLED':
+            value = 'DISABLE'
         if name == 'language' and value != 'EN':
             raise self.printer.command_error('This host supports English only')
         try:
             validate_setting(name, value)
         except NVMError as exc:
             raise self.printer.command_error(str(exc))
-        return self._write(lambda data: data['settings'].__setitem__(name, value))
+        if self.store._published['settings'][name] == value:
+            return self.ui_snapshot()
+        result = self._write(lambda data: data['settings'].__setitem__(name, value))
+        self.printer.send_event('m300:setting_changed', name, value)
+        return result
 
     def commit_calibration(self, record, token=None, phase=None):
         try:
@@ -614,7 +630,10 @@ class M300NVM:
                 data['settings']['full_platform_preheat'] = bool(flags & 2)
             # Preserve raw light/sleep/sort/usage; their numeric encodings/units
             # are not silently equated with the host's named policies.
-        return self._write(mutate)
+        result = self._write(mutate)
+        for name, value in self.store._published['settings'].items():
+            self.printer.send_event('m300:setting_changed', name, value)
+        return result
 
     def get_status(self, eventtime):
         data = self.snapshot()

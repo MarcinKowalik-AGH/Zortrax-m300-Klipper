@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.7-OEM-MAINTENANCE"
+    MENU_REVISION = "0.13.16.8-SETTINGS-INFORMATION"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -79,6 +79,8 @@ class M300Menu:
         self.job = self.printer.load_object(config, 'm300_job')
         self.nvm = self.printer.load_object(config, 'm300_nvm')
         self.maintenance = self.printer.load_object(config, 'm300_maintenance')
+        if getattr(self.job.board, 'native_control', False) and config.has_section('m300_settings'):
+            self.printer.load_object(config, 'm300_settings')
         self.cycle = self.printer.lookup_object('m300_cycle', None)
         self.page, self.reason = 'main', ''
         self.generation = 0
@@ -166,6 +168,10 @@ class M300Menu:
             ui.entered(self.page, page, remember)
         self.generation += 1
         self.page, self.reason, self._confirm = page, '', None
+        if page == 'information':
+            settings = self.printer.lookup_object('m300_settings', None)
+            if settings is not None:
+                settings.request_refresh()
         self._material_view = (None, None)
         if page == 'material_status':
             service = self.printer.lookup_object('m300_material_ui', None)
@@ -237,6 +243,14 @@ class M300Menu:
                 (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START'))])
         if native and self.page == 'fan_test':
             return self._service('m300_procedures').rows(now)
+        if native:
+            from .m300_settings import PAGES
+            if self.page in PAGES:
+                settings = self.printer.lookup_object('m300_settings', None)
+                if settings is None:
+                    return 'Settings / Information', back+[('Settings service unavailable', None)]
+                title, rows = settings.rows(self.page, now)
+                return title, self._notice(rows)
         if native and self.page == 'material':
             return self.t('Material'), self._notice(back + [
                 (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
@@ -302,7 +316,9 @@ class M300Menu:
             if service is None:
                 return 'Current procedure', back + [('Procedure view unavailable', None)]
             title, rows = service.rows(now)
-            return title, self._notice(back + rows[1:])
+            if rows and rows[0][0] == 'Back':
+                rows = back + rows[1:]
+            return title, self._notice(rows)
         if self.page == 'fans':
             service = self.printer.lookup_object('m300_fans', None)
             if service is None:
@@ -331,7 +347,10 @@ class M300Menu:
             if p is None:
                 rows.append(('No current checked snapshot', None))
             else:
-                rows.append((self.t('Print'), ('confirm_print', p.identity)))
+                if getattr(self.job, 'workflow_qualified', False):
+                    rows.append((self.t('Print'), ('confirm_print', p.identity)))
+                else:
+                    rows.append(('OEM print workflow is disabled', None))
                 rows.extend((line, None) for line in textwrap.wrap(self.clean(p.filename, 240), 36))
                 rows.extend([('Bytes: %d' % p.size, None),
                              ('SHA256: ' + p.sha256[:16], None),
@@ -879,7 +898,11 @@ class M300Menu:
                 generation = self.generation
                 self._busy = True
                 try:
-                    self.nvm.set_setting(action[1], action[2])
+                    settings = self.printer.lookup_object('m300_settings', None)
+                    if settings is not None and getattr(self.job.board, 'native_control', False):
+                        settings.set_option(action[1], action[2])
+                    else:
+                        self.nvm.set_setting(action[1], action[2])
                 finally:
                     self._busy = False
                 if generation == self.generation:

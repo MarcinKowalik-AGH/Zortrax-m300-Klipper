@@ -268,7 +268,7 @@ class M300NativeMaintenance(M300Maintenance):
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
-            revision='0.13.16.7-NATIVE-MAINTENANCE')
+            revision='0.13.16.8-NATIVE-MAINTENANCE')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

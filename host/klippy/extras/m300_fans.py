@@ -219,7 +219,7 @@ class M300Fans:
             peer = self.printer.lookup_object(name, None)
             if peer is None:
                 continue
-            status = peer.get_status(now)
+            status = getattr(peer, 'get_ownership_status', peer.get_status)(now)
             # Physical SD uses lowercase states (idle/listing/importing),
             # unlike the job FSM. Preserve the strict busy/type checks and
             # compare their documented idle names without letter-case bias.

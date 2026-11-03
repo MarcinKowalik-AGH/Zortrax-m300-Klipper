@@ -22,6 +22,12 @@ PAGES = {'models':'0x0801c690','browser':'0x0801c690',
          'maintenance':'0x0801c958','material':'0x0801cdd8',
          'material_status':'0x0801cdd8','settings':'0x0801d3bc',
          'information':'0x0801dc08','help':'0x0801de00',
+         'setting_light_mode':'0x0801d55c','setting_sound':'0x0801d72c',
+         'setting_sleep_mode':'0x0801d908','setting_language':'0x0801dab4',
+         'setting_sort_mode':'0x0801c4f4',
+         'info_firmware':'0x0801dc08','info_printer':'0x0801dfdc',
+         'info_model':'0x0801dfdc','info_hardware':'0x0801dfdc',
+         'info_serial':'0x0801dfdc','info_time':'0x0801dfdc',
          'calibration':'0x0801ca28','motion_jog':'0x0801cb24',
          'motion_status':'0x0801c958',
          'stock_atlas':'0x0801dc08','stock_detail':'0x0801dc08'}
@@ -78,6 +84,9 @@ class OEMGraphics:
 def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                 calibration=None, filament=None, job=None):
     """Return OEM image DESCRIPTOR, never actions. All inputs are read-only snapshots."""
+    if (menu_page in ('settings', 'information', 'help') or
+            menu_page.startswith(('setting_', 'info_'))):
+        return PAGES.get(menu_page)
     calibration=calibration or {}
     filament=filament or {}
     job=job or {}

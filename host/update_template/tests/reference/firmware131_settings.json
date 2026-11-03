@@ -1,0 +1,814 @@
+{
+  "source_sha256": "11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75",
+  "verified_instructions": 27982,
+  "callbacks": [
+    {
+      "setting": "light_mode",
+      "label": "Dynamic",
+      "callback": "0x8014e70",
+      "record": 1,
+      "stored_value": 0,
+      "rgb": [
+        [
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "setting": "light_mode",
+      "label": "White",
+      "callback": "0x8014eb0",
+      "record": 1,
+      "stored_value": 1,
+      "rgb": [
+        [
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "setting": "light_mode",
+      "label": "Disabled",
+      "callback": "0x8014e30",
+      "record": 1,
+      "stored_value": 2,
+      "rgb": [
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "setting": "sound",
+      "label": "Enabled",
+      "callback": "0x80148b8",
+      "record": 2,
+      "stored_value": 1,
+      "rgb": []
+    },
+    {
+      "setting": "sound",
+      "label": "Disabled",
+      "callback": "0x8014894",
+      "record": 2,
+      "stored_value": 0,
+      "rgb": []
+    },
+    {
+      "setting": "sleep_mode",
+      "label": "Enabled",
+      "callback": "0x8015748",
+      "record": 4,
+      "stored_value": 1,
+      "rgb": []
+    },
+    {
+      "setting": "sleep_mode",
+      "label": "Disabled",
+      "callback": "0x8015714",
+      "record": 4,
+      "stored_value": 0,
+      "rgb": []
+    },
+    {
+      "setting": "sort_mode",
+      "label": "Date",
+      "callback": "0x8015020",
+      "record": 2,
+      "stored_value": 0,
+      "rgb": []
+    },
+    {
+      "setting": "sort_mode",
+      "label": "Name",
+      "callback": "0x801502a",
+      "record": 2,
+      "stored_value": 16,
+      "rgb": []
+    },
+    {
+      "setting": "sort_mode",
+      "label": "Case-sensitive name",
+      "callback": "0x8015034",
+      "record": 2,
+      "stored_value": 32,
+      "rgb": []
+    },
+    {
+      "setting": "sort_mode",
+      "label": "File size",
+      "callback": "0x801503e",
+      "record": 2,
+      "stored_value": 48,
+      "rgb": []
+    }
+  ],
+  "frames": [
+    {
+      "page": "settings",
+      "labels": [
+        "Back",
+        "Light",
+        "Buzzer",
+        "Sleep Mode",
+        "Language"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d3bc",
+      "sha256": "56b17df5481b5de765d551b545c1eb9f015b462104507225e04c093a6e3da79e"
+    },
+    {
+      "page": "settings",
+      "labels": [
+        "Back",
+        "Light",
+        "Buzzer",
+        "Sleep Mode",
+        "Language"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d3bc",
+      "sha256": "ce827981c6ecf1b15fee7e7fa9ebef41654c2ff7e4c208c0d043935f0bb626bc"
+    },
+    {
+      "page": "settings",
+      "labels": [
+        "Back",
+        "Light",
+        "Buzzer",
+        "Sleep Mode",
+        "Language"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d3bc",
+      "sha256": "dc86cdc40e391b6be9588f7a381d66704f29743f74926b2a50e62f7d171a2254"
+    },
+    {
+      "page": "settings",
+      "labels": [
+        "Back",
+        "Light",
+        "Buzzer",
+        "Sleep Mode",
+        "Language"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801d3bc",
+      "sha256": "b591b3c86a8020ee7c674cb2d41d721076efb487428b4da7f209d34fb63478aa"
+    },
+    {
+      "page": "information",
+      "labels": [
+        "Back",
+        "Firmware version",
+        "Printer information",
+        "Help"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801dc08",
+      "sha256": "6f393ae29ab4f503663299fdbef10689594436020d38cd41184ed76d0dc38a76"
+    },
+    {
+      "page": "information",
+      "labels": [
+        "Back",
+        "Firmware version",
+        "Printer information",
+        "Help"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801dc08",
+      "sha256": "3672fad6fb17baf346a47cc2f0e0f5827b64fd8e956adcbd48be59a0783a2e0a"
+    },
+    {
+      "page": "information",
+      "labels": [
+        "Back",
+        "Firmware version",
+        "Printer information",
+        "Help"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801dc08",
+      "sha256": "02b51dabb5c7c67314944f2f7649695d137a48ac305fec49d9997739068a03d7"
+    },
+    {
+      "page": "information",
+      "labels": [
+        "Back",
+        "Firmware version",
+        "Printer information",
+        "Help"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801dc08",
+      "sha256": "39b44b10b44a2473debd2f7b0c7d9c372ad5b12f1f5eb8b151cbc9ba7cddde09"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d55c",
+      "sha256": "6cca8adcd13532166d7caabd98e1568079f274cd0c9dcd0f1044bff343c0e5dd"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d55c",
+      "sha256": "1b521cf72f33b30b492b0178265fe59e4aa307ed7a3e3fb9fda78aad7dfe0422"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d55c",
+      "sha256": "4bc583ea60dde1734313a6e1628dbcfb06038c7d88fc213c0671da5d03cb72b4"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801d55c",
+      "sha256": "1d0c68fba5050095aab99d89470c67e45d9b35f0e7c8489106613b911a0a23d9"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d55c",
+      "sha256": "6cca8adcd13532166d7caabd98e1568079f274cd0c9dcd0f1044bff343c0e5dd"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d55c",
+      "sha256": "1b521cf72f33b30b492b0178265fe59e4aa307ed7a3e3fb9fda78aad7dfe0422"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d55c",
+      "sha256": "4bc583ea60dde1734313a6e1628dbcfb06038c7d88fc213c0671da5d03cb72b4"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801d55c",
+      "sha256": "1d0c68fba5050095aab99d89470c67e45d9b35f0e7c8489106613b911a0a23d9"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d55c",
+      "sha256": "6cca8adcd13532166d7caabd98e1568079f274cd0c9dcd0f1044bff343c0e5dd"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d55c",
+      "sha256": "1b521cf72f33b30b492b0178265fe59e4aa307ed7a3e3fb9fda78aad7dfe0422"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d55c",
+      "sha256": "4bc583ea60dde1734313a6e1628dbcfb06038c7d88fc213c0671da5d03cb72b4"
+    },
+    {
+      "page": "setting_light_mode",
+      "labels": [
+        "Back",
+        "Dynamic lights",
+        "White light",
+        "Disable lights",
+        "Turn lights on (sleep mode)"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801d55c",
+      "sha256": "1d0c68fba5050095aab99d89470c67e45d9b35f0e7c8489106613b911a0a23d9"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d72c",
+      "sha256": "129380e3acc6357417f2b2728faa8bef802bb944f86c93d17b26560a4c4f0b27"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d72c",
+      "sha256": "a8dbd3d16119ae65dfe92330cc017598a04841a6970f0aa7045b77dd432e178e"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d72c",
+      "sha256": "081968a4e5696bde5dc80d634b906d0ddb55f8ed6c466bff0e3644ccb7a7b6d6"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d72c",
+      "sha256": "129380e3acc6357417f2b2728faa8bef802bb944f86c93d17b26560a4c4f0b27"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d72c",
+      "sha256": "a8dbd3d16119ae65dfe92330cc017598a04841a6970f0aa7045b77dd432e178e"
+    },
+    {
+      "page": "setting_sound",
+      "labels": [
+        "Back",
+        "Enable buzzer",
+        "Disable buzzer"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d72c",
+      "sha256": "081968a4e5696bde5dc80d634b906d0ddb55f8ed6c466bff0e3644ccb7a7b6d6"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d908",
+      "sha256": "a5fb2f4d40a1038eab44337b157d1a0d9ebbf58ff1280dcbc331801f4f8878df"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d908",
+      "sha256": "a0b89512417a5f7591980061b3b6900c9ffd8d391d0bf5bbd8206959adc22afa"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d908",
+      "sha256": "4289fa1646a7ce46426cfb275ff13f5d22a7202e0667932ca535ffb0ad9d0253"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801d908",
+      "sha256": "a5fb2f4d40a1038eab44337b157d1a0d9ebbf58ff1280dcbc331801f4f8878df"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801d908",
+      "sha256": "a0b89512417a5f7591980061b3b6900c9ffd8d391d0bf5bbd8206959adc22afa"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "labels": [
+        "Back",
+        "Enable Sleep Mode",
+        "Disable Sleep Mode"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801d908",
+      "sha256": "4289fa1646a7ce46426cfb275ff13f5d22a7202e0667932ca535ffb0ad9d0253"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801c4f4",
+      "sha256": "529b1fc0115cdce475d6ed8ac4041935432c4db633563212f3fb87767610425b"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801c4f4",
+      "sha256": "fdceb496fb9d249eb7482b55b258b813e5b6cbc43542b47b0db5937060843808"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801c4f4",
+      "sha256": "24bb0ae4507395cb1947d4188ef82bb7307f36c74ff3f524ae31241ad6a8b485"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801c4f4",
+      "sha256": "1de92325bebd649b726046775a40dbe7667a245b235bf5a6cda540767fe6b306"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 4,
+      "icon": "0x0801c4f4",
+      "sha256": "00666fea1cc5b3b85651f04e15fcd5c7825ddc459436509230bdbe7a1383eb43"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801c4f4",
+      "sha256": "529b1fc0115cdce475d6ed8ac4041935432c4db633563212f3fb87767610425b"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801c4f4",
+      "sha256": "fdceb496fb9d249eb7482b55b258b813e5b6cbc43542b47b0db5937060843808"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801c4f4",
+      "sha256": "24bb0ae4507395cb1947d4188ef82bb7307f36c74ff3f524ae31241ad6a8b485"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801c4f4",
+      "sha256": "1de92325bebd649b726046775a40dbe7667a245b235bf5a6cda540767fe6b306"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 4,
+      "icon": "0x0801c4f4",
+      "sha256": "00666fea1cc5b3b85651f04e15fcd5c7825ddc459436509230bdbe7a1383eb43"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801c4f4",
+      "sha256": "529b1fc0115cdce475d6ed8ac4041935432c4db633563212f3fb87767610425b"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801c4f4",
+      "sha256": "fdceb496fb9d249eb7482b55b258b813e5b6cbc43542b47b0db5937060843808"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801c4f4",
+      "sha256": "24bb0ae4507395cb1947d4188ef82bb7307f36c74ff3f524ae31241ad6a8b485"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801c4f4",
+      "sha256": "1de92325bebd649b726046775a40dbe7667a245b235bf5a6cda540767fe6b306"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 4,
+      "icon": "0x0801c4f4",
+      "sha256": "00666fea1cc5b3b85651f04e15fcd5c7825ddc459436509230bdbe7a1383eb43"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 0,
+      "icon": "0x0801c4f4",
+      "sha256": "529b1fc0115cdce475d6ed8ac4041935432c4db633563212f3fb87767610425b"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 1,
+      "icon": "0x0801c4f4",
+      "sha256": "fdceb496fb9d249eb7482b55b258b813e5b6cbc43542b47b0db5937060843808"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 2,
+      "icon": "0x0801c4f4",
+      "sha256": "24bb0ae4507395cb1947d4188ef82bb7307f36c74ff3f524ae31241ad6a8b485"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 3,
+      "icon": "0x0801c4f4",
+      "sha256": "1de92325bebd649b726046775a40dbe7667a245b235bf5a6cda540767fe6b306"
+    },
+    {
+      "page": "setting_sort_mode",
+      "labels": [
+        "Back",
+        "Date/time",
+        "File name",
+        "File name (case sensitive)",
+        "File size"
+      ],
+      "active": [],
+      "selected": 4,
+      "icon": "0x0801c4f4",
+      "sha256": "00666fea1cc5b3b85651f04e15fcd5c7825ddc459436509230bdbe7a1383eb43"
+    }
+  ]
+}

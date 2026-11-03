@@ -11,7 +11,7 @@ class BrowserError(ValueError):
     pass
 
 ALLOWED_EXTENSIONS = frozenset(('.gcode', '.gco', '.g', '.zcode'))
-SORTS = ('NAME', 'DATE', 'SIZE')
+SORTS = ('DATE', 'NAME', 'NAME_CASE', 'SIZE')
 
 
 def directory_parts(path):
@@ -79,13 +79,14 @@ class Catalog:
         if not isinstance(entries, (list, tuple)) or len(entries) > self.limit:
             raise BrowserError('directory entry count exceeded')
         material = tuple(EntryProof.from_dict(entry) for entry in entries)
-        if len(set(e.path.casefold() for e in material)) != len(material):
+        paths = [e.path.casefold() if source == 'sd' else e.path for e in material]
+        if len(set(paths)) != len(material):
             raise BrowserError('ambiguous duplicate paths')
         self.invalidate()
         self.source, self.directory, self.entries = source, directory, material
         return self.generation
 
-    def selected(self, generation, index, fresh):
+    def file_entry(self, generation, index):
         if type(generation) is not int or generation != self.generation or self.source is None:
             raise BrowserError('expired directory listing token')
         if type(index) is not int or not 0 <= index < len(self.entries):
@@ -93,6 +94,10 @@ class Catalog:
         old = self.entries[index]
         if old.is_dir:
             raise BrowserError('directory is not a printable file')
+        return old
+
+    def selected(self, generation, index, fresh):
+        old = self.file_entry(generation, index)
         if len(fresh) > self.limit:
             raise BrowserError('directory changed beyond entry limit')
         current = [EntryProof.from_dict(row) for row in fresh]

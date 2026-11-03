@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper R16.7
+# Zortrax M300 Classic — Klipper R16.8
 
-[Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/VALIDATION_R16_7.md)
+[Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/VALIDATION_R16_8.md)
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.7**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.8**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -26,36 +26,27 @@ Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Or
 
 ### Current implementation status
 
-R16.7 adds the original interactive Maintenance fan test: saved requests,
-independent upper/lower 0/150 toggles, original menu pixels and Back cleanup.
-Heat and held/finite platform actions share their English state with Fluidd.
-The existing R16.6 calibration, ordinary Z and material fixes are retained.
+R16.8 adds English Settings and Information to the OLED and Fluidd. It saves
+Light, Buzzer, Sleep mode and Models sorting choices, reads available printer
+data and directs Help to this repository. Sleep mode uses the existing OLED
+sleep sequence. The menu audit fixes Models listing and preview, preserves
+mandatory procedure instructions and removes large calibration data copies
+from ownership checks.
 
-Fan status reads one MCU snapshot instead of six. Rendering is cached, idle
-fan supervision does no periodic work, and native output/thermostat owners
-remain unchanged outside the test. See the measured host-only evaluation.
+Software evidence includes **288 host tests**, **9 repository contracts**,
+**14 actual Klippy FILEOUTPUT cases**, **174 original-renderer frames** and
+**20,002 turn vectors**. Physical validation is pending. The photographs above
+show the historical printer setup.
 
-The requested submenus use shared native owners and the same eleven Fluidd
-macros. Original dialog text/font/sprites are retained. Native motion, PID,
-sensors, calibrated E, factory Z selection and deliberate geometry remain
-under their existing owners. The full legacy OEM print/Z-code engine remains
-separately disabled.
-
-Software evidence: **258 host tests**, **9 repository contracts**, **13 actual
-Klippy FILEOUTPUT scenarios**, **122 original-renderer frames**, **20,002 turn
-vectors**, and executable original material/wizard/Z-reference traces. These
-are not physical printer acceptance. The photographs above remain historical
-operator evidence and retain their original supplied order.
-
-[Validation, confirmed differences and physical acceptance](docs/en/VALIDATION_R16_7.md)
+[Settings and Information](docs/en/SETTINGS_INFORMATION.md) · [Validation and performance](docs/en/VALIDATION_R16_8.md)
 
 ## Test release
 
-**MCU R14.5 + host R16.7**, pinned Klipper
+**MCU R14.5 + host R16.8**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Download `m300-r14_5-host-r16_7-test-<commit>` from a successful GitHub Actions
-run. It contains the verified `M300_HOST_R16_7_NORMAL_UI.zip`, build reports,
+Download `m300-r14_5-host-r16_8-test-<commit>` from a successful GitHub Actions
+run. It contains the verified `M300_HOST_R16_8_NORMAL_UI.zip`, build reports,
 provenance/checksums and a freshly compiled R14.5 application for older setups.
 An already installed R14.5 MCU can remain.
 

@@ -68,7 +68,15 @@ def main():
         extra = native_config.module.missing_macros(path.read_text(), existing)
         base += '\n' + native_config.convert_text(extra)
         existing.update(name.lower() for name, _ in native_config.blocks(extra)[1])
+    settings_script = (
+        'ZORTRAX_NATIVE_STATUS\nZORTRAX_SETTINGS\n'
+        'ZORTRAX_LIGHT MODE=WHITE\nZORTRAX_BUZZER STATE=DISABLED\n'
+        'ZORTRAX_SLEEP_MODE STATE=DISABLED\nZORTRAX_MODELS_SORT MODE=NAME_CASE\n'
+        'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
+        'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
+        'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n')
     cases=[
+        ('native_settings_information',settings_script,False,None),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
@@ -146,6 +154,18 @@ def main():
             assert process.returncode==0,(name,text[-3000:])
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
         assert 'Unknown command:' not in text, (name, 'undispatched G-code command', text[-4000:])
+        if name == 'native_settings_information':
+            views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
+                        if 'M300_SETTINGS ' in line]
+            view = views[-2]
+            assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',
+                                            sort_mode='NAME_CASE', language='EN'), view
+            displays = [json.loads(line.split('M300_DISPLAY ', 1)[1]) for line in text.splitlines()
+                        if 'M300_DISPLAY ' in line]
+            assert [d['sleep_enabled'] for d in displays] == [True, False, True], displays
+            assert view['information']['mcu_release'] == '0.13.14.5-FACTORY-Z-UART8'
+            assert 'M300_INFORMATION ' in text
+            assert 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper' in text
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)

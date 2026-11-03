@@ -1,6 +1,6 @@
-# R16.7 features and acceptance boundaries
+# R16.8 features and acceptance boundaries
 
-[Installation](INSTALL.md) · [Validation](VALIDATION_R16_7.md)
+[Installation](INSTALL.md) · [Validation](VALIDATION_R16_8.md)
 
 | Function | Owner / presentation | Evidence / boundary |
 |---|---|---|
@@ -15,14 +15,15 @@
 | Change during pause | Real native pause/file owner | 110 mm out / 150 mm in, one insertion confirmation, preserved pause and explicit Resume |
 | English interface | Shared presenter and NVM-facing language policy | Old saved PL/FR/DE/ES choices cannot alter runtime text; release documents are English only |
 | Original dialogs / sprites | Recovered text, 13-pixel font and existing sprite decoder | 110 original dialog frames plus 12 English fan-menu frames retained as evidence |
-| Sleep / OLED transport | Existing frame/ACK and dim/off/wake controllers | Existing regressions retained; no hidden action on wake |
+| Sleep mode / OLED transport | Existing frame/ACK and dim/off/wake controllers | Saved Enabled/Disabled choice uses the configured timing |
+| Settings and Information | Shared OLED and Fluidd menu | Persistent choices, actual available printer data and GitHub Help |
 | MCU supervision / offline cooling | Unchanged R14.5 code | Existing register-model and cooling tests |
 | Host startup recovery | Existing bounded lifecycle policy | One permitted recovery attempt; no automatic old motion/heater resume |
 | Full legacy OEM print / binary Z-code | Separate old M02 workflow | Remains unfinished and disabled; not enabled by these manual services |
 
 The first display remains the native Klipper status screen. The main groups
-remain Klipper, Zortrax M300 and Service / Tests. The two OEM submenus match
-the requested order. Change is available from paused Print status. Fluidd
+are Klipper, Zortrax M300 and Service / Tests. The Zortrax menu groups
+Models, Maintenance, Material, Settings and Information in that order. Change is available from paused Print status. Fluidd
 keeps Klipper / ZORTRAX M300 / TEST M300 categories and unrelated user settings.
 
 Existing 2 µs STEP, native XY profile, Z limits, E rotation distance, PID,
@@ -32,7 +33,7 @@ installer rule; other deliberate geometry, including Z315, is preserved.
 No additional general G1 velocity cap is introduced. FILEOUTPUT planning at
 300 mm/s and M220 150% does not measure physical F103 scheduling at that speed.
 
-258 host tests and 13 actual Klippy FILEOUTPUT scenarios support software
+288 host tests and 14 actual Klippy FILEOUTPUT scenarios support software
 integration. Electrical inputs and movement are modeled in the full procedure
-tests. Follow [the supervised acceptance sequence](VALIDATION_R16_7.md) for
+tests. Follow [the supervised acceptance sequence](VALIDATION_R16_8.md) for
 new contact homing, screw instructions, manual holds and material transport.

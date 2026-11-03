@@ -15,6 +15,8 @@ from .m300_oem_graphics import OEMGraphics, choose_icon
 from .m300_ui_labels import english_label
 from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
+from .m300_settings import PAGES as SETTINGS_PAGES
+from .m300_settings_ui import menu_frame
 
 
 class M300MenuUI:
@@ -143,9 +145,15 @@ class M300MenuUI:
         return next((view for view, frame in reversed(self._leveling_frames)
                      if frame == previous), None)
 
-    def maintenance_frame(self, panel_page, rows, selected, frame_type):
-        if panel_page != 'm04' or self.menu.page != 'fan_test' or len(rows) != 3:
+    def maintenance_frame(self, panel_page, rows, selected, frame_type, labels=None, sprite=None):
+        if panel_page != 'm04':
             return None
+        if self.menu.page in SETTINGS_PAGES:
+            settings = self.printer.lookup_object('m300_settings', None)
+            if settings is not None:
+                return menu_frame(tuple(labels or [r[0] for r in rows]),
+                    settings.active_rows(self.menu.page), selected, frame_type, sprite)
+        if self.menu.page != 'fan_test' or len(rows) != 3:return None
         upper=rows[1][0][len(FAN_LABELS[1])+1:]
         lower=rows[2][0][len(FAN_LABELS[2])+1:]
         note='Automatic upper-fan cooling' if upper=='(Cooling)' else ''
@@ -258,7 +266,7 @@ class M300MenuUI:
                 'oled_spi_owner':'m300_oled',
                 'encoder_owner':'m300_oled',
                 'action_owner':'m300_menu_and_existing_services',
-                'host_ui_revision':'0.13.16.7-OEM-MAINTENANCE',
+                'host_ui_revision':'0.13.16.8-SETTINGS-INFORMATION',
                 'operation_groups':['Klipper', 'Zortrax M300', 'Service / Tests'],
                 'menu_wrap':False,
                 'menu_reverse':self.oled.menu_reverse,

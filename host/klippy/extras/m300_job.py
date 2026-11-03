@@ -154,7 +154,7 @@ class M300Job:
                         and getattr(service, 'owner', None) is sd_owner
                         and getattr(service, 'owner_generation', None) == self.sd._generation):
                     continue
-                status = service.get_status(self.reactor.monotonic())
+                status = getattr(service, 'get_ownership_status', service.get_status)(self.reactor.monotonic())
                 if (not isinstance(status, dict) or status.get('busy') is not False
                         or not isinstance(status.get('state'), str) or not status['state'].strip()
                         or status['state'].upper() in ('FAULT', 'SLEEP', 'SLEEPING')):

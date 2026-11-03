@@ -18,7 +18,7 @@ def other_service(printer, names, now):
         if obj is None:
             continue
         try:
-            status = obj.get_status(now)
+            status = getattr(obj, 'get_ownership_status', obj.get_status)(now)
             if (not isinstance(status, dict) or status.get('busy') is not False
                     or not isinstance(status.get('state'), str) or not status['state'].strip()):
                 return name
@@ -57,6 +57,7 @@ class M300Maintenance:
         self._beep_until = 0.
         self._last_activity = self.reactor.monotonic()
         self._timer = self.reactor.register_timer(self._tick)
+        self.printer.register_event_handler('m300:setting_changed', self._setting_changed)
         for event, callback in (('klippy:connect', self._connect),
                                 ('klippy:ready', self._ready),
                                 ('klippy:shutdown', self._stop_lifecycle),
@@ -378,6 +379,15 @@ class M300Maintenance:
         nvm = self.printer.lookup_object('m300_nvm', None)
         return default if nvm is None else nvm.get_setting(name, default)
 
+    def _setting_changed(self, name, value):
+        if not self.ready:
+            return
+        if name == 'sound' and not value:
+            self._pin('m300_buzzer', 0)
+            self._beep_until = 0.
+        if name == 'light_mode':
+            self._indicators(self.reactor.monotonic())
+
     def _pin(self, name, value):
         output = self.printer.lookup_object('output_pin ' + name, None)
         if output is not None:
@@ -400,13 +410,22 @@ class M300Maintenance:
                     or status.get('native_heating') is True):
                 return rgb
         busy = self.is_busy()
+        stats = self.printer.lookup_object('print_stats', None)
+        if stats is not None:
+            try:
+                native_state = stats.get_status(now).get('state')
+                if native_state == 'error':
+                    return (1, 0, 0)
+                busy = busy or native_state in ('printing', 'paused')
+            except Exception:
+                return (1, 0, 0)
         for name in ('m300_job', 'm300_filament', 'm300_calibration',
-                     'm300_motion', 'm300_sd', 'm300_nvm'):
+                     'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans'):
             obj = self.job if name == 'm300_job' else self.printer.lookup_object(name, None)
             if obj is None:
                 continue
             try:
-                status = obj.get_status(now)
+                status = getattr(obj, 'get_ownership_status', obj.get_status)(now)
                 if (not isinstance(status, dict) or type(status.get('busy')) is not bool
                         or not isinstance(status.get('state'), str) or not status['state'].strip()):
                     return (1, 0, 0)
