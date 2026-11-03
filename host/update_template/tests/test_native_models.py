@@ -11,7 +11,7 @@ import unittest
 from payload.m300_binary import compile_m300
 from payload.m300_fat import _lfn_checksum
 from payload.m300_models import M300Models, ModelError
-from payload.m300_sd import M300SD, SDError
+from payload.m300_sd import M300SD, SDError, SNAPSHOT_BATCH_BYTES
 from test_settings_information import session, browser
 
 FIXTURES = json.loads((Path(__file__).parent / 'reference/models_zcode.json').read_text())
@@ -87,7 +87,7 @@ class CardImage:
                 self.before_read(args[0])
             self.sector = self.sectors.get(args[0], bytes(512))
             return {'data': b''}, 2
-        assert command == 'chunk' and count == 32
+        assert command == 'chunk' and 1 <= count <= 32
         return {'data': self.sector[offset:offset + count]}, 3
 
 
@@ -138,6 +138,73 @@ def prepare(h, source='sd', directory='', name='part.zcode', run=True):
 
 
 class ModelsTests(unittest.TestCase):
+    def test_card_import_fetches_only_the_last_sector_prefix(self):
+        for bits, file_sector in ((16, 50), (32, 546)):
+            with self.subTest(fat=bits), model_session(bits=bits) as h:
+                stream, metadata = h.card.get_snapshot('MODELS/bench.gcode')
+                with stream:
+                    self.assertEqual(stream.read(), h.image.text)
+                self.assertEqual(metadata['sha256'], hashlib.sha256(h.image.text).hexdigest())
+                chunks = []
+                for command, args in h.image.bus:
+                    if command == 'read':
+                        lba = args[0]
+                    elif command == 'chunk' and lba == file_sector:
+                        chunks.append(args[1:])
+                self.assertEqual(chunks, [(0, len(h.image.text))])
+                self.assertEqual([cmd for cmd, _ in h.image.bus].count('open'), 2)
+
+    def test_card_import_batches_full_sectors_and_keeps_exact_snapshot(self):
+        with model_session() as h:
+            # FAT16 fixture with a 129-sector file and a 33-byte tail.
+            data = bytes(range(256)) * (SNAPSHOT_BATCH_BYTES // 256) + bytes(range(33))
+            first_cluster = 5
+            first_lba = 49 + first_cluster - 2
+            fat = bytearray(h.image.sectors[1])
+            for offset in range(0, len(data), 512):
+                index = offset // 512
+                cluster = first_cluster + index
+                more = offset + 512 < len(data)
+                struct.pack_into('<H', fat, cluster * 2, cluster + 1 if more else 0xffff)
+                h.image.sectors[first_lba + index] = data[offset:offset + 512].ljust(512, b'\0')
+            h.image.sectors[1] = bytes(fat)
+            h.image.sectors[49] = file_rows('bench.gcode', b'BENCH   GCO',
+                                            first_cluster, data).ljust(512, b'\0')
+            writes = []
+
+            def submit(fn, *args):
+                if fn.__name__ == 'write':
+                    writes.append(len(args[0]))
+                return fn(*args)
+
+            h.card.executor = NS(submit=submit)
+            stream, metadata = h.card.get_snapshot('MODELS/bench.gcode')
+            with stream:
+                self.assertEqual(stream.read(), data)
+            self.assertEqual(metadata['sha256'], hashlib.sha256(data).hexdigest())
+            self.assertEqual(writes, [SNAPSHOT_BATCH_BYTES, 33])
+            self.assertEqual(h.card.bytes_copied, len(data))
+
+    def test_card_import_discards_snapshot_cancelled_during_local_write(self):
+        with model_session() as h:
+            created = []
+
+            def submit(fn, *args):
+                result = fn(*args)
+                if fn.__name__ == '_new_snapshot':
+                    created.append(Path(result[1]))
+                elif fn.__name__ == 'write':
+                    h.card.cancel()
+                return result
+
+            h.card.executor = NS(submit=submit)
+            with self.assertRaisesRegex(SDError, 'cancelled'):
+                h.card.get_snapshot('MODELS/bench.gcode')
+            self.assertEqual(len(created), 1)
+            self.assertFalse(created[0].exists())
+            self.assertFalse(h.card.busy)
+            self.assertIsNone(h.vsd.current_file)
+
     def test_oled_models_opens_card_root_and_runs_gcode_from_folder(self):
         for bits in (16, 32):
             with self.subTest(fat=bits), model_session(bits=bits) as h:

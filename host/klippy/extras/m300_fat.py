@@ -63,10 +63,11 @@ def _valid_name(name):
 
 class FATVolume:
     def __init__(self, read_sector, block_count, max_directory_entries=4096,
-                 max_chain_clusters=262144):
+                 max_chain_clusters=262144, *, read_prefix=None):
         if isinstance(block_count, bool) or not 1 <= int(block_count) <= 0xffffffff:
             raise FATError('invalid SD block count')
         self.read_sector = read_sector
+        self.read_prefix = read_prefix
         self.blocks = int(block_count)
         self.max_entries = max_directory_entries
         self.max_chain = max_chain_clusters
@@ -152,18 +153,23 @@ class FATVolume:
                 raise FATError('partition type disagrees with FAT32 geometry')
         self.volume_id = hashlib.sha256(first).hexdigest()
 
-    def _raw(self, lba):
+    def _raw(self, lba, size=512):
         if isinstance(lba, bool) or not 0 <= lba < self.blocks:
             raise FATError('sector outside card')
-        block = bytes(self.read_sector(lba))
-        if len(block) != 512:
+        expected = 512
+        if size < 512 and self.read_prefix is not None:
+            expected = size
+            block = bytes(self.read_prefix(lba, size))
+        else:
+            block = bytes(self.read_sector(lba))
+        if len(block) != expected:
             raise FATError('short sector')
-        return block
+        return block[:size]
 
-    def _sector(self, lba):
+    def _sector(self, lba, size=512):
         if not self.base <= lba < self.base + self.total:
             raise FATError('sector outside FAT partition')
-        return self._raw(lba)
+        return self._raw(lba, size)
 
     def _cluster(self, cluster):
         if not 2 <= cluster < self.clusters + 2:
@@ -327,7 +333,7 @@ class FATVolume:
             for offset in range(self.spc):
                 if not remaining:
                     break
-                data = self._sector(lba + offset)[:remaining]
+                data = self._sector(lba + offset, min(512, remaining))
                 remaining -= len(data)
                 yield data
             if not remaining:

@@ -18,6 +18,7 @@ from .m300_fat import FATVolume, FATError, path_parts
 
 DONE = 'm300_sd_done session=%u token=%u error=%c blocks=%u data=%*s'
 DATA = 'm300_sd_data session=%u token=%u offset=%hu data=%*s'
+SNAPSHOT_BATCH_BYTES = 64 * 1024
 ERRORS = {1: 'card deadline', 2: 'SPI timeout', 3: 'card command response',
           4: 'card data token', 5: 'sector/register CRC16', 6: 'card capacity',
           7: 'stale/invalid card session', 8: 'card busy', 9: 'out-of-range read'}
@@ -31,7 +32,7 @@ def _new_snapshot():
     fd, path = tempfile.mkstemp(prefix='m300_sd_', suffix='.snapshot')
     try:
         os.fchmod(fd, 0o400)
-        return os.fdopen(fd, 'wb', buffering=65536), path
+        return os.fdopen(fd, 'wb', buffering=SNAPSHOT_BATCH_BYTES), path
     except Exception:
         os.close(fd)
         os.unlink(path)
@@ -277,19 +278,32 @@ class M300SD:
         self.info = {'cid': data[:16].hex(), 'csd': data[16:].hex(), 'blocks': blocks}
         return dict(self.info)
 
-    def _read_sector(self, lba):
+    def _read_sector(self, lba, size=512):
         self._checkpoint()
         if self.info is None or not 0 <= lba < self.info['blocks']:
             raise SDError('SD sector outside card')
+        if not 1 <= size <= 512:
+            raise SDError('invalid SD sector prefix size')
         response, read_token = self._request('read', [lba])
         if response.get('data') not in (None, b'', ''):
             raise SDError('unexpected read-completion payload')
+        # The MCU checks the whole 512-byte sector CRC before any chunk is
+        # available. Only transfer the bytes the file uses from its last sector.
         result = bytearray()
-        for offset in range(0, 512, 32):
-            part, _ = self._request('chunk', [read_token, offset, 32],
-                                    offset=offset, count=32)
+        for offset in range(0, size, 32):
+            count = min(32, size - offset)
+            part, _ = self._request('chunk', [read_token, offset, count],
+                                    offset=offset, count=count)
             result.extend(part['data'])
         return bytes(result)
+
+    def _write_batch(self, writer, digest, batch):
+        self._checkpoint()
+        if self.executor.submit(writer.write, batch) != len(batch):
+            raise SDError('incomplete local SD snapshot write')
+        self._checkpoint()
+        digest.update(batch)
+        batch.clear()
 
     def _close_silent(self):
         if self.connected and self.session and not self.printer.is_shutdown():
@@ -356,7 +370,8 @@ class M300SD:
         error = None
         try:
             before_info = self._open()
-            volume = FATVolume(self._read_sector, before_info['blocks'])
+            volume = FATVolume(self._read_sector, before_info['blocks'],
+                               read_prefix=self._read_sector)
             entry = volume.resolve(path)
             if expected is not None and (expected['cid'] != before_info['cid']
                     or expected['fingerprint'] != entry.fingerprint
@@ -365,13 +380,15 @@ class M300SD:
             writer, temporary = self.executor.submit(_new_snapshot)
             self._checkpoint()
             digest = hashlib.sha256()
+            batch = bytearray()
             for data in volume.iter_file(entry, self.max_file_bytes):
                 self._checkpoint()
-                if self.executor.submit(writer.write, data) != len(data):
-                    raise SDError('incomplete local SD snapshot write')
-                self._checkpoint()
-                digest.update(data)
+                batch.extend(data)
                 self.bytes_copied += len(data)
+                if len(batch) >= SNAPSHOT_BATCH_BYTES:
+                    self._write_batch(writer, digest, batch)
+            if batch:
+                self._write_batch(writer, digest, batch)
             self._checkpoint()
             # Fresh card initialization and uncached metadata reads detect
             # replacement and obvious mutations; they do not promise a

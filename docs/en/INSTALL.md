@@ -1,28 +1,33 @@
-# Install the R16.10 test release
+# Install the R16.11 test release
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port. It accepts
-recognized R15.3 and subsequent published baselines, including R16.9. Unknown
-local runtime edits are refused. MCU R14.5 is required for factory Z detection;
-an already installed R14.5 **does not need flashing** for this update.
+This host update is for M300 Classic with the native Klipper port and MCU R14.5.
+It accepts recognized R15.3 through R16.10 baselines, including the browser
+modules from the M300 TEST01 v0.13.2 R2 install archive. The installer checks
+the existing module hashes before it writes anything.
 
-## Copy and verify
+## Stage and verify on Orange Pi
 
-Extract M300_HOST_R16_10_NORMAL_UI.zip into Downloads on the Mac. Run:
+Clone the R16.11 branch into a separate directory on the Orange Pi. Run the
+following from the Orange Pi shell.
 
 ```bash
-scp -r "$HOME/Downloads/M300_HOST_R16_10_NORMAL_UI" klipper@192.168.4.157:/home/klipper/
-ssh klipper@192.168.4.157
-cd ~/M300_HOST_R16_10_NORMAL_UI
-python3 VERIFY.py
-python3 -m unittest discover -s tests -v
+git clone --branch r16.11 --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-r16.11-src" &&
+cd "$HOME/m300-r16.11-src" &&
+python3 ci/stage_host_update.py &&
+cd .ci/host-update &&
+python3 VERIFY.py &&
+klipper_pid=$(systemctl show klipper.service -p MainPID --value) &&
+[ "$klipper_pid" -gt 0 ] &&
+IFS= read -r -d '' klipper_python < "/proc/$klipper_pid/cmdline" &&
+"$klipper_python" -m unittest discover -s tests &&
 python3 install.py \
   --root "$HOME/m300-test01-0.13.2/klipper" \
   --config "$HOME/printer_data/config/printer.cfg"
 ```
 
-Expect package PASS, **319 tests OK** and PLAN_M300_R16_10. The plan is read
+Expect package PASS, **322 tests OK** and PLAN_M300_R16_11. The plan is read
 only. Inspect its file list before applying. Calibrated E, both saved PID
 blocks, sensor includes, deliberate motion limits and usable geometry remain.
 The HW05 factory profile still selects effective Z400 without rewriting the
@@ -31,15 +36,17 @@ factory record. Old saved language values remain readable; the UI uses English.
 ## Apply while the printer is idle
 
 ```bash
-sudo systemctl stop klipper.service
-python3 install.py \
-  --root "$HOME/m300-test01-0.13.2/klipper" \
-  --config "$HOME/printer_data/config/printer.cfg" \
-  --apply
-sudo systemctl start klipper.service
+sudo systemctl stop klipper.service && {
+  python3 install.py \
+    --root "$HOME/m300-test01-0.13.2/klipper" \
+    --config "$HOME/printer_data/config/printer.cfg" \
+    --apply
+  update_status=$?
+  sudo systemctl start klipper.service && test "$update_status" -eq 0
+}
 ```
 
-Expect INSTALLED_M300_R16_10 and retain the exact RECEIPT.json path. Installation
+Expect INSTALLED_M300_R16_11 and retain the exact RECEIPT.json path. Installation
 does not run a motion/heating test. After Klipper reports Ready, update Fluidd:
 
 ```bash
@@ -72,7 +79,7 @@ ZORTRAX_INFO REFRESH=0
 QUERY_PROBE
 ```
 
-Confirm Ready, the real HW05/Z400 identity, normal native control, R16.10 UI,
+Confirm Ready, the real HW05/Z400 identity, normal native control, host R16.11,
 fan/maintenance/procedure revisions and an open PC7 contact with clearance.
 Motion and calibration retain their R16.6 component revisions.
 The link lifecycle revision remains 0.13.16.2-LIFECYCLE-RECONNECT; this is normal.
@@ -80,6 +87,12 @@ Targets are calibration/Heat 260°C, Load/Unload 240°C and ordinary Z home at
 least 180°C. A hotter pre-existing target during ordinary homing is retained.
 
 Follow the supervised sequence in [the validation report](PRINT_CONTEXT.md).
+
+For a read-only SD import check on a printer with a qualified SD configuration,
+run `ZORTRAX_SD_STATUS`, browse to a small G-code file under **Models**, and
+open its preview. Check that the model becomes ready to start and cancel the
+preview. Repeat with a larger file and check that the byte count reaches its
+file size. The import finishes before the print can start.
 The first procedure checks are Heat and bounded platform movement, then
 Load/Unload, the interactive Fan test, ordinary Z reference and Autocalibration. Change requires an
 already paused native print. Do not treat generic PROBE_ACCURACY as the OEM

@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper R16.10
+# Zortrax M300 Classic — Klipper R16.11
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.10**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). Current test baseline: **MCU R14.5 + Host R16.11**. This is an active integration/test project, **not** a fully OEM-equivalent or physically certified release.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -27,6 +27,8 @@ Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Or
 ### Current implementation status
 
 R16.10 adds contextual OLED PRINTING, PAUSE MENU and PRINTING DONE screens.
+R16.11 batches local SD imports and transfers only the used bytes of the final
+file sector from the MCU to the host.
 A 10-second hold pauses the native print or reprints the verified completed
 copy after the model has been removed. OLED and Fluidd share the native print
 state, including the existing material change procedure. The R16.9 card reader
@@ -36,13 +38,12 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Test release
 
-**MCU R14.5 + host R16.10**, pinned Klipper
+**MCU R14.5 + host R16.11**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
-Download `m300-r14_5-host-r16_10-test-<commit>` from a successful GitHub Actions
-run. It contains the verified `M300_HOST_R16_10_NORMAL_UI.zip`, build reports,
-provenance/checksums and a freshly compiled R14.5 application for older setups.
-An already installed R14.5 MCU can remain.
+Stage the host update directly on Orange Pi from the `r16.11` branch. For
+build reports and the matching R14.5 MCU image, use the
+`m300-r14_5-host-r16_11-test-<commit>` artifact from GitHub Actions.
 
 [Install on Orange Pi](docs/en/INSTALL.md). After Ready run
 `python3 setup_fluidd.py --apply` and refresh Fluidd. No procedure runs during
