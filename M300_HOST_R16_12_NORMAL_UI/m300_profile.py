@@ -1,6 +1,7 @@
 """R16 normal-operation configuration migration; keeps calibration text intact."""
 from pathlib import Path
 import glob
+import hashlib
 import math
 import re
 
@@ -78,7 +79,7 @@ def migrate_idle(block):
     return block
 
 
-def convert_text(text):
+def convert_text(text, stock_xy=None):
     prefix, chunks, saved = blocks(text)
     output = [prefix]
     for section, block in chunks:
@@ -96,6 +97,11 @@ def convert_text(text):
                 renamed = 'gcode_macro ' + MACRO_RENAMES[old]
                 block = block.replace('[' + section + ']', '[' + renamed + ']', 1)
                 section = renamed
+        if stock_xy is not None and section == 'gcode_macro TEST_ZORTRAX_XY':
+            _, commands = gcode_body(block)
+            old_digest = hashlib.sha256('\n'.join(commands).encode()).hexdigest()
+            if old_digest == 'b6cca4397430d4c0dafd97e51f4383cd467d2c689acec5defd54baf97b59b910':
+                block = stock_xy
         if section == 'm300_motion' and option(block, 'mode') != 'native':
             # The complete old text stays in the installer's rollback receipt.
             block = ('[m300_motion]\nmode: native\nhome_xy: ' +
@@ -177,6 +183,9 @@ def convert_text(text):
                      'description: Change material in a paused native print; explicit Resume\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=CHANGE '
                      '{% if params.TEMP is defined %}TEMP={params.TEMP|float}{% endif %}\n\n')
+        elif section in ('gcode_macro ZORTRAX_PLATFORM_UP', 'gcode_macro ZORTRAX_PLATFORM_DOWN'):
+            block = re.sub(r'SPEED=\{params\.SPEED\s*\|\s*default\(1\)\s*\|\s*float\}',
+                           "{% if 'SPEED' in params %}SPEED={params['SPEED']|float}{% endif %}", block)
         elif section in ('gcode_macro ZORTRAX_LOAD', 'gcode_macro ZORTRAX_UNLOAD'):
             # Existing wrappers live in included files on installed R16.x.
             # Update the TEMP default while preserving their other commands.

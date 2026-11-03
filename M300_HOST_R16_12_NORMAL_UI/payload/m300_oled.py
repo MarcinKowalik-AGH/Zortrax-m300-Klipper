@@ -257,6 +257,8 @@ class M300OLED:
         received_ui = self.printer.lookup_object('m300_menu_ui', None)
         receipt = getattr(received_ui, 'leveling_receipt', None)
         received_leveling = receipt(self.stream) if receipt is not None else None
+        brightness_receipt = getattr(received_ui, 'brightness_receipt', None)
+        received_brightness = brightness_receipt(self.stream) if brightness_receipt else None
         platform_receipt=getattr(received_ui,'platform_receipt',None)
         received_platform=platform_receipt(self.stream) if platform_receipt is not None else None
         # Native serialhdl records this before dispatching its handler. A
@@ -360,8 +362,15 @@ class M300OLED:
             leveling_panel = getattr(received_ui, 'leveling_panel', None)
             if leveling_panel is not None and leveling_panel(events, received_leveling, now):
                 return
+            brightness_selection = getattr(received_ui, 'brightness_selection', None)
+            brightness = (self.page == 'm04' and brightness_selection is not None
+                          and brightness_selection() is not None)
             if events['longs']:
-                self._show_status()
+                if brightness:
+                    menu._navigate('settings', remember=False)
+                    self.selection = 0
+                else:
+                    self._show_status()
             elif self.message:
                 # A notice is modal. Rotation cannot select the menu behind
                 # it, including when rotation and click arrive in one packet.
@@ -386,7 +395,8 @@ class M300OLED:
                     count = len(presented_actions) if presented_actions is not None else len(rows)
                     delta = -events['delta'] if self.menu_reverse else events['delta']
                     self.selection = max(0, min(count - 1, self.selection + delta))
-                if events['shorts']:
+                if events['shorts'] and (not brightness or (
+                        not events['delta'] and received_brightness == (menu.generation, self.selection))):
                     # Coalesced clicks never cascade through several menus.
                     self._select(now, presented_actions=presented_actions)
             self.render_at = 0.
@@ -964,6 +974,11 @@ class M300OLED:
                 menu.page == 'fan_test' or
                 (menu.page.startswith('setting_') and action and action[0] == 'set'))
             self.page, self.selection = 'm04', previous_selection if in_place else 0
+            if previous_page != menu.page:
+                ui = self.printer.lookup_object('m300_menu_ui', None)
+                brightness_selection = getattr(ui, 'brightness_selection', None)
+                if brightness_selection is not None:
+                    self.selection = brightness_selection() or 0
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None

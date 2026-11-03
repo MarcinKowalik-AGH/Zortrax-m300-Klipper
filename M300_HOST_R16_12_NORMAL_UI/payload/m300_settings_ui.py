@@ -47,6 +47,22 @@ def menu_frame(labels, active, selected, frame_type, sprite=None):
     return frame.wire_bytes()
 
 
+@lru_cache(maxsize=64)
+def brightness_frame(title, level, back, frame_type):
+    frame = frame_type()
+    draw_text(frame, 16, 0, title)
+    draw_text(frame, 16, 14, 'Turn to adjust')
+    draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to save')
+    draw_text(frame, 16, 40, 'Hold to go back')
+    for segment in range(16):
+        left = 16 + 14 * segment
+        for x in range(left, left + 12):
+            for y in range(55, 63):
+                if segment < level or x in (left, left + 11) or y in (55, 62):
+                    frame.pixel(x, y, 15 if segment < level else 5)
+    return frame.wire_bytes()
+
+
 def notice_frame(title, message, frame_type):
     rows = ['Back', title]
     for _ in range(2):

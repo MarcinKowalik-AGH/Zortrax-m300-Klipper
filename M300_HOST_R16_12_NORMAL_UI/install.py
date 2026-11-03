@@ -145,10 +145,12 @@ def plan(root, config):
     validate_settings(settings_data)
     desired[settings] = settings_data
     tree = profile.read_tree(config)
+    test_config = (HERE / 'payload/m300_tests.cfg').read_text()
+    stock_xy = dict(profile.blocks(test_config)[1])['gcode_macro TEST_ZORTRAX_XY']
     for path, text in tree.items():
         if not path.is_relative_to(config.parent):
             raise ValueError('Configuration include outside printer config directory: ' + str(path))
-        desired[path] = profile.convert_text(text).encode()
+        desired[path] = profile.convert_text(text, stock_xy).encode()
     existing = {name.lower() for path in tree for name, _ in
                 profile.blocks(desired[path].decode())[1]}
     additions = []
@@ -156,7 +158,7 @@ def plan(root, config):
         target = config.parent / name
         if target not in desired:
             if target.exists():
-                desired[target] = profile.convert_text(target.read_text()).encode()
+                desired[target] = profile.convert_text(target.read_text(), stock_xy).encode()
             else:
                 text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
                 desired[target] = profile.convert_text(text).encode()

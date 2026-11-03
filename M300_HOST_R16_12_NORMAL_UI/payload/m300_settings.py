@@ -9,9 +9,10 @@ import hashlib
 import json
 import math
 import os
+import re
 import urllib.request
 
-from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS
+from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS, COSMETIC_SETTINGS
 
 PROJECT_URL = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
 HOST_VERSION = 'R16.12'
@@ -218,6 +219,34 @@ class M300Settings:
         if menu is not None:
             menu.present_information_page(page, now)
 
+    def brightness_prompt(self, keys):
+        return ('M300_BRIGHTNESS %s %d' % (key, choice_value(self.nvm, key)) for key in keys)
+
+    def try_web_script(self, script):
+        # A single allowlisted UI command may run while native G28 holds the
+        # G-code mutex. Never dispatch a macro or general G-code here.
+        if not self.ready or not self.gcode.get_mutex().test() or '\n' in script or '\r' in script:
+            return False
+        command = script.strip()
+        if command == 'ZORTRAX_SETTINGS':
+            self.show('settings')
+            return True
+        match = re.fullmatch(r'ZORTRAX_UI_SETTING NAME=([a-z_]+) VALUE=([A-Z0-9]+)', command)
+        if match and match[1] in COSMETIC_SETTINGS:
+            gcmd = self.gcode.create_gcode_command('ZORTRAX_UI_SETTING', command,
+                {'NAME': match[1], 'VALUE': match[2]})
+            self.cmd_setting(gcmd)
+            return True
+        match = re.fullmatch(r'ZORTRAX_UI_ACTION VIEW=([a-f0-9]{24}) INDEX=([0-9]{1,3})', command)
+        if match and (self.page == 'settings' or self.page.startswith('setting_')):
+            index = int(match[2])
+            _, rows = self._web_rows(self.reactor.monotonic())
+            action = rows[index][1] if index < len(rows) else None
+            if action and (action[0] == 'page' or action[1] in COSMETIC_SETTINGS):
+                self.action(match[1], index)
+                return True
+        return False
+
     def _web_rows(self, now):
         if self.page == 'klipper':
             title, rows = WEB_MENU_ROWS[self.page]
@@ -254,6 +283,9 @@ class M300Settings:
             label=label+(' <' if index in active else '')
             if action is None:emit('prompt_text '+label.replace('|','/'))
             else:emit('prompt_button %s|ZORTRAX_UI_ACTION VIEW=%s INDEX=%d|primary'%(label,token,index))
+        if self.page.startswith('setting_') and self.page[8:] in BRIGHTNESS_KEYS:
+            for line in self.brightness_prompt((self.page[8:],)):
+                emit('prompt_text ' + line)
         if self.page == 'help':
             emit('prompt_text ' + PROJECT_URL)
         if self.page == 'info_printer':

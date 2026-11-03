@@ -317,6 +317,10 @@ class M300Procedures:
             color = 'error' if verb == 'CANCEL' else 'primary'
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
                        (self._action_label(view, verb), view['view_id'], verb, color))
+        settings = self.printer.lookup_object('m300_settings', None)
+        if view['busy'] and settings is not None:
+            for line in settings.brightness_prompt(('oled_brightness', 'led_brightness')):
+                self._emit('prompt_text ' + line)
         if self.live and not (view.get('leveling_screen') or view.get('maintenance_screen')):
             self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
         self._emit('prompt_show')
@@ -357,7 +361,9 @@ class M300Procedures:
                     # same current owner/phase, including screw pictograms.
                     menu = self.printer.lookup_object('m300_menu', None)
                     oled = self.printer.lookup_object('m300_oled', None)
+                    ui = self.printer.lookup_object('m300_menu_ui', None)
                     if (menu is not None and oled is not None
+                            and not getattr(ui, 'leveling_settings', False)
                             and (menu.page != 'procedure' or oled.page != 'm04')):
                         menu._navigate('procedure')
                         oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
