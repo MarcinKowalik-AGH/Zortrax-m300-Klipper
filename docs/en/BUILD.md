@@ -67,6 +67,10 @@ The counter closes the pulse timer's internal gate at the programmed
 count. The output returns to software GPIO for other blocks. The
 existing motion guard owns shutdown and pin recovery.
 
+At boot the firmware checks both internal routes with STEP disconnected.
+The log must show `M300 XY STEP timer startup check axes=3` before a
+motion test. A failed internal route keeps both axes on software STEP.
+
 The timer path handles non-inverted X/Y blocks of at least 32 steps,
 with a constant period of 352 to 720 core ticks and the 2 µs STEP
 setting. It reanchors each new hardware block to Klipper's planned

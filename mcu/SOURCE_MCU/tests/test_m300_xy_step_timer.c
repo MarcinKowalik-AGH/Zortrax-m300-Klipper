@@ -53,7 +53,7 @@ struct move_node { struct move_node *next; };
 struct move_queue_head { struct move_node *first; size_t size; };
 struct stepper;
 static struct stepper *oids[2];
-static uint8_t oid_count;
+static uint8_t oid_count, stalled_self_test_axis;
 static uint32_t now, cpu_toggles;
 static int armed, expect_shutdown;
 static jmp_buf stopped;
@@ -161,8 +161,9 @@ advance_axis(uint8_t axis, uint32_t ticks)
     TIM_TypeDef *p = a->pulse, *g = a->gate;
     unsigned rising = 0;
     while (ticks && (p->CR1 & TIM_CR1_CEN) && g->CNT < g->CCR1) {
-        assert((g->CR1 & TIM_CR1_CEN) && p->CCER == a->output_enable);
-        assert(((GPIOB->CRL >> (4 * a->pin)) & 15) == 9);
+        assert(g->CR1 & TIM_CR1_CEN);
+        unsigned attached = ((GPIOB->CRL >> (4 * a->pin)) & 15) == 9;
+        assert(p->CCER == (attached ? a->output_enable : 0));
         uint32_t event = p->CNT < p->CCR1 ? p->CCR1 : p->ARR + 1;
         uint32_t wait = event - p->CNT;
         if (ticks < wait) {
@@ -171,18 +172,28 @@ advance_axis(uint8_t axis, uint32_t ticks)
         }
         ticks -= wait;
         if (event == p->CCR1) {
-            assert(GPIOB->IDR & pin_mask(a));
+            assert(!!(GPIOB->IDR & pin_mask(a)) == attached);
             GPIOB->IDR &= ~pin_mask(a);
             g->CNT++;
             p->CNT = event;
         } else {
             assert(!(GPIOB->IDR & pin_mask(a)));
-            GPIOB->IDR |= pin_mask(a);
+            if (attached)
+                GPIOB->IDR |= pin_mask(a);
             p->CNT = 0;
             rising++;
         }
     }
     return rising;
+}
+
+void
+udelay(uint32_t us)
+{
+    for (unsigned i = 1; i <= 2; i++)
+        if (i != stalled_self_test_axis)
+            advance_axis(i, us * 72);
+    now += us * 72;
 }
 
 static void
@@ -241,7 +252,13 @@ replay(struct stepper *s, unsigned oid, const unsigned blocks[][2], unsigned n)
 
 int main(void)
 {
+    stalled_self_test_axis = 2;
     m300_xy_timer_init();
+    assert(verified == 1 && m300_xy_timer_axis(GPIO('B', 3)) == 0);
+    assert(!GPIOB->IDR && !GPIOB->CRL);
+    stalled_self_test_axis = 0;
+    m300_xy_timer_init();
+    assert(verified == 3 && !GPIOB->IDR && !GPIOB->CRL);
     assert(TIM2->SMCR == 0x35 && TIM4->SMCR == 0x17);
     assert(TIM3->SMCR == 0x25 && TIM5->SMCR == 0x17);
     assert(TIM2->CR2 == 0x30 && TIM3->CR2 == 0x30);

@@ -24,11 +24,12 @@ def main():
         work = Path(directory)
         (work / 'native_stepper.c').write_text(patch_upstream.transformed(original)['src/stepper.c'])
         for name in ('autoconf.h', 'basecmd.h', 'board/gpio.h', 'board/irq.h',
-                     'board/misc.h', 'command.h', 'generic/armcm_boot.h',
+                     'board/misc.h', 'command.h', 'generic/armcm_timer.h',
                      'internal.h', 'sched.h', 'stepper.h', 'trsync.h'):
             target = work / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.touch()
+        (work / 'generic/armcm_timer.h').write_text('void udelay(uint32_t us);\n')
         overlay = KIT / 'overlay/src/stm32'
         (work / 'board/m300.h').symlink_to(overlay / 'm300.h')
         (work / 'board/m300_xy_step_timer.h').symlink_to(overlay / 'm300_xy_step_timer.h')

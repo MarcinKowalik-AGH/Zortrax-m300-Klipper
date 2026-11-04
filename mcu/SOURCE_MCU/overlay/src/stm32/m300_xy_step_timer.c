@@ -3,6 +3,7 @@
 #include "board/irq.h" // irq_save
 #include "board/misc.h" // timer_read_time
 #include "command.h" // shutdown
+#include "generic/armcm_timer.h" // udelay
 #include "internal.h" // enable_pclock
 #include "m300.h" // m300_require_motion
 #include "m300_xy_step_timer.h"
@@ -21,7 +22,7 @@ static const struct xy_timer_axis axes[] = {
     {TIM2, TIM4, TIM_CCER_CC2E, 3u << 4, 1u << 4, 3},
     {TIM3, TIM5, TIM_CCER_CC1E, 2u << 4, 1u << 4, 4},
 };
-static uint8_t active, initialized, first_reported, pending_report;
+static uint8_t active, initialized, verified, first_reported, pending_report;
 static struct task_wake report_wake;
 
 static uint32_t
@@ -40,6 +41,8 @@ pin_mode(const struct xy_timer_axis *a, uint32_t mode)
 uint8_t
 m300_xy_timer_axis(uint32_t pin)
 {
+    if (verified != 3)
+        return 0;
     if (pin == GPIO('B', 3))
         return 1;
     if (pin == GPIO('B', 4))
@@ -75,6 +78,30 @@ m300_xy_timer_init(void)
         g->EGR = TIM_EGR_UG;
     }
     initialized = 1;
+    verified = 0;
+    // Exercise the actual internal trigger paths before Klipper can queue
+    // movement. CCER stays disabled and neither STEP pin is remuxed.
+    for (unsigned i = 0; i < sizeof(axes) / sizeof(axes[0]); i++) {
+        const struct xy_timer_axis *a = &axes[i];
+        TIM_TypeDef *p = a->pulse, *g = a->gate;
+        p->ARR = 511;
+        p->CCR1 = 176;
+        p->EGR = TIM_EGR_UG;
+        p->CNT = p->ARR;
+        g->CCR1 = 4;
+        g->EGR = TIM_EGR_UG;
+        g->CNT = 0;
+        g->CR1 = TIM_CR1_CEN;
+        p->CR1 = TIM_CR1_CEN;
+        udelay(40);
+        uint32_t end = p->CNT;
+        udelay(10);
+        if (g->CNT == 4 && p->CNT == end && end >= 176 && end < 208)
+            verified |= 1u << i;
+        p->CR1 = g->CR1 = 0;
+    }
+    pending_report = 4;
+    sched_wake_task(&report_wake);
 }
 DECL_INIT(m300_xy_timer_init);
 
@@ -231,6 +258,8 @@ m300_xy_timer_report_task(void)
         output("M300 XY STEP timer completed first X block");
     if (report_mask & 2)
         output("M300 XY STEP timer completed first Y block");
+    if (report_mask & 4)
+        output("M300 XY STEP timer startup check axes=%c", verified);
 }
 DECL_TASK(m300_xy_timer_report_task);
 
