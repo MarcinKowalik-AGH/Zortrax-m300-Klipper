@@ -21,7 +21,7 @@ ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2b
 APP_START = 0x08008000
 NVM_START = 0x0803A000
 MCU_RELEASE = '0.13.14.9-PANEL-REPORT-UART8'
-XY_DMA_LAB_RELEASE = '0.13.14.11-XY-STEP-DMA-CHAIN-LAB'
+XY_DMA_LAB_RELEASE = '0.13.14.12-XY-STEP-DMA-DIAG-LAB'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',

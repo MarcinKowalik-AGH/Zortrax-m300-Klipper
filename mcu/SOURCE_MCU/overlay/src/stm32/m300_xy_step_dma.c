@@ -35,7 +35,13 @@ static const uint32_t channel_mode = DMA_CCR_DIR | DMA_CCR_PSIZE_1
 static const uint32_t transfer_errors =
     DMA_ISR_TEIF2 | DMA_ISR_TEIF3 | DMA_ISR_TEIF6 | DMA_ISR_TEIF7;
 static uint8_t initialized, first_reported, pending_report;
+static uint8_t last_chained[sizeof(axes) / sizeof(axes[0])];
 static struct task_wake report_wake;
+static struct {
+    uint32_t clock, deadline, nominal_last, flags;
+    uint16_t rise, fall, counter, period, compare;
+    uint8_t axis, chained;
+} fault_snapshot;
 
 uint8_t
 m300_xy_dma_axis(uint32_t pin)
@@ -119,7 +125,9 @@ m300_xy_dma_start(uint8_t axis, uint32_t period, uint32_t pulse,
     t->CNT = period - lead;
     t->CR1 = TIM_CR1_URS | TIM_CR1_CEN;
     // Conservative upper bound on when the first timer update will occur.
-    return timer_read_time() + lead;
+    uint32_t first = timer_read_time() + lead;
+    last_chained[axis - 1] = 0;
+    return first;
 }
 
 uint32_t
@@ -210,17 +218,35 @@ m300_xy_dma_chain(uint8_t axis, uint32_t period, uint32_t count,
         return 0;
     }
     t->DIER = TIM_DIER_UDE | a->compare_request;
+    last_chained[axis - 1] = 1;
     report_completed_block(axis, 1);
     return 1;
 }
 
 void
-m300_xy_dma_finish(uint8_t axis)
+m300_xy_dma_finish(uint8_t axis, uint32_t deadline, uint32_t nominal_last)
 {
     const struct xy_dma_axis *a = &axes[axis - 1];
     uint32_t remaining = m300_xy_dma_stop(axis);
-    if (remaining || a->fall->CNDTR || (DMA1->ISR & a->flags & transfer_errors))
+    uint32_t falling = a->fall->CNDTR;
+    uint32_t flags = DMA1->ISR & a->flags;
+    if (remaining || falling || (flags & transfer_errors)) {
+        // The counters and CNT are frozen. Capture them before the shutdown
+        // hooks clear the DMA flags. Formatting runs after the guard closes.
+        fault_snapshot.axis = axis;
+        fault_snapshot.chained = last_chained[axis - 1];
+        fault_snapshot.clock = timer_read_time();
+        fault_snapshot.deadline = deadline;
+        fault_snapshot.nominal_last = nominal_last;
+        fault_snapshot.flags = flags;
+        fault_snapshot.rise = remaining;
+        fault_snapshot.fall = falling;
+        fault_snapshot.counter = a->timer->CNT;
+        fault_snapshot.period = a->timer->ARR + 1;
+        fault_snapshot.compare = *a->compare;
+        sched_wake_task(&report_wake);
         shutdown("M300 XY DMA incomplete STEP block");
+    }
     report_completed_block(axis, 0);
 }
 
@@ -233,6 +259,18 @@ m300_xy_dma_report_task(void)
     uint8_t report_mask = pending_report;
     pending_report = 0;
     irq_restore(flag);
+    if (fault_snapshot.axis) {
+        output("M300 XY DMA fault axis=%c chained=%c rise=%hu fall=%hu"
+               " cnt=%hu period=%hu compare=%hu flags=%u"
+               " clock=%u deadline=%u nominal_last=%u",
+               fault_snapshot.axis, fault_snapshot.chained,
+               fault_snapshot.rise, fault_snapshot.fall,
+               fault_snapshot.counter, fault_snapshot.period,
+               fault_snapshot.compare, fault_snapshot.flags,
+               fault_snapshot.clock, fault_snapshot.deadline,
+               fault_snapshot.nominal_last);
+        fault_snapshot.axis = 0;
+    }
     if (report_mask & 1)
         output("M300 XY STEP DMA completed first X block");
     if (report_mask & 2)

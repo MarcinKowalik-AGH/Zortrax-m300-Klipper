@@ -415,17 +415,32 @@ int main(void)
         ;
     assert(cpu_toggles == edges + 68 && position(y) == -40);
 
-    // Reject an incomplete DMA block, transfer error, and disarmed start.
-    queue(1, 625, 32, 0);
-    assert(event(y) == SF_RESCHEDULE);
-    pulse(2, 0);
+    // Inject a missing final falling transfer at the captured 669-tick block.
+    command_reset_step_clock((uint32_t[]){1, now + 3000});
+    queue(1, 677, 317, 0);
+    queue(1, 669, 290, 0);
+    block(y, 677, 317);
+    TIM3->CNT = 240;
+    assert(event(y) == SF_RESCHEDULE && y->dma_mode == M300_DMA_RUNNING);
+    for (unsigned i = 1; i < 290; i++)
+        pulse(2, 0);
+    pulse(2, 1);
     expect_shutdown = 1;
     if (!setjmp(stopped)) {
         event(y);
         assert(0);
     }
     assert(strstr(fault_message, "incomplete"));
-    assert(!transfer(axes[1].rise, axes[1].high));
+    assert(fault_snapshot.axis == 2 && fault_snapshot.chained);
+    assert(fault_snapshot.rise == 0 && fault_snapshot.fall == 1);
+    assert(fault_snapshot.period == 669 && fault_snapshot.compare == 176);
+    assert(fault_snapshot.deadline == y->time.waketime);
+    assert(fault_snapshot.nominal_last == y->next_step_time);
+    assert(!timer_is_before(fault_snapshot.clock, fault_snapshot.deadline));
+    m300_xy_dma_report_task();
+    assert(!fault_snapshot.axis);
+    assert(!transfer(axes[1].fall, axes[1].low));
+    // Reject a DMA transfer error and a disarmed start.
     dma.ISR = DMA_ISR_TEIF2;
     if (!setjmp(stopped)) {
         m300_xy_dma_error_irq();

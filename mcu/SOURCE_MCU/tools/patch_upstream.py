@@ -266,7 +266,7 @@ m300_stepper_prepare_dma(struct stepper *s)
                 return SF_RESCHEDULE;
             }
         }
-        m300_xy_dma_finish(s->dma_axis);
+        m300_xy_dma_finish(s->dma_axis, s->time.waketime, s->next_step_time);
         s->dma_mode = M300_DMA_SOFTWARE;
         s->time.waketime += s->step_pulse_ticks;
         return stepper_load_next(s);

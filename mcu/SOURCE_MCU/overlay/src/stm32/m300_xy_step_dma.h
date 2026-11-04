@@ -13,7 +13,7 @@ uint8_t m300_xy_dma_chain(uint8_t axis, uint32_t period, uint32_t count,
                          uint32_t last_rise_clock);
 uint32_t m300_xy_dma_remaining(uint8_t axis);
 uint32_t m300_xy_dma_stop(uint8_t axis);
-void m300_xy_dma_finish(uint8_t axis);
+void m300_xy_dma_finish(uint8_t axis, uint32_t deadline, uint32_t nominal_last);
 void m300_xy_dma_abort_all(void);
 
 #endif

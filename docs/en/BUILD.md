@@ -58,7 +58,7 @@ Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.
 
 Pass `--xy-step-dma-lab` to `mcu/SOURCE_MCU/tools/build.py` and use a separate
 work and output directory. The build identifies itself as
-`0.13.14.11-XY-STEP-DMA-CHAIN-LAB`. The register model can be run with
+`0.13.14.12-XY-STEP-DMA-DIAG-LAB`. The register model can be run with
 `python3 mcu/SOURCE_MCU/tools/test_xy_step_dma.py --upstream .ci/pristine`.
 
 The lab build uses finite DMA transfers for non-inverted X and Y
@@ -75,6 +75,11 @@ without resetting the running timer. The new period governs the gap after
 the preceding block's final rising edge. If the counter has passed the safe
 rearm window, the regular stop/start handoff handles the next block. The
 first successful chained boundary per axis is reported in `klippy.log`.
+
+If block completion causes a shutdown, the diagnostic build logs the
+remaining rising and falling transfers, timer counter, period, compare
+value, DMA flags and MCU deadlines after the motion guard closes. Use the
+record to distinguish an unfinished edge from a transfer error.
 
 This is a lab image for the M300 Classic application slot. Qualification
 requires checking pulse width, count and timing on the physical board and
