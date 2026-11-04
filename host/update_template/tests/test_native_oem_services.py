@@ -604,6 +604,8 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 motion = motion_fixture()
                 motion.printer = h.printer
                 h.objects['m300_motion'] = motion
+                h.objects['m300_settings'] = NS(brightness_prompt=lambda keys: [
+                    'M300_BRIGHTNESS %s 14' % key for key in keys])
                 native_home = motion.native_G28
                 commands = []
 
@@ -619,6 +621,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                         self.assertIn('// action:prompt_begin ZORTRAX M300 - ' + label, h.lines)
                         self.assertIn('// action:prompt_text M300_HOMING_ACTIVE', h.lines)
                         self.assertIn('// action:prompt_text Homing Y', h.lines)
+                        self.assertFalse(any('M300_BRIGHTNESS' in line for line in h.lines))
                         self.assertEqual(h.p.rows(h.now)[1][1], ('Homing Y', None))
                         oled._render(h.now)
                         before = oled._render_wire

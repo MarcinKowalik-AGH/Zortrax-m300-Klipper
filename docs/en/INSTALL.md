@@ -1,8 +1,11 @@
-# Install the R16.12 test release
+# Install the main Orange Pi release
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.9.
+The main package pairs the native R16.12 host with MCU R14.14 for M300 Classic.
+The host installer also accepts supported installations running earlier MCU revisions.
+Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
+baseline uses 750,000 baud. The installer preserves the configured baud.
 Factory serial and OEM print time require R14.6 or later.
 OLED hold-to-move with local button release stop requires R14.7.
 It accepts recognized baselines from R15.3 through the initial R16.12 build,
@@ -102,10 +105,12 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_9_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_14_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
-BUILD_PROVENANCE.json identifies the tested source. The full Actions artifact
+BUILD_PROVENANCE.json identifies the tested source. A printer already running
+the hardware-tested R14.14 candidate can receive the host and Fluidd update
+before its next scheduled MCU flash. The full Actions artifact
 also contains the HOST_SOURCE snapshot.
 
 ### OLED RLE benchmark

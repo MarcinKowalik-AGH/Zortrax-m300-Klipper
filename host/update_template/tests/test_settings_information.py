@@ -276,7 +276,7 @@ class SettingsTreeTests(unittest.TestCase):
             with self.assertRaisesRegex(h.printer.command_error, 'blocked by'):
                 h.settings.set_option('sort_mode', 'SIZE')
             h.p._tick(h.now)
-            self.assertTrue(any('M300_BRIGHTNESS led_brightness 8' in line for line in h.lines))
+            self.assertFalse(any('M300_BRIGHTNESS' in line for line in h.lines))
             context = h.oled._input_context()
             h.lines.clear()
             h.settings.show('settings')
@@ -287,6 +287,9 @@ class SettingsTreeTests(unittest.TestCase):
             h.until(h.f, 'CANCELLED')
             h.nvm._save_deferred_settings(h.now)
             self.assertEqual(h.nvm.store._published['settings']['led_brightness'], 8)
+            h.lines.clear()
+            h.settings.show('setting_led_brightness')
+            self.assertIn('// action:prompt_text M300_BRIGHTNESS led_brightness 8', h.lines)
 
     def test_web_settings_bypass_busy_gcode_for_one_cosmetic_command_only(self):
         with session() as h, h.gcode.get_mutex():

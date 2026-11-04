@@ -12,6 +12,9 @@
 #include "command.h"
 #include "internal.h"
 #include "m300.h"
+#if CONFIG_M300_XY_STEP_TIMER
+#include "m300_xy_step_timer.h"
+#endif
 #include "sched.h"
 #include "m300_sched.h"
 
@@ -161,8 +164,18 @@ m300_early_init(void)
 static void
 force_safe(void)
 {
+#if CONFIG_M300_XY_STEP_TIMER
+    irqstatus_t flag = irq_save();
+#endif
     armed = 0;
+#if CONFIG_M300_XY_STEP_TIMER
+    raw_write(GPIOD, 1u << 14, 0);
+    m300_xy_timer_abort_all();
+#endif
     raw_safe_outputs();
+#if CONFIG_M300_XY_STEP_TIMER
+    irq_restore(flag);
+#endif
 }
 
 static void
@@ -439,6 +452,19 @@ m300_require_motion(void)
     if (!gate_open(M300_GATE_MOTION))
         trip(M300_FAULT_REQUEST);
 }
+
+#if CONFIG_M300_XY_STEP_TIMER
+void
+m300_require_motion_gate(void)
+{
+    // Continuing an active timer uses the live motion gate. The periodic
+    // guard still checks ADC and host freshness and aborts any active STEP timer.
+    if (GPIOE->IDR & (1u << 15))
+        trip(M300_FAULT_PLATFORM);
+    if (!gate_open(M300_GATE_MOTION))
+        trip(M300_FAULT_REQUEST);
+}
+#endif
 
 void
 m300_require_output(void *regs, uint32_t bit, uint32_t on)

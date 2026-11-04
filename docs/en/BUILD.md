@@ -53,3 +53,15 @@ identity fixture is not installed by the host update.
 
 R16 also replays native XYZ homing with 180C, repeated Z, 300 mm/s/M220=150,
 Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.
+
+## X/Y STEP timers in R14.14
+
+The standard build enables the timer path and checks its ABI in the compiled
+dictionary. TIM2 and TIM3 drive STEP. TIM4 and TIM5 count the pulses and
+close the gates. Eligible constant-period blocks use the timers. Klipper
+generates steps in software for other blocks.
+
+CI runs the native timer model for overlapping X/Y blocks, direction changes,
+counting, stop and fallback. On the printer, the start-up line
+`M300 XY STEP timer startup check axes=3` confirms both internal routes.
+The first completed hardware block on each axis is logged separately.

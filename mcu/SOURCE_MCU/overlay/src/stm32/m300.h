@@ -35,6 +35,7 @@ uint32_t m300_filter_gpio(void *regs, uint32_t bit, uint32_t val);
 uint32_t m300_toggle_gpio(void *regs, uint32_t bit);
 void m300_adc_observe(void *adc, uint32_t channel, uint16_t value);
 void m300_require_motion(void);
+void m300_require_motion_gate(void);
 void m300_require_output(void *regs, uint32_t bit, uint32_t on);
 void m300_check_output_defaults(uint32_t pin, uint32_t value,
                                 uint32_t default_value);

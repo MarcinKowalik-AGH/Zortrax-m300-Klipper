@@ -20,7 +20,7 @@ PIN = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0'
 APP_START = 0x08008000
 NVM_START = 0x0803A000
-MCU_RELEASE = '0.13.14.9-PANEL-REPORT-UART8'
+MCU_RELEASE = '0.13.14.14-XY-STEP-TIMER-UART8'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
@@ -129,6 +129,7 @@ def validate(work, output, env, log):
                           'M300_OLED_HOSTLINK_ABI': 1, 'M300_OLED_HOSTLINK_TIMEOUT_US': 1500000,
                           'M300_OLED_FAST_ABI': 1, 'M300_OLED_FAST_QUEUE': 4,
                           'M300_OLED_FAST_WIRE': 256, 'M300_MCU_RELEASE': MCU_RELEASE,
+                          'M300_XY_STEP_TIMER_ABI': 1,
                           'M300_PANEL_CAPTURE_ABI': 3, 'M300_PANEL_RELEASE_ABI': 1,
                           'M300_PANEL_IRQ_PRIORITY': 3, 'M300_OLED_DMA_IRQ_PRIORITY': 4,
                           'CLOCK_FREQ': 72000000}.items():
@@ -164,7 +165,7 @@ def validate(work, output, env, log):
     stack_start = symbols['_stack_start']
     if bss_end >= stack_start:
         raise ValueError('Static data overlaps reserved MCU stack')
-    report = {'version': MCU_RELEASE,
+    report = {'version': MCU_RELEASE, 'xy_step_timer': True,
               'mcu_stage': 'P01_LAB + M04_SD + R9_HOST_LEASE_LOCAL_WAITING', 'upstream_commit': PIN,
               'upstream_archive_sha256': ARCHIVE_SHA256,
               'model': 'M300_CLASSIC', 'abi': 1,
@@ -223,7 +224,9 @@ def main():
             raise ValueError('Toolchain lacks libc_nano.a')
         opts = ['PYTHON=' + sys.executable, 'CPP=arm-none-eabi-cpp', 'CROSS_PREFIX=arm-none-eabi-']
         run(['make', 'olddefconfig'] + opts, args.work, env, log)
-        check_config(args.work / '.config')
+        cfg = check_config(args.work / '.config')
+        if cfg.get('CONFIG_M300_XY_STEP_TIMER') != 'y':
+            raise ValueError('Release requires XY STEP timers')
         run(['make', 'clean'] + opts, args.work, env, log)
         run(['make', '-j' + str(args.jobs)] + opts, args.work, env, log)
         report = validate(args.work, args.output, env, log)

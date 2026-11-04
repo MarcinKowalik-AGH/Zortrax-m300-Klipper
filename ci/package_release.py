@@ -25,7 +25,8 @@ def main():
     args = parser.parse_args()
     build = args.build.resolve()
     report = json.loads((build / 'BUILD_REPORT.json').read_text())
-    if report['version'] != META['mcu_release'] or not report['full_arm_link']:
+    if (report['version'] != META['mcu_release'] or not report['full_arm_link']
+            or not report['xy_step_timer']):
         raise ValueError('Wrong or incomplete ARM build')
     for name, expected in report['files'].items():
         if digest(build / name) != expected['sha256']:
@@ -49,7 +50,7 @@ def main():
     (mcu / 'M300APP.M3B').write_bytes(packed)
     container = m3b.inspect(packed)
     (mcu / 'M3B_REPORT.json').write_text(json.dumps(container, indent=2) + '\n')
-    with zipfile.ZipFile(mcu / 'M300_R14_9_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(mcu / 'M300_R14_14_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.write(mcu / 'M300APP.M3B', 'M300APP.M3B')
     stage = stage_host_update(ROOT / '.ci/release-host-update')
     host = release / 'M300_HOST_R16_12_NORMAL_UI'
@@ -70,16 +71,16 @@ def main():
         'github_run_id': os.environ.get('GITHUB_RUN_ID'),
         'physical_hardware': False, 'flashed': False,
         'factory_Z_requires_MCU_factory_ABI': 1,
-        'normal_motion': True, 'z_homing_temperature': 180,
+        'normal_motion': True, 'xy_step_timer': True, 'z_homing_temperature': 180,
         'xy_velocity_profile': 300, 'calibration_temperature': 260,
-        'filament_temperature': 240, 'release_stage': 'TEST_READY'}
+        'filament_temperature': 240, 'release_stage': 'VERIFIED'}
     (release / 'BUILD_PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
     (release / 'INSTALL_EN.md').write_text((ROOT / 'docs/en/INSTALL.md').read_text())
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'Use R14.9 MCU with the English-only R16.12 host; see INSTALL_EN.md.\n'
+        'Use R14.14 MCU with the English-only R16.12 host; see INSTALL_EN.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     if args.fluidd:

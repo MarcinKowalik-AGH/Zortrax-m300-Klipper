@@ -16,7 +16,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.9-PANEL-REPORT-UART8"
+VERSION = "M300_CLASSIC-0.13.14.14-XY-STEP-TIMER-UART8"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",
@@ -63,11 +63,17 @@ config M300_CLASSIC
         Fixed classic-M300 board ownership and local safety, ABI 1.
         Requires 72 MHz, USART1 PA9/PA10, 32 KiB stock bootloader offset.
         Starts unarmed with both cooling fans HIGH; never flashes the board.
+
+config M300_XY_STEP_TIMER
+    bool "Classic M300 constant-period XY STEP timer"
+    depends on M300_CLASSIC && !WANT_STEPPER_OPTIMIZED_BOTH_EDGE
+    default y
 ''', key)
 
     key = "src/stm32/Makefile"
     anchor = "# Add source files\n"
     f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c
+src-$(CONFIG_M300_XY_STEP_TIMER) += stm32/m300_xy_step_timer.c
 ifeq ($(CONFIG_M300_CLASSIC),y)
 CFLAGS_klipper.elf += -Wl,-Map=$(OUT)klipper.map
 endif
@@ -85,7 +91,22 @@ endif
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
 #include "m300.h"
 #endif
+#if CONFIG_M300_XY_STEP_TIMER
+#include "m300_xy_step_timer.h"
+#endif
 ''', key + ":include")
+    anchor = "#define STM_OSPEED"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_XY_STEP_TIMER
+void
+m300_xy_timer_remap(void)
+{
+    stm32f1_alternative_remap(AFIO_MAPR_TIM2_REMAP_Msk | AFIO_MAPR_TIM3_REMAP_Msk,
+                              AFIO_MAPR_TIM2_REMAP_PARTIALREMAP1
+                              | AFIO_MAPR_TIM3_REMAP_PARTIALREMAP);
+}
+#endif
+
+''' + anchor, key + ":xy-timer-remap")
     anchor = "gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)\n{\n"
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_check_pin_mode(gpio, mode);
@@ -179,7 +200,127 @@ struct gpio_in
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
 #include "board/m300.h"
 #endif
+#if CONFIG_M300_XY_STEP_TIMER
+#include "board/m300_xy_step_timer.h"
+#endif
 ''', key + ":include")
+    anchor = "    uint8_t flags : 8;\n};\n"
+    f[key] = replace(f[key], anchor, '''    uint8_t flags : 8;
+#if CONFIG_M300_XY_STEP_TIMER
+    uint8_t timer_axis, timer_mode;
+    uint32_t timer_first_clock;
+#endif
+};
+''', key + ":xy-timer-fields")
+    anchor = "// Setup a stepper for the next move in its queue\n"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_XY_STEP_TIMER
+enum { M300_TIMER_SOFTWARE, M300_TIMER_PLANNED, M300_TIMER_RUNNING };
+
+static void
+m300_stepper_prepare_timer(struct stepper *s)
+{
+    if (!s->timer_axis || s->add
+        || !m300_xy_timer_eligible(s->interval, s->step_pulse_ticks, s->count / 2))
+        return;
+    s->timer_mode = M300_TIMER_PLANNED;
+    s->timer_first_clock = s->time.waketime;
+    // Allow a short setup window when scheduling from a previous block.
+    // Keep new timers inserted by a host command strictly in the future.
+    if ((int32_t)(s->time.waketime - timer_read_time()) > 208)
+        s->time.waketime -= 104;
+}
+#endif
+
+''' + anchor, key + ":xy-timer-prepare")
+    anchor = "                s->time.waketime = min_next_time;\n            return SF_RESCHEDULE;\n"
+    f[key] = replace(f[key], anchor, '''                s->time.waketime = min_next_time;
+#if CONFIG_M300_XY_STEP_TIMER
+            m300_stepper_prepare_timer(s);
+#endif
+            return SF_RESCHEDULE;
+''', key + ":xy-timer-dir-handoff")
+    anchor = "    if (need_dir_change)\n        gpio_out_toggle_noirq(s->dir_pin);\n    return SF_RESCHEDULE;"
+    f[key] = replace(f[key], anchor, '''    if (need_dir_change)
+        gpio_out_toggle_noirq(s->dir_pin);
+#if CONFIG_M300_XY_STEP_TIMER
+    m300_stepper_prepare_timer(s);
+#endif
+    return SF_RESCHEDULE;''', key + ":xy-timer-handoff")
+    anchor = "stepper_event_full(struct timer *t)\n{\n    struct stepper *s = container_of(t, struct stepper, time);\n"
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER
+    const uint32_t high_margin = M300_XY_TIMER_HIGH_MARGIN;
+    const uint32_t gate_margin = M300_XY_TIMER_GATE_MARGIN;
+    if (s->timer_mode == M300_TIMER_PLANNED) {
+        uint32_t count = s->count / 2;
+        uint32_t span = (count - 1) * s->interval;
+        uint32_t first = m300_xy_timer_start(s->timer_axis, s->interval,
+                                         s->step_pulse_ticks, count,
+                                         s->timer_first_clock);
+        s->timer_mode = M300_TIMER_RUNNING;
+        s->next_step_time += span;
+        s->time.waketime = first + span + s->step_pulse_ticks
+            + high_margin + gate_margin;
+        return SF_RESCHEDULE;
+    }
+    if (s->timer_mode == M300_TIMER_RUNNING) {
+        struct move_node *node = move_queue_first(&s->mq);
+        if (node) {
+            struct stepper_move *m = container_of(node, struct stepper_move,
+                                                  node);
+            uint32_t period = m->interval, count = m->count;
+            if (!(m->flags & MF_DIR) && !m->add
+                && m300_xy_timer_eligible(period, s->step_pulse_ticks, count)) {
+                uint32_t first = s->next_step_time + period;
+                // Preserve the minimum low width if the previous block ran
+                // late. Otherwise re-anchor to Klipper's absolute clock.
+                uint32_t earliest = s->time.waketime
+                    + s->step_pulse_ticks - gate_margin;
+                if (timer_is_before(first, earliest))
+                    first = earliest;
+                first = m300_xy_timer_chain(s->timer_axis, period, count, first);
+                s->next_step_time += period * count;
+                s->time.waketime = first + period * (count - 1)
+                    + s->step_pulse_ticks + high_margin + gate_margin;
+                s->position += count;
+                s->interval = period;
+                s->count = 2 * count;
+                move_free(move_queue_pop(&s->mq));
+                return SF_RESCHEDULE;
+            }
+        }
+        m300_xy_timer_finish(s->timer_axis);
+        s->timer_mode = M300_TIMER_SOFTWARE;
+        s->time.waketime += s->step_pulse_ticks;
+        return stepper_load_next(s);
+    }
+#endif
+''', key + ":xy-timer-step")
+    anchor = "    s->step_pulse_ticks = args[4];\n"
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER
+    if (invert_step == 0)
+        s->timer_axis = m300_xy_timer_axis(args[1]);
+#endif
+''', key + ":xy-timer-config")
+    anchor = "    uint32_t position = s->position;\n"
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER
+    if (s->timer_mode == M300_TIMER_RUNNING)
+        position -= m300_xy_timer_remaining(s->timer_axis);
+    else
+#endif
+''', key + ":xy-timer-position")
+    anchor = "    sched_del_timer(&s->time);\n    s->next_step_time"
+    f[key] = replace(f[key], anchor, '''    sched_del_timer(&s->time);
+#if CONFIG_M300_XY_STEP_TIMER
+    if (s->timer_mode == M300_TIMER_RUNNING)
+        s->count = 2 * m300_xy_timer_stop(s->timer_axis);
+    s->timer_mode = M300_TIMER_SOFTWARE;
+#endif
+    s->next_step_time''', key + ":xy-timer-stop")
+    anchor = "stepper_shutdown(void)\n{\n"
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER
+    m300_xy_timer_abort_all();
+#endif
+''', key + ":xy-timer-shutdown")
     anchor = "command_queue_step(uint32_t *args)\n{\n"
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_require_motion();

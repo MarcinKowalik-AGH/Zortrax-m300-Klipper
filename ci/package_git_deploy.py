@@ -17,7 +17,7 @@ FLUIDD = 'M300_FLUIDD_1_37_7_R16_12.zip'
 def package(release, output, commit):
     subprocess.run(['sha256sum', '-c', '--quiet', 'SHA256SUMS'], cwd=release, check=True)
     provenance = json.loads((release / 'BUILD_PROVENANCE.json').read_text())
-    if provenance['github_commit'] != commit or provenance['release_stage'] != 'TEST_READY':
+    if provenance['github_commit'] != commit or provenance['release_stage'] != 'VERIFIED':
         raise ValueError('Actions artifact does not match this build')
 
     output.mkdir()
@@ -27,7 +27,7 @@ def package(release, output, commit):
     subprocess.run([sys.executable, '-B', 'VERIFY.py'], cwd=output / HOST, check=True)
 
     (output / 'MCU').mkdir()
-    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_R14_9_SD.zip',
+    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_R14_14_SD.zip',
                  'install-orange-pi.py', 'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
