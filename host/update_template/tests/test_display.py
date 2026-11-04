@@ -8,11 +8,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from payload.m300_display_stream import DisplayStream, AWAKE, DIM, OFF
 from payload.m300_display import M300Display
+from payload import m300_oled_transport as transport
 
-spec = importlib.util.spec_from_file_location(
-    'reference_transport', ROOT / 'tests/reference/m300_oled_transport.py')
-transport = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(transport)
 render_spec = importlib.util.spec_from_file_location(
     'payload.m300_oled_render', ROOT / 'tests/reference/m300_oled_render.py')
 renderer = importlib.util.module_from_spec(render_spec)

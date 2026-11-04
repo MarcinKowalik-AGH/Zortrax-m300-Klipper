@@ -358,6 +358,74 @@ def fast_frame_operations(wire, first_row=0, last_row=63, first_col=0, last_col=
     yield from fast_blocks(packed)
 
 
+def _gap_plans(before, after, window):
+    """Try only the widest untouched band in each axis."""
+    y0, y1, c0, c1 = window
+    points = []
+    for row in range(y0, y1 + 1):
+        offset = row * 128
+        if before[offset:offset + 128] == after[offset:offset + 128]:
+            continue
+        for col in range(c0, c1 + 1):
+            i = offset + col * 2
+            if before[i:i + 2] != after[i:i + 2]:
+                points.append((row, col))
+
+    def bounds(group):
+        ys, cols = zip(*group)
+        return min(ys), max(ys), min(cols), max(cols)
+
+    for axis in (0, 1):
+        occupied = sorted({p[axis] for p in points})
+        gaps = ((right - left, left) for left, right in zip(occupied, occupied[1:]))
+        width, cut = max(gaps, default=(0, 0))
+        if width > 1:
+            yield (bounds(p for p in points if p[axis] <= cut),
+                   bounds(p for p in points if p[axis] > cut))
+
+
+def optimized_frame_operations(before, after, regions):
+    """Choose up to four encoded plans with the existing OLED ABI."""
+    if not regions:
+        return ()
+    bounding = diff_window(before, after)
+    plans = dict.fromkeys(itertools.chain((regions, (bounding,)),
+                                         _gap_plans(before, after, bounding)))
+    encoded = {}
+
+    def operations(plan):
+        result = []
+        for window in plan:
+            if window not in encoded:
+                encoded[window] = tuple(fast_frame_operations(after, *window))
+            result.extend(encoded[window])
+        return tuple(result)
+
+    def cost(ops):
+        # Approximate one burst and its ACK using native serial envelopes.
+        return sum(len(args[3]) + 20 + (args[2] >= 96) for _, args, _ in ops)
+
+    best = operations(regions)
+    best_cost = cost(best)
+    baseline_count = len(best)
+    baseline_wire = sum(args[2] for _, args, _ in best)
+    for plan in plans:
+        if plan == regions:
+            continue
+        # SSD1322 uses two bytes per addressable column and seven setup
+        # bytes per window. Reject additional SPI work before encoding.
+        if sum(7 + 2 * (y1 - y0 + 1) * (c1 - c0 + 1)
+               for y0, y1, c0, c1 in plan) > baseline_wire:
+            continue
+        candidate = operations(plan)
+        if len(candidate) > baseline_count:
+            continue
+        candidate_cost = cost(candidate)
+        if candidate_cost < best_cost:
+            best, best_cost = candidate, candidate_cost
+    return best
+
+
 def fast_init_operations(wire):
     yield ('control', (0, 0), .010)
     yield ('control', (0, 1), .500)
@@ -377,7 +445,7 @@ class FastOledStream(OledStream):
     """
     def __init__(self, timeout=1., refresh_interval=.2, window=4,
                  interactive_interval=.020, work_interval=.100,
-                 work_bytes_per_second=30000.):
+                 work_bytes_per_second=30000., optimize_windows=True):
         super().__init__(timeout, refresh_interval)
         if type(window) is not int or not 1 <= window <= 4:
             raise ValueError('OLED DMA window must be 1..4')
@@ -392,6 +460,8 @@ class FastOledStream(OledStream):
         self.work_credit = 208.
         self.credit_at = self.budget_at = 0.
         self.active_work = False
+        self.optimize_windows = optimize_windows
+        self.optimized_frames = 0
         self.inflight = deque()
         self.exhausted = self.barrier = False
         self._held = None
@@ -495,8 +565,13 @@ class FastOledStream(OledStream):
                                           else self.interactive_interval)
             self._frame_payload, self._frame_wire = self.payload_bytes, self.wire_bytes
             regions = ((0,63,0,63),) if self.previous is None else diff_regions(self.previous, self.target)
-            self.operations = itertools.chain.from_iterable(
-                fast_frame_operations(self.target, *w) for w in regions)
+            if (self.optimize_windows and self.previous is not None
+                    and self.urgent_refresh and not self.active_work):
+                self.operations = iter(optimized_frame_operations(self.previous, self.target, regions))
+                self.optimized_frames += 1
+            else:
+                self.operations = itertools.chain.from_iterable(
+                    fast_frame_operations(self.target, *w) for w in regions)
         if len(self.inflight) >= self.window:
             return None
         # Peek only one operation. A barrier cannot overtake older DMA data.

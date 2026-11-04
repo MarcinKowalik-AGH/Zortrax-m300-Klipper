@@ -86,6 +86,9 @@ def main():
                                   ROOT / 'mcu/tests/test_m300_sd.c', '-o', sd_card])
     run('sd_card_model_execute', [sd_card])
     if args.dictionary:
+        run('oled_detent_traffic', [sys.executable, ROOT / 'ci/benchmark_oled_detents.py',
+            '--package', host, '--upstream', pristine, '--dictionary', args.dictionary.resolve(),
+            '--output', report / 'OLED_DETENTS.json'])
         host_tree = stage_host_tree(pristine)
         run('real_installer_migration', [sys.executable, ROOT / 'ci/validate_install.py',
             '--root', host_tree, '--output', ROOT / '.ci/installed-config'])

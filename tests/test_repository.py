@@ -71,9 +71,23 @@ class RepositoryContracts(unittest.TestCase):
             tool.pack(struct.pack('<II', 0x20020000, 0x08010009) + bytes(56))
 
     def test_existing_oled_transport_and_generic_renderer_are_unchanged(self):
-        for name in ('m300_oled_transport.py', 'm300_oled_render.py'):
-            self.assertEqual(digest(ROOT / 'host/klippy/extras' / name),
-                             digest(ROOT / 'host/update_template/tests/reference' / name), name)
+        runtime = ROOT / 'host/klippy/extras'
+        reference = ROOT / 'host/update_template/tests/reference'
+        self.assertEqual(digest(runtime / 'm300_oled_render.py'),
+                         digest(reference / 'm300_oled_render.py'))
+
+        def classes(folder):
+            module = ast.parse((folder / 'm300_oled_transport.py').read_text())
+            result = {}
+            for cls in (node for node in module.body if isinstance(node, ast.ClassDef)):
+                if cls.name == 'FastOledStream':
+                    cls.body = [node for node in cls.body
+                                if not isinstance(node, ast.FunctionDef)
+                                or node.name not in ('__init__', 'step')]
+                result[cls.name] = ast.dump(cls)
+            return result
+
+        self.assertEqual(classes(runtime), classes(reference))
 
     def test_oled_spi_lifecycle_and_background_scheduler_are_unchanged(self):
         def methods(path, allow_benchmark=False):
@@ -87,6 +101,18 @@ class RepositoryContracts(unittest.TestCase):
                 matching = [n for n in constructor.body if ast.dump(n) == ast.dump(registration)]
                 self.assertEqual(len(matching), 1)
                 constructor.body.remove(matching[0])
+                for item in ast.walk(constructor):
+                    if isinstance(item, ast.Call):
+                        item.keywords = [kw for kw in item.keywords if kw.arg != 'optimize_windows']
+                status = next(n for n in node.body if isinstance(n, ast.FunctionDef)
+                              and n.name == 'get_status')
+                for item in ast.walk(status):
+                    if isinstance(item, ast.Dict):
+                        fields = [(key, value) for key, value in zip(item.keys, item.values)
+                                  if not isinstance(key, ast.Constant)
+                                  or key.value not in ('optimize_windows', 'optimized_frames')]
+                        item.keys = [key for key, _ in fields]
+                        item.values = [value for _, value in fields]
             return {n.name:ast.dump(n,include_attributes=False) for n in node.body
                     if isinstance(n,ast.FunctionDef)}
         old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')

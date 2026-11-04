@@ -57,7 +57,8 @@ class M300OLED:
                                           minval=.050, maxval=1.),
             work_bytes_per_second=(config.getfloat('work_uart_fraction', .20,
                                                    minval=.05, maxval=.50)
-                                   * self.host_baud / 10.))
+                                   * self.host_baud / 10.),
+            optimize_windows=config.getboolean('optimize_windows', True))
         self.fast = False
         self.mcu_oled_stats = None
         self.stats_at = self.work_at = 0.
@@ -1106,6 +1107,8 @@ class M300OLED:
                 'acked': self.stream.acked, 'ignored_acks': self.stream.ignored_acks,
                 'last_frame_ms': self.stream.last_frame_ms,
                 'transport': 'DMA_RLE_WINDOW4' if self.fast else 'LEGACY_ACK32',
+                'optimize_windows': self.fast and self.stream.optimize_windows,
+                'optimized_frames': self.stream.optimized_frames if self.fast else 0,
                 'frame_samples': len(self.stream.frame_samples) if self.fast else 0,
                 'frame_mean_ms': (sum(self.stream.frame_samples)/len(self.stream.frame_samples)
                                   if self.fast and self.stream.frame_samples else None),

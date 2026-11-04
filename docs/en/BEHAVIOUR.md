@@ -22,6 +22,19 @@ because that API does not identify it separately. Raw PTY input is not
 intercepted; ZORTRAX_DISPLAY_WAKE is available.
 
 The complete first invisible gesture is consumed, including hold and release.
+
+## Interactive OLED updates
+
+The DMA transport compares a bounded set of OLED window layouts for urgent
+updates while the host reports that the printer is idle. It uses the existing
+DMA and ACK protocol and rejects candidates that increase SPI bytes or DMA
+operations. Background refresh, startup and active work use the original
+window selection.
+
+`ZORTRAX_OLED_STATUS` reports `optimize_windows` and `optimized_frames`.
+The latter counts frames submitted to the planner. To compare with the
+original behaviour, add `optimize_windows: false` to the existing
+`[m300_oled]` section and restart Klipper.
 It cannot choose an unseen action or grant a new encoder movement permission.
 Release/STOP delivery to the existing owner remains. After notice cancellation,
 actions remain guarded until the ordinary framebuffer is acknowledged.
