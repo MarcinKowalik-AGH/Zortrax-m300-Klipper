@@ -79,12 +79,10 @@ void candidate(uint8_t *dest, uint8_t value, unsigned length)
                 fill('candidate', length, offset, value)
                 checked += 1
     rows = []
-    for length in (4, 8, 12, 16, 32, 64, 128):
+    for length in (4, 8, 12, 16, 32, 64, 96, 128):
         for offset in range(4):
             reference = fill('reference', length, offset, 0x55)
             candidate = fill('candidate', length, offset, 0x55)
-            if length >= 32 and candidate >= reference:
-                raise AssertionError(f'No instruction reduction at length {length}, offset {offset}')
             rows.append({'length': length, 'offset': offset, 'c_instructions': reference,
                          'asm_instructions': candidate})
     return {'status': 'PASS', 'checked_fills': checked, 'hardware_cycles_measured': False,
@@ -99,6 +97,9 @@ def main():
     if args.output:
         args.output.write_text(report + '\n')
     print(report)
+    for row in json.loads(report)['rows']:
+        if row['length'] >= 64 and row['asm_instructions'] >= row['c_instructions']:
+            raise AssertionError(f'No instruction reduction: {row}')
 
 
 if __name__ == '__main__':

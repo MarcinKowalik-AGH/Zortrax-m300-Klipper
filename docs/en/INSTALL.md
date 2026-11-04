@@ -113,7 +113,7 @@ also contains the HOST_SOURCE snapshot.
 Run these commands in Fluidd with R14.8 running and the printer idle.
 
 ```text
-ZORTRAX_OLED_RLE_BENCH LENGTH=32 OFFSET=1
+ZORTRAX_OLED_RLE_BENCH LENGTH=64 OFFSET=1
 ZORTRAX_OLED_RLE_BENCH LENGTH=128 OFFSET=1
 ```
 
