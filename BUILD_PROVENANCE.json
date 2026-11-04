@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.8-OLED-RLE-ASM-UART8",
+  "mcu_release": "0.13.14.9-PANEL-REPORT-UART8",
   "host_update": "R16.12",
-  "github_commit": "59b1f0f41dacb5698fc03e585dff856bf25b95f3",
-  "github_run_id": "41870614710",
+  "github_commit": "d57d0fae800f772e5104b94d3ff2fcca33d8659e",
+  "github_run_id": "41879564642",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
