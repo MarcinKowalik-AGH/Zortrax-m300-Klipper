@@ -7,7 +7,7 @@
 
 #if defined(__ARM_ARCH_7M__)
 // Keep the registers clobbered by the wide store off the short-run path.
-static void __attribute__((noinline))
+static void __attribute__((__noinline__))
 oled_fill_long_run(uint8_t *dest, uint8_t value, unsigned count)
 {
     // The DMA slot starts at a byte offset. Align before using word stores.
