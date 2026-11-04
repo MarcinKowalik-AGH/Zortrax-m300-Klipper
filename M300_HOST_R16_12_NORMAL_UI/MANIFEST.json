@@ -1,7 +1,7 @@
 {
   "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
   "README.md": "2865bba6aadab728c82e4eb8a48a23f98ebdae545fd9398622a3fb96a2042813",
-  "SUPPORTED_BASELINES.json": "682ee5082cfe9829ffc8fabd32f550164389d557817b562ca72e7cd6bfa314d6",
+  "SUPPORTED_BASELINES.json": "b00c58fee8defd565a388df5f52d8f93d9d48b1984f0442b930f9599783a306d",
   "VERIFY.py": "29d0a03b6fad2a211e1e5779c43147c4bf64ecb894217855820326ed0d59248b",
   "install.py": "ab5b9c626187f01672be95639572d3483f031bf1f37cf98e112c800ac192110d",
   "m300_profile.py": "6d71627baeb4c125d83145ee3cabfbfb5303150864fda78ea559d4cf1e971efa",
@@ -46,7 +46,7 @@
   "payload/m300_oem_graphics.py": "023b22877783cfc30329433676a4fd3f38786d4c67bfb8e32e280b409e41f099",
   "payload/m300_oem_procedure_ui.py": "c88bfd32366c0f758ad0ec979c91eeb7c90d572c140b3f15ed548e52505fd628",
   "payload/m300_oem_sprites_131.json": "006058afcac0b9b888762a336935675bcac625b6f888e1fb10fca2872187c387",
-  "payload/m300_oled.py": "eeb035d229a377587ccda373f68c2c29be0633dc21df11f4217971b71d9627d4",
+  "payload/m300_oled.py": "c91626cfb2db45900259df9ee350c0f5bba4aee64ccc4b0ea8a99d7cca4dbd09",
   "payload/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
   "payload/m300_oled_transport.py": "c2d0b8a36191aff48907bbcc9436de791d4117be3078446bce855e0c4518ddf6",
   "payload/m300_operations.cfg": "1d6f45fa21659269fe6072c1ad978179b0e66556c9530c897497f5b55ea0ca2f",
