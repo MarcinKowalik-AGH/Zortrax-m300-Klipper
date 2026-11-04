@@ -132,11 +132,11 @@ def draw_text(frame, x, y, line):
 
 
 def draw_sprite(frame, sprite):
-    """Blit the audited 50 x 50 packed OEM frame at (200, 7)."""
+    """Right-align a packed sprite at the OEM icon edge."""
     width, height, pixels = sprite
     stride = width // 2
     for column in range(stride):
-        offset = (100 + column) * 64 + 7
+        offset = (125 - stride + column) * 64 + 7
         frame.raw[offset:offset + height] = pixels[column::stride]
 
 

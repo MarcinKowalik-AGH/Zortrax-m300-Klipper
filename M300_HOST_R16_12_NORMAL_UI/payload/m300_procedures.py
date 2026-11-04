@@ -13,9 +13,17 @@ from .m300_material_ui_state import MESSAGES
 from .m300_leveling_oem import describe, format_deviation
 from .m300_oem_procedure_ui import describe as describe_service
 from .m300_maintenance_ui import describe as describe_maintenance
+from .m300_native_service import require_idle_print
 
 OWNERS = ('m300_filament', 'm300_calibration', 'm300_maintenance',
-          'm300_thermal', 'm300_fans', 'm300_job')
+          'm300_thermal', 'm300_fans', 'm300_job', 'm300_motion')
+HOMING_TITLES = {'HOME_XY': 'Homing XY', 'HOME_ALL': 'Homing ALL'}
+HOMING_PHASES = {
+    'HOME_Y': 'Homing Y', 'HOME_X': 'Homing X', 'Z_PREHEAT': 'Heating nozzle for Z',
+    'Z_CHECK_CONTACT': 'Checking Z contact', 'Z_CONTACT_POSITION': 'Moving to Z contact',
+    'HOME_Z_NATIVE_PROBE': 'Homing Z', 'Z_FIVE_CONTACT_REFERENCES': 'Refining Z reference',
+    'Z_FINAL_CLEARANCE': 'Moving to Z clearance',
+}
 TERMINAL = ('COMPLETE', 'CANCELLED', 'FAULT', 'ERROR')
 VERBS = ('CONFIRM', 'PURGE', 'PAUSE', 'RESUME', 'CONFIRM_CLEAN', 'CANCEL',
          'BACK', 'TOGGLE_UPPER', 'TOGGLE_LOWER')
@@ -49,6 +57,7 @@ class M300Procedures:
         for event in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
             self.printer.register_event_handler(event, self.invalidate)
         self.printer.register_event_handler('klippy:ready', self._ready)
+        self.printer.register_event_handler('m300:homing_view_changed', self._homing_changed)
         for name, callback in (
                 ('ZORTRAX_PROCEDURE_STATUS', self.cmd_status),
                 ('ZORTRAX_PROCEDURE_SHOW', self.cmd_show),
@@ -60,6 +69,10 @@ class M300Procedures:
     def _ready(self):
         self.live = True
         self.reactor.update_timer(self.timer, self.reactor.NOW)
+
+    def _homing_changed(self):
+        if self.live:
+            self.reactor.update_timer(self.timer, self.reactor.NOW)
 
     def invalidate(self, *args):
         self.live = False
@@ -99,7 +112,8 @@ class M300Procedures:
 
     def _read(self, name, now):
         service = self.printer.lookup_object(name, None)
-        if service is None:
+        if service is None or (name == 'm300_motion' and
+                               getattr(service, 'operator_homing', None) not in HOMING_TITLES):
             return {'state': 'UNAVAILABLE', 'busy': False, 'ready': False}
         try:
             status = service.get_status(now)
@@ -146,7 +160,7 @@ class M300Procedures:
             owner = recent
         else:
             owner = active[0] if active else recent
-        if owner_override in snapshots:
+        if owner_override in snapshots and snapshots[owner_override]['state'] != 'UNAVAILABLE':
             owner = owner_override
         status = snapshots[owner] if owner else {'state': 'IDLE', 'busy': False}
         language = 'EN'
@@ -183,6 +197,9 @@ class M300Procedures:
                    else state.replace('_', ' ').title())
         if owner == 'm300_job' and status.get('can_confirm_resume_clean') is True:
             message = 'Clean nozzle, then confirm'
+        if owner == 'm300_motion':
+            title = HOMING_TITLES[status['operation']]
+            message = HOMING_PHASES.get(status.get('phase'), message)
         stats = self._read('print_stats', now)
         elapsed = (number(stats.get('print_duration')) if owner == 'm300_job' else
                    max(0., now - self.started.get(owner, now)))
@@ -215,6 +232,15 @@ class M300Procedures:
 
     def rows(self, now):
         view = self.view(now)
+        if view['owner'] == 'm300_motion':
+            rows = [(view['title'], None), (view['message'], None)]
+            if view['busy']:
+                rows.append(('Please wait', None))
+            else:
+                rows.insert(0, ('Back', ('page', 'zortrax')))
+                if view['reason']:
+                    rows.append((view['reason'], None))
+            return view['title'], rows
         if (view.get('maintenance_screen') or {}).get('kind') == 'fan_menu':
             return view['title'], [(self._action_label(view, action),
                     ('procedure_action', view['view_id'], action)) for action in view['actions']]
@@ -300,7 +326,13 @@ class M300Procedures:
             return
         self._emit('prompt_end')
         self._emit('prompt_begin ' + ('Klipper - ' if view['owner'] == 'm300_thermal' else 'ZORTRAX M300 - ') + view['title'])
-        if view.get('leveling_screen'):
+        if view['owner'] == 'm300_motion':
+            if view['busy']:
+                self._emit('prompt_text M300_HOMING_ACTIVE')
+            self._emit('prompt_text ' + view['message'])
+            if view['reason']:
+                self._emit('prompt_text ' + view['reason'])
+        elif view.get('leveling_screen'):
             screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
             for line in screen['text'].split('\n'):
                 self._emit('prompt_text ' + line.replace('|', '/'))
@@ -337,9 +369,11 @@ class M300Procedures:
         view = self.view(now)
         if view['owner'] and not view['snapshots'][view['owner']].get('platform_panel_local'):
             if view['view_id'] != self.last_prompt:
-                finished_service=((view.get('maintenance_screen') or view.get('leveling_screen')) and view['owner'] in
-                    ('m300_maintenance','m300_filament','m300_calibration','m300_fans') and view['state'] in
-                    ('COMPLETE','CANCELLED'))
+                homing = view['owner'] == 'm300_motion'
+                finished_service = (view['state'] in ('COMPLETE', 'CANCELLED') and
+                    (homing or ((view.get('maintenance_screen') or view.get('leveling_screen'))
+                     and view['owner'] in ('m300_maintenance','m300_filament',
+                                           'm300_calibration','m300_fans'))))
                 if finished_service:
                     self._emit('prompt_end')
                     self.last_prompt=view['view_id']
@@ -360,18 +394,23 @@ class M300Procedures:
                                 labels=[label for label,_ in menu.rows(now)[1]]
                                 if maintenance_screen['text'] in labels:
                                     oled.selection=labels.index(maintenance_screen['text'])
-                elif view.get('leveling_screen') and not finished_service and (view['owner']=='m300_calibration'
-                                                    or view['busy']):
+                elif not finished_service and (
+                        (homing and view['busy']) or
+                        (view.get('leveling_screen') and
+                         (view['owner'] == 'm300_calibration' or view['busy']))):
                     # External console, Fluidd and the encoder all follow the
                     # same current owner/phase, including screw pictograms.
                     menu = self.printer.lookup_object('m300_menu', None)
                     oled = self.printer.lookup_object('m300_oled', None)
                     ui = self.printer.lookup_object('m300_menu_ui', None)
                     if (menu is not None and oled is not None
-                            and not getattr(ui, 'leveling_settings', False)
+                            and (homing or not getattr(ui, 'leveling_settings', False))
                             and (menu.page != 'procedure' or oled.page != 'm04')):
                         menu._navigate('procedure')
                         oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
+                        if homing:
+                            oled.message = None
+                            oled._user_refresh_pending = True
                 elif finished_service:
                     # OEM Heat/Load/Unload return to the invoking submenu.
                     menu=self.printer.lookup_object('m300_menu',None)
@@ -393,6 +432,8 @@ class M300Procedures:
                     text = view['maintenance_screen']['text']
                 elif view.get('leveling_screen'):
                     text = view['leveling_screen']['text']
+                elif view['owner'] == 'm300_motion':
+                    text = view['title'] + ' ' + view['message']
                 else:
                     prefix = (str(view['snapshots'][view['owner']].get('operation') or 'Filament')
                               if view['owner'] == 'm300_filament' else
@@ -435,11 +476,17 @@ class M300Procedures:
     def cmd_start(self, gcmd):
         operation = gcmd.get('OP')
         if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT',
-                             'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK'):
+                             'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK', *HOMING_TITLES):
             raise self.printer.command_error('M300: unknown procedure')
         temp = gcmd.get_float('TEMP', None)
         try:
-            if operation.startswith('FAN'):
+            if operation in HOMING_TITLES:
+                motion = self.printer.lookup_object('m300_motion', None)
+                if not getattr(motion, 'normal_control', False):
+                    raise self.printer.command_error('Native M300 homing is unavailable')
+                require_idle_print(self.printer, self.reactor.monotonic())
+                self.gcode.run_script_from_command('G28 X Y' if operation == 'HOME_XY' else 'G28')
+            elif operation.startswith('FAN'):
                 owner=self.printer.lookup_object('m300_fans')
                 if operation=='FAN_BACK':
                     owner.end_oem()

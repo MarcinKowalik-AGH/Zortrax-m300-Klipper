@@ -33,6 +33,7 @@ class M300NativeMotion:
             raise config.error('M300 native homing settings must be finite')
         self.token = self.phase_id = 0
         self.state = self.phase = 'IDLE'
+        self.operator_homing = None
         self.reason, self.result = '', None
         self.failure_phase = None
         self.ready = False
@@ -85,6 +86,7 @@ class M300NativeMotion:
 
     def _ready(self):
         self.ready = True
+        self.operator_homing = None
 
     def _stop(self, event='host lifecycle'):
         self.token += 1
@@ -96,6 +98,8 @@ class M300NativeMotion:
 
     def _phase(self, name):
         self.phase, self.phase_id = name, self.phase_id + 1
+        if self.operator_homing is not None:
+            self.printer.send_event('m300:homing_view_changed')
 
     def _check(self, token):
         if token != self.token or not self.ready or self.printer.is_shutdown():
@@ -232,6 +236,16 @@ class M300NativeMotion:
         homed = kin.get_status(self.reactor.monotonic())['homed_axes']
         if 'z' in axes and any(a not in axes and a not in homed for a in 'xy'):
             raise self.printer.command_error('Home XY first, or use G28 for XYZ')
+        self.operator_homing = None
+        if owner_job is None and not oem_leveling:
+            operation = {'xy': 'HOME_XY', 'xyz': 'HOME_ALL'}.get(''.join(sorted(axes)))
+            if operation is not None:
+                stats = self.printer.lookup_object('print_stats', None)
+                sd = self.printer.lookup_object('virtual_sdcard', None)
+                if (getattr(sd, 'work_timer', None) is None
+                        and (stats is None or stats.get_status(self.reactor.monotonic()).get('state')
+                             not in ('printing', 'paused'))):
+                    self.operator_homing = operation
         self.token += 1
         token = self.token
         self.state, self.reason, self.result = 'HOMING', '', None
@@ -340,6 +354,7 @@ class M300NativeMotion:
         return {'version': '0.13.16.12-NATIVE-HOMING-MIN-TEMP', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
+                'operation': self.operator_homing,
                 'phase_id': self.phase_id, 'session_token': self.token,
                 'homed_axes': kin_status.get('homed_axes', ''),
                 'position_valid': kin_status.get('homed_axes') == 'xyz',
