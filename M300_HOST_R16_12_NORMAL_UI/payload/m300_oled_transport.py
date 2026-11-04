@@ -18,6 +18,9 @@ INIT = (
     (0xd1, b'\xa2\x20'), (0xbb, b'\x1f'), (0xb6, b'\x08'),
     (0xbe, b'\x07'), (0xa6, b''), (0xa9, b''),
 )
+MAX_DIRTY_REGIONS = 16
+FAST_TX_OVERHEAD = 20  # Conservative native framing and burst command fields.
+FAST_ACK_OVERHEAD = 10  # Framing, response ID and OLED acknowledgement token.
 
 
 def command(cmd, data=b'', delay=0.):
@@ -73,28 +76,8 @@ def diff_window(before,after):
 
 
 
-def diff_regions(before, after, max_regions=16):
-    """Choose a small set of safe, non-overlapping SSD1322 rectangles.
-
-    The SSD1322 window addresses groups of four pixels (two bytes); the
-    conservative alternative is a single exact bounding rectangle. An 8x8
-    grid of 32x8-pixel tiles is used only when it decreases the number of
-    ACK-paced operations. No previous frame is committed until EVERY window
-    has completed, including the final ACK. This is GDDRAM single-page mode:
-    there is no unverified A1 page flip on real hardware.
-    """
-    if type(max_regions) is not int or not 1<=max_regions<=64:
-        raise ValueError('Invalid maximum OLED dirty region count')
-    bounding=diff_window(before, after)
-    if bounding is None:
-        return ()
-    def cost(w):
-        y0,y1,c0,c1=w
-        size=(y1-y0+1)*(c1-c0+1)*2
-        # Each rectangle needs five ACK-paced command/data operations.
-        return 5 + (size+31)//32
-    if bounding==(0,63,0,63):
-        pass
+def _tiled_regions(before, after):
+    """Find non-overlapping dirty rectangles in a grid of 32x8-pixel tiles."""
     # 8 column-address groups (32 visible px) by 8 row tiles; 64 tiles.
     tile_dirty=[[False]*8 for _ in range(8)]
     for ty in range(8):
@@ -128,9 +111,27 @@ def diff_regions(before, after, max_regions=16):
         active=following
     rects.extend(active.values())
     rects.sort(key=lambda w:(w[0],w[2]))
-    if len(rects)>max_regions or sum(map(cost,rects))>=cost(bounding):
-        return (bounding,)
     return tuple(rects)
+
+
+def _raw_window_cost(window):
+    y0, y1, c0, c1 = window
+    size = (y1-y0+1) * (c1-c0+1) * 2
+    return 5 + (size+31)//32
+
+
+def diff_regions(before, after, max_regions=MAX_DIRTY_REGIONS):
+    """Choose between exact bounds and dirty tiles for the raw OLED stream."""
+    if type(max_regions) is not int or not 1 <= max_regions <= 64:
+        raise ValueError('Invalid maximum OLED dirty region count')
+    bounding = diff_window(before, after)
+    if bounding is None:
+        return ()
+
+    tiles = _tiled_regions(before, after)
+    if len(tiles) > max_regions or sum(map(_raw_window_cost, tiles)) >= _raw_window_cost(bounding):
+        return (bounding,)
+    return tiles
 
 
 def stock_init_operations():
@@ -358,6 +359,31 @@ def fast_frame_operations(wire, first_row=0, last_row=63, first_col=0, last_col=
     yield from fast_blocks(packed)
 
 
+def _fast_update_operations(before, after):
+    """Pick the cheaper encoded plan and reuse the blocks that were scored."""
+    bounding = diff_window(before, after)
+    if bounding is None:
+        return iter(())
+    tiles = _tiled_regions(before, after)
+    if tiles == (bounding,) or len(tiles) > MAX_DIRTY_REGIONS:
+        return fast_frame_operations(after, *bounding)
+
+    first, second = (bounding,), tiles
+    if sum(map(_raw_window_cost, tiles)) < _raw_window_cost(bounding):
+        first, second = second, first
+    overhead = FAST_TX_OVERHEAD + FAST_ACK_OVERHEAD
+    first_ops = [op for window in first for op in fast_frame_operations(after, *window)]
+    remaining = sum(len(args[3]) + overhead for _, args, _ in first_ops)
+    second_ops = []
+    for window in second:
+        for op in fast_frame_operations(after, *window):
+            remaining -= len(op[1][3]) + overhead
+            if remaining <= 0:
+                return iter(first_ops)
+            second_ops.append(op)
+    return iter(second_ops)
+
+
 def fast_init_operations(wire):
     yield ('control', (0, 0), .010)
     yield ('control', (0, 1), .500)
@@ -494,9 +520,8 @@ class FastOledStream(OledStream):
             self.next_interactive = now + (self.work_interval if self.active_work
                                           else self.interactive_interval)
             self._frame_payload, self._frame_wire = self.payload_bytes, self.wire_bytes
-            regions = ((0,63,0,63),) if self.previous is None else diff_regions(self.previous, self.target)
-            self.operations = itertools.chain.from_iterable(
-                fast_frame_operations(self.target, *w) for w in regions)
+            self.operations = (fast_frame_operations(self.target) if self.previous is None
+                               else _fast_update_operations(self.previous, self.target))
         if len(self.inflight) >= self.window:
             return None
         # Peek only one operation. A barrier cannot overtake older DMA data.
@@ -514,7 +539,7 @@ class FastOledStream(OledStream):
         if self.active_work:
             # 20 bytes cover msg id, token, args, length and a whole native
             # serial packet's framing (verified against the real dictionary).
-            cost = (len(args[3]) if kind == 'burst' else 0) + 20
+            cost = (len(args[3]) if kind == 'burst' else 0) + FAST_TX_OVERHEAD
             self.work_credit = min(208., self.work_credit + max(0., now-self.credit_at)*self.work_bytes_per_second)
             self.credit_at = now
             if cost > self.work_credit + 1.e-9:
