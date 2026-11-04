@@ -74,6 +74,7 @@ def measure(elf):
         return instructions
 
     byte('panel_configured', 1)
+    byte('panel_nav_enabled', 1)
     byte('nav_steps', 4)
     quadrature = (0, 1, -1, 0, -1, 0, 0, 1, 1, 0, 0, -1, 0, -1, 1, 0)
     counts = {key: [] for key in ('same_level', 'valid_edge', 'commit_detent', 'invalid_jump')}

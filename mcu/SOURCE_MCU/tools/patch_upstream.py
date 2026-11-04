@@ -16,7 +16,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.8-OLED-RLE-ASM-UART8"
+VERSION = "M300_CLASSIC-0.13.14.9-PANEL-REPORT-UART8"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",

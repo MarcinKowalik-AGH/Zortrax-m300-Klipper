@@ -32,7 +32,7 @@ DECL_CONSTANT("M300_OLED_DMA_IRQ_PRIORITY", 4);
 #define PANEL_EXTI_RELEASE (1u << 5)
 #define PANEL_EXTI_USED (PANEL_EXTI_AB | PANEL_EXTI_RELEASE)
 DECL_CONSTANT("M300_LOCAL_OLED_ABI", 1);
-DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.8-OLED-RLE-ASM-UART8");
+DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.9-PANEL-REPORT-UART8");
 DECL_CONSTANT("M300_OLED_HOSTLINK_ABI", 1);
 DECL_CONSTANT("M300_OLED_HOSTLINK_TIMEOUT_US", 1500000);
 DECL_CONSTANT("M300_LOCAL_OLED_STARTUP_FIX", 1);
@@ -240,7 +240,8 @@ static uint32_t shorts, longs, invalid_transitions, panel_sequence;
 static uint32_t nav_position;
 static int8_t nav_partial;
 static uint8_t nav_steps, panel_nav_enabled;
-static uint8_t last_ab, pressed, candidate, debounce_count;
+static uint8_t last_ab, candidate, debounce_count;
+static volatile uint8_t pressed;
 static uint8_t button_armed, long_sent;
 static volatile uint8_t continuous_press;
 static volatile uint8_t changed;
@@ -260,6 +261,10 @@ panel_sample_ab(void)
     };
     uint8_t ab = panel_ab();
     if (ab != last_ab) {
+        // With MCU-validated navigation, idle partial edges and invalid
+        // transitions ride the next event snapshot or heartbeat. A held
+        // button still needs prompt raw position and fault reports for jog.
+        uint8_t report = 0;
         if ((ab ^ last_ab) == 3) {
             invalid_transitions++;
             nav_partial = 0;
@@ -270,13 +275,16 @@ panel_sample_ab(void)
             if (nav_partial >= nav_steps) {
                 nav_position += nav_steps;
                 nav_partial = 0;
+                report = 1;
             } else if (nav_partial <= -(int8_t)nav_steps) {
                 nav_position -= nav_steps;
                 nav_partial = 0;
+                report = 1;
             }
         }
         last_ab = ab;
-        changed = 1;
+        if (report || !panel_nav_enabled || pressed)
+            changed = 1;
     }
 }
 

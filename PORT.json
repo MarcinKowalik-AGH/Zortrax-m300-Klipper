@@ -3,7 +3,7 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "upstream_archive_sha256": "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0",
   "upstream_archive_url": "https://codeload.github.com/Klipper3d/klipper/zip/ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.8-OLED-RLE-ASM-UART8",
+  "mcu_release": "0.13.14.9-PANEL-REPORT-UART8",
   "host_update": "R16.12",
   "menu_revision": "0.13.16.10-NATIVE-PRINT-CONTEXT",
   "display_revision": "0.4.0-M300-BRIGHTNESS",

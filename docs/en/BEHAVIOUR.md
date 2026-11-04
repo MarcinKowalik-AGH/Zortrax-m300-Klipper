@@ -35,6 +35,13 @@ window selection.
 The latter counts frames submitted to the planner. To compare with the
 original behaviour, add `optimize_windows: false` to the existing
 `[m300_oled]` section and restart Klipper.
+
+With MCU R14.9 and validated encoder navigation, completed detents and
+debounced button events can trigger a snapshot at the existing 20 ms
+minimum interval. Incomplete or invalid A/B transitions with the button
+released stay in the cumulative counters. The next event, explicit query
+or 250 ms heartbeat carries them. Legacy raw capture and held-button jog
+retain their original reporting cadence and local release stop.
 It cannot choose an unseen action or grant a new encoder movement permission.
 Release/STOP delivery to the existing owner remains. After notice cancellation,
 actions remain guarded until the ordinary framebuffer is acknowledged.

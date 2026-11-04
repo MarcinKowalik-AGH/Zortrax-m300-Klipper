@@ -82,7 +82,7 @@ static uint8_t timer_is_before(uint32_t a,uint32_t b) { return (int32_t)(a-b)<0;
 
 static unsigned cs_low, cs_high, ack_count, last_token, snapshot_count;
 static unsigned snapshot_v2;
-static uint32_t snapshot_position, snapshot_nav_position;
+static uint32_t snapshot_position, snapshot_nav_position, snapshot_invalid;
 static unsigned byte_count;
 static unsigned host_reply_count, host_reply_state, host_reply_local, host_reply_fault, host_reply_reason;
 static uint8_t payload[32], wire[20000];
@@ -121,7 +121,8 @@ static void sendf(const char *format, ...) {
         snapshot_v2 = strstr(format,"m300_panel_state_v2") != NULL;
         (void)va_arg(a,unsigned); (void)va_arg(a,unsigned);
         snapshot_position=va_arg(a,unsigned);
-        for(unsigned i=0;i<6;i++)(void)va_arg(a,unsigned);
+        for(unsigned i=0;i<5;i++)(void)va_arg(a,unsigned);
+        snapshot_invalid=va_arg(a,unsigned);
         if(snapshot_v2)snapshot_nav_position=va_arg(a,unsigned);
     }
     else assert(!"Unexpected response");
@@ -166,6 +167,61 @@ static void reset_encoder(unsigned held) {
     GPIOE->IDR=3u<<7;
     GPIOC->IDR=held ? 0 : 1u<<5;
     command_m300_panel_config(NULL);
+}
+
+static void test_navigation_report_coalescing(void) {
+    reset_encoder(0);
+    panel_configured = 0;
+    uint32_t config[] = {4};
+    command_m300_panel_config_v2(config);
+    unsigned initial = snapshot_count;
+    for (unsigned tick = 0; tick < 1000; tick++) {
+        set_ab(tick & 1 ? 3 : 0); // One invalid diagonal transition per ms.
+        m300_panel_task();
+    }
+    assert(snapshot_count == initial + 4);
+    assert(snapshot_v2 && snapshot_invalid == 1000 && !snapshot_nav_position);
+    assert(!snapshot_position && !nav_partial);
+
+    set_ab(2); // One valid partial edge still waits for the heartbeat.
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 4 && position == 1);
+    set_ab(0); set_ab(1); set_ab(3);
+    m300_panel_task();
+    assert(snapshot_count == initial + 5 && snapshot_nav_position == 4);
+    assert(snapshot_position == 4 && snapshot_invalid == 1000);
+
+    set_ab(0);
+    command_m300_panel_query(NULL);
+    assert(snapshot_count == initial + 6 && snapshot_invalid == 1001);
+    assert(!panel_wake.wake);
+    set_button(1, 5);
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 7);
+
+    // During a held jog, the host needs raw edges and invalid reports promptly.
+    set_ab(1);
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 8 && snapshot_position == 5);
+    assert(snapshot_nav_position == 4);
+    set_ab(2);
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 9 && snapshot_invalid == 1002);
+    set_button(0, 5);
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 10 && !pressed);
+
+    // Old hosts keep the original raw AB report cadence.
+    reset_encoder(0);
+    set_ab(0);
+    sample_n(20);
+    m300_panel_task();
+    assert(snapshot_count == initial + 11 && !snapshot_v2 && snapshot_invalid == 1);
 }
 
 int main(void) {
@@ -270,6 +326,7 @@ int main(void) {
     assert(panel_wake.wake);m300_panel_task();assert(snapshot_count==1);
     command_m300_panel_query(NULL);assert(snapshot_count==2);
 
+    test_navigation_report_coalescing();
     reset_encoder(0);
     set_button(1,5);
     uint32_t arm_release[] = {11, presses};
