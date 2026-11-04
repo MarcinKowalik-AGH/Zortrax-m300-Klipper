@@ -32,6 +32,7 @@ static unsigned mock_encoder_irq_priority, mock_dma_irq_priority;
 } while (0)
 #define NVIC_ClearPendingIRQ(...) do {} while (0)
 #define __DMB() do {} while (0)
+#define __DSB() do {} while (0)
 static GPIO_TypeDef mock_b, mock_c, mock_e;
 static SPI_TypeDef mock_spi;
 static RCC_TypeDef mock_rcc;
@@ -230,6 +231,28 @@ int main(void) {
     SPI2->SR=1u<<1;SPI2->CR1^=1;
     REJECT(command_m300_oled_write(write));
     SPI2->CR1=spi_cr1;
+
+    // Decode a literal followed by the longest run at an unaligned offset.
+    memcpy(payload, (uint8_t[]){1, 0x12, 0x34, 0xff, 0x55}, 5);
+    uint32_t burst[] = {3, 1, 1, 130, 5, 0};
+    command_m300_oled_burst(burst);
+    struct oled_slot *slot = &oled_slots[oled_head];
+    assert(oled_count == 1 && slot->length == 130 && slot->token == 3);
+    assert(slot->data[0] == 0x12 && slot->data[1] == 0x34);
+    for (unsigned i = 2; i < slot->length; i++)
+        assert(slot->data[i] == 0x55);
+    burst[3] = 129;
+    REJECT(command_m300_oled_burst(burst));
+    burst[3] = 130;
+    burst[4] = 4;
+    REJECT(command_m300_oled_burst(burst));
+    assert(oled_count == 1 && ack_count == 2);
+    m300_oled_dma_task();
+    assert(mock_dma5.CNDTR == 130 && ack_count == 2);
+    mock_dma.ISR = 1u << 17;
+    m300_oled_dma_irq();
+    m300_oled_dma_task();
+    assert(!oled_count && ack_count == 3 && last_token == 3);
 
     reset_encoder(0);
     REJECT(command_m300_panel_config(NULL));

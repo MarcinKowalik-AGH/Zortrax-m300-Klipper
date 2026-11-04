@@ -3,6 +3,7 @@
 // Private SPI2 TX: STM32F103 DMA1 channel 5. Four fixed slots, no heap.
 // Raw or lossless PackBits; 32 UART payload bytes -> <=256 SPI wire bytes.
 // Other peripherals and the native Klipper step/ADC/safety paths are untouched.
+#include "m300_oled_rle.h"
 #define OLED_QUEUE 4
 #define OLED_WIRE 256
 #define OLED_DMA_FLAGS (15u << 16)
@@ -199,7 +200,7 @@ command_m300_oled_burst(uint32_t *args)
             if (count > length - out || i >= size)
                 shutdown("M300 invalid OLED RLE size");
             if (code & 128u) {
-                memset(s->data + out, data[i++], count);
+                oled_fill_run(s->data + out, data[i++], count);
             } else {
                 if (count > size - i)
                     shutdown("M300 invalid OLED RLE literal");
@@ -229,3 +230,38 @@ command_m300_oled_stats(uint32_t *args)
           oled_display_fault, panel_spi_hz, oled_max_busy_ticks);
 }
 DECL_COMMAND(command_m300_oled_stats, "m300_oled_query_stats");
+
+void
+command_m300_oled_rle_bench(uint32_t *args)
+{
+    unsigned length = args[0], offset = args[1];
+    uint32_t c_ticks = UINT32_MAX, asm_ticks = UINT32_MAX;
+    if (!length || length > 128 || offset > 3) {
+        sendf("m300_oled_rle_result c_ticks=%u asm_ticks=%u", 0, 0);
+        return;
+    }
+    // Private SRAM only. Keep interrupts enabled and report the fastest of
+    // five pairs to limit noise from other work. The native timer is CYCCNT.
+    _Alignas(4) uint8_t buffer[128 + 3];
+    uint8_t *dest = buffer + offset;
+    uint8_t value = 0x55 ^ length;
+    for (unsigned sample = 0; sample < 5; sample++) {
+        uint32_t start = timer_read_time();
+        memset(dest, value, length);
+        __asm__ volatile("" : : "r" (dest) : "memory");
+        __DSB();
+        uint32_t elapsed = timer_read_time() - start;
+        if (elapsed < c_ticks)
+            c_ticks = elapsed;
+
+        start = timer_read_time();
+        oled_fill_run(dest, value, length);
+        __asm__ volatile("" : : "r" (dest) : "memory");
+        __DSB();
+        elapsed = timer_read_time() - start;
+        if (elapsed < asm_ticks)
+            asm_ticks = elapsed;
+    }
+    sendf("m300_oled_rle_result c_ticks=%u asm_ticks=%u", c_ticks, asm_ticks);
+}
+DECL_COMMAND(command_m300_oled_rle_bench, "m300_oled_rle_bench length=%c offset=%c");

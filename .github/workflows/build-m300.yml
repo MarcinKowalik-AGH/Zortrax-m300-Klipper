@@ -61,6 +61,11 @@ jobs:
       - name: Validate host, startup, guards, cooling and actual Klippy FILEOUTPUT
         run: python ci/run_checks.py --dictionary dist/mcu/klipper.dict
 
+      - name: Check OLED RLE on emulated Cortex-M instructions
+        run: |
+          python -m pip install unicorn==2.1.4
+          python ci/benchmark_oled_rle.py --output .ci/reports/OLED_RLE.json
+
       - name: Select Node 24
         uses: actions/setup-node@v4
         with:

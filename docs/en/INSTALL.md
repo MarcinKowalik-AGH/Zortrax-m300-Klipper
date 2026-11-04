@@ -2,7 +2,7 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.7.
+This host update is for M300 Classic with the native Klipper port and MCU R14.5–R14.8.
 Factory serial and OEM print time require R14.6 or later.
 OLED hold-to-move with local button release stop requires R14.7.
 It accepts recognized baselines from R15.3 through the initial R16.12 build,
@@ -102,8 +102,23 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_7_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_8_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. The full Actions artifact
 also contains the HOST_SOURCE snapshot.
+
+### OLED RLE benchmark
+
+Run these commands in Fluidd with R14.8 running and the printer idle.
+
+```text
+ZORTRAX_OLED_RLE_BENCH LENGTH=32 OFFSET=1
+ZORTRAX_OLED_RLE_BENCH LENGTH=128 OFFSET=1
+```
+
+The console reports MCU cycles for the previous C fill and the new Thumb-2
+fill. Each result is the minimum of five samples with interrupts enabled.
+Offset 1 models one alignment of the DMA slot. The test writes to a scratch
+buffer in SRAM. The numbers measure fill time only. `ZORTRAX_OLED_STATUS`
+reports complete frame timings, which also include the host and serial link.

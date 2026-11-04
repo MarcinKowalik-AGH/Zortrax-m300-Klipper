@@ -76,14 +76,22 @@ class RepositoryContracts(unittest.TestCase):
                              digest(ROOT / 'host/update_template/tests/reference' / name), name)
 
     def test_oled_spi_lifecycle_and_background_scheduler_are_unchanged(self):
-        def methods(path):
+        def methods(path, allow_benchmark=False):
             tree=ast.parse(path.read_text())
             node=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='M300OLED')
+            if allow_benchmark:
+                constructor = next(n for n in node.body if isinstance(n, ast.FunctionDef)
+                                   and n.name == '__init__')
+                registration = ast.parse("self.gcode.register_command("
+                                         "'ZORTRAX_OLED_RLE_BENCH', self.cmd_rle_bench)").body[0]
+                matching = [n for n in constructor.body if ast.dump(n) == ast.dump(registration)]
+                self.assertEqual(len(matching), 1)
+                constructor.body.remove(matching[0])
             return {n.name:ast.dump(n,include_attributes=False) for n in node.body
                     if isinstance(n,ast.FunctionDef)}
         old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')
-        new=methods(ROOT/'host/klippy/extras/m300_oled.py')
-        self.assertEqual(set(old),set(new))
+        new=methods(ROOT/'host/klippy/extras/m300_oled.py', allow_benchmark=True)
+        self.assertEqual(set(new), set(old) | {'cmd_rle_bench'})
         # _select additionally preserves the interactive OEM fan-menu cursor.
         for name in old.keys()-{'_render','_panel','_select'}:
             self.assertEqual(old[name],new[name],name)
