@@ -250,6 +250,63 @@ replay(struct stepper *s, unsigned oid, const unsigned blocks[][2], unsigned n)
     assert(((GPIOB->CRL >> (4 * a->pin)) & 15) == 1);
 }
 
+static void
+replay_diagonal(struct stepper *x, struct stepper *y)
+{
+    // Blocks planned by Klippy on the way into and through the region
+    // around X69.25 Y69.25 in the 300 mm/s diagonal move.
+    const unsigned blocks[][2] = {
+        {1434,168}, {1404,176}, {1375,177}, {1347,187},
+        {1320,186}, {1294,195}, {1269,194}, {1245,202},
+        {1222,198}, {1200,209}, {1179,198}, {1159,212},
+        {1139,220}, {1120,212}, {1102,217}, {1084,235},
+        {1066,239}, {1049,231}, {1033,233}, {1018,223},
+        {1003,253}, {988,244}, {974,242}, {960,264},
+        {946,266}, {933,247}, {921,246}, {909,267},
+        {897,267}, {885,287}, {874,243}, {864,256},
+        {854,259}, {844,277}, {834,277}, {824,298},
+        {814,297}, {805,259}, {796,315}, {787,279},
+    };
+    unsigned count = sizeof(blocks) / sizeof(blocks[0]);
+    uint32_t steps = 0;
+    uint32_t starts = now + 3000;
+    command_reset_step_clock((uint32_t[]){0, starts});
+    command_reset_step_clock((uint32_t[]){1, starts});
+    for (unsigned i = 0; i < count; i++) {
+        queue(0, blocks[i][0], blocks[i][1], 0);
+        queue(1, blocks[i][0], blocks[i][1], 0);
+        steps += blocks[i][1];
+    }
+    int32_t x_start = position(x), y_start = position(y);
+    uint32_t toggles = cpu_toggles;
+    unsigned edges[2] = {0};
+    for (unsigned i = 0; i < 2 * (count + 1); i++) {
+        struct stepper *s = x;
+        if (!x->count || (y->count && timer_is_before(y->time.waketime,
+                                                      x->time.waketime)))
+            s = y;
+        assert(s->count && s->timer_mode != M300_TIMER_SOFTWARE);
+        if (timer_is_before(now, s->time.waketime)) {
+            uint32_t idle = s->time.waketime - now;
+            edges[0] += advance_axis(1, idle);
+            edges[1] += advance_axis(2, idle);
+            now += idle;
+        }
+        uint32_t start = now;
+        stepper_event(&s->time);
+        // Inject callback work on the shared CPU while both timers run.
+        uint32_t elapsed = now - start + 128;
+        edges[0] += advance_axis(1, elapsed);
+        edges[1] += advance_axis(2, elapsed);
+        now = start + elapsed;
+    }
+    assert(!x->count && !y->count && cpu_toggles == toggles);
+    assert(edges[0] == steps && edges[1] == steps);
+    assert(position(x) == x_start - (int32_t)steps);
+    assert(position(y) == y_start - (int32_t)steps);
+    assert(!advance_axis(1, 1440) && !advance_axis(2, 1440));
+}
+
 int main(void)
 {
     stalled_self_test_axis = 2;
@@ -264,7 +321,9 @@ int main(void)
     assert(TIM2->CR2 == 0x30 && TIM3->CR2 == 0x30);
     assert(TIM4->CR2 == 0x40 && TIM5->CR2 == 0x40);
     assert(m300_xy_timer_axis(GPIO('B', 7)) == 0);
-    assert(!m300_xy_timer_eligible(751, 144, 28800));
+    assert(m300_xy_timer_eligible(814, 144, 297));
+    assert(m300_xy_timer_eligible(1440, 144, 32));
+    assert(!m300_xy_timer_eligible(1441, 144, 28800));
     assert(!m300_xy_timer_eligible(350, 144, 28800));
     assert(!m300_xy_timer_eligible(625, 72, 28800));
     assert(!m300_xy_timer_eligible(625, 144, 31));
@@ -286,6 +345,7 @@ int main(void)
     replay(y, 1, plateau, 96);
     const unsigned high_speed[][2] = {{375,65535},{376,313},{375,1024}};
     replay(x, 0, high_speed, sizeof(high_speed) / sizeof(high_speed[0]));
+    replay_diagonal(x, y);
 
     int32_t x_start = position(x), y_start = position(y);
     command_reset_step_clock((uint32_t[]){0, now + 3000});

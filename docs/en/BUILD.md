@@ -58,7 +58,7 @@ Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.
 
 Pass `--xy-step-timer-lab` to `mcu/SOURCE_MCU/tools/build.py` and use a
 separate work and output directory. The build identifies itself as
-`0.13.14.13-XY-STEP-TIMER-LAB`. Run the register model with
+`0.13.14.14-XY-STEP-TIMER-LAB`. Run the register model with
 `python3 mcu/SOURCE_MCU/tools/test_xy_step_timer.py --upstream .ci/pristine`.
 
 TIM2_CH2/PB3 and TIM3_CH1/PB4 generate both edges of each STEP pulse in
@@ -72,11 +72,16 @@ The log must show `M300 XY STEP timer startup check axes=3` before a
 motion test. A failed internal route keeps both axes on software STEP.
 
 The timer path handles non-inverted X/Y blocks of at least 32 steps,
-with a constant period of 352 to 720 core ticks and the 2 µs STEP
+with a constant period of 352 to 1440 core ticks and the 2 µs STEP
 setting. It reanchors each new hardware block to Klipper's planned
 clock while preserving the minimum low width. The software path handles
 varying-period, short and slower blocks. The first completed hardware
 block per axis is reported in `klippy.log`.
+
+The earlier handoff covers the simultaneous X/Y acceleration blocks
+around the 814-tick period where R14.13 used software STEP. The native
+model runs both axes on a common simulated clock through overlapping
+block completions and re-arms.
 
 This is a prototype for the M300 Classic application slot. Physical
 qualification requires a STEP capture verifying count, width and timing

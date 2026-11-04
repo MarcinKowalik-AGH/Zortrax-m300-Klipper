@@ -60,7 +60,9 @@ m300_xy_timer_axis(uint32_t pin)
 uint8_t
 m300_xy_timer_eligible(uint32_t period, uint32_t pulse, uint32_t count)
 {
-    return pulse == 144 && count >= 32 && period <= 720
+    // Both axes can saturate the software step scheduler during acceleration
+    // before either reaches the old 720-tick handover point.
+    return pulse == 144 && count >= 32 && period <= 1440
         && period >= 2 * (pulse + M300_XY_TIMER_HIGH_MARGIN);
 }
 
