@@ -65,6 +65,7 @@ static GPIO_TypeDef port_b, dir_port;
 #define TIM_CR1_CEN 1u
 #define TIM_CR1_URS 4u
 #define TIM_EGR_UG 1u
+#define TIM_SR_UIF 1u
 #define TIM_DIER_UDE (1u << 8)
 #define TIM_DIER_CC1DE (1u << 9)
 #define TIM_DIER_CC2DE (1u << 10)
@@ -122,6 +123,7 @@ void m300_require_motion(void)
     if (!armed)
         shutdown("motion disarmed");
 }
+void m300_require_motion_gate(void) { m300_require_motion(); }
 static void gpio_out_write(struct gpio_out g, uint32_t on)
 {
     if (on)
@@ -160,6 +162,7 @@ static void trsync_add_signal(struct trsync *trsync, struct trsync_signal *signa
 }
 static void move_queue_setup(struct move_queue_head *queue, size_t size) { queue->size = size; }
 static int move_queue_empty(struct move_queue_head *queue) { return !queue->first; }
+static struct move_node *move_queue_first(struct move_queue_head *queue) { return queue->first; }
 static void move_queue_push(struct move_node *node, struct move_queue_head *queue)
 {
     struct move_node **at = &queue->first;
@@ -249,6 +252,62 @@ block(struct stepper *stepper, unsigned period, unsigned count)
     for (unsigned i = 0; i < count + 2; i++)
         pulse(stepper->dma_axis, 0); // Excess timer events emit zero edges.
     assert(a->rise->CNDTR == 0 && a->fall->CNDTR == 0);
+    a->timer->CNT = period - 1; // Exercise the stop/start fallback.
+}
+
+static unsigned
+captured_block_count(unsigned index, unsigned period_a, unsigned a, unsigned b)
+{
+    if (index % 2)
+        return b;
+    return a + (period_a == 433 && index % 8 == 6);
+}
+
+static void
+captured_handoffs(struct stepper *stepper, unsigned blocks,
+                  unsigned period_a, unsigned period_b,
+                  unsigned count_a, unsigned count_b)
+{
+    command_reset_step_clock((uint32_t[]){0, now + 3000});
+    for (unsigned i = 0; i < blocks; i++) {
+        unsigned count = captured_block_count(i, period_a, count_a, count_b);
+        queue(0, i % 2 ? period_b : period_a, count, 0);
+    }
+    int32_t start_position = position(stepper);
+    uint32_t old_toggles = cpu_toggles;
+    assert(event(stepper) == SF_RESCHEDULE);
+    uint32_t completed = 0;
+    const struct xy_dma_axis *a = &axes[0];
+    for (unsigned i = 0; i < blocks; i++) {
+        uint32_t period = a->timer->ARR + 1;
+        uint32_t count = a->rise->CNDTR;
+        assert(count == captured_block_count(i, period_a, count_a, count_b));
+        assert(period == (i % 2 ? period_b : period_a));
+        for (unsigned j = 0; j < count; j++)
+            pulse(1, 0);
+        completed += count;
+        assert(position(stepper) == start_position - (int32_t)completed);
+
+        // SysTick is servicing a final falling edge in the current cycle.
+        // Preserve the counter and fixed phase despite callback latency.
+        a->timer->CNT = 240 + (i % 3) * 12;
+        a->timer->EGR = 0;
+        uint32_t last_clock = stepper->next_step_time;
+        uint32_t finish_clock = stepper->time.waketime;
+        now = finish_clock + 25 + (i % 3) * 12;
+        uint_fast8_t result = stepper_event(&stepper->time);
+        if (i + 1 == blocks) {
+            assert(result == SF_DONE && !(TIM2->CR1 & TIM_CR1_CEN));
+        } else {
+            uint32_t next_period = i % 2 ? period_a : period_b;
+            assert(result == SF_RESCHEDULE && stepper->dma_mode == M300_DMA_RUNNING);
+            uint32_t span = next_period * a->rise->CNDTR;
+            assert(stepper->next_step_time == last_clock + span);
+            assert(stepper->time.waketime == finish_clock + span);
+            assert(a->timer->CNT == 240 + (i % 3) * 12 && !a->timer->EGR);
+        }
+    }
+    assert(cpu_toggles == old_toggles);
 }
 
 int main(void)
@@ -286,10 +345,35 @@ int main(void)
     assert(event(x) == SF_DONE && position(x) == -93705);
     assert(cpu_toggles == 0);
 
+    // Preserve the exact gap and pulse count across the field captures.
+    captured_handoffs(x, 67, 433, 432, 704, 313);
+    captured_handoffs(x, 46, 562, 563, 563, 563);
+    captured_handoffs(x, 67, 375, 376, 704, 313);
+    int32_t start_position = position(x);
+
+    // A late callback may see a good-looking CNT in the next timer cycle.
+    // Use DWT to refuse an unsafe rearm even when both counters are empty.
+    command_reset_step_clock((uint32_t[]){0, now + 3000});
+    queue(0, 433, 32, 0);
+    queue(0, 432, 32, 0);
+    block(x, 433, 32);
+    TIM2->CNT = 240;
+    now = x->time.waketime + 433;
+    assert(stepper_event(&x->time) == SF_RESCHEDULE);
+    assert(x->dma_mode == M300_DMA_PLANNED && !(TIM2->CR1 & TIM_CR1_CEN));
+    assert(position(x) == start_position - 32);
+    now += 1;
+    assert(stepper_event(&x->time) == SF_RESCHEDULE);
+    for (unsigned i = 0; i < 32; i++)
+        pulse(1, 0);
+    assert(event(x) == SF_DONE && position(x) == start_position - 64);
+    start_position = position(x);
+
     // 300 mm/s nominal single-axis timing, then concurrent diagonal blocks.
+    command_reset_step_clock((uint32_t[]){0, now + 3000});
     queue(0, 375, 1024, 0);
     block(x, 375, 1024);
-    assert(event(x) == SF_DONE && position(x) == -94729);
+    assert(event(x) == SF_DONE && position(x) == start_position - 1024);
     command_reset_step_clock((uint32_t[]){0, now + 3000});
     command_reset_step_clock((uint32_t[]){1, now + 3000});
     queue(0, 530, 128, 0);
@@ -303,7 +387,7 @@ int main(void)
     uint32_t before_stop = now;
     stepper_stop(&x->stop_signal, 0);
     assert(now - before_stop >= 144);
-    assert(position(x) == -94736 && position(y) == -6);
+    assert(position(x) == start_position - 1031 && position(y) == -6);
     assert(!(TIM2->CR1 & TIM_CR1_CEN) && (TIM3->CR1 & TIM_CR1_CEN));
     apply_bsrr(GPIOB->BSRR);
     assert(!transfer(axes[0].rise, axes[0].high));
@@ -320,7 +404,7 @@ int main(void)
     block(x, 625, 32);
     assert(event(x) == SF_RESCHEDULE && (dir_port.ODR & (1u << 9)));
     block(x, 625, 32);
-    assert(event(x) == SF_DONE && position(x) == -94736);
+    assert(event(x) == SF_DONE && position(x) == start_position - 1031);
 
     // A changing-period block stays on the native software path.
     command_reset_step_clock((uint32_t[]){1, now + 3000});
@@ -355,6 +439,7 @@ int main(void)
         assert(0);
     }
     assert(strstr(fault_message, "disarmed") && !(TIM2->CR1 & TIM_CR1_CEN));
-    puts("PASS M300 XY STEP DMA register model: captured blocks, 300 mm/s timings,"
-         " concurrent axes, wrap, count, trigger stop, abort and faults");
+    puts("PASS M300 XY STEP DMA register model: captured blocks, phase-preserving"
+         " handoffs, late fallback, 300 mm/s timings, concurrent axes, wrap,"
+         " count, trigger stop, abort and faults");
 }

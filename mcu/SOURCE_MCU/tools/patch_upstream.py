@@ -246,6 +246,26 @@ m300_stepper_prepare_dma(struct stepper *s)
         return SF_RESCHEDULE;
     }
     if (s->dma_mode == M300_DMA_RUNNING) {
+        struct move_node *node = move_queue_first(&s->mq);
+        if (node) {
+            struct stepper_move *m = container_of(node, struct stepper_move,
+                                                  node);
+            uint32_t period = m->interval, count = m->count;
+            uint32_t last_rise = s->time.waketime - s->step_pulse_ticks
+                - 2 * M300_XY_DMA_EDGE_MARGIN;
+            if (!(m->flags & MF_DIR) && !m->add
+                && m300_xy_dma_eligible(period, s->step_pulse_ticks, count)
+                && m300_xy_dma_chain(s->dma_axis, period, count, last_rise)) {
+                uint32_t duration = period * count;
+                s->next_step_time += duration;
+                s->time.waketime += duration;
+                s->position += count;
+                s->interval = period;
+                s->count = 2 * count;
+                move_free(move_queue_pop(&s->mq));
+                return SF_RESCHEDULE;
+            }
+        }
         m300_xy_dma_finish(s->dma_axis);
         s->dma_mode = M300_DMA_SOFTWARE;
         s->time.waketime += s->step_pulse_ticks;

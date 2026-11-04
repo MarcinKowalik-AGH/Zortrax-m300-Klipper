@@ -453,6 +453,19 @@ m300_require_motion(void)
         trip(M300_FAULT_REQUEST);
 }
 
+#if CONFIG_M300_XY_STEP_DMA_LAB
+void
+m300_require_motion_gate(void)
+{
+    // Continuing an active timer uses the live motion gate. The periodic
+    // guard still checks ADC and host freshness and aborts any active DMA.
+    if (GPIOE->IDR & (1u << 15))
+        trip(M300_FAULT_PLATFORM);
+    if (!gate_open(M300_GATE_MOTION))
+        trip(M300_FAULT_REQUEST);
+}
+#endif
+
 void
 m300_require_output(void *regs, uint32_t bit, uint32_t on)
 {

@@ -156,6 +156,64 @@ m300_xy_dma_stop(uint8_t axis)
     return remaining;
 }
 
+static void
+report_completed_block(uint8_t axis, uint8_t chained)
+{
+    uint8_t mask = 1 << (axis - 1);
+    if (chained)
+        mask |= mask << 2;
+    mask &= ~first_reported;
+    if (mask) {
+        first_reported |= mask;
+        pending_report |= mask;
+        sched_wake_task(&report_wake);
+    }
+}
+
+uint8_t
+m300_xy_dma_chain(uint8_t axis, uint32_t period, uint32_t count,
+                  uint32_t last_rise_clock)
+{
+    const struct xy_dma_axis *a = &axes[axis - 1];
+    TIM_TypeDef *t = a->timer;
+    uint32_t old_period = t->ARR + 1;
+    uint32_t limit = period < old_period ? period : old_period;
+    if (a->rise->CNDTR || a->fall->CNDTR
+        || (DMA1->ISR & a->flags & transfer_errors))
+        return 0;
+    m300_require_motion_gate();
+    // A zero transfer count also persists after a missed overflow. The DWT
+    // deadline rules out an older timer cycle before rearming the channels.
+    if (!timer_is_before(timer_read_time(), last_rise_clock + limit))
+        return 0;
+    uint32_t counter = t->CNT;
+    if (counter < *a->compare || counter + 64 >= limit)
+        return 0;
+
+    // ARR has no preload. Changing it after the final compare sets the gap
+    // to the next rising edge without resetting CNT or shifting timer phase.
+    // Keep requests masked while rearming the two finite channels.
+    t->DIER = 0;
+    t->SR = 0;
+    t->ARR = period - 1;
+    a->rise->CCR = a->fall->CCR = 0;
+    DMA1->IFCR = a->flags;
+    a->rise->CNDTR = a->fall->CNDTR = count;
+    a->fall->CCR = a->rise->CCR = channel_mode | DMA_CCR_EN;
+    uint32_t armed_counter = t->CNT;
+    if (armed_counter < counter || armed_counter + 32 >= period
+        || (t->SR & TIM_SR_UIF)) {
+        // Requests stayed masked. Restore the completed transfer state so
+        // the caller can stop this timer and use the regular handoff.
+        a->rise->CCR = a->fall->CCR = 0;
+        a->rise->CNDTR = a->fall->CNDTR = 0;
+        return 0;
+    }
+    t->DIER = TIM_DIER_UDE | a->compare_request;
+    report_completed_block(axis, 1);
+    return 1;
+}
+
 void
 m300_xy_dma_finish(uint8_t axis)
 {
@@ -163,12 +221,7 @@ m300_xy_dma_finish(uint8_t axis)
     uint32_t remaining = m300_xy_dma_stop(axis);
     if (remaining || a->fall->CNDTR || (DMA1->ISR & a->flags & transfer_errors))
         shutdown("M300 XY DMA incomplete STEP block");
-    uint8_t mask = 1 << (axis - 1);
-    if (!(first_reported & mask)) {
-        first_reported |= mask;
-        pending_report |= mask;
-        sched_wake_task(&report_wake);
-    }
+    report_completed_block(axis, 0);
 }
 
 void
@@ -184,6 +237,10 @@ m300_xy_dma_report_task(void)
         output("M300 XY STEP DMA completed first X block");
     if (report_mask & 2)
         output("M300 XY STEP DMA completed first Y block");
+    if (report_mask & 4)
+        output("M300 XY STEP DMA chained first X boundary");
+    if (report_mask & 8)
+        output("M300 XY STEP DMA chained first Y boundary");
 }
 DECL_TASK(m300_xy_dma_report_task);
 
