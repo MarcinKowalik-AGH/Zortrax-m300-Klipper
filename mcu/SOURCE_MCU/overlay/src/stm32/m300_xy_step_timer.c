@@ -41,6 +41,13 @@ pin_mode(const struct xy_timer_axis *a, uint32_t mode)
 uint8_t
 m300_xy_timer_axis(uint32_t pin)
 {
+    // Report at the first Klipper stepper configuration, when the host
+    // can receive the message even if it attached well after MCU boot.
+    if (!(first_reported & 4)) {
+        first_reported |= 4;
+        pending_report |= 4;
+        sched_wake_task(&report_wake);
+    }
     if (verified != 3)
         return 0;
     if (pin == GPIO('B', 3))
@@ -100,8 +107,6 @@ m300_xy_timer_init(void)
             verified |= 1u << i;
         p->CR1 = g->CR1 = 0;
     }
-    pending_report = 4;
-    sched_wake_task(&report_wake);
 }
 DECL_INIT(m300_xy_timer_init);
 
