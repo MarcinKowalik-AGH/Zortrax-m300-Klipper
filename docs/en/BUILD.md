@@ -54,33 +54,27 @@ identity fixture is not installed by the host update.
 R16 also replays native XYZ homing with 180C, repeated Z, 300 mm/s/M220=150,
 Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.
 
-### Experimental XY STEP DMA
+### Experimental XY STEP timers
 
-Pass `--xy-step-dma-lab` to `mcu/SOURCE_MCU/tools/build.py` and use a separate
-work and output directory. The build identifies itself as
-`0.13.14.12-XY-STEP-DMA-DIAG-LAB`. The register model can be run with
-`python3 mcu/SOURCE_MCU/tools/test_xy_step_dma.py --upstream .ci/pristine`.
+Pass `--xy-step-timer-lab` to `mcu/SOURCE_MCU/tools/build.py` and use a
+separate work and output directory. The build identifies itself as
+`0.13.14.13-XY-STEP-TIMER-LAB`. Run the register model with
+`python3 mcu/SOURCE_MCU/tools/test_xy_step_timer.py --upstream .ci/pristine`.
 
-The lab build uses finite DMA transfers for non-inverted X and Y
-constant-period blocks of at least 32 pulses, with a period of 352 to
-720 core ticks and the stock 2 µs STEP setting. TIM2 and TIM3 generate update
-and compare events that set and clear PB3 and PB4 through DMA1 channels
-2/7 and 3/6, respectively. The GPIO pins stay in output mode. The existing
-software scheduler handles the other blocks. On the first completed hardware
-block per axis, `klippy.log` records `M300 XY STEP DMA completed first X block`
-or the equivalent line for Y.
+TIM2_CH2/PB3 and TIM3_CH1/PB4 generate both edges of each STEP pulse in
+PWM mode. A compare trigger at each falling edge clocks TIM4 or TIM5.
+The counter closes the pulse timer's internal gate at the programmed
+count. The output returns to software GPIO for other blocks. The
+existing motion guard owns shutdown and pin recovery.
 
-Adjacent eligible blocks in the same direction can rearm both DMA channels
-without resetting the running timer. The new period governs the gap after
-the preceding block's final rising edge. If the counter has passed the safe
-rearm window, the regular stop/start handoff handles the next block. The
-first successful chained boundary per axis is reported in `klippy.log`.
+The timer path handles non-inverted X/Y blocks of at least 32 steps,
+with a constant period of 352 to 720 core ticks and the 2 µs STEP
+setting. It reanchors each new hardware block to Klipper's planned
+clock while preserving the minimum low width. The software path handles
+varying-period, short and slower blocks. The first completed hardware
+block per axis is reported in `klippy.log`.
 
-If block completion causes a shutdown, the diagnostic build logs the
-remaining rising and falling transfers, timer counter, period, compare
-value, DMA flags and MCU deadlines after the motion guard closes. Use the
-record to distinguish an unfinished edge from a transfer error.
-
-This is a lab image for the M300 Classic application slot. Qualification
-requires checking pulse width, count and timing on the physical board and
-repeating X, Y and diagonal moves with a position check after each speed.
+This is a prototype for the M300 Classic application slot. Physical
+qualification requires a STEP capture verifying count, width and timing
+across block boundaries and at a trigger stop. Then repeat X, Y and
+diagonal moves with a position check at each speed.

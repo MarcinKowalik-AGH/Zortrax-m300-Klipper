@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the real patched stepper and DMA driver with STM32 register doubles."""
+"""Replay the real patched stepper and gated-timer driver with STM32 register doubles."""
 import argparse
 from pathlib import Path
 import subprocess
@@ -20,7 +20,7 @@ def main():
         if patch_upstream.sha(data) != digest:
             raise ValueError('Not pristine pinned source: ' + name)
         original[name] = data.decode()
-    with tempfile.TemporaryDirectory(prefix='m300-xy-dma-') as directory:
+    with tempfile.TemporaryDirectory(prefix='m300-xy-timer-') as directory:
         work = Path(directory)
         (work / 'native_stepper.c').write_text(patch_upstream.transformed(original)['src/stepper.c'])
         for name in ('autoconf.h', 'basecmd.h', 'board/gpio.h', 'board/irq.h',
@@ -31,13 +31,13 @@ def main():
             target.touch()
         overlay = KIT / 'overlay/src/stm32'
         (work / 'board/m300.h').symlink_to(overlay / 'm300.h')
-        (work / 'board/m300_xy_step_dma.h').symlink_to(overlay / 'm300_xy_step_dma.h')
-        executable = work / 'xy-dma-test'
+        (work / 'board/m300_xy_step_timer.h').symlink_to(overlay / 'm300_xy_step_timer.h')
+        executable = work / 'xy-timer-test'
         subprocess.run([
             'cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
             '-Wno-unused-parameter',
             '-I' + str(work), '-I' + str(overlay),
-            str(KIT / 'tests/test_m300_xy_step_dma.c'), '-o', str(executable),
+            str(KIT / 'tests/test_m300_xy_step_timer.c'), '-o', str(executable),
         ], check=True)
         subprocess.run([str(executable)], check=True)
 

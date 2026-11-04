@@ -62,7 +62,7 @@ def main():
         '--package',host,'--output',report/'MENU_PERFORMANCE.json'])
     run('step_equivalence', [sys.executable, KIT / 'tools/test_stepfast.py',
                             '--upstream', pristine, '--report', report / 'STEP.json'])
-    run('xy_step_dma_model', [sys.executable, KIT / 'tools/test_xy_step_dma.py',
+    run('xy_step_timer_model', [sys.executable, KIT / 'tools/test_xy_step_timer.py',
                               '--upstream', pristine])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',
                         '--upstream', pristine, '--report', report / 'AUTOCOOL.json'])

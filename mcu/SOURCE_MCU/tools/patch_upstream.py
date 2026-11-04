@@ -64,8 +64,8 @@ config M300_CLASSIC
         Requires 72 MHz, USART1 PA9/PA10, 32 KiB stock bootloader offset.
         Starts unarmed with both cooling fans HIGH; never flashes the board.
 
-config M300_XY_STEP_DMA_LAB
-    bool "Experimental Classic M300 constant-period XY STEP DMA"
+config M300_XY_STEP_TIMER_LAB
+    bool "Experimental Classic M300 constant-period XY STEP timer"
     depends on M300_CLASSIC && !WANT_STEPPER_OPTIMIZED_BOTH_EDGE
     default n
 ''', key)
@@ -73,7 +73,7 @@ config M300_XY_STEP_DMA_LAB
     key = "src/stm32/Makefile"
     anchor = "# Add source files\n"
     f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c
-src-$(CONFIG_M300_XY_STEP_DMA_LAB) += stm32/m300_xy_step_dma.c
+src-$(CONFIG_M300_XY_STEP_TIMER_LAB) += stm32/m300_xy_step_timer.c
 ifeq ($(CONFIG_M300_CLASSIC),y)
 CFLAGS_klipper.elf += -Wl,-Map=$(OUT)klipper.map
 endif
@@ -91,7 +91,22 @@ endif
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
 #include "m300.h"
 #endif
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+#include "m300_xy_step_timer.h"
+#endif
 ''', key + ":include")
+    anchor = "#define STM_OSPEED"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_XY_STEP_TIMER_LAB
+void
+m300_xy_timer_remap(void)
+{
+    stm32f1_alternative_remap(AFIO_MAPR_TIM2_REMAP_Msk | AFIO_MAPR_TIM3_REMAP_Msk,
+                              AFIO_MAPR_TIM2_REMAP_PARTIALREMAP1
+                              | AFIO_MAPR_TIM3_REMAP_PARTIALREMAP);
+}
+#endif
+
+''' + anchor, key + ":xy-timer-remap")
     anchor = "gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)\n{\n"
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_check_pin_mode(gpio, mode);
@@ -185,30 +200,30 @@ struct gpio_in
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
 #include "board/m300.h"
 #endif
-#if CONFIG_M300_XY_STEP_DMA_LAB
-#include "board/m300_xy_step_dma.h"
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+#include "board/m300_xy_step_timer.h"
 #endif
 ''', key + ":include")
     anchor = "    uint8_t flags : 8;\n};\n"
     f[key] = replace(f[key], anchor, '''    uint8_t flags : 8;
-#if CONFIG_M300_XY_STEP_DMA_LAB
-    uint8_t dma_axis, dma_mode;
-    uint32_t dma_first_clock;
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+    uint8_t timer_axis, timer_mode;
+    uint32_t timer_first_clock;
 #endif
 };
 ''', key + ":dma-fields")
     anchor = "// Setup a stepper for the next move in its queue\n"
-    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_XY_STEP_DMA_LAB
-enum { M300_DMA_SOFTWARE, M300_DMA_PLANNED, M300_DMA_RUNNING };
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_XY_STEP_TIMER_LAB
+enum { M300_TIMER_SOFTWARE, M300_TIMER_PLANNED, M300_TIMER_RUNNING };
 
 static void
-m300_stepper_prepare_dma(struct stepper *s)
+m300_stepper_prepare_timer(struct stepper *s)
 {
-    if (!s->dma_axis || s->add
-        || !m300_xy_dma_eligible(s->interval, s->step_pulse_ticks, s->count / 2))
+    if (!s->timer_axis || s->add
+        || !m300_xy_timer_eligible(s->interval, s->step_pulse_ticks, s->count / 2))
         return;
-    s->dma_mode = M300_DMA_PLANNED;
-    s->dma_first_clock = s->time.waketime;
+    s->timer_mode = M300_TIMER_PLANNED;
+    s->timer_first_clock = s->time.waketime;
     // Allow a short setup window when scheduling from a previous block.
     // Keep new timers inserted by a host command strictly in the future.
     if ((int32_t)(s->time.waketime - timer_read_time()) > 208)
@@ -219,46 +234,53 @@ m300_stepper_prepare_dma(struct stepper *s)
 ''' + anchor, key + ":dma-prepare")
     anchor = "                s->time.waketime = min_next_time;\n            return SF_RESCHEDULE;\n"
     f[key] = replace(f[key], anchor, '''                s->time.waketime = min_next_time;
-#if CONFIG_M300_XY_STEP_DMA_LAB
-            m300_stepper_prepare_dma(s);
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+            m300_stepper_prepare_timer(s);
 #endif
             return SF_RESCHEDULE;
 ''', key + ":dma-dir-handoff")
     anchor = "    if (need_dir_change)\n        gpio_out_toggle_noirq(s->dir_pin);\n    return SF_RESCHEDULE;"
     f[key] = replace(f[key], anchor, '''    if (need_dir_change)
         gpio_out_toggle_noirq(s->dir_pin);
-#if CONFIG_M300_XY_STEP_DMA_LAB
-    m300_stepper_prepare_dma(s);
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+    m300_stepper_prepare_timer(s);
 #endif
     return SF_RESCHEDULE;''', key + ":dma-handoff")
     anchor = "stepper_event_full(struct timer *t)\n{\n    struct stepper *s = container_of(t, struct stepper, time);\n"
-    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_DMA_LAB
-    if (s->dma_mode == M300_DMA_PLANNED) {
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER_LAB
+    const uint32_t high_margin = M300_XY_TIMER_HIGH_MARGIN;
+    const uint32_t gate_margin = M300_XY_TIMER_GATE_MARGIN;
+    if (s->timer_mode == M300_TIMER_PLANNED) {
         uint32_t count = s->count / 2;
         uint32_t span = (count - 1) * s->interval;
-        uint32_t first = m300_xy_dma_start(s->dma_axis, s->interval,
+        uint32_t first = m300_xy_timer_start(s->timer_axis, s->interval,
                                          s->step_pulse_ticks, count,
-                                         s->dma_first_clock);
-        s->dma_mode = M300_DMA_RUNNING;
+                                         s->timer_first_clock);
+        s->timer_mode = M300_TIMER_RUNNING;
         s->next_step_time += span;
         s->time.waketime = first + span + s->step_pulse_ticks
-            + 2 * M300_XY_DMA_EDGE_MARGIN;
+            + high_margin + gate_margin;
         return SF_RESCHEDULE;
     }
-    if (s->dma_mode == M300_DMA_RUNNING) {
+    if (s->timer_mode == M300_TIMER_RUNNING) {
         struct move_node *node = move_queue_first(&s->mq);
         if (node) {
             struct stepper_move *m = container_of(node, struct stepper_move,
                                                   node);
             uint32_t period = m->interval, count = m->count;
-            uint32_t last_rise = s->time.waketime - s->step_pulse_ticks
-                - 2 * M300_XY_DMA_EDGE_MARGIN;
             if (!(m->flags & MF_DIR) && !m->add
-                && m300_xy_dma_eligible(period, s->step_pulse_ticks, count)
-                && m300_xy_dma_chain(s->dma_axis, period, count, last_rise)) {
-                uint32_t duration = period * count;
-                s->next_step_time += duration;
-                s->time.waketime += duration;
+                && m300_xy_timer_eligible(period, s->step_pulse_ticks, count)) {
+                uint32_t first = s->next_step_time + period;
+                // Preserve the minimum low width if the previous block ran
+                // late. Otherwise re-anchor to Klipper's absolute clock.
+                uint32_t earliest = s->time.waketime
+                    + s->step_pulse_ticks - gate_margin;
+                if (timer_is_before(first, earliest))
+                    first = earliest;
+                first = m300_xy_timer_chain(s->timer_axis, period, count, first);
+                s->next_step_time += period * count;
+                s->time.waketime = first + period * (count - 1)
+                    + s->step_pulse_ticks + high_margin + gate_margin;
                 s->position += count;
                 s->interval = period;
                 s->count = 2 * count;
@@ -266,37 +288,37 @@ m300_stepper_prepare_dma(struct stepper *s)
                 return SF_RESCHEDULE;
             }
         }
-        m300_xy_dma_finish(s->dma_axis, s->time.waketime, s->next_step_time);
-        s->dma_mode = M300_DMA_SOFTWARE;
+        m300_xy_timer_finish(s->timer_axis);
+        s->timer_mode = M300_TIMER_SOFTWARE;
         s->time.waketime += s->step_pulse_ticks;
         return stepper_load_next(s);
     }
 #endif
 ''', key + ":dma-step")
     anchor = "    s->step_pulse_ticks = args[4];\n"
-    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_DMA_LAB
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER_LAB
     if (invert_step == 0)
-        s->dma_axis = m300_xy_dma_axis(args[1]);
+        s->timer_axis = m300_xy_timer_axis(args[1]);
 #endif
 ''', key + ":dma-config")
     anchor = "    uint32_t position = s->position;\n"
-    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_DMA_LAB
-    if (s->dma_mode == M300_DMA_RUNNING)
-        position -= m300_xy_dma_remaining(s->dma_axis);
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER_LAB
+    if (s->timer_mode == M300_TIMER_RUNNING)
+        position -= m300_xy_timer_remaining(s->timer_axis);
     else
 #endif
 ''', key + ":dma-position")
     anchor = "    sched_del_timer(&s->time);\n    s->next_step_time"
     f[key] = replace(f[key], anchor, '''    sched_del_timer(&s->time);
-#if CONFIG_M300_XY_STEP_DMA_LAB
-    if (s->dma_mode == M300_DMA_RUNNING)
-        s->count = 2 * m300_xy_dma_stop(s->dma_axis);
-    s->dma_mode = M300_DMA_SOFTWARE;
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+    if (s->timer_mode == M300_TIMER_RUNNING)
+        s->count = 2 * m300_xy_timer_stop(s->timer_axis);
+    s->timer_mode = M300_TIMER_SOFTWARE;
 #endif
     s->next_step_time''', key + ":dma-stop")
     anchor = "stepper_shutdown(void)\n{\n"
-    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_DMA_LAB
-    m300_xy_dma_abort_all();
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_XY_STEP_TIMER_LAB
+    m300_xy_timer_abort_all();
 #endif
 ''', key + ":dma-shutdown")
     anchor = "command_queue_step(uint32_t *args)\n{\n"

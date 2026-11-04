@@ -12,8 +12,8 @@
 #include "command.h"
 #include "internal.h"
 #include "m300.h"
-#if CONFIG_M300_XY_STEP_DMA_LAB
-#include "m300_xy_step_dma.h"
+#if CONFIG_M300_XY_STEP_TIMER_LAB
+#include "m300_xy_step_timer.h"
 #endif
 #include "sched.h"
 #include "m300_sched.h"
@@ -164,16 +164,16 @@ m300_early_init(void)
 static void
 force_safe(void)
 {
-#if CONFIG_M300_XY_STEP_DMA_LAB
+#if CONFIG_M300_XY_STEP_TIMER_LAB
     irqstatus_t flag = irq_save();
 #endif
     armed = 0;
-#if CONFIG_M300_XY_STEP_DMA_LAB
+#if CONFIG_M300_XY_STEP_TIMER_LAB
     raw_write(GPIOD, 1u << 14, 0);
-    m300_xy_dma_abort_all();
+    m300_xy_timer_abort_all();
 #endif
     raw_safe_outputs();
-#if CONFIG_M300_XY_STEP_DMA_LAB
+#if CONFIG_M300_XY_STEP_TIMER_LAB
     irq_restore(flag);
 #endif
 }
@@ -453,7 +453,7 @@ m300_require_motion(void)
         trip(M300_FAULT_REQUEST);
 }
 
-#if CONFIG_M300_XY_STEP_DMA_LAB
+#if CONFIG_M300_XY_STEP_TIMER_LAB
 void
 m300_require_motion_gate(void)
 {
