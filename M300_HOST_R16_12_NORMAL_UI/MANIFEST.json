@@ -1,7 +1,7 @@
 {
   "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
   "README.md": "2865bba6aadab728c82e4eb8a48a23f98ebdae545fd9398622a3fb96a2042813",
-  "SUPPORTED_BASELINES.json": "a5b9207983cb5568c39f44ed3f128f4c73344424a44f61f17c8ac402e5e2ee24",
+  "SUPPORTED_BASELINES.json": "afd021c0f2ef0211d2088524f4defa32a48205ebed6fdc5947bb17c413091e88",
   "VERIFY.py": "29d0a03b6fad2a211e1e5779c43147c4bf64ecb894217855820326ed0d59248b",
   "install.py": "ab5b9c626187f01672be95639572d3483f031bf1f37cf98e112c800ac192110d",
   "m300_profile.py": "6d71627baeb4c125d83145ee3cabfbfb5303150864fda78ea559d4cf1e971efa",
@@ -52,7 +52,7 @@
   "payload/m300_operations.cfg": "2f24c675f61ebb9a0d309246cb43aa4dbcbee220e93c09f00234c327dddeda7c",
   "payload/m300_print_hold.py": "13607580f5890cff073babc6bccced2e9104d63fdc8121de7c6c0c9e50763092",
   "payload/m300_print_ui.py": "bc6573d8ed8bc99a55a31c3d94ddd5c7d7ad05c143d2ecf76db7647b1d07d894",
-  "payload/m300_procedures.py": "6f3101d192024d5d15ebe28e2f30d581dda17d0ed81e723e3d5436bc5d70d90f",
+  "payload/m300_procedures.py": "e5d6af03ee5efab75146898f753fd14f57e8726c8ea23cbe49b1723c25ba0e1b",
   "payload/m300_resources.py": "1ee2d29895bd3f1cc104baa0733cf6b6fdb60e0cca81806d527b189491024180",
   "payload/m300_sd.py": "08a78a8f33b14903a610e24aa79daa03d7a17982f617b7853c14c72440163e05",
   "payload/m300_settings.py": "78c39dbc2313637e4d167cb00a578dbf8368fc3583e04434d8fa1998a85fd687",

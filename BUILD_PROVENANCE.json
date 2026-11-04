@@ -1,17 +1,18 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.9-PANEL-REPORT-UART8",
+  "mcu_release": "0.13.14.14-XY-STEP-TIMER-UART8",
   "host_update": "R16.12",
-  "github_commit": "63c18b199f43af6d7974a355f5368eaf4ad3af40",
-  "github_run_id": "41891772234",
+  "github_commit": "cb76f4e6e30a3b84b71c85e59b128507dd24f671",
+  "github_run_id": "41934870510",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
   "normal_motion": true,
+  "xy_step_timer": true,
   "z_homing_temperature": 180,
   "xy_velocity_profile": 300,
   "calibration_temperature": 260,
   "filament_temperature": 240,
-  "release_stage": "TEST_READY"
+  "release_stage": "VERIFIED"
 }

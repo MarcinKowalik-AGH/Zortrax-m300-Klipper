@@ -352,12 +352,6 @@ class M300Procedures:
             color = 'error' if verb == 'CANCEL' else 'primary'
             self._emit('prompt_button %s|ZORTRAX_PROCEDURE_ACTION VIEW=%s ACTION=%s|%s' %
                        (self._action_label(view, verb), view['view_id'], verb, color))
-        settings = self.printer.lookup_object('m300_settings', None)
-        if (self.live and view['busy'] and view['state'] not in TERMINAL
-                and (view.get('maintenance_screen') or {}).get('kind') != 'platform'
-                and settings is not None):
-            for line in settings.brightness_prompt(('oled_brightness', 'led_brightness')):
-                self._emit('prompt_text ' + line)
         if self.live and not (view.get('leveling_screen') or view.get('maintenance_screen')):
             self._emit('prompt_footer_button Refresh|ZORTRAX_PROCEDURE_SHOW|info')
         self._emit('prompt_show')
