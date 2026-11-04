@@ -10,6 +10,13 @@ original shared procedure actions.
 Printer information in the M300 build uses compact text rows for the model,
 hardware version, serial number and printing time.
 
+**Homing XY** and **Homing ALL** are available in the OLED Zortrax menu and
+as Fluidd macros `ZORTRAX_HOME_XY` and `ZORTRAX_HOME_ALL`. They call
+`G28 X Y` and `G28` respectively. Fluidd's standard XY and All controls
+also show the shared phase when the printer is idle. The M300 Fluidd build
+animates an hourglass while the OLED uses the original four-frame sprite.
+Print start and Autocalibration keep their own procedure screens.
+
 ## Build
 
 The patch applies to [Fluidd v1.37.7](https://github.com/fluidd-core/fluidd/tree/b2edab5bc690f5265a5aa1e56ae3f67669053fd4).

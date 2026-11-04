@@ -98,7 +98,7 @@ index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef4094030
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -7,88 +7,218 @@
+@@ -7,88 +7,261 @@
 -  >
 -    <v-card-text>
 -      <v-row
@@ -189,6 +189,25 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 -</style>
 +  >
 +    <v-card-text>
++      <svg
++        v-if="homingActive"
++        class="m300-homing-hourglass"
++        viewBox="0 0 32 32"
++        aria-hidden="true"
++      >
++        <path
++          d="M7 5h18M7 27h18M9 5v5l7 6-7 6v5M23 5v5l-7 6 7 6v5"
++          fill="none"
++          stroke="currentColor"
++          stroke-width="2"
++          stroke-linecap="round"
++          stroke-linejoin="round"
++        />
++        <path
++          d="M11 8h10l-5 5z"
++          fill="currentColor"
++        />
++      </svg>
 +      <v-row
 +        v-for="item in visibleItems"
 +        :key="`item::${item.id}`"
@@ -272,6 +291,8 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +import StateMixin from '@/mixins/state'
 +import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
 +
++const homingMarker = 'M300_HOMING_ACTIVE'
++
 +@Component({ components: { M300LevelingDiagram } })
 +export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
 +  brightnessDraft: Record<string, number> = {}
@@ -286,6 +307,11 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +
 +  get compactPrinterInfo () {
 +    return this.dialog.title === 'ZORTRAX M300 - Printer information'
++  }
++
++  get homingActive () {
++    return (this.dialog.title === 'ZORTRAX M300 - Homing XY' || this.dialog.title === 'ZORTRAX M300 - Homing ALL') &&
++      this.dialog.items.some(item => item.type === 'text' && item.text === homingMarker)
 +  }
 +
 +  get brightness () {
@@ -323,6 +349,7 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +    const replaced = this.leveling?.otherIds ?? []
 +    const singleBrightness = this.brightness.some(control => this.dialog.title === `ZORTRAX M300 - ${control.label}`)
 +    return this.dialog.items.filter(item => !replaced.includes(item.id) &&
++      !(this.homingActive && item.type === 'text' && item.text === homingMarker) &&
 +      !(singleBrightness && item.type === 'button' && /^(?:[1-9]|1[0-6])(?: <)?$/.test(item.text)))
 +  }
 +
@@ -343,6 +370,22 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +</script>
 +
 +<style lang="scss" scoped>
++  .m300-homing-hourglass {
++    display: block;
++    width: 40px;
++    height: 40px;
++    margin: 0 auto 8px;
++    animation: m300-homing-turn 2s linear infinite;
++  }
++
++  @keyframes m300-homing-turn {
++    to { transform: rotate(360deg); }
++  }
++
++  @media (prefers-reduced-motion: reduce) {
++    .m300-homing-hourglass { animation: none; }
++  }
++
 +  .prompt-button-group {
 +    display: flex;
 +    flex-wrap: wrap;
@@ -502,7 +545,7 @@ diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/
 new file mode 100644
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,131 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import { describe, expect, it, vi } from 'vitest'
@@ -586,6 +629,34 @@ new file mode 100644
 +    expect(wrapper.text()).toContain('Model: Zortrax M300 Classic')
 +    expect(wrapper.text()).toContain('Hardware version: HW05')
 +    expect(wrapper.text()).toContain('Back')
++    wrapper.destroy()
++  })
++})
++
++describe('M300 homing progress', () => {
++  it.each([
++    ['ZORTRAX M300 - Homing XY', true, true],
++    ['ZORTRAX M300 - Homing ALL', true, true],
++    ['ZORTRAX M300 - Homing ALL', false, false],
++    ['Unrelated dialog', true, false]
++  ] as const)('renders the hourglass for %s with marker %s', (title, marker, animated) => {
++    const prompt = {
++      title,
++      open: true,
++      items: [
++        { id: 1, type: 'text', text: 'Homing Y axis' },
++        ...(marker ? [{ id: 2, type: 'text', text: 'M300_HOMING_ACTIVE' }] : [])
++      ],
++      footerButtons: []
++    }
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(ActionCommandPromptDialog, {
++      mocks: { $typedState: { console: { promptDialog: prompt } } },
++      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot }
++    })
++    expect(wrapper.find('svg.m300-homing-hourglass').exists()).toBe(animated)
++    expect(wrapper.text()).toContain('Homing Y axis')
++    expect(wrapper.text().includes('M300_HOMING_ACTIVE')).toBe(marker && !animated)
 +    wrapper.destroy()
 +  })
 +})

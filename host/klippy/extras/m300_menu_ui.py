@@ -11,7 +11,7 @@ import os
 from collections import deque
 
 from .m300_ui_m11_state import MenuHistory, LANGS, atlas_summary, require_rows, clean_label
-from .m300_oem_graphics import OEMGraphics, choose_icon
+from .m300_oem_graphics import HOMING_HOURGLASS, OEMGraphics, choose_icon
 from .m300_ui_labels import english_label
 from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
@@ -103,7 +103,12 @@ class M300MenuUI:
             return None
         menu_page = self.menu.page if panel_page in ('home','m04') else ''
         if menu_page == 'procedure':
-            owner = self.procedures.view(now)['owner']
+            view = self.procedures.view(now)
+            owner = view['owner']
+            if owner == 'm300_motion':
+                self.last_sprite = HOMING_HOURGLASS if view['busy'] else (
+                    '0x0801c024' if view['state'] == 'COMPLETE' else '0x0801be48')
+                return self.oem_sprites.get(self.last_sprite, now)
             if owner == 'm300_calibration':
                 menu_page = 'calibration'
             elif owner == 'm300_filament':
@@ -125,6 +130,8 @@ class M300MenuUI:
             filament=snapshot('m300_filament') if (panel_page.startswith('filament')
                 or menu_page=='material_status') else {},
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
+        if menu_page == 'zortrax' and self.last_sprite == HOMING_HOURGLASS:
+            return self.oem_sprites.get(self.last_sprite)
         return self.oem_sprites.get(self.last_sprite, now)
 
     def leveling_frame(self, panel_page, now, frame_type):

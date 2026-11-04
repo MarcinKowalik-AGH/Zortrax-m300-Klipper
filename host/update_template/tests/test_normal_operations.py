@@ -14,6 +14,7 @@ def motion_fixture():
     motion = M300NativeMotion.__new__(M300NativeMotion)
     motion.token = motion.phase_id = 0
     motion.state = motion.phase = 'IDLE'
+    motion.operator_homing = None
     motion.reason, motion.result, motion.ready = '', None, True
     motion.homing_speeds = motion.failure_phase = None
     motion.home_xy, motion.travel_speed = (150., 158.), 50.
@@ -49,7 +50,7 @@ def motion_fixture():
                          get_position=lambda: position[:], wait_moves=lambda: None,
                          get_last_move_time=lambda: 1., check_busy=lambda now: (1., 2., True))
     motion.printer = NS(command_error=RuntimeError, is_shutdown=lambda: False,
-                        lookup_object=lambda name, default=None: default)
+                        lookup_object=lambda name, default=None: default, send_event=Mock())
     motion.gcode = NS(create_gcode_command=lambda name, text, params: params)
     def native_home(params):
         motion.events.append(('home', ''.join(params)))
@@ -66,6 +67,22 @@ def motion_fixture():
 
 
 class NormalHomingTests(unittest.TestCase):
+    def test_operator_homing_presentation_leaves_leveling_and_print_in_control(self):
+        for axes, leveling, printing, expected in (
+                ('xy', False, False, 'HOME_XY'), ('xyz', False, False, 'HOME_ALL'),
+                ('z', False, False, None), ('xyz', True, False, None),
+                ('xyz', False, True, None)):
+            with self.subTest(axes=axes, leveling=leveling, printing=printing):
+                motion = motion_fixture()
+                if printing:
+                    motion.printer.lookup_object = {
+                        'virtual_sdcard': NS(work_timer=object())
+                    }.get
+                status = motion.home(axes=axes, oem_leveling=leveling)
+                self.assertEqual(status['operation'], expected)
+                self.assertEqual(status['state'], 'COMPLETE')
+                self.assertEqual(motion.printer.send_event.called, expected is not None)
+
     def test_xy_needs_no_heat_or_clearance_declaration_and_keeps_z_e(self):
         m = motion_fixture()
         m.homed.clear()

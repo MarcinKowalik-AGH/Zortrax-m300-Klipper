@@ -9,6 +9,10 @@ SPRITE_LABEL_PIXELS = 174
 MENU_LABEL_PIXELS = 232
 
 
+def menu_label_pixels(sprite):
+    return MENU_LABEL_PIXELS if sprite is None else SPRITE_LABEL_PIXELS - max(0, sprite[0] - 50)
+
+
 @lru_cache(maxsize=64)
 def menu_frame(labels, active, selected, frame_type, sprite=None):
     frame = frame_type()
@@ -33,7 +37,7 @@ def menu_frame(labels, active, selected, frame_type, sprite=None):
         x = 16 if has_back and index == 0 else 20
         y = row*12
         active_row = index in active
-        pixels = SPRITE_LABEL_PIXELS if sprite is not None else MENU_LABEL_PIXELS
+        pixels = menu_label_pixels(sprite)
         if active_row:
             pixels -= width('<')+4
         label = labels[index]

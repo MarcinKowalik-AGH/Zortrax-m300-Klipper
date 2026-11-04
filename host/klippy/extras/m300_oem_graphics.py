@@ -14,26 +14,19 @@ from pathlib import Path
 import zlib
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
-# Two project-drawn 50x50 grayscale marks, separate from the audited OEM data.
-# Klipper uses the ribbon from the supplied logo; Zortrax uses a Z-SUITE-style Z.
+HOMING_HOURGLASS = '0x0801c2b8'
+# Project marks use binary pixels at the OEM sprite height.
 PROJECT_MENU_ICONS = {
-    name: (50, 50, zlib.decompress(base64.b64decode(data)))
-    for name, data in {
-        'project-klipper': (
-            'eNrt0UFLwmAYwPHHxGh26V7fQIrA91AzSth7qQ4FderaBzDqXocOdbOrSuwQQZS4gSOCDS3sEpSC0iUQ'
-            'D9ElvRZuU+zZ5sJt7yeInsvG8+e38W4Af2VCmUvfZiebtC5cr7Xn2Y/3a7J1jVb4rieklJgduMZh62x'
-            'kP9HvJoZhrWeMhHRNcYMgVeXfPdczqRsob7an3FAoK26oUEEqPQz3k58mGYZog1LeaDokVJKKlC7ZIaI'
-            'TJPm6HWbeEAhp52CpCyR6dR5vx5oiggXdeWzEsEjuHW/nnmzgHmujaBEpCeF2egQAhDsUSfYLVu48AG'
-            'D50SLituEF1juRiJnBlQ8AzL4Suqif+gGeq7qF5MSkPgAw/UEoP1D8AKe8S4WXIMAv9k0EjQQBgHiA'
-            'IQjwj3bjGmEAgKNjjSTuGSFaxyAzAscOq9lCgxkk7XmfGc5z12qHskJeVW/jMcajblScUjCsq/Zswv'
-            '/8AA7wrLE='),
-        'project-zortrax': (
-            'eNpjYBhoIIgK4OLe71DBVqg4+98ZHSjgfANEwn8imlES3yASe4WUUIHiHrA440sMiXoFsMQLDIl8SiSM'
-            'EQBFQvkewnuGKBLv/8NBMqoEQkcLFon/uCRA4D2KhJIZKPDaa/69e/87BUVC2AUITM+/e/dvWjKGBx'
-            'V9gRqupxlhSIgD7f6TFoQRJELr3/37vywFI6wUbYAGvUhzwpAQBbr4b1kyRugq9v/7935bKkboKmoB'
-            'DfoFNghVQuQ+0AutyUIYEnkQL2DGB9BmILqHJT5AYUtGfJAgAYkPCCjBjA8IcCYnJUISNcMeDIm9k'
-            'PwR34iWccS+QyQ4fpelIYP0/QugmTDnPyq4Ds+2aHYMePHCAACGiz6f'),
-    }.items()
+    'project-klipper': (62, 50, zlib.decompress(base64.b64decode(
+        'eNrF1IENxCAIBVA2YP8t2YBTEUsRC+nlciZNqi+VX20FZji1Ts/MrVGIyGKxN+1Xxn2SsPAgGuUjXZ'
+        'M/MgThpaIwbj5HSry59mvsw2sX26LvfmnODK76uh+Ezo1SzrP62jhV1Gq3dDZXidHMamqYRby+vXuu'
+        'CpvwPnaFTXgXW6urR5rxHMEgtnleOPqrEgZZUtpeyvztKKsOL7iNCx/OEvwXj908suz1d8y/ZY7PSO'
+        'NU5w9eL7tx'
+    ))),
+    'project-zortrax': (50, 50, zlib.decompress(base64.b64decode(
+        'eNrd1MENwCAIBdC/wd9/SzagMU0qUDB4MWk58gxKVADNAqDmIQtAFoNS4CfBty8VjNRBwD7M60mBrw'
+        'bj+ibweVIBbN6CLdQCV8iAXz/hPpEousCww28fw+kfVY6M/elTDCzBBZqZW2c='
+    ))),
 }
 MAIN = {'klipper':'project-klipper','zortrax':'project-zortrax',
         'models':'0x0801c690','maintenance':'0x0801c958',
@@ -174,6 +167,7 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                 return '0x0801cb24' if action[1]<0 else '0x0801cc24'
             if action[0]=='native_gcode':
                 icon={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
+                      'ZORTRAX_HOME_XY':HOMING_HOURGLASS,'ZORTRAX_HOME_ALL':HOMING_HOURGLASS,
                       'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}.get(action[1])
                 if icon:return icon
             if action[0]=='page' and len(action)>1:

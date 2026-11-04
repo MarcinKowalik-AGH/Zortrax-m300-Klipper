@@ -11,7 +11,7 @@ import textwrap
 
 from .m300_oled_render import Frame
 from .m300_oled_transport import EncoderSnapshots, OledStream, FastOledStream
-from .m300_settings_ui import SPRITE_LABEL_PIXELS, menu_frame, notice_frame
+from .m300_settings_ui import menu_label_pixels, menu_frame, notice_frame
 from .m300_ui_labels import english_label
 
 PANEL_RESPONSE = ('m300_panel_state clock=%u sequence=%u position=%u pressed=%c'
@@ -896,7 +896,7 @@ class M300OLED:
             ui = self.printer.lookup_object('m300_menu_ui', None)
             sprite = (ui.get_oem_sprite(self.page, rows, self.selection, now)
                       if ui is not None else None)
-            pixels = SPRITE_LABEL_PIXELS if sprite else None
+            pixels = menu_label_pixels(sprite) if sprite else None
             if ui is not None and self.page in ('home', 'm04'):
                 menu = self.printer.lookup_object('m300_menu', None)
                 if menu is not None:

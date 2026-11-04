@@ -216,7 +216,8 @@ class M300Menu:
 
     def return_from_procedure(self, owner, operation):
         page = ('native_job' if operation == 'CHANGE' else
-                'material' if owner == 'm300_filament' else 'maintenance')
+                'material' if owner == 'm300_filament' else
+                'zortrax' if owner == 'm300_motion' else 'maintenance')
         self._navigate(page, remember=False)
 
     def _service(self, name):
@@ -266,6 +267,8 @@ class M300Menu:
             return 'Zortrax M300', self._notice([(self.t('Back'), ('page', 'main')),
                 (self.t('Models'), ('page', 'models')),
                 (self.t('Maintenance'), ('page', 'maintenance')),
+                ('Homing XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
+                ('Homing ALL', ('native_gcode', 'ZORTRAX_HOME_ALL')),
                 (self.t('Material'), ('page', 'material')),
                 (self.t('Settings'), ('page', 'settings')),
                 (self.t('Information'), ('page', 'information'))])
