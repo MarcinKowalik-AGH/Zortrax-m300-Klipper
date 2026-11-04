@@ -53,3 +53,23 @@ identity fixture is not installed by the host update.
 
 R16 also replays native XYZ homing with 180C, repeated Z, 300 mm/s/M220=150,
 Z299/Z300 and concurrent thermal/fan/display requests in FILEOUTPUT.
+
+### Experimental XY STEP DMA
+
+Pass `--xy-step-dma-lab` to `mcu/SOURCE_MCU/tools/build.py` and use a separate
+work and output directory. The build identifies itself as
+`0.13.14.10-XY-STEP-DMA-LAB`. The register model can be run with
+`python3 mcu/SOURCE_MCU/tools/test_xy_step_dma.py --upstream .ci/pristine`.
+
+The lab build uses finite DMA transfers for non-inverted X and Y
+constant-period blocks of at least 32 pulses, with a period of 352 to
+720 core ticks and the stock 2 µs STEP setting. TIM2 and TIM3 generate update
+and compare events that set and clear PB3 and PB4 through DMA1 channels
+2/7 and 3/6, respectively. The GPIO pins stay in output mode. The existing
+software scheduler handles the other blocks. On the first completed hardware
+block per axis, `klippy.log` records `M300 XY STEP DMA completed first X block`
+or the equivalent line for Y.
+
+This is a lab image for the M300 Classic application slot. Qualification
+requires checking pulse width, count and timing on the physical board and
+repeating X, Y and diagonal moves with a position check after each speed.

@@ -12,6 +12,9 @@
 #include "command.h"
 #include "internal.h"
 #include "m300.h"
+#if CONFIG_M300_XY_STEP_DMA_LAB
+#include "m300_xy_step_dma.h"
+#endif
 #include "sched.h"
 #include "m300_sched.h"
 
@@ -161,8 +164,18 @@ m300_early_init(void)
 static void
 force_safe(void)
 {
+#if CONFIG_M300_XY_STEP_DMA_LAB
+    irqstatus_t flag = irq_save();
+#endif
     armed = 0;
+#if CONFIG_M300_XY_STEP_DMA_LAB
+    raw_write(GPIOD, 1u << 14, 0);
+    m300_xy_dma_abort_all();
+#endif
     raw_safe_outputs();
+#if CONFIG_M300_XY_STEP_DMA_LAB
+    irq_restore(flag);
+#endif
 }
 
 static void
