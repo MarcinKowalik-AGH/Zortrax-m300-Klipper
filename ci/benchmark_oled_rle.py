@@ -93,13 +93,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
-    report = json.dumps(run(), indent=2)
+    result = run()
+    regressions = [row for row in result['rows']
+                   if row['length'] >= 32 and row['asm_instructions'] >= row['c_instructions']]
+    result['performance_passed'] = not regressions
+    report = json.dumps(result, indent=2)
     if args.output:
         args.output.write_text(report + '\n')
     print(report)
-    for row in json.loads(report)['rows']:
-        if row['length'] >= 64 and row['asm_instructions'] >= row['c_instructions']:
-            raise AssertionError(f'No instruction reduction: {row}')
+    if regressions:
+        raise AssertionError(f'No instruction reduction: {regressions}')
 
 
 if __name__ == '__main__':
