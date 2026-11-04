@@ -70,24 +70,10 @@ class RepositoryContracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             tool.pack(struct.pack('<II', 0x20020000, 0x08010009) + bytes(56))
 
-    def test_oled_renderer_packet_format_and_ack_lifecycle_are_unchanged(self):
-        reference = ROOT / 'host/update_template/tests/reference'
-        current = ROOT / 'host/klippy/extras'
-        self.assertEqual(digest(current / 'm300_oled_render.py'),
-                         digest(reference / 'm300_oled_render.py'))
-
-        def transport(path):
-            tree = ast.parse((path / 'm300_oled_transport.py').read_text())
-            return {node.name: node for node in tree.body
-                    if isinstance(node, (ast.ClassDef, ast.FunctionDef))}
-
-        old, new = transport(reference), transport(current)
-        for name in ('OledStream', 'fast_blocks', 'fast_frame_operations', 'fast_init_operations'):
-            self.assertEqual(ast.dump(old[name]), ast.dump(new[name]), name)
-        for owner in (old, new):
-            owner['FastOledStream'].body = [node for node in owner['FastOledStream'].body
-                                          if getattr(node, 'name', None) != 'step']
-        self.assertEqual(ast.dump(old['FastOledStream']), ast.dump(new['FastOledStream']))
+    def test_existing_oled_transport_and_generic_renderer_are_unchanged(self):
+        for name in ('m300_oled_transport.py', 'm300_oled_render.py'):
+            self.assertEqual(digest(ROOT / 'host/klippy/extras' / name),
+                             digest(ROOT / 'host/update_template/tests/reference' / name), name)
 
     def test_oled_spi_lifecycle_and_background_scheduler_are_unchanged(self):
         def methods(path):

@@ -35,11 +35,6 @@ and acknowledgements. Wake sends a current framebuffer before AF. OFF suppresses
 hidden framebuffer traffic but retains input and the existing heartbeat.
 SPI/UART rates, MCU timers and interrupt priorities are unchanged.
 
-DMA updates compare the RLE blocks for the bounding rectangle and the dirty
-tiles. The host chooses the lower estimated UART cost, including command and
-OLED acknowledgement overhead, and sends the selected blocks. The final
-acknowledgement commits the complete framebuffer as the next comparison base.
-
 An ACK timeout follows the existing reset_required path; no automatic board
 reset or actuator enable is added. Shutdown/disconnect leaves local display
 ownership with the MCU. The policy timer runs once per second, or every 0.1 s
