@@ -238,7 +238,7 @@ class M300NativeMotion:
             raise self.printer.command_error('Home XY first, or use G28 for XYZ')
         self.operator_homing = None
         if owner_job is None and not oem_leveling:
-            operation = {'xy': 'HOME_XY', 'xyz': 'HOME_ALL'}.get(''.join(sorted(axes)))
+            operation = {'xy': 'HOME_XY', 'z': 'HOME_Z', 'xyz': 'HOME_ALL'}.get(''.join(sorted(axes)))
             if operation is not None:
                 stats = self.printer.lookup_object('print_stats', None)
                 sd = self.printer.lookup_object('virtual_sdcard', None)

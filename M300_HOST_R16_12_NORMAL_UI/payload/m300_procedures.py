@@ -17,7 +17,8 @@ from .m300_native_service import require_idle_print
 
 OWNERS = ('m300_filament', 'm300_calibration', 'm300_maintenance',
           'm300_thermal', 'm300_fans', 'm300_job', 'm300_motion')
-HOMING_TITLES = {'HOME_XY': 'Homing XY', 'HOME_ALL': 'Homing ALL'}
+HOMING_TITLES = {'HOME_XY': 'Homing XY', 'HOME_Z': 'Homing Z', 'HOME_ALL': 'Homing ALL'}
+HOMING_COMMANDS = {'HOME_XY': 'G28 X Y', 'HOME_Z': 'G28 Z', 'HOME_ALL': 'G28'}
 HOMING_PHASES = {
     'HOME_Y': 'Homing Y', 'HOME_X': 'Homing X', 'Z_PREHEAT': 'Heating nozzle for Z',
     'Z_CHECK_CONTACT': 'Checking Z contact', 'Z_CONTACT_POSITION': 'Moving to Z contact',
@@ -237,7 +238,7 @@ class M300Procedures:
             if view['busy']:
                 rows.append(('Please wait', None))
             else:
-                rows.insert(0, ('Back', ('page', 'zortrax')))
+                rows.insert(0, ('Back', ('page', 'maintenance')))
                 if view['reason']:
                     rows.append((view['reason'], None))
             return view['title'], rows
@@ -479,7 +480,7 @@ class M300Procedures:
                 if not getattr(motion, 'normal_control', False):
                     raise self.printer.command_error('Native M300 homing is unavailable')
                 require_idle_print(self.printer, self.reactor.monotonic())
-                self.gcode.run_script_from_command('G28 X Y' if operation == 'HOME_XY' else 'G28')
+                self.gcode.run_script_from_command(HOMING_COMMANDS[operation])
             elif operation.startswith('FAN'):
                 owner=self.printer.lookup_object('m300_fans')
                 if operation=='FAN_BACK':
