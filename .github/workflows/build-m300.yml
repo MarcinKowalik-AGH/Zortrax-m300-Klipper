@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: m300-arm-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -39,10 +39,11 @@ jobs:
 
       - name: Install GNU ARM and native test compiler
         shell: bash
+        timeout-minutes: 8
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libffi-dev
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y --no-install-recommends build-essential gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libffi-dev
           arm-none-eabi-gcc --version
           test -f "$(arm-none-eabi-gcc --print-file-name=libc_nano.a)"
 
