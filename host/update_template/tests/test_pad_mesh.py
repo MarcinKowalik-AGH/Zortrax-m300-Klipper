@@ -208,6 +208,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.points = geometry_points(mesh.geometry)
         mesh._error = ValueError
         mesh.reactor = NS(monotonic=lambda: 0.)
+        mesh.printer = NS(lookup_object=lambda name, default=None: default)
         mesh._preflight = lambda: self.fail('preview called physical preflight')
         updates, output = [], []
         mesh.probe_points = NS(update_probe_points=lambda *args: updates.append(args))
@@ -266,9 +267,56 @@ class PadMeshTests(unittest.TestCase):
         mesh.printer = NS(lookup_object=lambda name, default=None: objects.get(name, default))
         with self.assertRaisesRegex(ValueError, 'configured XY travel'):
             mesh._preflight()
+        travel = mesh._geometry_travel(limits)
+        self.assertEqual(travel['required_x'], [5., 315.])
+        self.assertEqual(travel['configured_x'], [0., 300.])
+        self.assertEqual(travel['suggested_edge_margin'], 21)
+        self.assertEqual(travel['outside_points'][0]['pad'], 'front_right')
         limits['axis_maximum'] = (320., 320., 315.)
         with self.assertRaisesRegex(ValueError, 'clear the active mesh'):
             mesh._preflight()
+
+    def test_preview_reports_limits_and_fitting_inset_without_moving_or_extending_travel(self):
+        mesh = M300PadMesh.__new__(M300PadMesh)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS)
+        mesh.points = geometry_points(mesh.geometry)
+        mesh.busy, mesh.state, mesh.report = False, 'IDLE', None
+        mesh._error = ValueError
+        mesh.reactor = NS(monotonic=lambda: 0.)
+        limits = dict(homed_axes='', axis_minimum=[0., 0., 0.], axis_maximum=[300., 300., 315.])
+        toolhead = NS(get_kinematics=lambda: NS(get_status=lambda now: limits))
+        mesh.printer = NS(lookup_object=lambda name, default=None: toolhead if name == 'toolhead' else default)
+        mesh._preflight = lambda: self.fail('preview must not move, heat or home')
+        mesh.probe_points = NS(update_probe_points=lambda *args: None)
+        params, output = {'PREVIEW': '1'}, []
+        gcmd = NS(get=lambda key, default: params.get(key, default), get_command_parameters=lambda: params,
+                  get_int=lambda key, default, **kw: int(params.get(key, default)),
+                  get_float=lambda key, default: float(params.get(key, default)), respond_info=output.append)
+        mesh.cmd_calibrate(gcmd)
+        self.assertIn('configured travel X0..300 Y0..300: OUTSIDE TRAVEL', output[1])
+        self.assertIn('EDGE_MARGIN=21 PREVIEW=1', output[2])
+        params['EDGE_MARGIN'] = '21'
+        mesh.cmd_calibrate(gcmd)
+        travel = mesh.get_status(0.)['travel']
+        self.assertTrue(travel['fits'])
+        self.assertEqual(travel['required_x'], [21., 299.])
+        self.assertEqual(travel['required_y'], [21., 299.])
+        self.assertEqual(len(set(mesh.points)), 25)
+        for index, (x, y) in enumerate(mesh.points):
+            cx, cy = ((290., 30.), (30., 30.), (160., 160.), (290., 290.), (30., 290.))[index // 5]
+            width = 50. if index // 5 == 2 else 60.
+            self.assertLess(abs(x - cx), width / 2)
+            self.assertLess(abs(y - cy), width / 2)
+        self.assertEqual(limits['axis_maximum'], [300., 300., 315.])
+        surface_grid(mesh.points, [0.] * 25)  # Full interpolation still covers this geometry.
+
+    def test_unreachable_pad_center_cannot_get_a_false_fitting_inset(self):
+        mesh = M300PadMesh.__new__(M300PadMesh)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS)
+        mesh.points = geometry_points(mesh.geometry)
+        travel = mesh._geometry_travel(dict(axis_minimum=[0., 0., 0.], axis_maximum=[280., 280., 315.]))
+        self.assertFalse(travel['fits'])
+        self.assertNotIn('suggested_edge_margin', travel)
 
     def test_native_service_only_accepts_the_known_mesh_transform(self):
         mesh = NS(get_mesh=lambda: None)

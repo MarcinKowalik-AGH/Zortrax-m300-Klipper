@@ -93,6 +93,7 @@ class M300Settings:
         self.history_seconds=None;self.history_error=None;self.history_stamp=None
         self.request_time=None
         self.printer.register_event_handler('klippy:ready',self._ready)
+        self.printer.register_event_handler('m300:setting_changed', self._setting_changed)
         for event in ('klippy:shutdown','klippy:disconnect','gcode:request_restart'):
             self.printer.register_event_handler(event,self.invalidate)
         for name,callback in (('ZORTRAX_UI_SHOW',self.cmd_show),('ZORTRAX_UI_ACTION',self.cmd_action),
@@ -206,9 +207,42 @@ class M300Settings:
             return self.nvm.set_setting(key,value)
         finally:self.setting_busy=False
 
+    def _setting_changed(self, key, value):
+        # A remote save updates an already open slider as well as the lamp.
+        # Invalidate old physical click receipts, without changing its route.
+        if key not in BRIGHTNESS_KEYS:
+            return
+        oled = self.printer.lookup_object('m300_oled', None)
+        menu = self.printer.lookup_object('m300_menu', None)
+        if (oled is None or menu is None or oled.page != 'm04'
+                or menu.page != 'setting_' + key or oled.selection == value):
+            return
+        oled.selection = value
+        oled._input_epoch += 1
+        oled._presented_context = oled._presented_actions = None
+        oled.render_at = 0.
+        oled._user_refresh_pending = True
+        self.reactor.update_timer(oled.timer, self.reactor.NOW)
+
+    def brightness_levels(self):
+        # The physical cursor is the unsaved preview. Moonraker publishes it
+        # through its existing status subscription: no extra UART requests,
+        # prompt rebuilds, timer or storage writes on every encoder step.
+        levels = {key: choice_value(self.nvm, key) for key in BRIGHTNESS_KEYS}
+        oled = self.printer.lookup_object('m300_oled', None)
+        menu = self.printer.lookup_object('m300_menu', None)
+        if (oled is not None and menu is not None and oled.connected
+                and oled.page == 'm04' and not oled.message):
+            key = menu.page[8:] if menu.page.startswith('setting_') else None
+            if key in levels and type(oled.selection) is int and 1 <= oled.selection <= 16:
+                levels[key] = oled.selection
+        return levels
+
     def _view_id(self):
-        revision=self.nvm.ui_snapshot()['revision']
-        return hashlib.sha256(('%s:%s:%s:%s'%(self.epoch,self.generation,self.page,revision)).encode()).hexdigest()[:24]
+        # These rows are fixed English navigation/choices, not mutable files
+        # or procedure confirmations. NVM writes must not expire their Back
+        # button. Navigation and lifecycle epochs still reject old receipts.
+        return hashlib.sha256(('%s:%s:%s'%(self.epoch,self.generation,self.page)).encode()).hexdigest()[:24]
 
     def _procedure_busy(self, now):
         procedures = self.printer.lookup_object('m300_procedures', None)
@@ -327,8 +361,9 @@ class M300Settings:
         sleep=settings['sleep_mode']!='OFF'
         settings['sleep_mode']='ENABLED' if sleep else 'DISABLED'
         display=self.printer.lookup_object('m300_display',None)
-        return dict(revision='0.13.16.8-SETTINGS-INFORMATION',ready=self.ready,state='IDLE',busy=False,
+        return dict(revision='0.13.16.13-BRIGHTNESS-SYNC',ready=self.ready,state='IDLE',busy=False,
             io_busy=self.reading,settings=settings,
+            brightness=self.brightness_levels(),
             language='EN',sleep_enabled=sleep,display_timeout_seconds=getattr(display,'timeout',None),
             information=self.information(now),project_url=PROJECT_URL)
 
@@ -359,6 +394,9 @@ class M300Settings:
         now = self.reactor.monotonic()
         if not self._procedure_busy(now):
             self._present_on_oled('setting_' + key, now)
+        # A no-op save emits no NVM event, but must still align a draft
+        # cursor when a second client explicitly selects the saved value.
+        self._setting_changed(key, value)
         self.cmd_status(gcmd)
 
     def cmd_show(self,gcmd):

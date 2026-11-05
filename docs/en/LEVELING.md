@@ -207,6 +207,29 @@ must allow at least 315 mm. An existing 300 mm limit is rejected before
 probing. Set `position_max: 320` in those existing sections only when the
 reported homed coordinate and physical travel are confirmed on this printer.
 
+If the printer configuration still limits XY to 300 mm, the metal dimensions
+are valid but the outer default contacts at 315 mm are unreachable. To retain
+those limits, preview a larger inset:
+
+~~~gcode
+ZORTRAX_BED_MESH EDGE_MARGIN=21 PREVIEW=1
+~~~
+
+This keeps all five pad centers and all 25 measurements, with total bounds
+X21–299 and Y21–299. Each corner pad then uses its center and corners 9 mm
+from that center; the center pad uses its center and corners 4 mm away.
+All points remain on the reported 60/50 mm metal squares, but the sampled
+area of each square is smaller. Use the same `EDGE_MARGIN=21` when measuring;
+`PREVIEW=1` does not change the macro's defaults. Do not enter the pad's
+width as its center coordinate.
+
+`PREVIEW=1` and `ZORTRAX_PAD_MESH_STATUS` now report configured travel,
+requested bounds and every point outside those limits without moving or
+requiring a homing session. A fitting inset is suggested only if all five
+centers are reachable and the resulting geometry still supports the 25-point
+surface. No valid inset is suggested for an unreachable center. Keep the
+default 5 mm inset only with verified physical travel to all 315 mm contacts.
+
 ~~~ini
 [bed_mesh]
 mesh_min: 5, 5
@@ -275,6 +298,12 @@ ZORTRAX_BED_MESH PROFILE=m300_pads
 ZORTRAX_PAD_MESH_STATUS
 TURN_OFF_HEATERS
 ~~~
+
+For a configuration capped at 300 mm, replace the measurement line above with
+`ZORTRAX_BED_MESH PROFILE=m300_pads EDGE_MARGIN=21`. Before a print, load the
+result with `BED_MESH_PROFILE LOAD=m300_pads`; the measurement intentionally
+leaves compensation inactive. `SAVE_CONFIG` stores the generated profile
+and restarts Klipper, so issue it while idle after reviewing the measurements.
 
 The status command reports all 25 heights, each pad's median and its spread.
 All 25 heights contribute to the compensation. A difference over 0.50 mm

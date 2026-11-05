@@ -121,7 +121,9 @@ The X/Y STEP timer core and UART rate are unchanged from R14.14.
 The 0.13.16.12 host menu update restores the preceding OLED page after an
 externally started procedure, including native Klipper status after Fluidd
 homing. Check `ZORTRAX_MENU_STATUS` for
-`menu_revision: 0.13.16.12-PROCEDURE-RETURN`. This host navigation correction
+`menu_revision: 0.13.16.13-BRIGHTNESS-MESH-BOUNDS`. This update also synchronizes
+the OLED/Fluidd brightness bars, preserves Back after saving and reports pad
+geometry against the current XY limits in `ZORTRAX_BED_MESH PREVIEW=1`. It
 does not require another MCU flash when R14.15 is already installed.
 
 ### OLED RLE benchmark

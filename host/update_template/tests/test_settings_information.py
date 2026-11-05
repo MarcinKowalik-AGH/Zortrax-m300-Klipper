@@ -50,6 +50,7 @@ def session(serial=None):
             h.objects['output_pin '+key]=NS(gcrq=NS(send_async_request=lambda value,key=key:h.pins.__setitem__(key,value)))
         o,menu,ui,display,packet=physical_panel(h);menu.nvm=h.nvm;menu._last_file=None
         h.oled,h.menu,h.ui=o,menu,ui
+        h.panel_display = display
         for name,body in templates().items():
             if name in ('ZORTRAX_SETTINGS','ZORTRAX_BUZZER','ZORTRAX_SLEEP_MODE','ZORTRAX_LANGUAGE',
                         'ZORTRAX_MODELS_SORT','ZORTRAX_INFORMATION','ZORTRAX_HELP','ZORTRAX_LIGHT'):
@@ -313,6 +314,98 @@ class SettingsTreeTests(unittest.TestCase):
             for segment in range(16):
                 x = 16 + 10 * segment + 4
                 self.assertEqual(frame[57 * 128 + x // 2] & 15, 15 if segment < 8 else 0)
+
+    def test_fluidd_slider_save_keeps_back_valid_and_updates_the_open_oled_cursor(self):
+        for key in ('oled_brightness', 'led_brightness'):
+            with self.subTest(key=key), session() as h:
+                h.settings.show('setting_' + key)
+                token = h.settings._view_id()
+                h.run('ZORTRAX_UI_SETTING NAME=%s VALUE=7' % key)
+                self.assertEqual(h.oled.selection, 7)
+                self.assertEqual(h.settings.brightness_levels()[key], 7)
+                self.assertEqual(h.settings._view_id(), token)
+                self.assertEqual(h.nvm.get_setting(key), 7)
+                h.settings.action(token, 0)
+                self.assertEqual((h.settings.page, h.menu.page), ('settings', 'settings'))
+                with self.assertRaisesRegex(h.printer.command_error, 'Expired'):
+                    h.settings.action(token, 0)
+
+    def test_oled_draft_is_published_without_storage_uart_or_prompt_operations(self):
+        with session() as h:
+            h.settings.show('setting_led_brightness')
+            h.oled.selection = 6
+            revision = h.nvm.ui_snapshot()['revision']
+            lines, events = list(h.lines), list(h.events)
+            for _ in range(10):
+                status = h.settings.get_status(h.now)
+                self.assertEqual(status['brightness']['led_brightness'], 6)
+                self.assertEqual(status['settings']['led_brightness'], 16)
+                self.assertEqual(status['brightness']['oled_brightness'], 16)
+            self.assertEqual(h.nvm.ui_snapshot()['revision'], revision)
+            self.assertEqual((h.lines, h.events), (lines, events))
+            h.menu._navigate('settings')
+            self.assertEqual(h.settings.brightness_levels()['led_brightness'], 16)
+
+    def test_remote_save_invalidates_old_oled_draft_receipts_and_can_save_its_current_preview(self):
+        with session() as h:
+            h.settings.show('setting_oled_brightness')
+            h.oled.selection = 11
+            h.oled._render(h.now)
+            context = h.oled._input_context()
+            h.run('ZORTRAX_UI_SETTING NAME=oled_brightness VALUE=4')
+            self.assertNotEqual(h.oled._input_context(), context)
+            self.assertIsNone(h.oled._presented_actions)
+            self.assertEqual((h.oled.selection, h.settings.brightness_levels()['oled_brightness']), (4, 4))
+            h.oled.selection = 9
+            h.oled._render(h.now)
+            h.oled._select(h.now, h.oled._presented_actions)
+            self.assertIsNone(h.oled.message)
+            self.assertEqual(h.nvm.get_setting('oled_brightness'), 9)
+            self.assertEqual(h.settings.brightness_levels()['oled_brightness'], 9)
+
+    def test_encoder_rotation_then_acknowledged_click_saves_the_synchronized_preview(self):
+        with session() as h:
+            h.settings.show('setting_led_brightness')
+            h.oled.menu_reverse = True
+            def packet(sequence, nav, shorts=0):
+                h.now += .1
+                before = len(h.callbacks)
+                h.oled._panel(dict(sequence=sequence, position=nav*4, nav_position=nav*4,
+                    invalid=0, pressed=False, presses=shorts, releases=shorts, shorts=shorts,
+                    longs=0, **{'#receive_time':h.now}))
+                h.callbacks.pop(before)(h.now)
+            h.oled._render(h.now);h.panel_display.pump()
+            packet(1, 0)
+            packet(2, 3)
+            self.assertEqual(h.oled.selection, 13)
+            self.assertEqual(h.settings.get_status(h.now)['brightness']['led_brightness'], 13)
+            self.assertEqual(h.nvm.get_setting('led_brightness'), 16)
+            h.oled._render(h.now);h.panel_display.pump()
+            packet(3, 3, shorts=1)
+            self.assertIsNone(h.oled.message)
+            self.assertEqual(h.nvm.get_setting('led_brightness'), 13)
+            self.assertEqual(h.oled.selection, 13)
+
+    def test_cosmetic_deferred_save_and_noop_save_keep_web_navigation_and_remote_value(self):
+        with session() as h:
+            h.settings.show('setting_led_brightness')
+            token = h.settings._view_id()
+            h.run('ZORTRAX_LOAD')
+            h.menu._navigate('setting_led_brightness')
+            h.oled.selection = 12
+            h.run('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5')
+            self.assertEqual(h.oled.selection, 5)
+            self.assertEqual(h.settings._view_id(), token)
+            self.assertEqual(h.nvm.get_setting('led_brightness'), 5)
+            self.assertEqual(h.nvm.store._published['settings'].get('led_brightness',16), 16)
+            h.oled.selection = 9
+            h.run('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5')
+            self.assertEqual(h.oled.selection, 5)
+            h.f.cancel('test');h.until(h.f, 'CANCELLED')
+            h.nvm._save_deferred_settings(h.now)
+            h.run('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5')
+            self.assertEqual(h.oled.selection, 5)
+            self.assertEqual(h.nvm.store._published['settings']['led_brightness'], 5)
 
     def test_non_english_languages_and_old_interval_choices_are_not_ui_actions(self):
         with session() as h:

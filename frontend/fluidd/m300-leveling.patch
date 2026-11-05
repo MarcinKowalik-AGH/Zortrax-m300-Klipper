@@ -1,5 +1,5 @@
 diff --git a/components.d.ts b/components.d.ts
-index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef409403002695b47 100644
+index 61dc457..b8ca5fc 100644
 --- a/components.d.ts
 +++ b/components.d.ts
 @@ -65,6 +65,7 @@ declare module 'vue' {
@@ -10,96 +10,11 @@ index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef4094030
      ManualProbeDialog: typeof import('./src/components/common/ManualProbeDialog.vue')['default']
      PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
      PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
-@@ -79,84 +80,5 @@ declare module 'vue' {
-     SystemLayout: typeof import('./src/components/common/SystemLayout.vue')['default']
-     SystemPrinters: typeof import('./src/components/common/SystemPrinters.vue')['default']
-     UpdatingDialog: typeof import('./src/components/common/UpdatingDialog.vue')['default']
--    VAlert: typeof import('vuetify/lib')['VAlert']
--    VApp: typeof import('vuetify/lib')['VApp']
--    VAppBar: typeof import('vuetify/lib')['VAppBar']
--    VBadge: typeof import('vuetify/lib')['VBadge']
--    VBreadcrumbs: typeof import('vuetify/lib')['VBreadcrumbs']
--    VBreadcrumbsItem: typeof import('vuetify/lib')['VBreadcrumbsItem']
--    VBtn: typeof import('vuetify/lib')['VBtn']
--    VBtnToggle: typeof import('vuetify/lib')['VBtnToggle']
--    VCard: typeof import('vuetify/lib')['VCard']
--    VCardActions: typeof import('vuetify/lib')['VCardActions']
--    VCardSubtitle: typeof import('vuetify/lib')['VCardSubtitle']
--    VCardText: typeof import('vuetify/lib')['VCardText']
--    VCardTitle: typeof import('vuetify/lib')['VCardTitle']
--    VCheckbox: typeof import('vuetify/lib')['VCheckbox']
--    VChip: typeof import('vuetify/lib')['VChip']
--    VCol: typeof import('vuetify/lib')['VCol']
--    VColorPicker: typeof import('vuetify/lib')['VColorPicker']
--    VCombobox: typeof import('vuetify/lib')['VCombobox']
--    VContainer: typeof import('vuetify/lib')['VContainer']
--    VDataTable: typeof import('vuetify/lib')['VDataTable']
--    VDialog: typeof import('vuetify/lib')['VDialog']
--    VDivider: typeof import('vuetify/lib')['VDivider']
--    VExpandTransition: typeof import('vuetify/lib')['VExpandTransition']
--    VExpansionPanel: typeof import('vuetify/lib')['VExpansionPanel']
--    VExpansionPanelContent: typeof import('vuetify/lib')['VExpansionPanelContent']
--    VExpansionPanelHeader: typeof import('vuetify/lib')['VExpansionPanelHeader']
--    VExpansionPanels: typeof import('vuetify/lib')['VExpansionPanels']
--    VFadeTransition: typeof import('vuetify/lib')['VFadeTransition']
--    VFooter: typeof import('vuetify/lib')['VFooter']
--    VForm: typeof import('vuetify/lib')['VForm']
--    VIcon: typeof import('vuetify/lib')['VIcon']
--    VImg: typeof import('vuetify/lib')['VImg']
--    VItemGroup: typeof import('vuetify/lib')['VItemGroup']
--    VLayout: typeof import('vuetify/lib')['VLayout']
--    VList: typeof import('vuetify/lib')['VList']
--    VListGroup: typeof import('vuetify/lib')['VListGroup']
--    VListItem: typeof import('vuetify/lib')['VListItem']
--    VListItemAction: typeof import('vuetify/lib')['VListItemAction']
--    VListItemContent: typeof import('vuetify/lib')['VListItemContent']
--    VListItemGroup: typeof import('vuetify/lib')['VListItemGroup']
--    VListItemIcon: typeof import('vuetify/lib')['VListItemIcon']
--    VListItemSubtitle: typeof import('vuetify/lib')['VListItemSubtitle']
--    VListItemTitle: typeof import('vuetify/lib')['VListItemTitle']
--    VMain: typeof import('vuetify/lib')['VMain']
--    VMenu: typeof import('vuetify/lib')['VMenu']
--    VNavigationDrawer: typeof import('vuetify/lib')['VNavigationDrawer']
--    VOverlay: typeof import('vuetify/lib')['VOverlay']
--    VProgressCircular: typeof import('vuetify/lib')['VProgressCircular']
--    VProgressLinear: typeof import('vuetify/lib')['VProgressLinear']
--    VRadio: typeof import('vuetify/lib')['VRadio']
--    VRadioGroup: typeof import('vuetify/lib')['VRadioGroup']
--    VRow: typeof import('vuetify/lib')['VRow']
--    VSelect: typeof import('vuetify/lib')['VSelect']
--    VSheet: typeof import('vuetify/lib')['VSheet']
--    VSimpleCheckbox: typeof import('vuetify/lib')['VSimpleCheckbox']
--    VSimpleTable: typeof import('vuetify/lib')['VSimpleTable']
--    VSlider: typeof import('vuetify/lib')['VSlider']
--    VSnackbar: typeof import('vuetify/lib')['VSnackbar']
--    VSpacer: typeof import('vuetify/lib')['VSpacer']
--    VStepper: typeof import('vuetify/lib')['VStepper']
--    VStepperContent: typeof import('vuetify/lib')['VStepperContent']
--    VStepperHeader: typeof import('vuetify/lib')['VStepperHeader']
--    VStepperItems: typeof import('vuetify/lib')['VStepperItems']
--    VStepperStep: typeof import('vuetify/lib')['VStepperStep']
--    VSubheader: typeof import('vuetify/lib')['VSubheader']
--    VSwitch: typeof import('vuetify/lib')['VSwitch']
--    VTab: typeof import('vuetify/lib')['VTab']
--    VTabItem: typeof import('vuetify/lib')['VTabItem']
--    VTabs: typeof import('vuetify/lib')['VTabs']
--    VTabsItems: typeof import('vuetify/lib')['VTabsItems']
--    VTextarea: typeof import('vuetify/lib')['VTextarea']
--    VTextField: typeof import('vuetify/lib')['VTextField']
--    VTimeline: typeof import('vuetify/lib')['VTimeline']
--    VTimelineItem: typeof import('vuetify/lib')['VTimelineItem']
--    VToolbar: typeof import('vuetify/lib')['VToolbar']
--    VToolbarItems: typeof import('vuetify/lib')['VToolbarItems']
--    VToolbarTitle: typeof import('vuetify/lib')['VToolbarTitle']
--    VTooltip: typeof import('vuetify/lib')['VTooltip']
--    VVirtualScroll: typeof import('vuetify/lib')['VVirtualScroll']
-   }
- }
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
-index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b1693fd8c 100644
+index dbea2df..2a9916c 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -7,10 +7,37 @@
+@@ -7,10 +7,44 @@
    >
      <v-card-text>
        <v-row
@@ -134,12 +49,19 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b
 +              >
 +            </div>
 +          </label>
++          <app-btn
++            class="mt-2"
++            :disabled="brightnessLevel(brightnessById[item.id]) === brightnessById[item.id].savedLevel"
++            @click="saveBrightness(brightnessById[item.id])"
++          >
++            Save
++          </app-btn>
 +        </v-col>
 +        <v-col v-else-if="item.type === 'text'">
            {{ item.text }}
          </v-col>
          <v-col v-else-if="item.type === 'button'">
-@@ -55,16 +82,67 @@
+@@ -55,16 +89,71 @@
  </template>
 
  <script lang="ts">
@@ -169,7 +91,7 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b
 +  }
 +
 +  get brightness () {
-+    return readM300Brightness(this.dialog)
++    return readM300Brightness(this.dialog, this.$typedState.printer?.printer.m300_settings)
 +  }
 +
 +  get brightnessById (): Record<number, BrightnessControl> {
@@ -193,6 +115,10 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b
 +
 +  applyBrightness (control: BrightnessControl, event: Event) {
 +    this.previewBrightness(control, event)
++    this.saveBrightness(control)
++  }
++
++  saveBrightness (control: BrightnessControl) {
 +    const level = this.brightnessLevel(control)
 +    if (Number.isInteger(level) && level >= 1 && level <= 16) {
 +      this.sendGcode(`ZORTRAX_UI_SETTING NAME=${control.key} VALUE=${level}`)
@@ -209,7 +135,7 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b
    get open (): boolean {
      return this.dialog.open
    }
-@@ -91,4 +169,56 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+@@ -91,4 +180,56 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
        flex: 1 1 0;
      }
    }
@@ -268,7 +194,7 @@ index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b
  </style>
 diff --git a/src/components/common/M300LevelingDiagram.vue b/src/components/common/M300LevelingDiagram.vue
 new file mode 100644
-index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc344990bc
+index 0000000..bf35ddf
 --- /dev/null
 +++ b/src/components/common/M300LevelingDiagram.vue
 @@ -0,0 +1,87 @@
@@ -361,14 +287,15 @@ index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc
 +</style>
 diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..8549354f81429a6b4057bd5c9686a6261756db4d
+index 0000000..25908eb
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,171 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import { describe, expect, it, vi } from 'vitest'
 +import { mount, shallowMount } from '@vue/test-utils'
++import Vue from 'vue'
 +import ActionCommandPromptDialog from './ActionCommandPromptDialog.vue'
 +import M300LevelingDiagram from './M300LevelingDiagram.vue'
 +import { readM300Brightness, readM300Leveling } from './m300Leveling'
@@ -463,17 +390,84 @@ index 0000000000000000000000000000000000000000..8549354f81429a6b4057bd5c9686a626
 +        { id: 4, type: 'text', text: 'M300_BRIGHTNESS led_brightness 17' }
 +      ]
 +    })).toEqual([
-+      { id: 2, key: 'oled_brightness', label: 'OLED brightness', level: 16 },
-+      { id: 3, key: 'led_brightness', label: 'LED brightness', level: 5 }
++      { id: 2, key: 'oled_brightness', label: 'OLED brightness', level: 16, savedLevel: 16 },
++      { id: 3, key: 'led_brightness', label: 'LED brightness', level: 5, savedLevel: 5 }
 +    ])
++  })
++
++  const brightnessPrompt = () => ({
++    title: 'ZORTRAX M300 - LED brightness',
++    open: true,
++    items: [
++      { id: 0, type: 'button' as const, text: 'Back', command: 'ZORTRAX_UI_ACTION VIEW=012345678901234567890123 INDEX=0' },
++      { id: 1, type: 'text' as const, text: 'M300_BRIGHTNESS led_brightness 8' }
++    ],
++    footerButtons: []
++  })
++
++  it('uses subscribed OLED previews and saved values, with a validated legacy fallback', () => {
++    const prompt = brightnessPrompt()
++    expect(readM300Brightness(prompt, {
++      ready: true, brightness: { led_brightness: 13 }, settings: { led_brightness: 7 }
++    })[0]).toMatchObject({ level: 13, savedLevel: 7 })
++    for (const status of [undefined, { ready: false, brightness: { led_brightness: 13 } },
++      { ready: true, brightness: { led_brightness: 17 }, settings: { led_brightness: NaN } }]) {
++      expect(readM300Brightness(prompt, status)[0]).toMatchObject({ level: 8, savedLevel: 8 })
++    }
++  })
++
++  it('follows knob changes live and saves the displayed value without replacing Back', async () => {
++    const source = Vue.observable({
++      console: { promptDialog: brightnessPrompt() },
++      printer: {
++        printer: {
++          m300_settings: {
++            ready: true, brightness: { led_brightness: 8 }, settings: { led_brightness: 8 }
++          }
++        }
++      }
++    })
++    const sendGcode = vi.fn()
++    const slot = { template: '<div><slot /><slot name="actions" /></div>' }
++    const button = { props: ['disabled'], template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>' }
++    const wrapper = shallowMount(ActionCommandPromptDialog, {
++      mocks: { $typedState: source, sendGcode },
++      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot, AppBtn: button }
++    })
++    expect(wrapper.findAll('.filled')).toHaveLength(8)
++    source.printer.printer.m300_settings.brightness.led_brightness = 13
++    await Vue.nextTick()
++    expect(wrapper.findAll('.filled')).toHaveLength(13)
++    const save = () => wrapper.findAll('button').wrappers.find(button => button.text() === 'Save')!
++    expect(save().attributes('disabled')).toBeUndefined()
++    await save().trigger('click')
++    expect(sendGcode).toHaveBeenLastCalledWith('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=13')
++    source.printer.printer.m300_settings.settings.led_brightness = 13
++    await Vue.nextTick()
++    expect(save().attributes('disabled')).toBeDefined()
++    const back = wrapper.findAll('button').wrappers.find(button => button.text() === 'Back')!
++    await back.trigger('click')
++    expect(sendGcode).toHaveBeenLastCalledWith(source.console.promptDialog.items[0].command)
++    sendGcode.mockClear()
++    await wrapper.find('input').setValue('5')
++    expect(sendGcode).not.toHaveBeenCalled()
++    await wrapper.find('input').trigger('change')
++    expect(sendGcode).toHaveBeenLastCalledWith('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5')
++    expect(sendGcode).toHaveBeenCalledTimes(1)
++    source.printer.printer.m300_settings.brightness.led_brightness = 5
++    source.printer.printer.m300_settings.settings.led_brightness = 5
++    await Vue.nextTick()
++    expect(wrapper.findAll('.filled')).toHaveLength(5)
++    expect(save().attributes('disabled')).toBeDefined()
++    wrapper.destroy()
 +  })
 +})
 diff --git a/src/components/common/m300Leveling.ts b/src/components/common/m300Leveling.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b3e364549e03524cb1551b6a350277ea25bbdf3
+index 0000000..f7cc2db
 --- /dev/null
 +++ b/src/components/common/m300Leveling.ts
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,79 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +import type { PromptDialog } from '@/store/console/types'
 +
@@ -516,9 +510,22 @@ index 0000000000000000000000000000000000000000..3b3e364549e03524cb1551b6a350277e
 +  key: keyof typeof brightnessLabels;
 +  label: string;
 +  level: number;
++  savedLevel: number;
 +}
 +
-+export function readM300Brightness (dialog: Pick<PromptDialog, 'title' | 'items'>): BrightnessControl[] {
++export interface BrightnessState {
++  ready?: boolean;
++  brightness?: Partial<Record<BrightnessControl['key'], number>>;
++  settings?: Partial<Record<BrightnessControl['key'], number>>;
++}
++
++function validBrightness (value: unknown): value is number {
++  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 16
++}
++
++export function readM300Brightness (
++  dialog: Pick<PromptDialog, 'title' | 'items'>, status?: BrightnessState
++): BrightnessControl[] {
 +  if (!dialog.title?.startsWith('ZORTRAX M300 - ')) return []
 +  const controls: BrightnessControl[] = []
 +  for (const item of dialog.items) {
@@ -527,13 +534,21 @@ index 0000000000000000000000000000000000000000..3b3e364549e03524cb1551b6a350277e
 +    if (!match) continue
 +    const key = match[1] as keyof typeof brightnessLabels
 +    if (!controls.some(control => control.key === key)) {
-+      controls.push({ id: item.id, key, label: brightnessLabels[key], level: Number(match[2]) })
++      const live = status?.ready === true ? status.brightness?.[key] : undefined
++      const saved = status?.ready === true ? status.settings?.[key] : undefined
++      controls.push({
++        id: item.id,
++        key,
++        label: brightnessLabels[key],
++        level: validBrightness(live) ? live : Number(match[2]),
++        savedLevel: validBrightness(saved) ? saved : Number(match[2])
++      })
 +    }
 +  }
 +  return controls
 +}
 diff --git a/src/components/widgets/toolhead/ToolheadControlBars.vue b/src/components/widgets/toolhead/ToolheadControlBars.vue
-index 711e725518b7926b8b5ab5c82819c0019c02ba94..67e7fc87aa83021b68210d7559b7be20a387ab4d 100644
+index 711e725..67e7fc8 100644
 --- a/src/components/widgets/toolhead/ToolheadControlBars.vue
 +++ b/src/components/widgets/toolhead/ToolheadControlBars.vue
 @@ -12,6 +12,7 @@
@@ -553,7 +568,7 @@ index 711e725518b7926b8b5ab5c82819c0019c02ba94..67e7fc87aa83021b68210d7559b7be20
            class="px-2"
            @click="sendGcode('G28 X Y', $waits.onHomeXY)"
 diff --git a/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue b/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
-index 2a7a570f5af25ec26dc967005192140cefdde017..ffef756f58e2f5a002de04218f129b15d541f3dd 100644
+index 2a7a570..ffef756 100644
 --- a/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
 +++ b/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
 @@ -15,6 +15,7 @@
@@ -565,7 +580,7 @@ index 2a7a570f5af25ec26dc967005192140cefdde017..ffef756f58e2f5a002de04218f129b15
            @click="home"
          >
 diff --git a/src/components/widgets/toolhead/ToolheadControlCircle.vue b/src/components/widgets/toolhead/ToolheadControlCircle.vue
-index ab57038295c2e0d94087a90da7dd2ff03aaa6bea..1ca05b35f480f03a6cedd5754d8ae90a0718e7cb 100644
+index ab57038..1ca05b3 100644
 --- a/src/components/widgets/toolhead/ToolheadControlCircle.vue
 +++ b/src/components/widgets/toolhead/ToolheadControlCircle.vue
 @@ -421,8 +421,11 @@
@@ -703,7 +718,7 @@ index ab57038295c2e0d94087a90da7dd2ff03aaa6bea..1ca05b35f480f03a6cedd5754d8ae90a
 
    @include theme(app-circle-control) using ($material) {
 diff --git a/src/components/widgets/toolhead/ToolheadControlCross.vue b/src/components/widgets/toolhead/ToolheadControlCross.vue
-index 1027a75103d9c4fdf2b4775516afdc9339489ef2..6dab18d48014042ee1d36e5fbd211b60fc36a76d 100644
+index 1027a75..6dab18d 100644
 --- a/src/components/widgets/toolhead/ToolheadControlCross.vue
 +++ b/src/components/widgets/toolhead/ToolheadControlCross.vue
 @@ -33,6 +33,7 @@
@@ -753,7 +768,7 @@ index 1027a75103d9c4fdf2b4775516afdc9339489ef2..6dab18d48014042ee1d36e5fbd211b60
            icon="$home"
            small-icon
 diff --git a/src/mixins/state.ts b/src/mixins/state.ts
-index 6a1732cd3ef0eb05bd4331151b4cb858b815b165..00e08a8c501bfbc14699b6d0ebdc5c605849a019 100644
+index 6a1732c..00e08a8 100644
 --- a/src/mixins/state.ts
 +++ b/src/mixins/state.ts
 @@ -3,6 +3,7 @@ import { SocketActions } from '@/api/socketActions'
@@ -789,7 +804,7 @@ index 6a1732cd3ef0eb05bd4331151b4cb858b815b165..00e08a8c501bfbc14699b6d0ebdc5c60
    /**
 diff --git a/src/util/m300-homing.spec.ts b/src/util/m300-homing.spec.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..99e47b4a82fd76d42783f36aa35666659f0892a8
+index 0000000..99e47b4
 --- /dev/null
 +++ b/src/util/m300-homing.spec.ts
 @@ -0,0 +1,124 @@
@@ -919,7 +934,7 @@ index 0000000000000000000000000000000000000000..99e47b4a82fd76d42783f36aa3566665
 +})
 diff --git a/src/util/m300-homing.ts b/src/util/m300-homing.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..76ce2ad61c205868b19fe1ab00f0843ffc60db76
+index 0000000..76ce2ad
 --- /dev/null
 +++ b/src/util/m300-homing.ts
 @@ -0,0 +1,24 @@

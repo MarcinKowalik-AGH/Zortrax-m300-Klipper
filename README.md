@@ -67,6 +67,10 @@ corresponding OLED screens and reported states. Brightness controls retain
 Menu revision `0.13.16.12-PROCEDURE-RETURN` remembers the invoking OLED screen,
 cursor and navigation history. Fluidd homing returns to native Klipper status
 when that was the preceding screen, while manual navigation is respected.
+Menu revision `0.13.16.13-BRIGHTNESS-MESH-BOUNDS` synchronizes the OLED/Fluidd
+brightness preview and Save operation without expiring Back. Pad mesh preview
+reports requested points against the configured XY travel and can suggest a
+larger inset without changing motor limits. See [pad mesh geometry](docs/en/LEVELING.md#optional-klipper-pad-mesh).
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

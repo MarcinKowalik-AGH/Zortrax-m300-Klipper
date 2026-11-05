@@ -14,12 +14,21 @@ hardware version, serial number and printing time.
 Maintenance directly below Autocalibration, and as Fluidd macros
 `ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL`. They call
 `G28 X Y`, `G28 Z` and `G28` respectively. Z requires XY to be homed first.
-All three return to Maintenance on completion. Fluidd's standard X, Y, XY,
+On completion the OLED returns to its invoking screen, cursor and history;
+external homing from native Klipper status returns to that status screen.
+Fluidd's standard X, Y, XY,
 Z and All home buttons show the matching busy state and phase text as a
 tooltip, including starts from OLED and macros. Homing does not open a modal
 dialog. OLED keeps the original four-frame M300 hourglass.
 Print start and Autocalibration keep their own procedure screens.
 See [the symbol inventory and draft sheet](UI_SYMBOLS.md).
+
+The dedicated OLED/LED brightness dialogs show the live physical encoder
+preview from `m300_settings.brightness` using the normal status subscription.
+Save stores the displayed preview; releasing the web slider saves as well.
+Remote saves align the open OLED slider and keep Back usable. Stale dialogs
+from navigation or restart are still rejected. No per-step console refresh
+or additional MCU polling is needed.
 
 ## Build
 
@@ -40,8 +49,10 @@ under the Fluidd GPL-3.0 license. The patch and license are included in the ZIP.
 
 ## Install the web files
 
-This step is separate from the R16.12 host installer. It changes only the
-static Fluidd site. Use the built ZIP or the matching GitHub Actions artifact.
+The standard `orange-pi` installer installs this compiled Fluidd together
+with the host update and preserves the existing `config.json`. Pull
+`orange-pi` and run `install-orange-pi.py` as described in [Install](INSTALL.md).
+The steps below are for a custom web-root deployment only.
 
 1. On the Orange Pi, identify the actual web root of your existing Fluidd
    server block (for nginx, inspect `sudo nginx -T` and the matching

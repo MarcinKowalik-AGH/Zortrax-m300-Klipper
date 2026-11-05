@@ -6,6 +6,13 @@ handlers. The `<` mark identifies the current choice on list pages.
 Brightness uses two independent 16-segment controls. Turn the encoder to
 adjust and press to save. Hold to go back. In the M300 build of Fluidd,
 drag the segmented control and release to apply.
+Both bars follow the open OLED control through the existing Moonraker status
+subscription. Turning the knob is a shared preview; press the knob or Fluidd's
+Save button to store it. Releasing a dragged Fluidd slider also saves it and
+updates the open OLED cursor. A remote change invalidates old physical click
+receipts. Back remains valid after saving; leaving and reopening a dialog,
+restart and shutdown still expire the old view. Reading the preview writes
+neither NVM nor UART commands.
 
 In Fluidd, the setting macros open button dialogs when called without
 arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`
@@ -36,8 +43,8 @@ Each OLED brightness control has one compact 16-segment bar at x16–173 and
 a static display/lamp symbol at x200–249. The empty gap prevents overlap;
 the icon's demonstration meter is hidden on the actual control screen.
 Turn the knob on an active leveling screen to open Settings. Back returns
-to the wizard. Fluidd offers brightness controls inside the procedure
-dialog. Brightness, light mode and buzzer can change while a service owns
+to the wizard. Fluidd brightness controls appear on their dedicated Settings
+pages. Brightness, light mode and buzzer can change while a service owns
 motion or heaters. The host saves these changes when the service releases
 its resources.
 
