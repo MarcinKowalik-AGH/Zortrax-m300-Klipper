@@ -222,9 +222,13 @@ class M300PadMesh:
         if not set(limits['homed_axes']) >= set('xyz'):
             raise self._error('home XYZ before probing')
         low, high = limits['axis_minimum'], limits['axis_maximum']
-        if any(not (low[0] <= x <= high[0] and low[1] <= y <= high[1])
-               for x, y in self.points):
-            raise self._error('pad geometry falls outside the configured XY travel')
+        travel = self._geometry_travel(limits)
+        if not travel['fits']:
+            raise self._error('pad geometry falls outside the configured XY travel: '
+                'requested X%g..%g Y%g..%g; configured X%g..%g Y%g..%g. '
+                'Use ZORTRAX_BED_MESH PREVIEW=1 for a fitting inset.' % (
+                    *travel['required_x'], *travel['required_y'],
+                    *travel['configured_x'], *travel['configured_y']))
         gcode_move = self.printer.lookup_object('gcode_move')
         if gcode_move.move_transform is not self.bedmesh or self.bedmesh.get_mesh() is not None:
             raise self._error('clear the active mesh before probing with BED_MESH_CLEAR')
@@ -323,13 +327,54 @@ class M300PadMesh:
         gcmd.respond_info('Measured 25 pad positions. Load %s for printing; use SAVE_CONFIG to keep it.'
                           % profile)
 
+    def _geometry_travel(self, limits):
+        low, high = limits['axis_minimum'], limits['axis_maximum']
+        xs, ys = zip(*self.points)
+        conflicts = [dict(point=index, pad=PAD_NAMES[index // 5], x=x, y=y)
+                     for index, (x, y) in enumerate(self.points)
+                     if not (low[0] <= x <= high[0] and low[1] <= y <= high[1])]
+        result = dict(fits=not conflicts, required_x=[min(xs), max(xs)],
+                      required_y=[min(ys), max(ys)], configured_x=[low[0], high[0]],
+                      configured_y=[low[1], high[1]], outside_points=conflicts)
+        if conflicts:
+            # Only suggest an inset inside the reported metal and existing
+            # travel. Never silently change the geometry or motor limits.
+            margin = self.geometry['edge_margin']
+            for index, name in enumerate(PAD_NAMES):
+                width = self.geometry['center_pad_width' if index == 2 else 'corner_pad_width']
+                for axis, letter in enumerate('xy'):
+                    center = self.geometry[name + '_' + letter]
+                    margin = max(margin, width / 2 - (center - low[axis]),
+                                 width / 2 - (high[axis] - center))
+            margin = math.ceil(margin + 1.)  # Leave 1 mm inside travel too.
+            try:
+                points = geometry_points(dict(self.geometry, edge_margin=margin))
+            except ValueError:
+                points = ()
+            if points and all(low[0] <= x <= high[0] and low[1] <= y <= high[1] for x, y in points):
+                result['suggested_edge_margin'] = margin
+        return result
+
     def get_status(self, eventtime):
+        toolhead = self.printer.lookup_object('toolhead', None)
+        limits = toolhead.get_kinematics().get_status(eventtime) if toolhead is not None else None
         return dict(state=self.state, busy=self.busy, result=self.report,
-                    geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points))
+                    geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
+                    travel=self._geometry_travel(limits) if limits else None)
 
     def cmd_status(self, gcmd):
         status = self.get_status(self.reactor.monotonic())
         gcmd.respond_info('M300_PAD_MESH ' + json.dumps(dict(status, probe_points=self.points)))
+        travel = status['travel']
+        if travel is not None:
+            gcmd.respond_info('Pad points X%g..%g Y%g..%g; configured travel X%g..%g Y%g..%g: %s' % (
+                *travel['required_x'], *travel['required_y'],
+                *travel['configured_x'], *travel['configured_y'],
+                'fits' if travel['fits'] else 'OUTSIDE TRAVEL'))
+            if 'suggested_edge_margin' in travel:
+                gcmd.respond_info('Keep the configured travel: preview a smaller contact area with '
+                    'BED_MESH_CALIBRATE EDGE_MARGIN=%g PREVIEW=1. '
+                    'This reduces corner coverage; motor limits are unchanged.' % travel['suggested_edge_margin'])
 
 
 def load_config(config):
