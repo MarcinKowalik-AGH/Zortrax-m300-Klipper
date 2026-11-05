@@ -974,6 +974,8 @@ class M300OLED:
                 return
             previous_page, previous_selection = menu.page, self.selection
             page = menu.select(action, now)
+            if page == '_procedure_view_restored':
+                return
             # OEM fan and Settings choices redraw in place with the same cursor.
             in_place = previous_page == menu.page and not menu.reason and (
                 menu.page == 'fan_test' or

@@ -151,6 +151,13 @@ fan icon. Rotation requires an enabled selected fan and live/fresh status;
 it reports the commanded state, not measured RPM. Original reference frames
 remain in the software tests. See [activity bindings](UI_SYMBOLS.md).
 
+From host menu revision 0.13.16.12, procedures return to their invoking OLED
+screen, cursor and Back history. For an ordinary Maintenance invocation this
+is still Maintenance; a Fluidd home button used while native Klipper status is
+visible returns to that status screen. Manual navigation during an operation
+is respected. Fault explanations remain until acknowledgement, and saved
+navigation is invalidated on restart/disconnect. No printer state is restored.
+
 With the nominal OEM E scale of 960 units/mm, the transport counters give
 130, 110 and 150 mm. These are nominal program values, not independent
 physical length measurements. The port retains the printer's calibrated E.

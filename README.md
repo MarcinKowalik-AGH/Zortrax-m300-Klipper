@@ -64,6 +64,9 @@ Host menu revision `0.13.16.11-ACTIVITY-SYMBOLS` assigns these graphics to the
 corresponding OLED screens and reported states. Brightness controls retain
 16 segments in a shorter bar alongside the icon. See the
 [rendered screen preview](docs/en/UI_SYMBOLS.md#host-oled-bindings--menu-revision-0131611).
+Menu revision `0.13.16.12-PROCEDURE-RETURN` remembers the invoking OLED screen,
+cursor and navigation history. Fluidd homing returns to native Klipper status
+when that was the preceding screen, while manual navigation is respected.
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

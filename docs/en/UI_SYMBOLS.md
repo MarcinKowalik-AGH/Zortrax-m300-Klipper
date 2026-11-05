@@ -162,6 +162,33 @@ Unknown user-modified runtime files remain protected.
 This assignment update is host-side. A printer already running R14.15 does not
 need another MCU flash to receive the host OLED bindings.
 
+## Procedure return navigation — menu revision 0.13.16.12
+
+Automatic procedure presentation borrows the OLED for the current owner and
+session. It remembers the preceding panel page, menu page, selected row and
+Back history once, before switching to the procedure. Later phases and repeated
+refreshes do not overwrite that origin. OLED-dispatched macros retain the row
+that was clicked before the normal dispatcher resets its selection.
+
+| Invocation | Completion or cancellation |
+| --- | --- |
+| Fluidd home button or console G28 while OLED shows native Klipper status | Return to native Klipper status |
+| Homing from OLED Maintenance | Return to Maintenance with the invoking row selected |
+| Remote Heat / Load / Unload / Fan test from another OLED page | Return to that preceding page and cursor |
+| Native procedure from a Settings page | Restore the page and history; brightness displays its current live value |
+| Operator navigates to another menu during an operation | Leave the operator's current screen in place |
+| Operator explicitly exits to native status during homing | Later phases do not reopen that same homing session |
+| Temporary wizard Settings page when the procedure finishes | Back returns to the original page |
+| Reported procedure fault | Keep the explanation visible until acknowledgement |
+| Restart, disconnect or shutdown | Discard saved navigation and stale input receipts |
+
+The saved state contains navigation only. It never restores positions, heaters,
+settings, file handles, action confirmations or print continuation. Returning
+revokes the old input epoch and requires a freshly presented view before another
+action can be accepted. A different session cannot consume the saved origin.
+The existing motion, thermal and material owners remain unchanged. MCU R14.15
+is still the matching MCU image; this correction requires only the host update.
+
 ## Local MCU animation in R14.15
 
 The original local text-only waiting screen now includes the matching 50 × 50

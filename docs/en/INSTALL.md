@@ -118,6 +118,12 @@ appears only after the new MCU image is flashed using the existing SD procedure.
 Updating the Orange Pi host alone does not install these local MCU graphics.
 The X/Y STEP timer core and UART rate are unchanged from R14.14.
 
+The 0.13.16.12 host menu update restores the preceding OLED page after an
+externally started procedure, including native Klipper status after Fluidd
+homing. Check `ZORTRAX_MENU_STATUS` for
+`menu_revision: 0.13.16.12-PROCEDURE-RETURN`. This host navigation correction
+does not require another MCU flash when R14.15 is already installed.
+
 ### OLED RLE benchmark
 
 Run these commands in Fluidd with R14.8 or later running and the printer idle.

@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.11-ACTIVITY-SYMBOLS"
+    MENU_REVISION = "0.13.16.12-PROCEDURE-RETURN"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -102,6 +102,7 @@ class M300Menu:
         self._motion_jog_token = None
         self._temperature = {'HOTEND': None, 'BED': None}
         self._return_page = 'material'
+        self._procedure_return = self._procedure_launch = self._procedure_dismissed = None
         self._labels = {}
         # Recovered stock labels are UI data; known extraction defects are
         # corrected explicitly in the resource provenance document.
@@ -150,14 +151,18 @@ class M300Menu:
         self._repeat_identity = None
         self._cal_view = (None, None)
         self._material_view = (None, None)
+        self._procedure_return = self._procedure_launch = self._procedure_dismissed = None
         self.page = 'main'
 
     def home(self):
+        context = getattr(self, '_procedure_return', None)
+        dismissed = context['session'] if context else getattr(self, '_procedure_dismissed', None)
         if self.page == 'fan_test':
             fans = self.printer.lookup_object('m300_fans', None)
             if fans is not None and fans.test is not None:
                 fans.end_oem()
         self.invalidate()
+        self._procedure_dismissed = dismissed
         self.reason = ''
 
     def _navigate(self, page, remember=True, *, refresh_information=True):
@@ -214,11 +219,112 @@ class M300Menu:
         oled._user_refresh_pending = True
         self.reactor.update_timer(oled.timer, self.reactor.NOW)
 
-    def return_from_procedure(self, owner, operation):
+    def _panel_route(self):
+        oled = self.printer.lookup_object('m300_oled', None)
+        return (self.page, oled.page, self.generation) if oled is not None else None
+
+    def _panel_origin(self):
+        oled = self.printer.lookup_object('m300_oled', None)
+        if oled is None:
+            return None
+        ui = self._ui()
+        history = getattr(ui, 'history', None)
+        # Only navigation is saved. Never save an action token, confirmation,
+        # heater/motor state, file handle or a resumable print state here.
+        panel = {'job_cancel':'job', 'filament_cancel':'filament'}.get(oled.page, oled.page)
+        page = 'models' if self.page in ('confirm', 'confirm_print') else self.page
+        stack = tuple(history.stack) if history is not None else ()
+        if page in ('procedure', 'fan_test'):
+            page, stack = (stack[-1], stack[:-1]) if stack else ('maintenance', ())
+        return dict(panel=panel, page=page, selection=oled.selection,
+                    history=stack)
+
+    def _launch_origin(self, view):
+        hint = getattr(self, '_procedure_launch', None)
+        if hint is None:
+            return None
+        status = view['snapshots'][view['owner']]
+        if (hint['generation'] != self.generation or hint['owner'] != view['owner']
+                or hint['operation'] != status.get('operation')
+                or hint['previous_token'] == view['token']):
+            return None
+        self._procedure_launch = None
+        return hint['origin']
+
+    def present_procedure(self, view, page, selection=0):
+        """Temporarily show this owner/session, retaining its invoking screen."""
+        oled = self.printer.lookup_object('m300_oled', None)
+        if oled is None:
+            return False
+        session = view['owner'], view['token']
+        if session == getattr(self, '_procedure_dismissed', None):
+            return False
+        context = getattr(self, '_procedure_return', None)
+        route = self._panel_route()
+        if context is None or context['session'] != session:
+            origin = self._launch_origin(view)
+            if origin is None:
+                origin = (context['origin'] if context and context['shown']==route
+                          else self._panel_origin())
+            context = dict(session=session, origin=origin, shown=None)
+            self._procedure_return = context
+        elif context['shown'] != route:
+            # Settings or another manually selected screen is not a modal
+            # owner. Phase updates must not steal it from the operator.
+            if not (self.page == page and oled.page == 'm04'):
+                return False
+        if self.page != page or oled.page != 'm04':
+            self._navigate(page, remember=False)
+            oled.page, oled.selection = 'm04', selection
+        context['shown'] = self._panel_route()
+        oled.message = None
+        self._refresh_panel(oled)
+        return True
+
+    def _refresh_panel(self, oled):
+        oled._input_epoch = getattr(oled, '_input_epoch', 0)+1
+        oled._presented_context = oled._presented_actions = None
+        oled.render_at = 0.
+        oled._user_refresh_pending = True
+
+    def return_from_procedure(self, owner, operation, token=None, *, explicit=False):
+        context = getattr(self, '_procedure_return', None)
+        oled = self.printer.lookup_object('m300_oled', None)
+        if context is not None:
+            if context['session'][0] != owner or token is not None and context['session'][1] != token:
+                return False
+            if not explicit and context['shown'] != self._panel_route():
+                return False  # Preserve a screen the operator deliberately opened.
+            origin = context['origin']
+            self._procedure_return = self._procedure_launch = None
+            self._procedure_dismissed = context['session']
+            if oled is not None and origin is not None:
+                if origin['panel'] == 'status':
+                    oled._show_status()
+                else:
+                    self._navigate(origin['page'], remember=False, refresh_information=False)
+                    oled.page, oled.selection, oled.message = origin['panel'], origin['selection'], None
+                    ui = self._ui()
+                    if getattr(ui, 'history', None) is not None:
+                        ui.history.stack[:] = origin['history']
+                        ui.history.scroll_anchor = None
+                    select = getattr(ui, 'brightness_selection', None)
+                    if select is not None and origin['selection'] > 0:
+                        level = select()
+                        if level is not None:
+                            oled.selection = level  # A concurrent setting change is not undone.
+                self._refresh_panel(oled)
+                return True
+        if oled is not None and (oled.page != 'm04' or self.page not in ('procedure', 'fan_test')):
+            return False
         page = ('native_job' if operation == 'CHANGE' else
                 'material' if owner == 'm300_filament' else
                 'maintenance')
         self._navigate(page, remember=False)
+        if oled is not None:
+            oled.page, oled.selection = 'm04', 0
+            self._refresh_panel(oled)
+        return True
 
     def _service(self, name):
         obj = self.printer.lookup_object(name, None)
@@ -292,7 +398,12 @@ class M300Menu:
                 if self.page == 'settings' and getattr(self._ui(), 'leveling_settings', False):
                     view = self._service('m300_procedures').view(now)
                     target = 'maintenance' if view['state'] in ('COMPLETE', 'CANCELLED', 'IDLE') else 'procedure'
-                    rows[0] = ('Back', ('page', target))
+                    context = getattr(self, '_procedure_return', None)
+                    if (target == 'maintenance' and context is not None
+                            and context['session'] == (view['owner'], view['token'])):
+                        rows[0] = ('Back', ('procedure_return', view['owner'], view['token']))
+                    else:
+                        rows[0] = ('Back', ('page', target))
                 return title, self._notice(rows)
         if native and self.page == 'material':
             return self.t('Material'), self._notice([(self.t('Back'), ('page', 'zortrax')),
@@ -766,16 +877,57 @@ class M300Menu:
             raise self._error('select an explicit ' + kind + ' temperature first')
         return value
 
-    def _native_script(self, script):
+    @staticmethod
+    def _script_procedure(script):
+        words = script.strip().upper().split()
+        if not words:
+            return None
+        command = words[0]
+        if command == 'G28':
+            axes = ''.join(axis for axis in 'XYZ' if len(words)==1 or axis in words[1:])
+            operation = {'X':'HOME_X','Y':'HOME_Y','Z':'HOME_Z',
+                         'XY':'HOME_XY','XYZ':'HOME_ALL'}.get(axes)
+            return ('m300_motion',operation) if operation else None
+        return {'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
+                'ZORTRAX_HOME_Z':('m300_motion','HOME_Z'),
+                'ZORTRAX_HOME_ALL':('m300_motion','HOME_ALL'),
+                'ZORTRAX_LEVEL':('m300_calibration',None),
+                'ZORTRAX_HEAT':('m300_maintenance','HOTEND'),
+                'ZORTRAX_LOAD':('m300_filament','LOAD'),
+                'ZORTRAX_UNLOAD':('m300_filament','UNLOAD'),
+                'ZORTRAX_CHANGE':('m300_filament','CHANGE'),
+                'ZORTRAX_FAN_TEST_START':('m300_fans','FAN_TEST'),
+                'ZORTRAX_FAN_UPPER':('m300_fans','FAN_TEST'),
+                'ZORTRAX_FAN_LOWER':('m300_fans','FAN_TEST')}.get(command)
+
+    @staticmethod
+    def _procedure_snapshot(service, now):
+        try:
+            status = service.get_status(now) if service is not None else {}
+            return status if isinstance(status, dict) else {}
+        except Exception:
+            return {}  # Optional UI bookkeeping must not interrupt a command.
+
+    def _native_script(self, script, origin=None):
         # Run through the ordinary native G-code mutex. Revalidate the view
         # AFTER acquiring it, so a delayed click cannot outlive navigation or
         # restart. The OLED serial/ACK callback never waits for this command.
         generation = self.generation
+        origin = self._panel_origin() if origin is None else origin
+        procedure = self._script_procedure(script)
         def execute(now):
             with self.gcode.get_mutex():
                 if generation != self.generation or self.printer.is_shutdown():
                     return
                 saved = False
+                hint = None
+                if procedure is not None:
+                    owner, operation = procedure
+                    service = self.printer.lookup_object(owner, None)
+                    before = self._procedure_snapshot(service, now)
+                    hint = dict(origin=origin, owner=owner, operation=operation,
+                                generation=generation, previous_token=before.get('session_token'))
+                    self._procedure_launch = hint
                 try:
                     prefix = 'SAVE_GCODE_STATE NAME=M300_UI_NATIVE\n'
                     if script.startswith(prefix):
@@ -786,7 +938,13 @@ class M300Menu:
                         self.gcode.run_script_from_command(script)
                 except self.printer.command_error as exc:
                     self.reason = str(exc)
+                    if getattr(self, '_procedure_launch', None) is hint:
+                        self._procedure_launch = None
                 finally:
+                    if hint is not None and getattr(self, '_procedure_launch', None) is hint:
+                        status = self._procedure_snapshot(service, self.reactor.monotonic())
+                        if not status.get('busy'):
+                            self._procedure_launch = None
                     if saved and not self.printer.is_shutdown():
                         self.gcode.run_script_from_command(
                             'RESTORE_GCODE_STATE NAME=M300_UI_NATIVE MOVE=0')
@@ -808,6 +966,13 @@ class M300Menu:
                 if not getattr(getattr(getattr(self, 'job', None), 'board', None), 'native_control', False):
                     raise self._error('native controls are not active')
                 self._native_script(action[1])
+            elif kind == 'procedure_return':
+                view = self._service('m300_procedures').view(now)
+                if (view['owner'], view['token']) != tuple(action[1:3]) or view['busy']:
+                    raise self._error('procedure changed; review the current screen')
+                operation = view['snapshots'][view['owner']].get('operation')
+                if self.return_from_procedure(view['owner'], operation, view['token'], explicit=True):
+                    return '_procedure_view_restored'
             elif kind == 'platform_hold':
                 # The raw acknowledged physical press owns this gesture.
                 # The short/long event delivered on release never jogs twice.
@@ -956,6 +1121,7 @@ class M300Menu:
                 outcome=self._service('m300_motion').arm_xy_clearance(5.)
                 self.reason = 'Confirmed operator >=5mm XY gap (60s), MCU ARM requested. No movement.'
             elif kind in ('motion_home_x','motion_home_y','motion_home_xy','motion_home_z','motion_home_xyz'):
+                origin = self._panel_origin()
                 axes={'motion_home_x':'x','motion_home_y':'y',
                       'motion_home_xy':'xy','motion_home_z':'z','motion_home_xyz':'xyz'}[kind]
                 self._navigate('motion_status')
@@ -964,7 +1130,7 @@ class M300Menu:
                     oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
                 motion = self._service('m300_motion')
                 if getattr(motion, 'normal_control', False):
-                    self._native_script('G28 ' + ' '.join(axes.upper()))
+                    self._native_script('G28 ' + ' '.join(axes.upper()), origin=origin)
                     self.reason = 'Homing %s requested.' % axes.upper()
                 else:
                     motion.home(axes=axes)

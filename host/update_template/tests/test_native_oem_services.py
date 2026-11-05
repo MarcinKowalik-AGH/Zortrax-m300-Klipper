@@ -790,6 +790,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                    ('ZORTRAX_LOAD','f','WAIT_INSERT','material'),
                    ('ZORTRAX_UNLOAD','f','WAIT_UNLOAD','material')):
             h=Harness();o,menu,ui,display,packet=physical_panel(h)
+            menu.page=page;o.selection=0
             h.run(command);h.p._tick(h.now)
             self.assertEqual(menu.page,'procedure')
             service=getattr(h,owner);h.heat(service,waiting)

@@ -424,6 +424,10 @@ class NativeLevelingTests(unittest.TestCase):
         def navigate(page):menu.page=page;menu.generation+=1
         menu._navigate=navigate
         oled=NS(page='status',selection=4,render_at=5.)
+        def present(view,page,selection=0):
+            navigate(page);oled.page,oled.selection,oled.render_at='m04',selection,0.
+            return True
+        menu.present_procedure=present
         h.objects.update(m300_menu=menu,m300_oled=oled)
         h.c.start();h.until('WAIT_WARNING');p._tick(h.now)
         self.assertEqual((menu.page,oled.page,oled.selection),('procedure','m04',0))

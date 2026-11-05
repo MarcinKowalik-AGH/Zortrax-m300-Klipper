@@ -384,9 +384,7 @@ class M300Procedures:
                     # that view would revoke the physical hold lease.
                     if menu is not None and oled is not None and view['state']!='PLATFORM_HOLD':
                         page='fan_test' if maintenance_screen['kind']=='fan_menu' else 'maintenance'
-                        if menu.page!=page or oled.page!='m04':
-                            menu._navigate(page)
-                            oled.page,oled.selection,oled.render_at='m04',0,0.
+                        if menu.present_procedure(view,page):
                             if page=='maintenance':
                                 labels=[label for label,_ in menu.rows(now)[1]]
                                 if maintenance_screen['text'] in labels:
@@ -401,21 +399,16 @@ class M300Procedures:
                     oled = self.printer.lookup_object('m300_oled', None)
                     ui = self.printer.lookup_object('m300_menu_ui', None)
                     if (menu is not None and oled is not None
-                            and (homing or not getattr(ui, 'leveling_settings', False))
-                            and (menu.page != 'procedure' or oled.page != 'm04')):
-                        menu._navigate('procedure')
-                        oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
-                        if homing:
-                            oled.message = None
-                            oled._user_refresh_pending = True
+                            and (homing or not getattr(ui, 'leveling_settings', False))):
+                        menu.present_procedure(view,'procedure')
                 elif finished_service:
-                    # OEM Heat/Load/Unload return to the invoking submenu.
+                    # A procedure borrows the panel; only its own visible
+                    # presentation may return to the captured invoking view.
                     menu=self.printer.lookup_object('m300_menu',None)
                     oled=self.printer.lookup_object('m300_oled',None)
-                    if menu is not None and oled is not None and menu.page in ('procedure','fan_test'):
+                    if menu is not None and oled is not None:
                         operation=view['snapshots'][view['owner']].get('operation')
-                        menu.return_from_procedure(view['owner'], operation)
-                        oled.page,oled.selection,oled.render_at='m04',0,0.
+                        menu.return_from_procedure(view['owner'], operation, view['token'])
             display = self.printer.lookup_object('display_status', None)
             visible = (view['busy'] or view['state'] not in TERMINAL
                        or now - self.changes[view['owner']] < 8.)

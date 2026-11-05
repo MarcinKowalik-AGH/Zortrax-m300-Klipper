@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 import shutil
 import sys
+import tempfile
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import native_config
 
@@ -152,7 +153,10 @@ def main():
             assert cp.getboolean(led, 'pwm') and cp.getfloat(led, 'cycle_time') == .010
         assert not cp.getboolean('output_pin m300_buzzer', 'pwm', fallback=False)
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
-        cp.set('m300_nvm','path',str(dest/'settings.json'))
+        # Repeated FILEOUTPUT runs must not inherit previously saved settings
+        # or late writes from an earlier process using the same output root.
+        state_dir=Path(tempfile.mkdtemp(prefix='nvm-',dir=dest))
+        cp.set('m300_nvm','path',str(state_dir/'settings.json'))
         if name == 'native_pad_mesh':
             cp.set('stepper_x', 'position_max', '320')
             cp.set('stepper_y', 'position_max', '320')

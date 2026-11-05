@@ -258,8 +258,8 @@ class M300MenuUI:
                     self.procedures.action(received_view, 'CONFIRM')
                 elif view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
                     self.menu.return_from_procedure(
-                        view['owner'], view['snapshots'][view['owner']].get('operation'))
-                    self.oled.page, self.oled.selection = 'm04', 0
+                        view['owner'], view['snapshots'][view['owner']].get('operation'),
+                        view['token'], explicit=True)
             elif events.get('delta') and not events.get('pressed') and view['busy']:
                 if self.printer.lookup_object('m300_settings', None) is not None:
                     self.leveling_settings = True

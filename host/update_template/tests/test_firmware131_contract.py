@@ -421,6 +421,7 @@ class EnglishOnlyTests(unittest.TestCase):
 
     def test_runtime_prompts_ignore_a_non_english_saved_language_and_close_on_completion(self):
         h=Harness();h.language='DE';o,menu,ui,display,packet=physical_panel(h)
+        menu.page='material';o.selection=0
         h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         self.assertEqual(h.p.view(h.now)['leveling_screen']['language'],'EN')
         view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
