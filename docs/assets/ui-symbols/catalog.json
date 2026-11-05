@@ -1,0 +1,134 @@
+[
+  {
+    "id": "bed_mesh",
+    "title": "Bed mesh",
+    "concept": "Five contact pads and a moving measurement dot",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "heat_nozzle",
+    "title": "Heat the nozzle",
+    "concept": "Nozzle with rising heat waves",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "heat_bed",
+    "title": "Heat the bed",
+    "concept": "Platform with rising heat waves",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "cooling",
+    "title": "Cooling",
+    "concept": "Thermometer and downward temperature arrow",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "fan_upper",
+    "title": "Upper fan",
+    "concept": "Rotating fan with an upper position marker",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "fan_lower",
+    "title": "Lower fan",
+    "concept": "Rotating fan with a lower position marker",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "sd_read",
+    "title": "Read SD card",
+    "concept": "Card, contacts and moving data dots",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "file_convert",
+    "title": "Prepare model file",
+    "concept": "Two files and a transfer arrow",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "clean_nozzle",
+    "title": "Clean the nozzle",
+    "concept": "Nozzle and a moving brush",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "link_status",
+    "title": "Printer connection",
+    "concept": "Two ports with a moving link dot",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "oled_brightness",
+    "title": "OLED brightness",
+    "concept": "Display with a sixteen-segment bar",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "led_brightness",
+    "title": "LED brightness",
+    "concept": "Lamp with a sixteen-segment bar",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "origin": "New project design; not an extracted OEM asset"
+  }
+]

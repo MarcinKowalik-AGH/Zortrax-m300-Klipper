@@ -180,15 +180,16 @@ def main():
         (dest/'input.gcode').write_text('ZORTRAX_DISPLAY_STATUS\n' + script)
         command=[sys.executable,str(args.root/'klippy/klippy.py'),str(dest/'printer.cfg'),
                  '-i',str(dest/'input.gcode'),'-o',str(dest/'protocol.bin'),'-d',str(args.dictionary)]
-        with (dest/'klippy.log').open('w') as log:
-            process=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=30)
-        text=(dest/'klippy.log').read_text(errors='replace')
+        process=subprocess.run(command,capture_output=True,text=True,timeout=30)
+        text=process.stdout+process.stderr
+        (dest/'klippy.log').write_text(text)
         if name == 'factory_erased_refused':
             assert error in text, (name, text[-3000:])
             assert "Configured MCU 'mcu'" not in text
             results.append({'case': name, 'PASS': True, 'startup_refused': True,
                             'synthetic_factory_record': True, 'physical_hardware': False})
             continue
+        assert 'M300_DISPLAY ' in text, (name, process.returncode, text[-4000:])
         display_line=next(line.split('M300_DISPLAY ',1)[1] for line in text.splitlines() if 'M300_DISPLAY ' in line)
         assert json.loads(display_line)['connected'] is True, (name, display_line)
         report_line=next(line.split('M300_NATIVE ',1)[1] for line in text.splitlines() if 'M300_NATIVE ' in line)

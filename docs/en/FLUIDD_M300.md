@@ -14,10 +14,12 @@ hardware version, serial number and printing time.
 Maintenance directly below Autocalibration, and as Fluidd macros
 `ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL`. They call
 `G28 X Y`, `G28 Z` and `G28` respectively. Z requires XY to be homed first.
-All three return to Maintenance on completion. Fluidd's standard XY, Z and All controls
-also show the shared phase when the printer is idle. The M300 Fluidd build
-animates an hourglass while the OLED uses the original four-frame sprite.
+All three return to Maintenance on completion. Fluidd's standard X, Y, XY,
+Z and All home buttons show the matching busy state and phase text as a
+tooltip, including starts from OLED and macros. Homing does not open a modal
+dialog. OLED keeps the original four-frame M300 hourglass.
 Print start and Autocalibration keep their own procedure screens.
+See [the symbol inventory and draft sheet](UI_SYMBOLS.md).
 
 ## Build
 

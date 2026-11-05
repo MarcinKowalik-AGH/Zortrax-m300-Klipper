@@ -69,6 +69,7 @@ def motion_fixture():
 class NormalHomingTests(unittest.TestCase):
     def test_operator_homing_presentation_leaves_leveling_and_print_in_control(self):
         for axes, leveling, printing, expected in (
+                ('x', False, False, 'HOME_X'), ('y', False, False, 'HOME_Y'),
                 ('xy', False, False, 'HOME_XY'), ('xyz', False, False, 'HOME_ALL'),
                 ('z', False, False, 'HOME_Z'), ('xyz', True, False, None),
                 ('xyz', False, True, None), ('z', False, True, None)):

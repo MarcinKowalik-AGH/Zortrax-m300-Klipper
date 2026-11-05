@@ -96,123 +96,19 @@ index 61dc457bd6cfb66ef6c9364019874f0c4241b355..30ff2f277c5ff06342c7a45ef4094030
    }
  }
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
+index dbea2dfd657790c2ae599b2fa276a74f4f511b15..fdadd7da86cd7922d82e2efb0a6d455b1693fd8c 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -7,88 +7,261 @@
--  >
--    <v-card-text>
--      <v-row
+@@ -7,10 +7,37 @@
+   >
+     <v-card-text>
+       <v-row
 -        v-for="item in dialog.items"
--        :key="`item::${item.id}`"
--      >
--        <v-col v-if="item.type === 'text'">
--          {{ item.text }}
--        </v-col>
--        <v-col v-else-if="item.type === 'button'">
--          <app-btn
--            :color="item.color"
--            block
--            @click="handleClick(item)"
--          >
--            {{ item.text }}
--          </app-btn>
--        </v-col>
--        <v-col
--          v-else-if="item.type === 'button_group'"
--          class="prompt-button-group"
--        >
--          <app-btn
--            v-for="button in item.buttons"
--            :key="`button::${button.id}`"
--            :color="button.color"
--            @click="handleClick(button)"
--          >
--            {{ button.text }}
--          </app-btn>
--        </v-col>
--      </v-row>
--    </v-card-text>
--
--    <template #actions>
--      <v-spacer />
--
--      <app-btn
--        v-for="button in dialog.footerButtons"
--        :key="`button::${button.id}`"
--        :color="button.color ?? 'primary'"
--        type="button"
--        @click="handleClick(button)"
--      >
--        {{ button.text }}
--      </app-btn>
--    </template>
--  </app-dialog>
--</template>
--
--<script lang="ts">
--import { Component, Mixins } from 'vue-property-decorator'
--import StateMixin from '@/mixins/state'
--import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
--
--@Component({})
--export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
--  get dialog (): PromptDialog {
--    return this.$typedState.console.promptDialog
--  }
--
--  get open (): boolean {
--    return this.dialog.open
--  }
--
--  set open (value: boolean) {
--    if (!value) {
--      this.sendGcode('RESPOND TYPE=command MSG="action:prompt_end"')
--    }
--  }
--
--  handleClick (button: PromptDialogButton) {
--    this.sendGcode(button.command || button.text)
--  }
--}
--</script>
--
--<style lang="scss" scoped>
--  .prompt-button-group {
--    display: flex;
--    flex-wrap: wrap;
--    gap: 16px;
--
--    .v-btn {
--      flex: 1 1 0;
--    }
--  }
--</style>
-+  >
-+    <v-card-text>
-+      <svg
-+        v-if="homingActive"
-+        class="m300-homing-hourglass"
-+        viewBox="0 0 32 32"
-+        aria-hidden="true"
-+      >
-+        <path
-+          d="M7 5h18M7 27h18M9 5v5l7 6-7 6v5M23 5v5l-7 6 7 6v5"
-+          fill="none"
-+          stroke="currentColor"
-+          stroke-width="2"
-+          stroke-linecap="round"
-+          stroke-linejoin="round"
-+        />
-+        <path
-+          d="M11 8h10l-5 5z"
-+          fill="currentColor"
-+        />
-+      </svg>
-+      <v-row
 +        v-for="item in visibleItems"
-+        :key="`item::${item.id}`"
+         :key="`item::${item.id}`"
 +        :class="{ 'm300-printer-info-row': compactPrinterInfo && item.type === 'text' }"
-+      >
+       >
+-        <v-col v-if="item.type === 'text'">
 +        <v-col v-if="leveling && item.id === leveling.firstId">
 +          <m300-leveling-diagram :points="leveling.points" />
 +        </v-col>
@@ -240,78 +136,36 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +          </label>
 +        </v-col>
 +        <v-col v-else-if="item.type === 'text'">
-+          {{ item.text }}
-+        </v-col>
-+        <v-col v-else-if="item.type === 'button'">
-+          <app-btn
-+            :color="item.color"
-+            block
-+            @click="handleClick(item)"
-+          >
-+            {{ item.text }}
-+          </app-btn>
-+        </v-col>
-+        <v-col
-+          v-else-if="item.type === 'button_group'"
-+          class="prompt-button-group"
-+        >
-+          <app-btn
-+            v-for="button in item.buttons"
-+            :key="`button::${button.id}`"
-+            :color="button.color"
-+            @click="handleClick(button)"
-+          >
-+            {{ button.text }}
-+          </app-btn>
-+        </v-col>
-+      </v-row>
-+    </v-card-text>
-+
-+    <template #actions>
-+      <v-spacer />
-+
-+      <app-btn
-+        v-for="button in dialog.footerButtons"
-+        :key="`button::${button.id}`"
-+        :color="button.color ?? 'primary'"
-+        type="button"
-+        @click="handleClick(button)"
-+      >
-+        {{ button.text }}
-+      </app-btn>
-+    </template>
-+  </app-dialog>
-+</template>
-+
-+<script lang="ts">
+           {{ item.text }}
+         </v-col>
+         <v-col v-else-if="item.type === 'button'">
+@@ -55,16 +82,67 @@
+ </template>
+
+ <script lang="ts">
+-import { Component, Mixins } from 'vue-property-decorator'
 +import { Component, Mixins, Watch } from 'vue-property-decorator'
 +import M300LevelingDiagram from './M300LevelingDiagram.vue'
 +import { readM300Brightness, readM300Leveling } from './m300Leveling'
 +import type { BrightnessControl } from './m300Leveling'
-+import StateMixin from '@/mixins/state'
-+import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
-+
-+const homingMarker = 'M300_HOMING_ACTIVE'
-+
+ import StateMixin from '@/mixins/state'
+ import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
+
+-@Component({})
 +@Component({ components: { M300LevelingDiagram } })
-+export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
 +  brightnessDraft: Record<string, number> = {}
 +
-+  get dialog (): PromptDialog {
-+    return this.$typedState.console.promptDialog
-+  }
-+
+   get dialog (): PromptDialog {
+     return this.$typedState.console.promptDialog
+   }
+
 +  get leveling () {
 +    return readM300Leveling(this.dialog)
 +  }
 +
 +  get compactPrinterInfo () {
 +    return this.dialog.title === 'ZORTRAX M300 - Printer information'
-+  }
-+
-+  get homingActive () {
-+    return ['ZORTRAX M300 - Homing XY', 'ZORTRAX M300 - Homing Z', 'ZORTRAX M300 - Homing ALL'].includes(this.dialog.title ?? '') &&
-+      this.dialog.items.some(item => item.type === 'text' && item.text === homingMarker)
 +  }
 +
 +  get brightness () {
@@ -349,52 +203,16 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +    const replaced = this.leveling?.otherIds ?? []
 +    const singleBrightness = this.brightness.some(control => this.dialog.title === `ZORTRAX M300 - ${control.label}`)
 +    return this.dialog.items.filter(item => !replaced.includes(item.id) &&
-+      !(this.homingActive && item.type === 'text' && item.text === homingMarker) &&
 +      !(singleBrightness && item.type === 'button' && /^(?:[1-9]|1[0-6])(?: <)?$/.test(item.text)))
 +  }
 +
-+  get open (): boolean {
-+    return this.dialog.open
-+  }
-+
-+  set open (value: boolean) {
-+    if (!value) {
-+      this.sendGcode('RESPOND TYPE=command MSG="action:prompt_end"')
-+    }
-+  }
-+
-+  handleClick (button: PromptDialogButton) {
-+    this.sendGcode(button.command || button.text)
-+  }
-+}
-+</script>
-+
-+<style lang="scss" scoped>
-+  .m300-homing-hourglass {
-+    display: block;
-+    width: 40px;
-+    height: 40px;
-+    margin: 0 auto 8px;
-+    animation: m300-homing-turn 2s linear infinite;
-+  }
-+
-+  @keyframes m300-homing-turn {
-+    to { transform: rotate(360deg); }
-+  }
-+
-+  @media (prefers-reduced-motion: reduce) {
-+    .m300-homing-hourglass { animation: none; }
-+  }
-+
-+  .prompt-button-group {
-+    display: flex;
-+    flex-wrap: wrap;
-+    gap: 16px;
-+
-+    .v-btn {
-+      flex: 1 1 0;
-+    }
-+  }
+   get open (): boolean {
+     return this.dialog.open
+   }
+@@ -91,4 +169,56 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+       flex: 1 1 0;
+     }
+   }
 +
 +  .m300-brightness-control {
 +    display: block;
@@ -447,7 +265,7 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +      line-height: 1.4;
 +    }
 +  }
-+</style>
+ </style>
 diff --git a/src/components/common/M300LevelingDiagram.vue b/src/components/common/M300LevelingDiagram.vue
 new file mode 100644
 index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc344990bc
@@ -543,9 +361,10 @@ index 0000000000000000000000000000000000000000..bf35ddf0773330cb293ba224ff3b10cc
 +</style>
 diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
 new file mode 100644
+index 0000000000000000000000000000000000000000..8549354f81429a6b4057bd5c9686a6261756db4d
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,103 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import { describe, expect, it, vi } from 'vitest'
@@ -633,35 +452,6 @@ new file mode 100644
 +  })
 +})
 +
-+describe('M300 homing progress', () => {
-+  it.each([
-+    ['ZORTRAX M300 - Homing XY', true, true],
-+    ['ZORTRAX M300 - Homing Z', true, true],
-+    ['ZORTRAX M300 - Homing ALL', true, true],
-+    ['ZORTRAX M300 - Homing ALL', false, false],
-+    ['Unrelated dialog', true, false]
-+  ] as const)('renders the hourglass for %s with marker %s', (title, marker, animated) => {
-+    const prompt = {
-+      title,
-+      open: true,
-+      items: [
-+        { id: 1, type: 'text', text: 'Homing Y axis' },
-+        ...(marker ? [{ id: 2, type: 'text', text: 'M300_HOMING_ACTIVE' }] : [])
-+      ],
-+      footerButtons: []
-+    }
-+    const slot = { template: '<div><slot /></div>' }
-+    const wrapper = shallowMount(ActionCommandPromptDialog, {
-+      mocks: { $typedState: { console: { promptDialog: prompt } } },
-+      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot }
-+    })
-+    expect(wrapper.find('svg.m300-homing-hourglass').exists()).toBe(animated)
-+    expect(wrapper.text()).toContain('Homing Y axis')
-+    expect(wrapper.text().includes('M300_HOMING_ACTIVE')).toBe(marker && !animated)
-+    wrapper.destroy()
-+  })
-+})
-+
 +describe('M300 brightness controls', () => {
 +  it('reads both controls while preserving other procedure text', () => {
 +    expect(readM300Brightness({
@@ -680,6 +470,7 @@ new file mode 100644
 +})
 diff --git a/src/components/common/m300Leveling.ts b/src/components/common/m300Leveling.ts
 new file mode 100644
+index 0000000000000000000000000000000000000000..3b3e364549e03524cb1551b6a350277ea25bbdf3
 --- /dev/null
 +++ b/src/components/common/m300Leveling.ts
 @@ -0,0 +1,58 @@
@@ -740,4 +531,419 @@ new file mode 100644
 +    }
 +  }
 +  return controls
++}
+diff --git a/src/components/widgets/toolhead/ToolheadControlBars.vue b/src/components/widgets/toolhead/ToolheadControlBars.vue
+index 711e725518b7926b8b5ab5c82819c0019c02ba94..67e7fc87aa83021b68210d7559b7be20a387ab4d 100644
+--- a/src/components/widgets/toolhead/ToolheadControlBars.vue
++++ b/src/components/widgets/toolhead/ToolheadControlBars.vue
+@@ -12,6 +12,7 @@
+         <app-btn
+           :disabled="!klippyReady || printerPrinting"
+           :loading="hasWait($waits.onHomeAll)"
++          :title="m300HomeMessage($waits.onHomeAll)"
+           :color="!allHomed ? 'primary' : undefined"
+           class="px-2 mr-2"
+           @click="homeAll"
+@@ -28,6 +29,7 @@
+         <app-btn
+           :disabled="!klippyReady || printerPrinting"
+           :loading="hasWait($waits.onHomeXY)"
++          :title="m300HomeMessage($waits.onHomeXY)"
+           :color="!xyHomed ? 'primary' : undefined"
+           class="px-2"
+           @click="sendGcode('G28 X Y', $waits.onHomeXY)"
+diff --git a/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue b/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
+index 2a7a570f5af25ec26dc967005192140cefdde017..ffef756f58e2f5a002de04218f129b15d541f3dd 100644
+--- a/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
++++ b/src/components/widgets/toolhead/ToolheadControlBarsAxis.vue
+@@ -15,6 +15,7 @@
+           :color="!homed ? 'primary' : undefined"
+           :disabled="!klippyReady || printerPrinting"
+           :loading="hasWait(wait)"
++          :title="m300HomeMessage(wait)"
+           class="flex-grow-1"
+           @click="home"
+         >
+diff --git a/src/components/widgets/toolhead/ToolheadControlCircle.vue b/src/components/widgets/toolhead/ToolheadControlCircle.vue
+index ab57038295c2e0d94087a90da7dd2ff03aaa6bea..1ca05b35f480f03a6cedd5754d8ae90a0718e7cb 100644
+--- a/src/components/widgets/toolhead/ToolheadControlCircle.vue
++++ b/src/components/widgets/toolhead/ToolheadControlCircle.vue
+@@ -421,8 +421,11 @@
+               v-else
+               class="cc-btn"
+               :class="xyzHomeClasses"
++              :title="m300HomeMessage($waits.onHomeAll)"
++              :aria-busy="m300HomeBusy($waits.onHomeAll)"
+               @click="homeAll"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeAll) || "Home ALL" }}</title>
+               <circle
+                 cx="173.5"
+                 cy="173.5"
+@@ -439,8 +442,11 @@
+             <a
+               class="cc-btn large"
+               :class="xHomeClasses"
++              :title="m300HomeMessage($waits.onHomeX)"
++              :aria-busy="m300HomeBusy($waits.onHomeX)"
+               @click="sendGcode('G28 X', $waits.onHomeX)"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeX) || "Home X" }}</title>
+               <path
+                 d="M63.219 8.5H14.495A5.995 5.995 0 0 0 8.5 14.495v48.724c0 5.851 7.555 8.259 10.892 3.454a188.5 188.5 0 0 1 47.28-47.28c4.805-3.337 2.397-10.892-3.454-10.892Z"
+                 class="cc-btn-container"
+@@ -453,8 +459,11 @@
+             <a
+               class="cc-btn large"
+               :class="yHomeClasses"
+-              @click="sendGcode('G28 Y', $waits.onHomeX)"
++              :title="m300HomeMessage($waits.onHomeY)"
++              :aria-busy="m300HomeBusy($waits.onHomeY)"
++              @click="sendGcode('G28 Y', $waits.onHomeY)"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeY) || "Home Y" }}</title>
+               <path
+                 d="M338.5 63.219V14.495a5.995 5.995 0 0 0-5.995-5.995h-48.724c-5.851 0-8.259 7.555-3.454 10.892a188.5 188.5 0 0 1 47.28 47.28c3.337 4.805 10.892 2.397 10.892-3.454Z"
+                 class="cc-btn-container"
+@@ -470,8 +479,11 @@
+             <a
+               class="cc-btn large"
+               :class="zHomeClasses"
++              :title="m300HomeMessage($waits.onHomeZ)"
++              :aria-busy="m300HomeBusy($waits.onHomeZ)"
+               @click="sendGcode('G28 Z', $waits.onHomeZ)"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeZ) || "Home Z" }}</title>
+               <path
+                 d="M283.781 338.5h48.724a5.995 5.995 0 0 0 5.995-5.995v-48.724c0-5.851-7.555-8.259-10.892-3.454a188.5 188.5 0 0 1-47.28 47.28c-4.805 3.337-2.397 10.892 3.454 10.892Z"
+                 class="cc-btn-container"
+@@ -488,8 +500,11 @@
+               v-if="enableXYHoming"
+               class="cc-btn large"
+               :class="xyHomeClasses"
++              :title="m300HomeMessage($waits.onHomeXY)"
++              :aria-busy="m300HomeBusy($waits.onHomeXY)"
+               @click="sendGcode('G28 X Y', $waits.onHomeXY)"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeXY) || "Home XY" }}</title>
+               <path
+                 d="M8.5 283.781v48.724a5.995 5.995 0 0 0 5.995 5.995h48.724c5.851 0 8.259-7.555 3.454-10.892a188.5 188.5 0 0 1-47.28-47.28c-3.337-4.805-10.892-2.397-10.892 3.454Z"
+                 class="cc-btn-container"
+@@ -503,8 +518,11 @@
+               v-else
+               class="cc-btn large"
+               :class="xyzHomeClasses"
++              :title="m300HomeMessage($waits.onHomeAll)"
++              :aria-busy="m300HomeBusy($waits.onHomeAll)"
+               @click="homeAll"
+             >
++              <title>{{ m300HomeMessage($waits.onHomeAll) || "Home ALL" }}</title>
+               <path
+                 d="M8.5 283.781v48.724a5.995 5.995 0 0 0 5.995 5.995h48.724c5.851 0 8.259-7.555 3.454-10.892a188.5 188.5 0 0 1-47.28-47.28c-3.337-4.805-10.892-2.397-10.892 3.454Z"
+                 class="cc-btn-container"
+@@ -619,6 +637,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+
+   get xHomeClasses () {
+     return {
++      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeX),
+       disabled: (
+         !this.klippyReady ||
+         this.printerPrinting ||
+@@ -630,6 +649,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+
+   get yHomeClasses () {
+     return {
++      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeY),
+       disabled: (
+         !this.klippyReady ||
+         this.printerPrinting ||
+@@ -641,6 +661,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+
+   get zHomeClasses () {
+     return {
++      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeZ),
+       disabled: (
+         !this.klippyReady ||
+         this.printerPrinting ||
+@@ -652,6 +673,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+
+   get xyHomeClasses () {
+     return {
++      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeXY),
+       disabled: (
+         !this.klippyReady ||
+         this.printerPrinting ||
+@@ -663,6 +685,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+
+   get xyzHomeClasses () {
+     return {
++      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeAll),
+       disabled: (
+         !this.klippyReady ||
+         this.printerPrinting ||
+@@ -786,6 +809,20 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
+ </script>
+
+ <style lang="scss" scoped>
++  .m300-homing-active .cc-btn-container {
++    animation: m300-home-pulse 1s ease-in-out infinite;
++    stroke: var(--v-primary-base) !important;
++    stroke-width: 3px;
++  }
++
++  @keyframes m300-home-pulse {
++    50% { opacity: .4; }
++  }
++
++  @media (prefers-reduced-motion: reduce) {
++    .m300-homing-active .cc-btn-container { animation: none; }
++  }
++
+   @import 'vuetify/src/styles/styles.sass';
+
+   @include theme(app-circle-control) using ($material) {
+diff --git a/src/components/widgets/toolhead/ToolheadControlCross.vue b/src/components/widgets/toolhead/ToolheadControlCross.vue
+index 1027a75103d9c4fdf2b4775516afdc9339489ef2..6dab18d48014042ee1d36e5fbd211b60fc36a76d 100644
+--- a/src/components/widgets/toolhead/ToolheadControlCross.vue
++++ b/src/components/widgets/toolhead/ToolheadControlCross.vue
+@@ -33,6 +33,7 @@
+         <app-btn-toolhead-move
+           :color="(!allHomed) ? 'primary' : undefined"
+           :loading="hasWait($waits.onHomeAll)"
++          :title="m300HomeMessage($waits.onHomeAll)"
+           :disabled="!klippyReady || printerPrinting"
+           icon="$home"
+           small-icon
+@@ -68,8 +69,9 @@
+         <app-btn-toolhead-move
+           :color="(!xyHomed) ? 'primary' : undefined"
+           :loading="hasWait($waits.onHomeXY)"
++          :title="m300HomeMessage($waits.onHomeXY)"
+           :disabled="!klippyReady || printerPrinting"
+-          :tooltip="$t('app.tool.tooltip.home_xy')"
++          :tooltip="m300HomeMessage($waits.onHomeXY) || $t('app.tool.tooltip.home_xy')"
+           icon="$home"
+           @click="sendGcode('G28 X Y', $waits.onHomeXY)"
+         />
+@@ -94,8 +96,9 @@
+         <app-btn-toolhead-move
+           :color="(!zHomed) ? 'primary' : undefined"
+           :loading="hasWait($waits.onHomeZ)"
++          :title="m300HomeMessage($waits.onHomeZ)"
+           :disabled="!klippyReady || printerPrinting"
+-          :tooltip="$t('app.tool.tooltip.home_z')"
++          :tooltip="m300HomeMessage($waits.onHomeZ) || $t('app.tool.tooltip.home_z')"
+           icon="$home"
+           @click="sendGcode('G28 Z', $waits.onHomeZ)"
+         />
+@@ -107,6 +110,7 @@
+         <app-btn-toolhead-move
+           :color="(!xHomed) ? 'primary' : undefined"
+           :loading="hasWait($waits.onHomeX)"
++          :title="m300HomeMessage($waits.onHomeX)"
+           :disabled="!klippyReady || printerPrinting"
+           icon="$home"
+           small-icon
+@@ -150,6 +154,7 @@
+         <app-btn-toolhead-move
+           :color="(!yHomed) ? 'primary' : undefined"
+           :loading="hasWait($waits.onHomeY)"
++          :title="m300HomeMessage($waits.onHomeY)"
+           :disabled="!klippyReady || printerPrinting"
+           icon="$home"
+           small-icon
+diff --git a/src/mixins/state.ts b/src/mixins/state.ts
+index 6a1732cd3ef0eb05bd4331151b4cb858b815b165..00e08a8c501bfbc14699b6d0ebdc5c605849a019 100644
+--- a/src/mixins/state.ts
++++ b/src/mixins/state.ts
+@@ -3,6 +3,7 @@ import { SocketActions } from '@/api/socketActions'
+ import { Component } from 'vue-property-decorator'
+ import type { Macro } from '@/store/macros/types'
+ import type { PrinterStatus } from '@/store/printer/types'
++import { readM300Homing } from '@/util/m300-homing'
+
+ @Component
+ export default class StateMixin extends Vue {
+@@ -92,7 +93,21 @@ export default class StateMixin extends Vue {
+    * Supports a single string or a list of.
+    */
+   hasWait (wait: string | string[]): boolean {
+-    return this.$typedGetters['wait/hasWait'](wait)
++    return this.$typedGetters['wait/hasWait'](wait) || this.m300HomeBusy(wait)
++  }
++
++  get m300Homing () {
++    return readM300Homing(this.$typedState.printer.printer)
++  }
++
++  m300HomeBusy (wait: string | string[]): boolean {
++    const homing = this.m300Homing
++    return homing !== undefined && (Array.isArray(wait) ? wait : [wait]).includes(homing.wait)
++  }
++
++  m300HomeMessage (wait: string): string | undefined {
++    const homing = this.m300Homing
++    return homing?.wait === wait ? homing.message : undefined
+   }
+
+   /**
+diff --git a/src/util/m300-homing.spec.ts b/src/util/m300-homing.spec.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..99e47b4a82fd76d42783f36aa35666659f0892a8
+--- /dev/null
++++ b/src/util/m300-homing.spec.ts
+@@ -0,0 +1,124 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// @vitest-environment jsdom
++import Vue from 'vue'
++import { describe, expect, it, vi } from 'vitest'
++import { shallowMount } from '@vue/test-utils'
++import StateMixin from '@/mixins/state'
++import AppBtn from '@/components/ui/AppBtn.vue'
++import ToolheadControlBars from '@/components/widgets/toolhead/ToolheadControlBars.vue'
++import { readM300Homing } from './m300-homing'
++import { SocketActions } from '@/api/socketActions'
++
++vi.mock('@/api/socketActions', () => ({ SocketActions: { printerGcodeScript: vi.fn() } }))
++
++function printer (operation = 'HOME_Z') {
++  return {
++    webhooks: { state: 'ready' },
++    m300_motion: {
++      normal_control: true,
++      ready: true,
++      busy: true,
++      state: 'HOMING',
++      operation,
++      session_token: 5,
++      phase_id: 2
++    },
++    m300_procedures: {
++      owner: 'm300_motion',
++      busy: true,
++      token: 5,
++      phase: 2,
++      message: 'Refining Z reference'
++    }
++  } as unknown as Klipper.PrinterState
++}
++
++describe('M300 native home button status', () => {
++  it.each(['X', 'Y', 'XY', 'Z', 'All'])('binds %s homing to its existing wait key', axis => {
++    expect(readM300Homing(printer('HOME_' + axis.toUpperCase())))
++      .toEqual({ wait: 'onHome' + axis, message: 'Refining Z reference' })
++  })
++
++  it.each(['COMPLETE', 'CANCELLED', 'FAULT', 'IDLE'])('clears the home state after %s', state => {
++    const source = printer()
++    source.m300_motion!.state = state
++    expect(readM300Homing(source)).toBeUndefined()
++  })
++
++  it('rejects inactive, disconnected and unsupported motion reports', () => {
++    for (const change of [{ busy: false }, { ready: false }, { normal_control: false },
++      { operation: '__proto__' }, { operation: 'HOME_OTHER' }]) {
++      const source = printer()
++      Object.assign(source.m300_motion!, change)
++      expect(readM300Homing(source)).toBeUndefined()
++    }
++    const source = printer()
++    source.webhooks.state = 'shutdown'
++    expect(readM300Homing(source)).toBeUndefined()
++    delete source.m300_motion
++    source.webhooks.state = 'ready'
++    expect(readM300Homing(source)).toBeUndefined()
++  })
++
++  it('uses the same OLED phase text only for the current token and phase', () => {
++    const source = printer()
++    source.m300_procedures!.phase = 1
++    expect(readM300Homing(source)?.message).toBe('Homing Z')
++    source.m300_procedures!.phase = 2
++    source.m300_procedures!.token = 4
++    expect(readM300Homing(source)?.message).toBe('Homing Z')
++    source.m300_procedures!.token = 5
++    expect(readM300Homing(source)?.message).toBe('Refining Z reference')
++  })
++
++  it('updates the actual home buttons for remote starts and clears them on completion', async () => {
++    const state = Vue.observable({ printer: { printer: printer('HOME_ALL'), forceMoveEnabled: false } })
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(ToolheadControlBars, {
++      mocks: {
++        $typedState: state,
++        $typedGetters: {
++          'wait/hasWait': () => false,
++          'printer/getKlippyReady': true,
++          'printer/getPrinterState': 'idle',
++          'printer/getHomedAxes': () => false
++        },
++        $waits: { onHomeAll: 'onHomeAll', onHomeXY: 'onHomeXY' },
++        $t: (value: string) => value,
++        $typedDispatch: vi.fn()
++      },
++      stubs: { 'v-row': slot, 'v-col': slot, 'v-icon': slot }
++    })
++    const buttons = () => wrapper.findAllComponents(AppBtn)
++    expect(buttons().at(0).attributes('loading')).toBe('true')
++    expect(buttons().at(0).attributes('title')).toBe('Refining Z reference')
++    expect(buttons().at(1).attributes('loading')).toBeUndefined()
++    state.printer.printer.m300_motion!.operation = 'HOME_XY'
++    await Vue.nextTick()
++    expect(buttons().at(0).attributes('loading')).toBeUndefined()
++    expect(buttons().at(1).attributes('loading')).toBe('true')
++    state.printer.printer.m300_motion!.state = 'COMPLETE'
++    state.printer.printer.m300_motion!.busy = false
++    await Vue.nextTick()
++    expect(buttons().at(1).attributes('loading')).toBeUndefined()
++    buttons().at(1).vm.$emit('click')
++    expect(SocketActions.printerGcodeScript).toHaveBeenCalledWith('G28 X Y', { wait: 'onHomeXY' })
++    wrapper.destroy()
++  })
++
++  it('retains ordinary Fluidd waits without M300 firmware', () => {
++    const Component = Vue.extend({ mixins: [StateMixin], render: h => h('div') })
++    const source = printer()
++    delete source.m300_motion
++    const wrapper = shallowMount(Component, {
++      mocks: {
++        $typedState: { printer: { printer: source } },
++        $typedGetters: { 'wait/hasWait': () => true }
++      }
++    })
++    const vm = wrapper.vm as unknown as StateMixin
++    expect(vm.hasWait('onHomeAll')).toBe(true)
++    expect(vm.m300HomeBusy('onHomeAll')).toBe(false)
++    wrapper.destroy()
++  })
++})
+diff --git a/src/util/m300-homing.ts b/src/util/m300-homing.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..76ce2ad61c205868b19fe1ab00f0843ffc60db76
+--- /dev/null
++++ b/src/util/m300-homing.ts
+@@ -0,0 +1,24 @@
++// SPDX-License-Identifier: GPL-3.0-only
++export interface M300Homing {
++  wait: string;
++  message: string;
++}
++
++const operations: Record<string, string> = {
++  HOME_X: 'X', HOME_Y: 'Y', HOME_XY: 'XY', HOME_Z: 'Z', HOME_ALL: 'All'
++}
++
++export function readM300Homing (printer: Klipper.PrinterState): M300Homing | undefined {
++  const motion = printer.m300_motion
++  if (printer.webhooks.state !== 'ready' || !motion || motion.normal_control !== true ||
++      motion.ready !== true || motion.busy !== true || motion.state !== 'HOMING') return
++  const axis = operations[motion.operation]
++  if (typeof axis !== 'string' || !['X', 'Y', 'XY', 'Z', 'All'].includes(axis)) return
++  const procedure = printer.m300_procedures
++  const current = procedure?.owner === 'm300_motion' && procedure.busy === true &&
++    procedure.token === motion.session_token && procedure.phase === motion.phase_id
++  const message = current && typeof procedure.message === 'string' && procedure.message.trim()
++    ? procedure.message
++    : 'Homing ' + axis.toUpperCase()
++  return { wait: 'onHome' + axis, message }
 +}

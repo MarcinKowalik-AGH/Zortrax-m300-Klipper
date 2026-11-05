@@ -23,9 +23,9 @@ Material, Settings, Information. Back follows the menu history.
 |---|---|---|---|
 | Maintenance | Back | Navigation | Return to parent |
 | Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
-| Maintenance | Homing XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`, shared phase and hourglass |
+| Maintenance | Homing XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`, OLED hourglass and Fluidd home-button status |
 | Maintenance | Homing Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed |
-| Maintenance | Homing ALL | `ZORTRAX_HOME_ALL` | Native `G28`, shared phase and hourglass |
+| Maintenance | Homing ALL | `ZORTRAX_HOME_ALL` | Native `G28`, OLED hourglass and Fluidd home-button status |
 | Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
 | Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
 | Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
@@ -41,8 +41,9 @@ Material, Settings, Information. Back follows the menu history.
 Maintenance includes the requested Fan test submenu. Change belongs to
 the paused-print context, not the idle Material submenu. Homing XY, Homing Z
 and Homing ALL are directly below Autocalibration in Maintenance. They return
-to Maintenance on completion and use the same progress view from OLED, macros
-and the corresponding native Fluidd homing controls. The procedure
+to Maintenance on completion. OLED retains its original animated hourglass;
+Fluidd shows status on the corresponding home button without a homing dialog,
+including starts from macros and OLED. The phase text is shared. The procedure
 macros are assigned to Fluidd's ZORTRAX M300 group by `setup_fluidd.py --apply`.
 Existing macro visibility, colors and unrelated Fluidd preferences are preserved.
 

@@ -623,9 +623,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                         h.p._tick(h.now)
                         self.assertEqual((menu.page, oled.page), ('procedure', 'm04'))
                         self.assertEqual(h.p.view(h.now)['message'], message)
-                        self.assertIn('// action:prompt_begin ZORTRAX M300 - ' + label, h.lines)
-                        self.assertIn('// action:prompt_text M300_HOMING_ACTIVE', h.lines)
-                        self.assertIn('// action:prompt_text ' + message, h.lines)
+                        self.assertFalse(any('action:prompt_' in line for line in h.lines))
                         self.assertFalse(any('M300_BRIGHTNESS' in line for line in h.lines))
                         self.assertEqual(h.p.rows(h.now)[1][1], (message, None))
                         oled._render(h.now)
@@ -653,7 +651,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 h.p._tick(h.now)
                 self.assertEqual(commands, [g28])
                 self.assertEqual((menu.page, oled.page), ('maintenance', 'm04'))
-                self.assertEqual(h.lines[-1], '// action:prompt_end')
+                self.assertFalse(any('action:prompt_' in line for line in h.lines))
                 h.print_state = 'paused'
                 with self.assertRaisesRegex(native_gcode.CommandError, 'requires an idle'):
                     h.run(command)
