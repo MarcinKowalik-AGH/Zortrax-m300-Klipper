@@ -101,7 +101,8 @@ def main():
                  args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
     pad_mesh_script = (
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
-        'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\nBED_MESH_CLEAR\n'
+        'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\n'
+        'ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
         'BED_MESH_CALIBRATE\n')
     cases=[
         ('native_settings_information',settings_script,False,None),
@@ -153,7 +154,9 @@ def main():
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
         if name == 'native_pad_mesh':
-            cp.read_dict({'bed_mesh': {'mesh_min': '10, 19', 'mesh_max': '294, 300',
+            cp.set('stepper_x', 'position_max', '320')
+            cp.set('stepper_y', 'position_max', '320')
+            cp.read_dict({'bed_mesh': {'mesh_min': '5, 5', 'mesh_max': '315, 315',
                                        'probe_count': '3, 3', 'mesh_pps': '0, 0'},
                           'm300_pad_mesh': {}, 'm300_ci_pad_mesh_fixture': {}})
         if name in model_fixtures:
@@ -205,6 +208,7 @@ def main():
             assert len(status['probe_points']) == 25 and status['result'] is None
             assert 'has been saved to profile [m300_pads]' in text
             assert 'M300_CI_PAD_MESH profile load passed' in text
+            assert 'M300_CI_PAD_MESH macro preview passed' in text
             assert 'Traceback' not in text
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()

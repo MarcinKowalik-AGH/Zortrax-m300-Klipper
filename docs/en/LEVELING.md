@@ -181,30 +181,36 @@ It uses the existing PC7 nozzle contact and Klipper's ProbePointsHelper.
 The operator can use this option without replacing the MCU firmware.
 
 The measured corner squares are 60 × 60 mm and the center square is 50 × 50 mm.
-The default inset is 5 mm from each edge. This puts the rearmost samples at
-Y300 instead of Y304 with a 1 mm inset. The procedure uses the fixed nominal
-OEM points as pad centers; verify this alignment on the actual platform.
-The randomized offset used for OEM Autocalibration is not used for the mesh.
+The reported metal edges are X0–60 / X260–320 and Y0–60 / Y260–320.
+The default inset is 5 mm from each edge. Corner pad centers are therefore
+30/290 mm, with the center pad at X160, Y160. These are separate from the OEM
+Autocalibration contact positions. All five centers can be corrected
+individually. The randomized offset used for OEM Autocalibration is not used.
 Each pad contributes its center and four inset corners:
 
 | Pad | Center X, Y (mm) | Corner X coordinates (mm) | Corner Y coordinates (mm) |
 | --- | --- | --- | --- |
-| Front right | 269, 44 | 244, 294 | 19, 69 |
-| Front left | 35, 44 | 10, 60 | 19, 69 |
-| Center | 150, 158 | 130, 170 | 138, 178 |
-| Rear right | 269, 275 | 244, 294 | 250, 300 |
-| Rear left | 35, 275 | 10, 60 | 250, 300 |
+| Front right | 290, 30 | 265, 315 | 5, 55 |
+| Front left | 30, 30 | 5, 55 | 5, 55 |
+| Center | 160, 160 | 140, 180 | 140, 180 |
+| Rear right | 290, 290 | 265, 315 | 265, 315 |
+| Rear left | 30, 290 | 5, 55 | 265, 315 |
 
 Add these sections to the existing printer configuration when ready to test
 the probe. Do not duplicate an existing section. Before moving, run
 `ZORTRAX_PAD_MESH_STATUS` to review all 25 positions and confirm that each one
 lies on conductive metal with nozzle clearance. The configuration is opt-in;
 it does not increase the configured axis travel limits.
+The reported 320 mm travel must also be represented in the existing
+`[stepper_x]` and `[stepper_y]` limits. With the default points, both axes
+must allow at least 315 mm. An existing 300 mm limit is rejected before
+probing. Set `position_max: 320` in those existing sections only when the
+reported homed coordinate and physical travel are confirmed on this printer.
 
 ~~~ini
 [bed_mesh]
-mesh_min: 10, 19
-mesh_max: 294, 300
+mesh_min: 5, 5
+mesh_max: 315, 315
 probe_count: 3, 3
 mesh_pps: 0, 0
 
@@ -213,6 +219,38 @@ corner_pad_width: 60.0
 center_pad_width: 50.0
 edge_margin: 5.0
 ~~~
+
+The `ZORTRAX_BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
+Its parameter fields allow individual corrections without editing Python:
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `FRONT_RIGHT_X`, `FRONT_RIGHT_Y` | 290, 30 | Front-right pad center |
+| `FRONT_LEFT_X`, `FRONT_LEFT_Y` | 30, 30 | Front-left pad center |
+| `CENTER_X`, `CENTER_Y` | 160, 160 | Center pad center |
+| `REAR_RIGHT_X`, `REAR_RIGHT_Y` | 290, 290 | Rear-right pad center |
+| `REAR_LEFT_X`, `REAR_LEFT_Y` | 30, 290 | Rear-left pad center |
+| `CORNER_PAD_WIDTH` | 60 | Width of each corner square, mm |
+| `CENTER_PAD_WIDTH` | 50 | Width of the center square, mm |
+| `EDGE_MARGIN` | 5 | Distance inward from every square edge, mm |
+| `PROFILE` | `m300_pads` | Native profile name |
+| `PREVIEW` | 0 | Set to 1 to show geometry without homing, heating or moving |
+
+For example, preview a 1 mm front-left X correction and a different center:
+
+~~~gcode
+ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31 CENTER_X=159.5 CENTER_Y=160
+~~~
+
+Run the same macro with the same corrections and `PREVIEW=0` to measure.
+The macro supplies the table defaults for fields that are not passed.
+To retain corrections as the macro's defaults, change its `default(...)`
+values in `m300_operations.cfg`; keep a copy because a package update
+reinstalls that managed file. Alternatively, set the lowercase names in
+`[m300_pad_mesh]` (for example `front_left_x: 31`) and call
+`BED_MESH_CALIBRATE` directly. Direct calls use those configured defaults and
+accept the same uppercase overrides. Unsaved command overrides last until
+restart. The saved native mesh profile retains the resulting surface.
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
 four inset corners of each pad. Rectangular, adaptive and manual probing
@@ -233,7 +271,7 @@ BED_MESH_CLEAR
 M190 S60
 M109 S185
 G28
-BED_MESH_CALIBRATE PROFILE=m300_pads
+ZORTRAX_BED_MESH PROFILE=m300_pads
 ZORTRAX_PAD_MESH_STATUS
 TURN_OFF_HEATERS
 ~~~
@@ -247,17 +285,22 @@ repeatability. An optional `max_pad_spread` can impose an additional limit.
 The interpolation joins the 25 measured positions into 36 triangles with
 continuous piecewise-linear heights. This preserves a plane, uses each
 measurement and avoids polynomial overshoot. The surface is resampled to a
-61 × 61 native Klipper grid (about 4.7 mm spacing), normalized to zero at the
-center contact. Native Bed Mesh handles profile storage, visualization and
+61 × 61 native Klipper grid (about 5.2 mm spacing), normalized to zero at the
+native homing XY position (normally X150, Y158). Correcting a pad's geometric
+center does not change that Z datum. Native Bed Mesh handles profile storage, visualization and
 motion compensation. The regular-grid conversion approximates triangle
 edges; the 3,721 grid values are interpolated, not additional measurements.
 Curvature in the unmeasured gaps between the five squares remains unknown.
-Keep the first print inside the measured rectangle X10–294, Y19–300.
+With the defaults, keep the first print inside X5–315, Y5–315. If individual
+pad corrections make the outside edges uneven, the mesh rectangle is reduced
+to stay inside both pads along each side.
 Outside that rectangle Klipper clamps the correction to the mesh edge.
 
-Existing `pad_width` configurations retain their common width and 1 mm default
-inset. For the measured 60/50 mm geometry, replace that legacy option with the
-two explicit widths and 5 mm inset shown above, then measure a fresh profile.
+Existing `pad_width` configurations retain their common width, 1 mm default
+inset and legacy OEM centers when the direct native command is used. For the
+measured layout, remove `pad_width`, use the explicit widths and 5 mm inset
+shown above, and measure a fresh profile. The new macro explicitly supplies
+the 320 mm layout unless its parameter fields are changed.
 
 A successful run leaves a profile in the current session. Use `SAVE_CONFIG`
 to keep it across restarts. After homing in the print-start sequence, use
