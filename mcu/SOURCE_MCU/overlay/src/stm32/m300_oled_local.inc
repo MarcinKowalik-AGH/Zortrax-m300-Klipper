@@ -4,13 +4,16 @@
  * A private 1ms wake timer progresses even with NO host or encoder config.
  */
 #include "m300_oled_stock_glyphs.inc"
+#include "m300_oled_activity.inc"
 enum {
     LOCAL_OFF, LOCAL_WAIT_POWER, LOCAL_WAIT_LOW, LOCAL_WAIT_HIGH,
     LOCAL_INIT_CMDS, LOCAL_WINDOW, LOCAL_FRAME, LOCAL_DISPLAY_ON,
-    LOCAL_READY, LOCAL_FAILED, LOCAL_HANDOVER
+    LOCAL_READY, LOCAL_FAILED, LOCAL_HANDOVER,
+    LOCAL_ICON_WINDOW, LOCAL_ICON_FRAME
 };
 static uint8_t local_state, local_render_row, local_start_pending;
 static uint8_t local_reason, local_timer_active;
+static uint8_t local_animation_frame, local_icon_row;
 static uint32_t local_due, local_init_pos, local_frame_pos;
 static uint8_t local_row[128];
 static struct timer local_timer;
@@ -24,7 +27,8 @@ static const uint8_t local_init_bytes[] = {
     0xa6,0,0xa9,0
 };
 static int local_has_claim(void) {
-    return local_state >= LOCAL_WAIT_POWER && local_state < LOCAL_READY;
+    return (local_state >= LOCAL_WAIT_POWER && local_state <= LOCAL_READY)
+        || local_state == LOCAL_ICON_WINDOW || local_state == LOCAL_ICON_FRAME;
 }
 static void local_oled_cancel(void) {
     irqstatus_t flag=irq_save();
@@ -99,13 +103,21 @@ static void local_text(unsigned x,unsigned y,const char *str) {
     }
 }
 
+static void local_render_icon(unsigned row) {
+    if(row<7u || row>=57u)return;
+    unsigned y=row-7u;
+    const uint8_t *bits=local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
+    for(unsigned x=0;x<50u;x++)
+        if(bits[x>>3u] & (0x80u>>(x&7u)))local_pixel(200u+x,(int)row,15u);
+}
 static void local_render(unsigned row) {
     local_render_row=row;
     memset(local_row,0,sizeof(local_row));
     local_text(4,2,"ZORTRAX M300");
-    for(unsigned x=4;x<252;x++)local_pixel(x,12,5);
-    local_text(4,18,"Waiting for Klipper...");
-    local_text(4,34,local_reason==3 ? "MCU shutdown R14.4 U8" : "MCU: 0.13.14.4 U8");
+    for(unsigned x=4;x<192;x++)local_pixel(x,12,5);
+    local_text(4,18,local_reason==3 ? "MCU shutdown" :
+               local_reason==2 ? "Klipper disconnected" : "Waiting for Klipper...");
+    local_text(4,34,M300_LOCAL_RELEASE_TEXT);
     char line[24]="UART: ",digits[10];
     unsigned n=6,k=0; uint32_t baud=m300_uart_baud();
     do { digits[k++]='0'+baud%10; baud/=10; } while(baud);
@@ -113,12 +125,15 @@ static void local_render(unsigned row) {
     const char suffix[]=" 8N1";
     memcpy(line+n,suffix,sizeof(suffix));
     local_text(4,50,line);
+    local_render_icon(row);
 }
 static uint_fast8_t local_event(struct timer *timer) {
     if (!local_has_claim()) {local_timer_active=0;return SF_DONE;}
     sched_wake_task(&local_wake);
-    timer->waketime=m300_next_timer(timer->waketime, timer_read_time(),
-                                    timer_from_us(1000));
+    uint32_t now=timer_read_time();
+    // Sleep between frames. No 1 kHz idle wake and no animation over UART.
+    timer->waketime=local_state==LOCAL_READY && timer_is_before(now,local_due)
+        ? local_due : m300_next_timer(timer->waketime,now,timer_from_us(1000));
     return SF_RESCHEDULE;
 }
 static void local_oled_init(void) {
@@ -132,6 +147,7 @@ static void local_oled_init(void) {
 static void local_oled_start(void) {
     local_start_pending=0;
     if(local_state!=LOCAL_OFF)return;
+    local_animation_frame=local_icon_row=0;
     (void)m300_uart_baud();
     // A host config received before the first task keeps its selected rate.
     if(!oled_configured || panel_fault)panel_spi_setup(2000000);
@@ -186,7 +202,27 @@ void m300_local_oled_task(void) {
         local_frame_pos+=32;
         if(local_frame_pos==8192)local_state=LOCAL_DISPLAY_ON;
     } else if(local_state==LOCAL_DISPLAY_ON) {
-        if(local_cmd(0xaf,0,0)) local_state=LOCAL_READY;
+        if(local_cmd(0xaf,0,0)) {
+            local_due=now+timer_from_us(500000);
+            local_state=LOCAL_READY;
+        }
+    } else if(local_state==LOCAL_READY && !timer_is_before(now,local_due)) {
+        local_animation_frame=(local_animation_frame+1u)&3u;
+        local_due=now+timer_from_us(500000);
+        local_state=LOCAL_ICON_WINDOW;
+    } else if(local_state==LOCAL_ICON_WINDOW) {
+        // SSD1322 columns address four pixels. 52 x 50 window; last two
+        // pixels stay black. Preserve all text and transfer one row per task.
+        const uint8_t col[]={0x4e,0x5a},row[]={7,56};
+        if(!local_cmd(0x15,col,2) || !local_cmd(0x75,row,2) || !local_cmd(0x5c,0,0))return;
+        local_icon_row=0;
+        local_state=LOCAL_ICON_FRAME;
+    } else if(local_state==LOCAL_ICON_FRAME) {
+        local_render_row=7u+local_icon_row;
+        memset(local_row,0,sizeof(local_row));
+        local_render_icon(local_render_row);
+        if(!local_write(1,local_row+100,26))return;
+        if(++local_icon_row==50u)local_state=LOCAL_READY;
     }
 }
 #line 2000 "m300_oled_local.inc"

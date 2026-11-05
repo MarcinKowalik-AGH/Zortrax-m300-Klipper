@@ -42,6 +42,7 @@ static RCC_TypeDef mock_rcc;
 #define SPI2 (&mock_spi)
 #define RCC (&mock_rcc)
 #define M300_PANEL_TEST 1
+#define CONFIG_M300_XY_STEP_TIMER 1
 #define DECL_CONSTANT_STR(...)
 #define DECL_COMMAND_FLAGS(...)
 #define DECL_CONSTANT(...)
@@ -252,9 +253,45 @@ int main(void) {
     assert(local_state==LOCAL_READY && local_frame_pos==8192);
     assert(!panel_configured && !oled_configured && !panel_fault);
     assert(GPIOE->ODR&(1u<<10));
-    assert(local_timer.func(&local_timer)==SF_DONE);
     const char *outfile=getenv("M300_FRAME_OUTPUT");
     if(outfile) {FILE *f=fopen(outfile,"wb");assert(f);assert(fwrite(frame,1,8192,f)==8192);assert(!fclose(f));}
+    // Local animation changes only its 52 x 50 window, exactly every 500 ms.
+    // Decode the actual SPI data back into the original complete screen.
+    for(unsigned animation=1;animation<=4;animation++) {
+        uint32_t due=local_due;
+        mock_time=due-timer_from_us(1000);
+        assert(local_timer.func(&local_timer)==SF_RESCHEDULE);
+        unsigned saved=byte_count;
+        m300_local_oled_task();
+        assert(byte_count==saved && local_state==LOCAL_READY);
+        assert(local_timer.waketime==due); // no 1 kHz wake while idle
+        mock_time=due;
+        assert(local_timer.func(&local_timer)==SF_RESCHEDULE);
+        m300_local_oled_task();
+        assert(local_state==LOCAL_ICON_WINDOW);
+        saved=byte_count;
+        m300_local_oled_task(); // no timer wake, no work
+        assert(byte_count==saved);
+        mock_time=local_timer.waketime;
+        local_timer.func(&local_timer);m300_local_oled_task();
+        const uint8_t window[]={0x15,0x4e,0x5a,0x75,7,56,0x5c};
+        assert(byte_count-saved==sizeof(window) && !memcmp(wire+saved,window,sizeof(window)));
+        for(unsigned y=0;y<50;y++) {
+            saved=byte_count;
+            mock_time=local_timer.waketime;
+            local_timer.func(&local_timer);m300_local_oled_task();
+            assert(byte_count-saved==26);
+            memcpy(frame+(y+7)*128+100,wire+saved,26);
+        }
+        assert(local_state==LOCAL_READY && local_animation_frame==(animation&3u));
+        for(unsigned y=0;y<50;y++)for(unsigned x=0;x<52;x++) {
+            unsigned actual=(frame[(y+7)*128+100+x/2]>>((x&1u)?0:4))&15u;
+            unsigned expected=x<50 && (local_activity_frames[0][animation&3u][y*7+x/8]&(0x80u>>(x&7u)))?15:0;
+            assert(actual==expected);
+        }
+        // Keep the fixed-size test wire buffer bounded across complete cycles.
+        byte_count=0;
+    }
     byte_count=0;
     uint32_t config[]={1000000}, control[]={1,1,1};
     REJECT(command_m300_oled_control(control));
@@ -380,7 +417,8 @@ int main(void) {
     command_m300_oled_config(config); command_m300_oled_control(control);
     assert(local_state==LOCAL_HANDOVER); // host can recover an optional local failure
     // A host can take over at EVERY local phase; the task never writes again.
-    for(unsigned phase=LOCAL_OFF;phase<=LOCAL_READY;phase++) {
+    for(unsigned phase=LOCAL_OFF;phase<=LOCAL_ICON_FRAME;phase++) {
+        if(phase==LOCAL_FAILED || phase==LOCAL_HANDOVER)continue;
         panel_fault=oled_configured=0;m300_panel_init();
         if(phase!=LOCAL_OFF)m300_local_oled_task();
         local_state=phase;command_m300_oled_config(config);

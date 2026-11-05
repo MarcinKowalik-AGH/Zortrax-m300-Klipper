@@ -8,6 +8,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -19,6 +20,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -30,6 +32,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -41,6 +44,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -52,6 +56,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -63,6 +68,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -74,6 +80,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -85,6 +92,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -96,6 +104,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -107,6 +116,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -118,6 +128,7 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   },
   {
@@ -129,6 +140,151 @@
     "frames": 4,
     "frame_ms": 500,
     "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "filament_jam",
+    "title": "Filament jam",
+    "concept": "Feed rollers and a blocked filament path",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "filament_runout",
+    "title": "Filament runout",
+    "concept": "An empty spool and a broken feed path",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "waiting_klipper",
+    "title": "Waiting for Klipper",
+    "concept": "MCU and host with a travelling connection marker",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": true,
+    "runtime_target": "MCU local waiting screen",
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "connection_lost",
+    "title": "Connection lost",
+    "concept": "A broken link with a persistent cross",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": true,
+    "runtime_target": "MCU local waiting screen",
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "hotend_overheat",
+    "title": "Hotend overheat",
+    "concept": "Nozzle, high temperature and warning rays",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "bed_overheat",
+    "title": "Bed overheat",
+    "concept": "Platform, high temperature and warning rays",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "sensor_fault",
+    "title": "Temperature sensor fault",
+    "concept": "Thermometer with a broken sensor lead",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "heating_failed",
+    "title": "Heating failed",
+    "concept": "Heater, low temperature and a warning triangle",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "probe_contact_fault",
+    "title": "Probe contact fault",
+    "concept": "Nozzle contact pad and a persistent warning",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "platform_connector",
+    "title": "Platform connector fault",
+    "concept": "Separated platform connector and a warning",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "emergency_stop",
+    "title": "Emergency stop",
+    "concept": "Stop octagon with a fixed exclamation mark",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
+    "origin": "New project design; not an extracted OEM asset"
+  },
+  {
+    "id": "firmware_update",
+    "title": "Firmware update",
+    "concept": "Memory chip and an incoming data arrow",
+    "width": 50,
+    "height": 50,
+    "frames": 4,
+    "frame_ms": 500,
+    "runtime_enabled": false,
+    "runtime_target": null,
     "origin": "New project design; not an extracted OEM asset"
   }
 ]

@@ -55,6 +55,8 @@ def main():
         cwd=host, expected_tests=META['self_contained_host_tests'])
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
+    run('ui_activity_artwork', [sys.executable, ROOT/'ci/check_ui_symbols.py', '-v'],
+        expected_tests=3)
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
         '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])

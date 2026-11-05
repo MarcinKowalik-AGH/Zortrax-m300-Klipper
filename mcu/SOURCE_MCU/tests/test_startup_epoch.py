@@ -77,9 +77,9 @@ class StartupEpoch(unittest.TestCase):
             glyphs[chr(code)]=(width,span,packed[at:at+size]);at+=size
         for baud in [19200,57600,115200,250000,500000,750000,1000000,1500000]:
             screen=[[0]*256 for _ in range(64)]
-            for x in range(4,252):screen[12][x]=5
+            for x in range(4,192):screen[12][x]=5
             for y,text in [(2,'ZORTRAX M300'),(18,'Waiting for Klipper...'),
-                           (34,'MCU: 0.13.14.4 U8'),(50,f'UART: {baud} 8N1')]:
+                           (34,'MCU: R14.15 U8'),(50,f'UART: {baud} 8N1')]:
                 x=4
                 for char in text:
                     w,span,bits=glyphs[char]
@@ -90,6 +90,12 @@ class StartupEpoch(unittest.TestCase):
                             bit=row*w+col
                             if 0<=py<64 and bits[bit//8]&(1<<(bit%8)):screen[py][x+col]=15
                     x+=w+1
+            # Independent native-frame oracle, not the MCU blitter code.
+            assets=ROOT.parents[1]/'docs/assets/ui-symbols/native_frames.json'
+            icon=bytes.fromhex(json.loads(assets.read_text())['symbols']['waiting_klipper']['frames'][0])
+            for y in range(50):
+                for x in range(50):
+                    screen[y+7][x+200]=(icon[y*25+x//2]>>(0 if x%2 else 4))&15
             expected=bytes((row[x]<<4)|row[x+1] for row in screen for x in range(0,256,2))
             out=Path(self.temp.name)/f'{baud}.bin'
             self.run_case(M300_BAUD=baud,M300_FRAME_OUTPUT=out)

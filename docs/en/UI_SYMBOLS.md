@@ -45,15 +45,20 @@ by this update.
 | Maintenance / settings | Crossed tools / gear | Keep existing menu symbols |
 | Information | Circled lower-case i | Keep original information symbol |
 
-## Additional symbol drafts
+## Activity symbol set
 
 These are new project designs inspired by the two visual vocabularies.
-They are not extracted OEM graphics and are not assigned to runtime OLED
-screens in this update. Each SVG has a 50 × 50 viewBox and four discrete
-frames at 500 ms. Runtime integration can use pre-rendered 4bpp frames;
-SVG rendering on the Orange Pi is not needed during printer operation.
+They are not extracted OEM graphics. The set now contains 24 monochrome
+50 × 50 symbols, each with four distinct frames at 500 ms (a two-second loop).
+The downloadable pack includes 24 animated GIFs, 96 individual PNG frames,
+24 animated SVGs, a catalog and native 4bpp frame data. No SVG rasterizer is
+needed during printer operation.
+
+[Download all 24 symbols](../assets/ui-symbols/M300_ACTIVITY_SYMBOLS_24.zip)
 
 ![Draft symbol review sheet](../assets/ui-symbols/preview.png)
+
+[Animated first set](../assets/ui-symbols/preview.gif)
 
 | Symbol | Printer function | Proposed movement | Draft |
 | --- | --- | --- | --- |
@@ -70,11 +75,66 @@ SVG rendering on the Orange Pi is not needed during printer operation.
 | OLED brightness | Existing 16-level display setting | Display and segmented bar change together | [SVG](../assets/ui-symbols/oled_brightness.svg) |
 | LED brightness | Existing 16-level lighting setting | Lamp rays and segmented bar change together | [SVG](../assets/ui-symbols/led_brightness.svg) |
 
+## Twelve additional symbols
+
+![Animated additional symbols](../assets/ui-symbols/preview_additional.gif)
+
+| Symbol | Movement | Current assignment |
+| --- | --- | --- |
+| Filament jam | Feed marker reaches a blocked path; rollers rock | Artwork prepared; no jam detector added |
+| Filament runout | Marker approaches the broken feed path | Artwork prepared |
+| Waiting for Klipper | Marker travels from the MCU to the host; dots accumulate | Local MCU waiting screen |
+| Connection lost | Broken-link cross remains visible; underline expands | Local MCU lease expiry and shutdown screen |
+| Hotend overheat | High-temperature marker and warning rays move | Artwork prepared; existing limits unchanged |
+| Bed overheat | High-temperature marker and warning rays move | Artwork prepared; existing limits unchanged |
+| Temperature sensor fault | Marker reaches the broken sensor lead | Artwork prepared |
+| Heating failed | Low-temperature marker moves; warning remains visible | Artwork prepared |
+| Probe contact fault | Contact marker approaches the pad; cross remains visible | Artwork prepared |
+| Platform connector fault | Connector pins move toward the separated socket | Artwork prepared |
+| Emergency stop | Indicator marks accumulate inside the fixed stop outline | Artwork prepared |
+| Firmware update | Data marker moves into the memory chip | Artwork prepared; no new flashing mechanism added |
+
+The first twelve symbols and ten unassigned fault/activity symbols are ready
+assets, not new runtime capabilities. Inventure-style thermal thresholds and
+fault-to-icon routing will be handled separately before integrating the thermal
+symbols. Critical warning outlines, crosses and exclamation marks remain visible
+in every frame.
+
+## Local MCU animation in R14.15
+
+The original local text-only waiting screen now includes the matching 50 × 50
+symbol on the right. Startup and an explicit host display release use
+`waiting_klipper`; a host lease timeout or MCU shutdown uses `connection_lost`.
+Shutdown still says `MCU shutdown`; it never claims that the printer is ready.
+The version line now identifies the compiled R14.15 image instead of the old
+hard-coded R14.4 label.
+
+The frames occupy 2,800 bytes of static flash, with the existing 128-byte
+scanline buffer reused. After the initial screen, only a 52 × 50 SPI window
+is updated: 1,300 pixel bytes plus seven command/address bytes per frame,
+two frames per second. A task sends at most 26 pixel bytes per animation row,
+with interrupts enabled. Between frames the timer sleeps until the deadline.
+There is no host query, UART frame traffic, heap allocation or queued animation
+backlog. The first host display claim cancels local work in every state, including
+partway through the icon window. Existing OLED host rendering and the original
+M300 homing hourglass are unchanged.
+
+R14.15 adds only the local screen and its version label to the R14.14 MCU core.
+It does not change X/Y hardware STEP timers, Z/E stepping, encoder capture,
+UART rate or thermal guards. Hardware motion evidence remains that collected
+for the R14.14 core; the new panel animation needs a printer check after flashing.
+
 Do not show an animated activity symbol when its associated operation is
 inactive. In particular, a connection symbol must not imply healthy motion
 or hardware qualification, and fan artwork must not imply measured RPM on
-hardware that has no tachometer. These drafts add no controls or capabilities.
+hardware that has no tachometer. The artwork adds no controls or detection capabilities.
 
-Reproduce the SVGs and contact sheet with `python3 ci/render_ui_symbols.py`.
-Render the PNG from `preview.svg` with CairoSVG. The catalog JSON records
-geometry, frame cadence, origin and the inactive runtime status.
+Reproduce the SVGs with `python3 ci/render_ui_symbols.py`. To regenerate the
+complete pack, previews and MCU bitmap include, install CairoSVG 2.9.1 and
+Pillow on the authoring machine, then run
+`python3 ci/render_ui_symbols.py --raster`.
+`python3 ci/check_ui_symbols.py -v` validates all 96 frames and download contents
+using only the standard library. It also checks that the MCU's one-bit flash
+frames exactly match the native 4bpp artwork. The panel model checks actual SPI
+window addressing, four-frame wraparound, a maximum of 26 pixel bytes per task,
+no idle 1 kHz wake, shutdown and host handover in every rendering phase.

@@ -2,7 +2,7 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-The main package pairs the native R16.12 host with MCU R14.14 for M300 Classic.
+The main package pairs the native R16.12 host with MCU R14.15 for M300 Classic.
 The host installer also accepts supported installations running earlier MCU revisions.
 Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
 baseline uses 750,000 baud. The installer preserves the configured baud.
@@ -105,13 +105,18 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_14_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_15_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. A printer already running
 the hardware-tested R14.14 candidate can receive the host and Fluidd update
 before its next scheduled MCU flash. The full Actions artifact
 also contains the HOST_SOURCE snapshot.
+
+The R14.15 waiting/disconnection animation runs locally on the MCU and therefore
+appears only after the new MCU image is flashed using the existing SD procedure.
+Updating the Orange Pi host alone does not install these local MCU graphics.
+The X/Y STEP timer core and UART rate are unchanged from R14.14.
 
 ### OLED RLE benchmark
 

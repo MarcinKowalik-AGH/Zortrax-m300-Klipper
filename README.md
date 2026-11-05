@@ -4,7 +4,7 @@
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.14 with Host R16.12**.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.15 with Host R16.12**.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -44,7 +44,7 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Main release
 
-**MCU R14.14 + host R16.12**, pinned Klipper
+**MCU R14.15 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
 GitHub Actions publishes the verified package to the
@@ -55,6 +55,11 @@ segmented diagonals commanded at 400 mm/s. The 201.6-second link sample
 recorded zero retransmitted and zero rejected bytes. Loaded printing remains
 a separate validation step. Fluidd procedure prompts reserve brightness bars
 for the dedicated brightness pages.
+
+R14.15 retains that motion core and adds local MCU waiting/disconnection
+animations without UART frame traffic. The [24 activity symbols](docs/en/UI_SYMBOLS.md)
+include GIF previews, individual frames and native OLED data. Thermal limits
+and fault detection are unchanged.
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.
