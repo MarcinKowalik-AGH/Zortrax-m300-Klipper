@@ -23,6 +23,9 @@ Material, Settings, Information. Back follows the menu history.
 |---|---|---|---|
 | Maintenance | Back | Navigation | Return to parent |
 | Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
+| Maintenance | Homing XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`, shared phase and hourglass |
+| Maintenance | Homing Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed |
+| Maintenance | Homing ALL | `ZORTRAX_HOME_ALL` | Native `G28`, shared phase and hourglass |
 | Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
 | Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
 | Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
@@ -36,10 +39,12 @@ Material, Settings, Information. Back follows the menu history.
 | Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Retract 110 mm → insert and confirm → feed 150 mm; remain paused |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
-the paused-print context, not the idle Material submenu. The eleven procedure
+the paused-print context, not the idle Material submenu. Homing XY, Homing Z
+and Homing ALL are directly below Autocalibration in Maintenance. They return
+to Maintenance on completion and use the same progress view from OLED, macros
+and the corresponding native Fluidd homing controls. The procedure
 macros are assigned to Fluidd's ZORTRAX M300 group by `setup_fluidd.py --apply`.
-The separate `TEST_ZORTRAX_LEVEL` alias remains in TEST M300. Existing macro
-visibility, colors and unrelated Fluidd preferences are preserved.
+Existing macro visibility, colors and unrelated Fluidd preferences are preserved.
 
 ## Operation
 

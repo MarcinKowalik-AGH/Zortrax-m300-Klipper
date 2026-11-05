@@ -70,8 +70,8 @@ class NormalHomingTests(unittest.TestCase):
     def test_operator_homing_presentation_leaves_leveling_and_print_in_control(self):
         for axes, leveling, printing, expected in (
                 ('xy', False, False, 'HOME_XY'), ('xyz', False, False, 'HOME_ALL'),
-                ('z', False, False, None), ('xyz', True, False, None),
-                ('xyz', False, True, None)):
+                ('z', False, False, 'HOME_Z'), ('xyz', True, False, None),
+                ('xyz', False, True, None), ('z', False, True, None)):
             with self.subTest(axes=axes, leveling=leveling, printing=printing):
                 motion = motion_fixture()
                 if printing:

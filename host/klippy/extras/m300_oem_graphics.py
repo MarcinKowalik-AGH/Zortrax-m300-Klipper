@@ -167,7 +167,8 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                 return '0x0801cb24' if action[1]<0 else '0x0801cc24'
             if action[0]=='native_gcode':
                 icon={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
-                      'ZORTRAX_HOME_XY':HOMING_HOURGLASS,'ZORTRAX_HOME_ALL':HOMING_HOURGLASS,
+                      'ZORTRAX_HOME_XY':HOMING_HOURGLASS,'ZORTRAX_HOME_Z':HOMING_HOURGLASS,
+                      'ZORTRAX_HOME_ALL':HOMING_HOURGLASS,
                       'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}.get(action[1])
                 if icon:return icon
             if action[0]=='page' and len(action)>1:

@@ -310,7 +310,7 @@ diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/component
 +  }
 +
 +  get homingActive () {
-+    return (this.dialog.title === 'ZORTRAX M300 - Homing XY' || this.dialog.title === 'ZORTRAX M300 - Homing ALL') &&
++    return ['ZORTRAX M300 - Homing XY', 'ZORTRAX M300 - Homing Z', 'ZORTRAX M300 - Homing ALL'].includes(this.dialog.title ?? '') &&
 +      this.dialog.items.some(item => item.type === 'text' && item.text === homingMarker)
 +  }
 +
@@ -545,7 +545,7 @@ diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/
 new file mode 100644
 --- /dev/null
 +++ b/src/components/common/m300Leveling.spec.ts
-@@ -0,0 +1,131 @@
+@@ -0,0 +1,132 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import { describe, expect, it, vi } from 'vitest'
@@ -636,6 +636,7 @@ new file mode 100644
 +describe('M300 homing progress', () => {
 +  it.each([
 +    ['ZORTRAX M300 - Homing XY', true, true],
++    ['ZORTRAX M300 - Homing Z', true, true],
 +    ['ZORTRAX M300 - Homing ALL', true, true],
 +    ['ZORTRAX M300 - Homing ALL', false, false],
 +    ['Unrelated dialog', true, false]

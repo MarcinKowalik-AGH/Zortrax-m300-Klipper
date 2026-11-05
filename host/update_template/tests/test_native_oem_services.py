@@ -130,7 +130,7 @@ class Harness:
         self.p=M300Procedures(self.config)
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
-            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HOME_XY','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
+            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
                         'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_CHANGE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
@@ -459,9 +459,10 @@ class OEMMenuIntegrationTests(unittest.TestCase):
     def test_exact_oem_submenu_order_and_available_native_actions(self):
         menu,_=menu_fixture();menu.page='zortrax'
         self.assertEqual([name for name,_ in menu.rows(1.)[1]],
-            ['Back','Models','Maintenance','Homing XY','Homing ALL','Material','Settings','Information'])
+            ['Back','Models','Maintenance','Material','Settings','Information'])
         menu.page='maintenance';rows=menu.rows(1.)[1]
-        self.assertEqual([name for name,_ in rows],['Back','Autocalibration','Heat the extruder',
+        self.assertEqual([name for name,_ in rows],['Back','Autocalibration',
+            'Homing XY','Homing Z','Homing ALL','Heat the extruder',
             'Move the platform up','Move the platform down','Fan test'])
         self.assertTrue(require_rows(rows))
         menu.page='material';rows=menu.rows(1.)[1]
@@ -469,7 +470,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
         self.assertTrue(require_rows(rows))
 
     def test_oled_actions_invoke_the_same_macros_as_fluidd_through_native_lexer(self):
-        for page,index,operation in (('maintenance',1,'LEVEL'),('maintenance',2,'HOTEND'),
+        for page,index,operation in (('maintenance',1,'LEVEL'),('maintenance',5,'HOTEND'),
                                      ('material',1,'UNLOAD'),('material',2,'LOAD')):
             h=Harness();calls=[]
             if operation=='LEVEL':
@@ -513,7 +514,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
 
     def test_fluidd_groups_procedure_macros_without_unhiding_user_choices(self):
         names = ['ZORTRAX_' + name for name in (
-            'LEVEL', 'HEAT', 'HOME_XY', 'HOME_ALL', 'PLATFORM_UP', 'PLATFORM_DOWN', 'LOAD', 'UNLOAD')]
+            'LEVEL', 'HEAT', 'HOME_XY', 'HOME_Z', 'HOME_ALL', 'PLATFORM_UP', 'PLATFORM_DOWN', 'LOAD', 'UNLOAD')]
         before=dict(categories=[dict(id='tests',name='TEST M300')],
                     stored=[dict(name='ZORTRAX_LOAD',categoryId='tests',visible=False)])
         after,assigned=merge_groups(before,names)
@@ -568,7 +569,7 @@ def physical_panel(h):
     display=test_display.Harness()
     o=M300OLED.__new__(M300OLED)
     o.printer=h.printer;o.reactor=h.reactor;o.stream=display.stream
-    o.generation=1;o._input_epoch=0;o.page='m04';o.selection=3;o.message=None
+    o.generation=1;o._input_epoch=0;o.page='m04';o.message=None
     o.connected=o.fast=True;o._user_refresh_pending=False
     o._render_key=o._render_wire=o._presented_context=o._presented_actions=None
     o.job_token=o.cancel_token=o.filament_token=o.filament_phase_id=o.filament_cancel_token=None
@@ -576,6 +577,8 @@ def physical_panel(h):
     o.encoder=test_display.transport.EncoderSnapshots(4,validated=True)
     menu,_=menu_fixture();menu.page='maintenance';menu.printer=h.printer
     menu.job=h.job;menu.maintenance=h.m;menu.reactor=h.reactor;menu.gcode=h.gcode
+    o.selection=next(i for i,row in enumerate(menu.rows(h.now)[1])
+                     if row[0]=='Move the platform up')
     ui=M300MenuUI.__new__(M300MenuUI)
     ui.menu=menu;ui.oled=o;ui.printer=h.printer;ui.procedures=h.p
     ui.language=lambda:h.language;ui._leveling_frames=deque(maxlen=16)
@@ -597,6 +600,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
     def test_homing_macros_and_oled_rows_share_native_progress(self):
         for axes, label, command, g28 in (
                 ('xy', 'Homing XY', 'ZORTRAX_HOME_XY', 'G28 X Y'),
+                ('z', 'Homing Z', 'ZORTRAX_HOME_Z', 'G28 Z'),
                 ('xyz', 'Homing ALL', 'ZORTRAX_HOME_ALL', 'G28')):
             with self.subTest(axes=axes):
                 h = Harness()
@@ -614,15 +618,16 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                     motion.home(axes=axes)
 
                 def observe(params):
-                    if list(params) == ['Y']:
+                    if list(params) == (['Z'] if axes == 'z' else ['Y']):
+                        message = 'Homing Z' if axes == 'z' else 'Homing Y'
                         h.p._tick(h.now)
                         self.assertEqual((menu.page, oled.page), ('procedure', 'm04'))
-                        self.assertEqual(h.p.view(h.now)['message'], 'Homing Y')
+                        self.assertEqual(h.p.view(h.now)['message'], message)
                         self.assertIn('// action:prompt_begin ZORTRAX M300 - ' + label, h.lines)
                         self.assertIn('// action:prompt_text M300_HOMING_ACTIVE', h.lines)
-                        self.assertIn('// action:prompt_text Homing Y', h.lines)
+                        self.assertIn('// action:prompt_text ' + message, h.lines)
                         self.assertFalse(any('M300_BRIGHTNESS' in line for line in h.lines))
-                        self.assertEqual(h.p.rows(h.now)[1][1], ('Homing Y', None))
+                        self.assertEqual(h.p.rows(h.now)[1][1], (message, None))
                         oled._render(h.now)
                         before = oled._render_wire
                         oled._render(h.now + .5)
@@ -633,26 +638,38 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 motion.native_G28 = observe
                 h.gcode.register_command('G28', None)
                 h.gcode.register_command('G28', g28_handler)
-                menu.page = 'zortrax'
+                menu.page = 'maintenance'
                 _, rows = menu.rows(h.now)
                 selected = next(i for i, row in enumerate(rows) if row[0] == label)
                 action = rows[selected][1]
                 self.assertEqual(action, ('native_gcode', command))
-                self.assertEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
-                                 ui.get_oem_sprite('m04', rows, selected, h.now + .5))
-                if axes == 'xy':
+                self.assertNotEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
+                                    ui.get_oem_sprite('m04', rows, selected, h.now + .5))
+                if axes in ('xy', 'z'):
                     menu.select(action, h.now)
                     h.callbacks.pop()(h.now)
                 else:
                     h.run(command)
                 h.p._tick(h.now)
                 self.assertEqual(commands, [g28])
-                self.assertEqual((menu.page, oled.page), ('zortrax', 'm04'))
+                self.assertEqual((menu.page, oled.page), ('maintenance', 'm04'))
                 self.assertEqual(h.lines[-1], '// action:prompt_end')
                 h.print_state = 'paused'
                 with self.assertRaisesRegex(native_gcode.CommandError, 'requires an idle'):
                     h.run(command)
                 self.assertEqual(commands, [g28])
+
+    def test_z_macro_rejects_unhomed_xy_before_heating_or_moving(self):
+        h = Harness()
+        motion = motion_fixture()
+        motion.homed.clear()
+        motion.printer = h.printer
+        h.objects['m300_motion'] = motion
+        h.gcode.register_command('G28', None)
+        h.gcode.register_command('G28', lambda gcmd: motion.home(axes='z'))
+        with self.assertRaisesRegex(native_gcode.CommandError, 'Home XY first'):
+            h.run('ZORTRAX_HOME_Z')
+        self.assertEqual(motion.events, [])
 
     def test_platform_hold_uses_oled_without_opening_fluidd_even_on_shutdown(self):
         h = Harness()
@@ -697,12 +714,14 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         h.assert_restored(self)
 
     def test_both_oled_directions_reconcile_actual_position_after_release(self):
-        for row, direction, limit in ((3, -1, 0.), (4, 1, 315.)):
+        for label, direction, limit in (('Move the platform up', -1, 0.),
+                                         ('Move the platform down', 1, 315.)):
             with self.subTest(direction=direction):
                 h = Harness()
                 h.homed = 'z'
-                oled, _, _, display, packet = physical_panel(h)
-                oled.selection = row
+                oled, menu, _, display, packet = physical_panel(h)
+                oled.selection = next(i for i, row in enumerate(menu.rows(h.now)[1])
+                                      if row[0] == label)
                 oled._render(h.now)
                 display.pump()
                 packet(False)
@@ -754,7 +773,8 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         h.now+=.1
         o._panel(dict(sequence=3,position=0,nav_position=0,invalid=0,pressed=True,
             presses=1,releases=0,shorts=0,longs=0,**{'#receive_time':h.now}))
-        o.selection=4
+        o.selection=next(i for i,row in enumerate(menu.rows(h.now)[1])
+                         if row[0]=='Move the platform down')
         h.callbacks.pop()(h.now)
         self.assertEqual(h.m.state,'IDLE')
         self.assertEqual(h.position[2],5.)
