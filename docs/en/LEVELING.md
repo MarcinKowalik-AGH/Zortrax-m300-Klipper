@@ -180,34 +180,45 @@ measures residual height differences for native Klipper Z compensation.
 It uses the existing PC7 nozzle contact and Klipper's ProbePointsHelper.
 The operator can use this option without replacing the MCU firmware.
 
-Measure the conductive width of all five squares. Use the smallest verified
-width in mm and check that the nominal centers in the table above are inside
-the actual squares. The inset is measured from the edge. Check that a clean
-nozzle can reach all four inset corners of each pad without contacting its
-border. The five OEM centers are fixed for this procedure. The randomized
-offset used for OEM Autocalibration is not used for the mesh.
+The measured corner squares are 60 × 60 mm and the center square is 50 × 50 mm.
+The default inset is 5 mm from each edge. This puts the rearmost samples at
+Y300 instead of Y304 with a 1 mm inset. The procedure uses the fixed nominal
+OEM points as pad centers; verify this alignment on the actual platform.
+The randomized offset used for OEM Autocalibration is not used for the mesh.
+Each pad contributes its center and four inset corners:
 
-Add these sections to the existing printer configuration when ready to
-test the probe. Replace `MEASURED_WIDTH` with the verified numeric width.
-Before moving, run `ZORTRAX_PAD_MESH_STATUS` to review all requested positions.
-The configuration is opt-in.
+| Pad | Center X, Y (mm) | Corner X coordinates (mm) | Corner Y coordinates (mm) |
+| --- | --- | --- | --- |
+| Front right | 269, 44 | 244, 294 | 19, 69 |
+| Front left | 35, 44 | 10, 60 | 19, 69 |
+| Center | 150, 158 | 130, 170 | 138, 178 |
+| Rear right | 269, 275 | 244, 294 | 250, 300 |
+| Rear left | 35, 275 | 10, 60 | 250, 300 |
+
+Add these sections to the existing printer configuration when ready to test
+the probe. Do not duplicate an existing section. Before moving, run
+`ZORTRAX_PAD_MESH_STATUS` to review all 25 positions and confirm that each one
+lies on conductive metal with nozzle clearance. The configuration is opt-in;
+it does not increase the configured axis travel limits.
 
 ~~~ini
 [bed_mesh]
-mesh_min: 35, 44
-mesh_max: 269, 275
+mesh_min: 10, 19
+mesh_max: 294, 300
 probe_count: 3, 3
 mesh_pps: 0, 0
 
 [m300_pad_mesh]
-pad_width: MEASURED_WIDTH
-edge_margin: 1.0
+corner_pad_width: 60.0
+center_pad_width: 50.0
+edge_margin: 5.0
 ~~~
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
 four inset corners of each pad. Rectangular, adaptive and manual probing
 options are rejected by the pad adapter. It uses three native contacts per
-position, the median of the three and a bounded Z search. The Z coordinate
+position (at least 75 contacts), their median and a bounded Z search. The
+native repeat tolerance is 0.05 mm at each position. The Z coordinate
 frame is restored after the measurement. A failed search invalidates the
 Z reference and the previous saved mesh remains available.
 
@@ -227,14 +238,26 @@ ZORTRAX_PAD_MESH_STATUS
 TURN_OFF_HEATERS
 ~~~
 
-The status command reports the 25 physical positions, each pad's median and
-its spread. A spread over 0.05 mm within a pad or a difference over 0.50 mm
-between pad medians rejects the mesh by default. The four outer pad medians
-define a bilinear surface. A bounded smooth correction accounts for the
-center median. Klipper receives an interpolated 21 × 21 grid, normalized to
-zero at the center pad. The five clusters only constrain the broad bed shape.
-Keep the first print inside the measured rectangle X35–269, Y44–275.
+The status command reports all 25 heights, each pad's median and its spread.
+All 25 heights contribute to the compensation. A difference over 0.50 mm
+between any two positions rejects the mesh by default. A sloped 60 mm pad can
+have a real spread above 0.05 mm, so pad spread is reported separately from
+repeatability. An optional `max_pad_spread` can impose an additional limit.
+
+The interpolation joins the 25 measured positions into 36 triangles with
+continuous piecewise-linear heights. This preserves a plane, uses each
+measurement and avoids polynomial overshoot. The surface is resampled to a
+61 × 61 native Klipper grid (about 4.7 mm spacing), normalized to zero at the
+center contact. Native Bed Mesh handles profile storage, visualization and
+motion compensation. The regular-grid conversion approximates triangle
+edges; the 3,721 grid values are interpolated, not additional measurements.
+Curvature in the unmeasured gaps between the five squares remains unknown.
+Keep the first print inside the measured rectangle X10–294, Y19–300.
 Outside that rectangle Klipper clamps the correction to the mesh edge.
+
+Existing `pad_width` configurations retain their common width and 1 mm default
+inset. For the measured 60/50 mm geometry, replace that legacy option with the
+two explicit widths and 5 mm inset shown above, then measure a fresh profile.
 
 A successful run leaves a profile in the current session. Use `SAVE_CONFIG`
 to keep it across restarts. After homing in the print-start sequence, use

@@ -9,48 +9,85 @@ from .m300_calibration_state import POINTS
 from .m300_native_service import require_idle_print
 
 PATTERN = ((0, 0), (-1, -1), (1, -1), (1, 1), (-1, 1))
-GRID_COUNT = 21
+GRID_COUNT = 61
 CLEARANCE = 5.
 SEARCH_MARGIN = 1.
 
 
-def pad_points(width, margin):
-    if not (math.isfinite(width) and math.isfinite(margin)
-            and .5 <= margin < width / 2 <= 25.):
-        raise ValueError('pad_width and edge_margin must leave a positive inset')
-    span = width / 2 - margin
-    return tuple((x + dx * span, y + dy * span)
-                 for x, y in POINTS for dx, dy in PATTERN)
+def pad_points(corner_width, margin, center_width=None):
+    """Keep the legacy two-argument geometry, with a separate center width."""
+    if center_width is None:
+        center_width = corner_width
+    if not (math.isfinite(margin) and all(
+            math.isfinite(width) and .5 <= margin < width / 2 <= 50.
+            for width in (corner_width, center_width))):
+        raise ValueError('pad widths and edge_margin must leave a positive inset (width <= 100 mm)')
+    points = []
+    for index, (x, y) in enumerate(POINTS):
+        span = (center_width if index == 2 else corner_width) / 2 - margin
+        points.extend((x + dx * span, y + dy * span) for dx, dy in PATTERN)
+    # The structured triangulation needs five separated, nested pad clusters.
+    if not (points[8][0] < points[11][0] < points[13][0] < points[4][0]
+            and points[8][1] < points[11][1] < points[13][1] < points[21][1]):
+        raise ValueError('pad geometry must leave space between the five contact squares')
+    return tuple(points)
 
 
-def surface_grid(heights):
-    """Bilinear corner surface with a bounded smooth center residual."""
-    front_right, front_left, center, rear_right, rear_left = heights
-    x0, y0 = POINTS[1]
-    x1, y1 = POINTS[3]
-    cx, cy = POINTS[2]
-    u_center = (cx - x0) / (x1 - x0)
-    v_center = (cy - y0) / (y1 - y0)
+def pad_triangles():
+    """Tile the measured rectangle using all 25 vertices, without extrapolation."""
+    triangles = []
+    for start in range(0, 25, 5):
+        for corner in range(1, 5):
+            triangles.append((start, start + corner, start + corner % 4 + 1))
+    # Four gaps along the outer edges, then four gaps around the center pad.
+    for a, b, c, d in ((7, 1, 4, 8), (22, 16, 19, 23),
+                       (9, 8, 22, 21), (4, 3, 17, 16),
+                       (8, 4, 12, 11), (4, 16, 13, 12),
+                       (16, 22, 14, 13), (22, 8, 11, 14)):
+        triangles.extend(((a, b, c), (a, c, d)))
+    return tuple(triangles)
 
-    def base(u, v):
-        front = (1 - u) * front_left + u * front_right
-        rear = (1 - u) * rear_left + u * rear_right
-        return (1 - v) * front + v * rear
 
-    def weight(value, midpoint):
-        t = value / midpoint if value <= midpoint else (1 - value) / (1 - midpoint)
-        return t ** 3 * (10 + t * (6 * t - 15))
+def mesh_bounds(points):
+    return (min(x for x, y in points), min(y for x, y in points),
+            max(x for x, y in points), max(y for x, y in points))
 
-    residual = center - base(u_center, v_center)
-    low, high = min(heights), max(heights)
+
+def surface_grid(points, readings):
+    """Resample a continuous piecewise-linear 25-point surface for native ZMesh."""
+    if len(points) != 25 or len(readings) != 25 or not all(map(math.isfinite, readings)):
+        raise ValueError('mesh requires 25 finite contact heights')
+    planes = []
+    reference = readings[10]
+    for a, b, c in pad_triangles():
+        ax, ay = points[a]
+        bx, by = points[b]
+        cx, cy = points[c]
+        det = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(det) < 1e-9:
+            raise ValueError('degenerate pad triangle')
+        planes.append((cx, cy, (by - cy) / det, (cx - bx) / det,
+                       (cy - ay) / det, (ax - cx) / det,
+                       readings[a] - reference, readings[b] - reference,
+                       readings[c] - reference))
+    x0, y0, x1, y1 = mesh_bounds(points)
     grid = []
     for j in range(GRID_COUNT):
-        v = j / (GRID_COUNT - 1)
+        y = y0 + (y1 - y0) * j / (GRID_COUNT - 1)
         row = []
         for i in range(GRID_COUNT):
-            u = i / (GRID_COUNT - 1)
-            z = base(u, v) + residual * weight(u, u_center) * weight(v, v_center)
-            row.append(min(high, max(low, z)) - center)
+            x = x0 + (x1 - x0) * i / (GRID_COUNT - 1)
+            for cx, cy, au, av, bu, bv, za, zb, zc in planes:
+                u = au * (x - cx) + av * (y - cy)
+                v = bu * (x - cx) + bv * (y - cy)
+                w = 1 - u - v
+                if min(u, v, w) >= -1e-9:
+                    # Remove roundoff at boundaries and keep a convex combination.
+                    u, v, w = max(0., u), max(0., v), max(0., w)
+                    row.append((u * za + v * zb + w * zc) / (u + v + w))
+                    break
+            else:
+                raise ValueError('pad triangles do not cover the requested mesh')
         grid.append(row)
     return grid
 
@@ -67,12 +104,17 @@ class M300PadMesh:
         pin = config.getsection('probe').get('pin').lstrip('^~!')
         if pin not in ('PC7', 'mcu:PC7'):
             raise config.error('M300 pad mesh requires the native PC7 contact probe')
+        legacy_width = config.getfloat('pad_width', None)
+        corner_width = config.getfloat('corner_pad_width',
+                                       60. if legacy_width is None else legacy_width)
+        center_width = config.getfloat('center_pad_width',
+                                       50. if legacy_width is None else legacy_width)
         try:
-            self.points = pad_points(config.getfloat('pad_width'),
-                                     config.getfloat('edge_margin', 1.))
+            self.points = pad_points(corner_width, config.getfloat(
+                'edge_margin', 5. if legacy_width is None else 1.), center_width)
         except ValueError as exc:
             raise config.error(str(exc))
-        self.max_pad_spread = config.getfloat('max_pad_spread', .05, above=0., maxval=.15)
+        self.max_pad_spread = config.getfloat('max_pad_spread', None, above=0., maxval=.75)
         self.max_bed_span = config.getfloat('max_bed_span', .5, above=0., maxval=.75)
         self.bedmesh = self.printer.load_object(config, 'bed_mesh')
         self.state, self.busy = 'IDLE', False
@@ -132,13 +174,12 @@ class M300PadMesh:
             start = index * len(PATTERN)
             values = readings[start:start + len(PATTERN)]
             spread = max(values) - min(values)
-            if spread > self.max_pad_spread:
+            if self.max_pad_spread is not None and spread > self.max_pad_spread:
                 raise self._error('pad %d is uneven or has inconsistent contact' % index)
             summaries.append(dict(x=x, y=y, z=statistics.median(values), spread=spread))
-        heights = [pad['z'] for pad in summaries]
-        if max(heights) - min(heights) > self.max_bed_span:
+        if max(readings) - min(readings) > self.max_bed_span:
             raise self._error('bed span is too large; run Autocalibration first')
-        self.samples = (readings, summaries, heights)
+        self.samples = (readings, summaries)
 
     def _preflight(self):
         now = self.reactor.monotonic()
@@ -179,16 +220,15 @@ class M300PadMesh:
             raise self._error('heat the clean nozzle to at least 180 C and the bed to print temperature')
         self._check_clear()
 
-    def _publish(self, profile, heights):
+    def _publish(self, profile, readings):
         from .bed_mesh import ZMesh
 
-        x0, y0 = POINTS[1]
-        x1, y1 = POINTS[3]
+        x0, y0, x1, y1 = mesh_bounds(self.points)
         params = dict(min_x=x0, min_y=y0, max_x=x1, max_y=y1, algo='direct',
                       x_count=GRID_COUNT, y_count=GRID_COUNT,
                       mesh_x_pps=0, mesh_y_pps=0, tension=.2)
         mesh = ZMesh(params, profile)
-        mesh.build_mesh(surface_grid(heights))
+        mesh.build_mesh(surface_grid(self.points, readings))
         mesh.set_zero_reference(*POINTS[2])
         try:
             self.bedmesh.set_mesh(mesh)
@@ -217,13 +257,13 @@ class M300PadMesh:
             native_cmd = self.gcode.create_gcode_command('BED_MESH_CALIBRATE',
                                                        'BED_MESH_CALIBRATE', params)
             self.probe_points.start_probe(native_cmd)
-            readings, pads, heights = self.samples
+            readings, pads = self.samples
             self.toolhead.wait_moves()
             pos = self.toolhead.get_position()
             pos[2] -= self.shift
             self.toolhead.set_position(pos)
             shifted = False
-            self._publish(profile, heights)
+            self._publish(profile, readings)
             self.report = dict(profile=profile, pads=pads,
                                points=[[x, y, z] for (x, y), z in zip(self.points, readings)])
             completed = True

@@ -153,9 +153,9 @@ def main():
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
         if name == 'native_pad_mesh':
-            cp.read_dict({'bed_mesh': {'mesh_min': '35, 44', 'mesh_max': '269, 275',
+            cp.read_dict({'bed_mesh': {'mesh_min': '10, 19', 'mesh_max': '294, 300',
                                        'probe_count': '3, 3', 'mesh_pps': '0, 0'},
-                          'm300_pad_mesh': {'pad_width': '8'}, 'm300_ci_pad_mesh_fixture': {}})
+                          'm300_pad_mesh': {}, 'm300_ci_pad_mesh_fixture': {}})
         if name in model_fixtures:
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)

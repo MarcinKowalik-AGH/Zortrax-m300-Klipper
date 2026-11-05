@@ -13,12 +13,17 @@ class PadMeshFixture:
             mesh = adapter.bedmesh.get_mesh()
             assert mesh.profile_name == 'm300_pads'
             matrix = mesh.get_mesh_matrix()
-            assert len(matrix) == 21 and all(len(row) == 21 for row in matrix)
+            assert len(matrix) == 61 and all(len(row) == 61 for row in matrix)
+            params = mesh.get_mesh_params()
+            assert (params['min_x'], params['min_y'], params['max_x'], params['max_y']) == (
+                10., 19., 294., 300.)
             assert abs(mesh.calc_z(150, 158)) < .000001
             assert abs(mesh.calc_z(35, 44) - .3) < .001
             gcmd.respond_info('M300_CI_PAD_MESH profile load passed')
         else:
-            adapter._publish('m300_pads', [.1, .1, -.2, .1, .1])
+            assert adapter.points[1] == (244., 19.)
+            assert adapter.points[11] == (130., 138.)
+            adapter._publish('m300_pads', [.1] * 10 + [-.2] * 5 + [.1] * 10)
             assert adapter.bedmesh.get_mesh() is None
 
 
