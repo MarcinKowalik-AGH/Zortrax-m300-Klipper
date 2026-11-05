@@ -17,8 +17,10 @@ from .m300_native_service import require_idle_print
 
 OWNERS = ('m300_filament', 'm300_calibration', 'm300_maintenance',
           'm300_thermal', 'm300_fans', 'm300_job', 'm300_motion')
-HOMING_TITLES = {'HOME_XY': 'Homing XY', 'HOME_Z': 'Homing Z', 'HOME_ALL': 'Homing ALL'}
-HOMING_COMMANDS = {'HOME_XY': 'G28 X Y', 'HOME_Z': 'G28 Z', 'HOME_ALL': 'G28'}
+HOMING_TITLES = {'HOME_X': 'Homing X', 'HOME_Y': 'Homing Y', 'HOME_XY': 'Homing XY',
+                 'HOME_Z': 'Homing Z', 'HOME_ALL': 'Homing ALL'}
+HOMING_COMMANDS = {'HOME_X': 'G28 X', 'HOME_Y': 'G28 Y', 'HOME_XY': 'G28 X Y',
+                   'HOME_Z': 'G28 Z', 'HOME_ALL': 'G28'}
 HOMING_PHASES = {
     'HOME_Y': 'Homing Y', 'HOME_X': 'Homing X', 'Z_PREHEAT': 'Heating nozzle for Z',
     'Z_CHECK_CONTACT': 'Checking Z contact', 'Z_CONTACT_POSITION': 'Moving to Z contact',
@@ -323,17 +325,16 @@ class M300Procedures:
             self.reactor.update_timer(self.timer, self.reactor.NOW)
 
     def _prompt(self, view):
+        if view['owner'] == 'm300_motion':
+            # Homing stays on the OLED and Fluidd's native home buttons. Do not
+            # open a modal or close another operator dialog at a phase change.
+            self.last_prompt = view['view_id']
+            return
         if view['snapshots'].get(view['owner'], {}).get('platform_panel_local'):
             return
         self._emit('prompt_end')
         self._emit('prompt_begin ' + ('Klipper - ' if view['owner'] == 'm300_thermal' else 'ZORTRAX M300 - ') + view['title'])
-        if view['owner'] == 'm300_motion':
-            if view['busy']:
-                self._emit('prompt_text M300_HOMING_ACTIVE')
-            self._emit('prompt_text ' + view['message'])
-            if view['reason']:
-                self._emit('prompt_text ' + view['reason'])
-        elif view.get('leveling_screen'):
+        if view.get('leveling_screen'):
             screen = view.get('leveling_screen') or describe(view['snapshots'][view['owner']])
             for line in screen['text'].split('\n'):
                 self._emit('prompt_text ' + line.replace('|', '/'))
@@ -370,7 +371,8 @@ class M300Procedures:
                      and view['owner'] in ('m300_maintenance','m300_filament',
                                            'm300_calibration','m300_fans'))))
                 if finished_service:
-                    self._emit('prompt_end')
+                    if not homing:
+                        self._emit('prompt_end')
                     self.last_prompt=view['view_id']
                 else:
                     self._prompt(view)
