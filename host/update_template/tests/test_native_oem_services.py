@@ -641,8 +641,8 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 selected = next(i for i, row in enumerate(rows) if row[0] == label)
                 action = rows[selected][1]
                 self.assertEqual(action, ('native_gcode', command))
-                self.assertNotEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
-                                    ui.get_oem_sprite('m04', rows, selected, h.now + .5))
+                self.assertEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
+                                 ui.get_oem_sprite('m04', rows, selected, h.now + .5))
                 if axes in ('xy', 'z'):
                     menu.select(action, h.now)
                     h.callbacks.pop()(h.now)

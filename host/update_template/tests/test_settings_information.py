@@ -308,9 +308,10 @@ class SettingsTreeTests(unittest.TestCase):
             h.oled.selection = 8
             h.oled._render(h.now)
             frame = h.oled._render_wire
-            self.assertEqual(frame, brightness_frame('LED brightness', 8, False, test_display.renderer.Frame))
+            sprite=h.ui.oem_sprites.get('activity:led_brightness')
+            self.assertEqual(frame, brightness_frame('LED brightness', 8, False, test_display.renderer.Frame,sprite))
             for segment in range(16):
-                x = 16 + 14 * segment + 4
+                x = 16 + 10 * segment + 4
                 self.assertEqual(frame[57 * 128 + x // 2] & 15, 15 if segment < 8 else 0)
 
     def test_non_english_languages_and_old_interval_choices_are_not_ui_actions(self):
@@ -499,7 +500,7 @@ class InformationTests(unittest.TestCase):
                 self.assertLessEqual(width(line), h.ui.row_pixels)
             h.oled._render(h.now)
             self.assertEqual(h.oled._render_wire, menu_frame(tuple(label for label, _ in rows),
-                             (), 0, test_display.renderer.Frame))
+                             (), 0, test_display.renderer.Frame,h.ui.oem_sprites.get('0x0801dc08')))
             self.assertIsNone(choose_icon(menu_page='info_printer'))
 
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate committed OLED artwork without raster libraries or printer access."""
 import hashlib
+import base64
 import json
 from pathlib import Path
 import re
@@ -8,8 +9,9 @@ import struct
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
+import zlib
 
-from render_ui_symbols import OUT, SYMBOLS, MCU_FRAMES, drawing, frame_svg
+from render_ui_symbols import OUT, SYMBOLS, MCU_FRAMES, HOST_FRAMES, drawing, frame_svg
 
 
 def gif_frames(data):
@@ -52,10 +54,14 @@ class ArtworkContracts(unittest.TestCase):
         self.assertEqual(len(catalog), 24)
         self.assertEqual(set(bank['symbols']), {entry[0] for entry in SYMBOLS})
         self.assertEqual({item['id'] for item in catalog if item['runtime_enabled']},
-                         {'waiting_klipper', 'connection_lost'})
+                         {entry[0] for entry in SYMBOLS})
+        runtime = json.loads(HOST_FRAMES.read_text())
         for name, _, _ in SYMBOLS:
             with self.subTest(name=name):
                 record = bank['symbols'][name]
+                host_frames = runtime['symbols'][name]['frames']
+                self.assertEqual([zlib.decompress(base64.b64decode(frame['zlib_b64'])).hex()
+                                  for frame in host_frames], record['frames'])
                 self.assertEqual(len(set(record['frames'])), 4)
                 for raw, checksum in zip(record['frames'], record['sha256']):
                     packed = bytes.fromhex(raw)

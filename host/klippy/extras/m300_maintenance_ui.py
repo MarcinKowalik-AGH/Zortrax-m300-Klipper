@@ -2,7 +2,7 @@
 """English OEM fan menu and manual platform presentation; no hardware access."""
 from functools import lru_cache
 
-from .m300_leveling_oem import draw_text
+from .m300_leveling_oem import draw_sprite, draw_text
 
 FAN_LABELS = ('Back', 'Toggle upper fan', 'Toggle lower fan')
 PLATFORM_LABELS = {'PLATFORM_UP': 'Move the platform up',
@@ -36,9 +36,23 @@ def describe(owner, status):
 
 
 @lru_cache(maxsize=24)
-def fan_frame(upper, lower, note, selected, frame_type):
+def fan_frame(upper, lower, note, selected, frame_type, sprite=None):
     """0x08018c4c + 0x0801846c layout, verified against all 12 cold frames."""
     frame = frame_type()
+    if sprite is not None:
+        # Keep the same three actions and their labels; put each fan's
+        # state beneath it so the 50px icon never overlaps the status text.
+        for x, y, label in ((16, 0, FAN_LABELS[0]), (20, 12, FAN_LABELS[1]),
+                            (28, 24, upper), (20, 36, FAN_LABELS[2]), (28, 48, lower)):
+            draw_text(frame, x, y, label)
+        center = (0, 12, 36)[max(0, min(2, selected))]+7
+        for y in range(64):
+            if abs(y-center)>2:
+                frame.pixel(8, y)
+        for dy in range(-2, 3):
+            frame.pixel(8+(-1 if selected == 0 else 1)*(3-abs(dy)), center+dy)
+        draw_sprite(frame, sprite)
+        return frame.wire_bytes()
     for x, y, label in ((16, 0, FAN_LABELS[0]), (20, 12, FAN_LABELS[1]),
                         (20, 24, FAN_LABELS[2]), (190, 12, upper), (190, 24, lower)):
         draw_text(frame, x, y, label)

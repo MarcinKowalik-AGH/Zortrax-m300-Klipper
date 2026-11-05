@@ -56,11 +56,11 @@ needed during printer operation.
 
 [Download all 24 symbols](../assets/ui-symbols/M300_ACTIVITY_SYMBOLS_24.zip)
 
-![Draft symbol review sheet](../assets/ui-symbols/preview.png)
+![Activity symbol review sheet](../assets/ui-symbols/preview.png)
 
 [Animated first set](../assets/ui-symbols/preview.gif)
 
-| Symbol | Printer function | Proposed movement | Draft |
+| Symbol | Printer function | Movement | Artwork |
 | --- | --- | --- | --- |
 | Bed mesh | Native 25-contact map | Measurement dot visits platform pads | [SVG](../assets/ui-symbols/bed_mesh.svg) |
 | Heat the nozzle | Hotend heating | Rising heat waves below the nozzle | [SVG](../assets/ui-symbols/heat_nozzle.svg) |
@@ -81,24 +81,86 @@ needed during printer operation.
 
 | Symbol | Movement | Current assignment |
 | --- | --- | --- |
-| Filament jam | Feed marker reaches a blocked path; rollers rock | Artwork prepared; no jam detector added |
-| Filament runout | Marker approaches the broken feed path | Artwork prepared |
+| Filament jam | Feed marker reaches a blocked path; rollers rock | A reported filament/extruder jam failure |
+| Filament runout | Marker approaches the broken feed path | A reported filament-runout failure |
 | Waiting for Klipper | Marker travels from the MCU to the host; dots accumulate | Local MCU waiting screen |
 | Connection lost | Broken-link cross remains visible; underline expands | Local MCU lease expiry and shutdown screen |
-| Hotend overheat | High-temperature marker and warning rays move | Artwork prepared; existing limits unchanged |
-| Bed overheat | High-temperature marker and warning rays move | Artwork prepared; existing limits unchanged |
-| Temperature sensor fault | Marker reaches the broken sensor lead | Artwork prepared |
-| Heating failed | Low-temperature marker moves; warning remains visible | Artwork prepared |
-| Probe contact fault | Contact marker approaches the pad; cross remains visible | Artwork prepared |
-| Platform connector fault | Connector pins move toward the separated socket | Artwork prepared |
-| Emergency stop | Indicator marks accumulate inside the fixed stop outline | Artwork prepared |
-| Firmware update | Data marker moves into the memory chip | Artwork prepared; no new flashing mechanism added |
+| Hotend overheat | High-temperature marker and warning rays move | Reported hotend overheat / maximum-temperature failure |
+| Bed overheat | High-temperature marker and warning rays move | Reported bed overheat / maximum-temperature failure |
+| Temperature sensor fault | Marker reaches the broken sensor lead | Reported sensor / ADC / thermistor failure |
+| Heating failed | Low-temperature marker moves; warning remains visible | Reported heating failure or heating timeout |
+| Probe contact fault | Contact marker approaches the pad; cross remains visible | Reported PC7 / probe / contact failure |
+| Platform connector fault | Connector pins move toward the separated socket | Reported platform-connector failure |
+| Emergency stop | Indicator marks accumulate inside the fixed stop outline | Reported M112 / emergency-stop failure; static command preview |
+| Firmware update | Data marker moves into the memory chip | Static Firmware version / restart / Save configuration preview |
 
-The first twelve symbols and ten unassigned fault/activity symbols are ready
-assets, not new runtime capabilities. Inventure-style thermal thresholds and
-fault-to-icon routing will be handled separately before integrating the thermal
-symbols. Critical warning outlines, crosses and exclamation marks remain visible
-in every frame.
+All 24 symbols now have explicit runtime bindings. The fault selector only
+explains an existing failure state and its reason/flags. It does not implement
+a jam detector, change thermal limits, declare a new failure or restart hardware.
+Unknown failures retain the original generic warning. The local MCU shutdown
+screen remains the separate R14.15 connection/shutdown screen; host-side fault
+icons do not replace that MCU screen after display ownership is lost. Critical
+warning outlines, crosses and exclamation marks remain visible in every frame.
+
+## Host OLED bindings — menu revision 0.13.16.11
+
+![Assigned OLED screens](../assets/ui-symbols/assigned_oled.png)
+
+[Animated production-renderer preview](../assets/ui-symbols/assigned_oled.gif).
+The example values are offline fixtures, not live measurements.
+
+| Screen or action | Graphic and activation |
+| --- | --- |
+| First menu: Klipper / Zortrax | Existing monochrome project marks |
+| Models / normal model selection | Original model icon; SD source uses the SD symbol |
+| Reading SD / preparing a model | SD activity while card I/O is busy; file-transfer activity while model preparation is busy |
+| Maintenance / Material / Settings / Information | Existing original category symbols; selected subpages use their own appropriate symbol |
+| OEM Autocalibration | Audited original screw directions, quarter-turn instructions, hourglass, result diagram and failure screens |
+| Homing XY / Z / ALL | Original hourglass animates during the homing procedure; static menu preview |
+| Heat nozzle / heat bed / PID | Matching nozzle or platform; animates during an existing heating/PID state |
+| Cooling / heaters off | Cooling thermometer; static command preview, animation during an existing cooling/coast state |
+| Move platform / axes | Original direction symbols; no motion policy or release-to-stop behavior changes |
+| Fan test / fan status | Correct upper/lower fan; animation requires the selected channel to be enabled in a live/fresh status |
+| Load / Unload / Change | Original material instructions and transport animations; heating uses the nozzle symbol |
+| Nozzle cleaning before resume | Animated brush when the existing procedure requests cleaning |
+| Printing | Existing native Klipper status screen, unchanged |
+| Pause menu | Original information symbol and left-aligned text, retained |
+| Native SD pause / draining / done / stop confirmation | Original pause / printing activity / check / cancellation symbols respectively |
+| OLED / LED brightness | Static display or lamp on the right; one real 16-segment value bar on the left |
+| Light / buzzer / sleep / language / sorting | Existing light / sound / moon / language / sorting symbols |
+| Printer information | Original information symbol; the four shared data fields remain on one page |
+| Firmware version / Help | Static memory-chip symbol / original Help symbol |
+| Board / OLED link / temperature diagnostics | Connection symbol / matching heater symbol; other informational diagnostics retain the original information symbol |
+| Bed mesh | Five-pad symbol; animation only while the native pad-mesh owner reports busy |
+| Back | Existing left-pointing navigation indicator; context symbols remain where appropriate |
+
+When `[m300_pad_mesh]` is configured, Klipper also offers a Bed mesh page.
+It reads the existing owner's state and invokes the existing `ZORTRAX_BED_MESH`
+macro. Its measurement action is absent while that owner is busy. Geometry,
+preflight, probing, compensation and optional configuration stay under the
+existing native implementation.
+
+The brightness bar now occupies x16–173: sixteen eight-pixel segments at a
+ten-pixel pitch. The 50px symbol occupies x200–249, leaving a clear gap.
+The icon's decorative miniature meter is hidden on these controls, so only
+the actual current-value bar is shown. Fan labels retain their shared text;
+their Enabled/Disabled/Cooling states move onto the line immediately below
+each label to make room for the graphic.
+
+Runtime assets are pre-rendered and compressed in `m300_activity_sprites.json`.
+Only visible native frames are decoded, with a bounded 32-frame cache. Menu
+previews are static; active four-frame graphics retain the 500ms cadence.
+Rendering reads cached owner status and introduces no MCU queries, encoder
+sampling changes or new transport queues. Existing display diff/RLE/coalescing
+continues to handle the frames.
+
+`ZORTRAX_UI_STATUS` reports `activity_revision: ACTIVITY_SYMBOLS_V1` and
+`activity_symbols: 24`. The installer includes both the selector and bitmap
+resource, and recognizes the canonical payload from the preceding GitHub build.
+Unknown user-modified runtime files remain protected.
+
+This assignment update is host-side. A printer already running R14.15 does not
+need another MCU flash to receive the host OLED bindings.
 
 ## Local MCU animation in R14.15
 

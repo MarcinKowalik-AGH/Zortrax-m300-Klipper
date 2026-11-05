@@ -144,6 +144,13 @@ comments and executed with declared hardware/UI boundaries.
 | Interactive fan test | `0x08014940`, `0x080157f0`, `0x080157c8`, `0x08014980` | Save, requests off, independent 0/150 toggles, saved-request restoration |
 | Fan state fields | `0x0801846c` | Original Enabled/Disabled text at x190, y12/y24 |
 
+The table records the recovered source layout. Host menu revision 0.13.16.11
+retains the three fan actions and moves each Enabled/Disabled/Cooling state
+below its label, reserving the right side for the corresponding upper/lower
+fan icon. Rotation requires an enabled selected fan and live/fresh status;
+it reports the commanded state, not measured RPM. Original reference frames
+remain in the software tests. See [activity bindings](UI_SYMBOLS.md).
+
 With the nominal OEM E scale of 960 units/mm, the transport counters give
 130, 110 and 150 mm. These are nominal program values, not independent
 physical length measurements. The port retains the printer's calibrated E.

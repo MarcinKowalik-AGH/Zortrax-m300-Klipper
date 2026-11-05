@@ -6,12 +6,14 @@ SVG generation uses the standard library. --raster requires CairoSVG and Pillow
 only on the asset-authoring machine; the printer never imports either package.
 """
 import argparse
+import base64
 import hashlib
 import html
 import io
 import json
 from pathlib import Path
 import zipfile
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'docs/assets/ui-symbols'
@@ -44,6 +46,7 @@ SYMBOLS = (
 FRAME_MS = 500
 FRAME_COUNT = 4
 MCU_FRAMES = ROOT / 'mcu/SOURCE_MCU/overlay/src/stm32/m300_oled_activity.inc'
+HOST_FRAMES = ROOT / 'host/klippy/extras/m300_activity_sprites.json'
 
 
 def drawing(name, frame=0):
@@ -225,7 +228,7 @@ def sheet_svg(symbols, frame=0, subtitle='New project symbols'):
         parts.append('<g transform="translate(%d %d) scale(3)" color="#eaf5ff">%s</g>' % (x+49, y+16, drawing(name, frame)))
         parts.append('<text x="%d" y="%d" font-size="%d" font-weight="bold">%s</text>' % (x+16, y+191, 15 if len(title)>22 else 17, html.escape(title)))
         parts.append('<text x="%d" y="%d" font-size="12" fill="#a8c0d2">%s · 4 FRAMES</text>' % (x+16, y+215, name))
-    parts.extend(['<text x="32" y="932" font-size="13" fill="#a8c0d2">Waiting for Klipper: MCU screen. Fault symbols: artwork ready; detection and limits are separate.</text>', '</g></svg>\n'])
+    parts.extend(['<text x="32" y="932" font-size="13" fill="#a8c0d2">Icons follow existing printer states. Thermal limits and fault detection are unchanged.</text>', '</g></svg>\n'])
     return ''.join(parts)
 
 
@@ -276,6 +279,14 @@ def raster_exports():
         bank['symbols'][name] = dict(frames=[b.hex() for b in data],
                                     sha256=[hashlib.sha256(b).hexdigest() for b in data])
     (OUT/'native_frames.json').write_text(json.dumps(bank, indent=2)+'\n')
+    runtime = dict(format='M300_ACTIVITY_SPRITES_V1', symbols={})
+    for name, _, _ in SYMBOLS:
+        record = bank['symbols'][name]
+        runtime['symbols'][name] = dict(width=50, height=50, frame_ms=FRAME_MS,
+            frames=[dict(sha256=checksum, zlib_b64=base64.b64encode(
+                zlib.compress(bytes.fromhex(raw), 9)).decode())
+                for raw, checksum in zip(record['frames'], record['sha256'])])
+    HOST_FRAMES.write_text(json.dumps(runtime, indent=2)+'\n')
     MCU_FRAMES.write_text(mcu_header(images))
     for prefix, symbols in (('preview', SYMBOLS[:12]), ('preview_additional', SYMBOLS[12:])):
         sheets = []
@@ -330,8 +341,9 @@ def main():
         (OUT / (name + '.svg')).write_text(svg)
         manifest.append(dict(id=name, title=title, concept=concept, width=50, height=50,
                              frames=FRAME_COUNT, frame_ms=FRAME_MS,
-                             runtime_enabled=name in ('waiting_klipper', 'connection_lost'),
-                             runtime_target='MCU local waiting screen' if name in ('waiting_klipper', 'connection_lost') else None,
+                             runtime_enabled=True,
+                             runtime_target=('MCU local waiting screen' if name=='waiting_klipper' else
+                                'MCU local screen and reported host disconnection' if name=='connection_lost' else 'Conditional host OLED'),
                              origin='New project design; not an extracted OEM asset'))
     (OUT / 'catalog.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (OUT/'preview.svg').write_text(sheet_svg(SYMBOLS[:12], subtitle='First 12 symbols'))

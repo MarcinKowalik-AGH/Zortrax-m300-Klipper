@@ -32,6 +32,9 @@ write. Disabled Buzzer also ends an active host beep. Dynamic Light follows the
 printer, including purple during a native print pause and red on faults.
 LED brightness applies to both Dynamic and White. The two brightness settings
 are independent and default to level 16 on existing installations.
+Each OLED brightness control has one compact 16-segment bar at x16–173 and
+a static display/lamp symbol at x200–249. The empty gap prevents overlap;
+the icon's demonstration meter is hidden on the actual control screen.
 Turn the knob on an active leveling screen to open Settings. Back returns
 to the wizard. Fluidd offers brightness controls inside the procedure
 dialog. Brightness, light mode and buzzer can change while a service owns

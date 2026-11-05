@@ -60,6 +60,10 @@ R14.15 retains that motion core and adds local MCU waiting/disconnection
 animations without UART frame traffic. The [24 activity symbols](docs/en/UI_SYMBOLS.md)
 include GIF previews, individual frames and native OLED data. Thermal limits
 and fault detection are unchanged.
+Host menu revision `0.13.16.11-ACTIVITY-SYMBOLS` assigns these graphics to the
+corresponding OLED screens and reported states. Brightness controls retain
+16 segments in a shorter bar alongside the icon. See the
+[rendered screen preview](docs/en/UI_SYMBOLS.md#host-oled-bindings--menu-revision-0131611).
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

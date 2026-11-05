@@ -7,6 +7,8 @@ from .m300_ui_m11_state import fit_label
 
 SPRITE_LABEL_PIXELS = 174
 MENU_LABEL_PIXELS = 232
+BRIGHTNESS_BAR_PITCH = 10
+BRIGHTNESS_BAR_WIDTH = 8
 
 
 def menu_label_pixels(sprite):
@@ -52,33 +54,39 @@ def menu_frame(labels, active, selected, frame_type, sprite=None):
 
 
 @lru_cache(maxsize=64)
-def brightness_frame(title, level, back, frame_type):
+def brightness_frame(title, level, back, frame_type, sprite=None):
     frame = frame_type()
     draw_text(frame, 16, 0, title)
     draw_text(frame, 16, 14, 'Turn to adjust')
     draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to save')
     draw_text(frame, 16, 40, 'Hold to go back')
     for segment in range(16):
-        left = 16 + 14 * segment
-        for x in range(left, left + 12):
+        left = 16 + BRIGHTNESS_BAR_PITCH * segment
+        for x in range(left, left + BRIGHTNESS_BAR_WIDTH):
             for y in range(55, 63):
-                if segment < level or x in (left, left + 11) or y in (55, 62):
+                if segment < level or x in (left, left + BRIGHTNESS_BAR_WIDTH-1) or y in (55, 62):
                     frame.pixel(x, y, 15 if segment < level else 5)
+    if sprite is not None:
+        # The real sixteen-segment control is on the left. Hide the draft
+        # icon's demonstration meter so the screen has only one value bar.
+        w,h,raw=sprite
+        draw_sprite(frame,(w,h,raw[:43*(w//2)]+bytes((h-43)*(w//2))))
     return frame.wire_bytes()
 
 
-def notice_frame(title, message, frame_type):
+def notice_frame(title, message, frame_type, sprite=None):
     rows = ['Back', title]
+    pixels = menu_label_pixels(sprite)
     for _ in range(2):
-        if width(message) <= MENU_LABEL_PIXELS:
+        if width(message) <= pixels:
             break
-        line = fit_label(message, MENU_LABEL_PIXELS)
+        line = fit_label(message, pixels)
         prefix, separator, _ = line.rpartition(' ')
         if separator and prefix:
             line = prefix
         rows.append(line)
         message = message[len(line):].lstrip()
-    if width(message) > MENU_LABEL_PIXELS:
-        message = fit_label(message, MENU_LABEL_PIXELS-width(' ...')-1).rstrip() + ' ...'
+    if width(message) > pixels:
+        message = fit_label(message, pixels-width(' ...')-1).rstrip() + ' ...'
     rows.append(message)
-    return menu_frame(tuple(rows), (), 0, frame_type)
+    return menu_frame(tuple(rows), (), 0, frame_type, sprite)

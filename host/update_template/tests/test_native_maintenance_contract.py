@@ -296,7 +296,8 @@ class MaintenancePresentationTests(unittest.TestCase):
         packet(False);packet(False,1,1,1)
         self.assertEqual(h.upper.speed,OEM_DUTY);self.assertFalse(h.fans.test['lower'])
         h.p._tick(h.now);o._render(h.now);display.pump()
-        self.assertEqual(o._render_wire,fan_frame('(Enabled)','(Disabled)','',1,test_display.renderer.Frame))
+        sprite=ui.oem_sprites.get('activity:fan_upper',h.now)
+        self.assertEqual(o._render_wire,fan_frame('(Enabled)','(Disabled)','',1,test_display.renderer.Frame,sprite))
         o.selection=0;o._render(h.now);display.pump();packet(False,2,2,2)
         h.p._tick(h.now);self.assertEqual(menu.page,'maintenance');h.assert_restored(self)
 
