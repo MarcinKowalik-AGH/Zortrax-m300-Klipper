@@ -18,6 +18,7 @@ from .m300_maintenance_ui import FAN_LABELS, fan_frame
 from .m300_settings import PAGES as SETTINGS_PAGES, TITLES
 from .m300_nvm import BRIGHTNESS_KEYS
 from .m300_settings_ui import brightness_frame, menu_frame
+from .m300_activity_graphics import fault_symbol, menu_symbol, procedure_symbol
 
 
 class M300MenuUI:
@@ -102,9 +103,36 @@ class M300MenuUI:
             self.last_sprite = None
             return None
         menu_page = self.menu.page if panel_page in ('home','m04') else ''
+        def snapshot(name):
+            service = self.printer.lookup_object(name, None)
+            if service is None:
+                return {}
+            try:
+                result = service.get_status(now)
+                return result if isinstance(result, dict) else {}
+            except Exception:
+                return {}  # Drawing never attempts owner recovery.
+        view = self.procedures.view(now) if menu_page in ('procedure', 'fan_test') else None
+        self._activity_view = view
+        if menu_page == 'bed_mesh':
+            status = snapshot('m300_pad_mesh')
+            choice = procedure_symbol('m300_pad_mesh', status)
+            self.last_sprite = (choice.key if choice else
+                '0x0801be48' if status.get('state')=='FAILED' else 'activity:bed_mesh')
+            return self.oem_sprites.get(self.last_sprite, now if choice and choice.animated else 0.)
+        if menu_page == 'fan_test' and view and view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
+            status = view.get('snapshots', {}).get(view['owner'], {})
+            choice = fault_symbol(status)
+            self.last_sprite = choice.key if choice else (
+                '0x0801be48' if view['state']=='FAULT' else '0x0801c024' if view['state']=='COMPLETE' else '0x0801fe34')
+            return self.oem_sprites.get(self.last_sprite, now if choice else 0.)
         if menu_page == 'procedure':
-            view = self.procedures.view(now)
             owner = view['owner']
+            status = view.get('snapshots', {}).get(owner, {})
+            choice = procedure_symbol(owner, status)
+            if choice is not None and owner != 'm300_calibration':
+                self.last_sprite = choice.key
+                return self.oem_sprites.get(choice.key, now if choice.animated else 0.)
             if owner == 'm300_motion':
                 self.last_sprite = HOMING_HOURGLASS if view['busy'] else (
                     '0x0801c024' if view['state'] == 'COMPLETE' else '0x0801be48')
@@ -115,24 +143,41 @@ class M300MenuUI:
                 panel_page = 'filament'
             elif owner == 'm300_job':
                 panel_page = 'job'
-        def snapshot(name):
-            service = self.printer.lookup_object(name, None)
-            if service is None:
-                return {}
-            try:
-                result = service.get_status(now)
-                return result if isinstance(result, dict) else {}
-            except Exception:
-                return {}  # Drawing never attempts owner recovery.
+        if panel_page.startswith(('filament', 'job')) or menu_page == 'material_status':
+            owner = 'm300_filament' if panel_page.startswith('filament') or menu_page == 'material_status' else 'm300_job'
+            choice = procedure_symbol(owner, snapshot(owner))
+            if choice is not None:
+                self.last_sprite = choice.key
+                return self.oem_sprites.get(choice.key, now if choice.animated else 0.)
+        choice = menu_symbol('fan_test' if view and
+            (view.get('maintenance_screen') or {}).get('kind')=='fan_menu' else menu_page,
+            panel_page, rows, selected,
+            fan=view.get('snapshots', {}).get('m300_fans', {}) if view else
+                snapshot('m300_fans') if menu_page=='fans' else None,
+            browser=snapshot('m300_browser') if menu_page in ('models', 'browser', 'model_file', 'preview', 'confirm_print') else None,
+            sd=snapshot('m300_sd') if menu_page in ('models', 'browser', 'model_file', 'preview', 'confirm_print') else None,
+            models=snapshot('m300_models') if menu_page in ('model_file', 'preview', 'confirm_print') else None)
+        if choice is not None:
+            self.last_sprite = choice.key
+            return self.oem_sprites.get(choice.key, now if choice.animated else 0.)
         self.last_sprite = choose_icon(menu_page=menu_page, panel_page=panel_page,
             rows=rows, selected=selected,
             calibration=snapshot('m300_calibration') if menu_page=='calibration' else {},
             filament=snapshot('m300_filament') if (panel_page.startswith('filament')
                 or menu_page=='material_status') else {},
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
-        if menu_page == 'zortrax' and self.last_sprite == HOMING_HOURGLASS:
+        if menu_page not in ('procedure', 'calibration', 'material_status') and not panel_page.startswith(('job', 'filament')):
             return self.oem_sprites.get(self.last_sprite)
         return self.oem_sprites.get(self.last_sprite, now)
+
+    def notice_sprite(self, title, message, now):
+        if self.oem_sprites is None:
+            return None
+        choice = fault_symbol(dict(state='FAULT', reason=str(title)+' '+str(message)))
+        warning = any(word in (str(title)+' '+str(message)).lower()
+                      for word in ('error','fault','failed','refused','not allowed'))
+        self.last_sprite = choice.key if choice else '0x0801be48' if warning else '0x0801dc08'
+        return self.oem_sprites.get(self.last_sprite, now if choice and choice.animated else 0.)
 
     def leveling_frame(self, panel_page, now, frame_type):
         if panel_page != 'm04' or self.menu.page != 'procedure':
@@ -143,6 +188,11 @@ class M300MenuUI:
             self._leveling_frames.clear()
             return None
         screen = view['leveling_screen']
+        if view['owner'] != 'm300_calibration':
+            status = view.get('snapshots', {}).get(view['owner'], {})
+            choice = procedure_symbol(view['owner'], status)
+            if choice is not None:
+                screen = dict(screen, sprite=choice.key)
         self.last_sprite = screen['sprite']
         wire = render_leveling(screen, self.oem_sprites, frame_type, now)
         # Keep all recent animation frames of this phase. An acknowledged
@@ -168,16 +218,18 @@ class M300MenuUI:
                 key = self.menu.page[8:]
                 if key in BRIGHTNESS_KEYS:
                     level = selected or self.menu.nvm.get_setting(key)
-                    wire = brightness_frame(TITLES[key], level, selected == 0, frame_type)
+                    wire = brightness_frame(TITLES[key], level, selected == 0, frame_type, sprite)
                     self._brightness_presented = self.menu.generation, selected, wire
                     return wire
                 return menu_frame(tuple(labels or [r[0] for r in rows]),
                     settings.active_rows(self.menu.page), selected, frame_type, sprite)
-        if self.menu.page != 'fan_test' or len(rows) != 3:return None
+        view = getattr(self, '_activity_view', None)
+        is_fan_menu = view and (view.get('maintenance_screen') or {}).get('kind') == 'fan_menu'
+        if (self.menu.page != 'fan_test' and not is_fan_menu) or len(rows) != 3:return None
         upper=rows[1][0][len(FAN_LABELS[1])+1:]
         lower=rows[2][0][len(FAN_LABELS[2])+1:]
         note='Automatic upper-fan cooling' if upper=='(Cooling)' else ''
-        return fan_frame(upper,lower,note,selected,frame_type)
+        return fan_frame(upper,lower,note,selected,frame_type,sprite)
 
     def brightness_selection(self):
         key = self.menu.page[8:]
@@ -293,6 +345,7 @@ class M300MenuUI:
 
     def get_status(self, now):
         return {'stage':'M11','model':'M300_CLASSIC','installed':True,
+                'activity_revision':'ACTIVITY_SYMBOLS_V1', 'activity_symbols':24,
                 'hardware_qualified':False,
                 'languages':list(LANGS),'language':self.language(),
                 'history_depth':len(self.history.stack),

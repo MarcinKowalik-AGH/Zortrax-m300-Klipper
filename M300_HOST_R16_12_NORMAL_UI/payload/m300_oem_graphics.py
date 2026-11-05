@@ -13,6 +13,8 @@ import math
 from pathlib import Path
 import zlib
 
+from .m300_activity_graphics import ActivityGraphics, PREFIX
+
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
 HOMING_HOURGLASS = '0x0801c2b8'
 # Project marks use binary pixels at the OEM sprite height.
@@ -72,6 +74,10 @@ class OEMGraphics:
 
     def get(self, addr, now=0.):
         addr=str(addr).lower()
+        if addr.startswith(PREFIX):
+            if not hasattr(self, 'activity'):
+                self.activity = ActivityGraphics()
+            return self.activity.get(addr, now)
         if addr in PROJECT_MENU_ICONS:
             return PROJECT_MENU_ICONS[addr]
         desc=self.frames.get(addr)

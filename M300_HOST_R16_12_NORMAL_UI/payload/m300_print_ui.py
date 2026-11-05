@@ -6,6 +6,7 @@ import logging
 
 from .m300_leveling_oem import draw_sprite, draw_text
 from .m300_oem_graphics import PAGES
+from .m300_activity_graphics import fault_symbol
 from .m300_print_hold import PrintHold
 from .m300_settings_ui import MENU_LABEL_PIXELS, SPRITE_LABEL_PIXELS
 from .m300_ui_m11_state import clean_label, fit_label
@@ -151,7 +152,12 @@ class M300PrintUI:
                      'Press to close')
         if self.error:
             lines = (*lines[:3], clean_label(self.error, 80))
-        sprite = sprites.get(PAGES['information'], now) if sprites is not None else None
+        icon = {'DRAINING':'0x08020fb8', 'DONE':'0x0801c024',
+                'SD_PAUSED':'0x0801e178', 'STOP_CONFIRM':'0x0801fe34'}.get(phase, PAGES['information'])
+        if self.error:
+            choice = fault_symbol(dict(state='FAULT', reason=self.error))
+            icon = choice.key if choice else '0x0801be48'
+        sprite = sprites.get(icon, now) if sprites is not None else None
         wire = frame_for(frame_type, title, lines, selected, sprite)
         self._remember_frame((wire, panel_context, key, rows, selected))
         return wire

@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.10-NATIVE-PRINT-CONTEXT"
+    MENU_REVISION = "0.13.16.11-ACTIVITY-SYMBOLS"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -498,6 +498,8 @@ class M300Menu:
                     ('Fans', ('page', 'fans')),
                     ('PID calibration', ('page', 'native_pid')),
                     ('Print status', ('page', 'native_job'))]
+                if self.printer.lookup_object('m300_pad_mesh', None) is not None:
+                    rows.insert(11, ('Bed mesh (25 points)', ('page', 'bed_mesh')))
                 return 'Klipper', self._notice(rows)
             motion = self.printer.lookup_object('m300_motion', None)
             motion_rows = ([('XY gap >=5mm: CONFIRM', ('motion_xy_arm',)),
@@ -524,6 +526,19 @@ class M300Menu:
                 ('Test print fan (5 s)', ('service', 'FAN_PRINT')),
                 ('Test hotend fan (5 s)', ('service', 'FAN_HOTEND')),
                 ('Stop service / heat off', ('service_stop',))])
+        if self.page == 'bed_mesh' and native:
+            mesh = self.printer.lookup_object('m300_pad_mesh', None)
+            if mesh is None:
+                return 'Bed mesh', back+[('Native pad mesh is not configured', None)]
+            status = mesh.get_status(now)
+            rows = back+[('State: '+self.clean(status.get('state', 'IDLE')), None)]
+            if not status.get('busy'):
+                rows.append(('Measure 25 pad points', ('native_gcode', 'ZORTRAX_BED_MESH')))
+            result = status.get('result') or {}
+            if result:
+                rows.append(('Profile: '+self.clean(result.get('profile', '')), None))
+            rows.append(('Five pads / 25 contacts', None))
+            return 'Bed mesh', self._notice(rows)
         if self.page == 'native_moves' and native:
             return 'Move axes', back + [
                 ('Move ' + axis, ('page', 'native_move_' + axis.lower()))

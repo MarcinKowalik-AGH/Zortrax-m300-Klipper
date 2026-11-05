@@ -884,7 +884,9 @@ class M300OLED:
         if print_wire is not None:
             key = ('native_print_context', print_wire)
         elif self.message:
-            key = ('notice', tuple(self.message))
+            title, message = (english_label(x) for x in self.message)
+            notice_sprite = (ui.notice_sprite(title, message, now) if ui is not None else None)
+            key = ('notice', (title, message), notice_sprite)
         elif leveling_wire is not None:
             key = ('leveling', leveling_wire)
         elif self.page == 'status':
@@ -917,8 +919,7 @@ class M300OLED:
                    else ('menu', tuple(labels), self.selection, sprite))
         if key != self._render_key:
             if key[0] == 'notice':
-                title, message = (english_label(x) for x in self.message)
-                wire = notice_frame(title, message, Frame)
+                wire = notice_frame(title, message, Frame, key[2])
             elif key[0] == 'menu':
                 wire = menu_frame(tuple(labels), (), self.selection, Frame, sprite)
             else:
