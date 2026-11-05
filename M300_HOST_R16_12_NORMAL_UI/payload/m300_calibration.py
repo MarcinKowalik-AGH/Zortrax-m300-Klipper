@@ -10,7 +10,7 @@ import json
 import logging
 import math
 from .m300_native_service import (lock_command, unlock_command,
-                                  native_temperature_ready, require_idle_print)
+                                  native_service_frame, native_temperature_ready, require_idle_print)
 from .m300_native_probe import BoundedProbeToolhead, boundary_z
 from .m300_stock_geometry import stock_xy_offsets
 from .m300_calibration_state import CalibrationState, CalibrationError, POINTS, finite
@@ -268,6 +268,7 @@ class M300Calibration:
                    'SET_GCODE_OFFSET', 'SET_KINEMATIC_POSITION', 'FORCE_MOVE',
                    'STEPPER_BUZZ', 'SET_VELOCITY_LIMIT', 'PROBE', 'PROBE_ACCURACY',
                    'PROBE_CALIBRATE', 'BED_MESH_CALIBRATE', 'SCREWS_TILT_CALCULATE',
+                   'BED_MESH_CLEAR', 'BED_MESH_PROFILE', 'BED_MESH_OFFSET',
                    'Z_TILT_ADJUST', 'QUAD_GANTRY_LEVEL', 'PID_CALIBRATE',
                    'M109', 'M190', 'TEMPERATURE_WAIT', 'SAVE_CONFIG',
                    'SDCARD_PRINT_FILE', 'M23', 'M24', 'PAUSE', 'RESUME')
@@ -367,7 +368,7 @@ class M300Calibration:
             # the separately unqualified legacy M02 print/load workflows.
             self.board.require_motion()
             self.board.require_heating()
-            if self.job.gcode_move.move_transform not in (None, self.toolhead):
+            if not native_service_frame(self.printer, self.job.gcode_move, self.toolhead):
                 raise self._error('native M07 requires untransformed Cartesian motion')
             if self._homed_once and not self._cal_homing:
                 self.job._check_position()

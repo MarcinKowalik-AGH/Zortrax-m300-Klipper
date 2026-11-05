@@ -142,7 +142,8 @@ class M300Job:
                 or self.m04_service_busy(sd_owner=owner))
 
     def m04_service_busy(self, sd_owner=None):
-        for name in ('m300_calibration', 'm300_maintenance', 'm300_sd', 'm300_nvm', 'm300_motion', 'm300_fans', 'm300_thermal'):
+        for name in ('m300_calibration', 'm300_maintenance', 'm300_sd', 'm300_nvm',
+                     'm300_motion', 'm300_fans', 'm300_thermal', 'm300_pad_mesh'):
             service = self.printer.lookup_object(name, None)
             if service is None:
                 continue

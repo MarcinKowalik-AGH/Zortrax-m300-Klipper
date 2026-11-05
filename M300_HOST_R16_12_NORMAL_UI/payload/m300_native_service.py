@@ -18,6 +18,7 @@ BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M22
            'SAVE_GCODE_STATE','RESTORE_GCODE_STATE','SET_GCODE_OFFSET',
            'SET_KINEMATIC_POSITION','FORCE_MOVE','STEPPER_BUZZ','SET_VELOCITY_LIMIT',
            'PROBE','PROBE_ACCURACY','PROBE_CALIBRATE','BED_MESH_CALIBRATE',
+           'BED_MESH_CLEAR','BED_MESH_PROFILE','BED_MESH_OFFSET',
            'SCREWS_TILT_CALCULATE','Z_TILT_ADJUST','QUAD_GANTRY_LEVEL',
            'PID_CALIBRATE','M109','M190','TEMPERATURE_WAIT','SAVE_CONFIG',
            'SET_EXTRUDER_ROTATION_DISTANCE','SYNC_EXTRUDER_MOTION',
@@ -30,6 +31,18 @@ def require_idle_print(printer, now):
     if (getattr(sd, 'work_timer', None) is not None
             or stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')):
         raise printer.command_error('OEM service requires an idle native print')
+    pad_mesh = printer.lookup_object('m300_pad_mesh', None)
+    if pad_mesh is not None and pad_mesh.busy:
+        raise printer.command_error('M300 pad mesh owns motion')
+
+
+def native_service_frame(printer, gcode_move, toolhead, *, paused_extrusion=False):
+    transform = gcode_move.move_transform
+    if transform in (None, toolhead):
+        return True
+    pad_mesh = printer.lookup_object('m300_pad_mesh', None)
+    return (pad_mesh is not None and transform is pad_mesh.bedmesh
+            and (paused_extrusion or transform.get_mesh() is None))
 
 
 def lock_command(gcode,name,wrapper):

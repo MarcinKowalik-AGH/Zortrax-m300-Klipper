@@ -12,7 +12,8 @@ import math
 
 from .m300_filament_state import (FilamentState, FilamentStateError, build_plan,
                                  TRANSPORT_STATES, WAIT_STATES)
-from .m300_native_service import NativeServiceLease, require_idle_print, native_temperature_ready
+from .m300_native_service import (NativeServiceLease, native_service_frame,
+                                  native_temperature_ready, require_idle_print)
 
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
@@ -320,7 +321,8 @@ class M300Filament:
             self.board.require_heating()
             if self.job.machine.state not in JOB_IDLE or self.job.machine.active:
                 raise self._error('M02 job owns resources')
-            if self.gcode_move.move_transform not in (None,self.toolhead):
+            if not native_service_frame(self.printer, self.gcode_move, self.toolhead,
+                                        paused_extrusion=parent is not None):
                 raise self._error('native filament requires untransformed Cartesian motion')
             if self.job.m04_service_busy():
                 raise self._error('another OEM service owns resources')

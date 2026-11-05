@@ -8,7 +8,7 @@ import math
 
 from .m300_maintenance import M300Maintenance, other_service
 from .m300_native_probe import BoundedProbeToolhead, boundary_z
-from .m300_native_service import NativeServiceLease, require_idle_print
+from .m300_native_service import NativeServiceLease, native_service_frame, require_idle_print
 
 PERIOD = .05
 PANEL_LEASE = .75
@@ -123,7 +123,7 @@ class M300NativeMaintenance(M300Maintenance):
         if self.board.mcu.is_fileoutput():
             raise self._error('FILEOUTPUT cannot actuate a physical maintenance service')
         require_idle_print(self.printer,self.reactor.monotonic())
-        if self.gcode_move.move_transform not in (None,self.toolhead):
+        if not native_service_frame(self.printer, self.gcode_move, self.toolhead):
             raise self._error('native maintenance requires untransformed Cartesian motion')
         owner=other_service(self.printer,('m300_filament','m300_calibration',
             'm300_sd','m300_nvm','m300_motion','m300_fans','m300_thermal'),
