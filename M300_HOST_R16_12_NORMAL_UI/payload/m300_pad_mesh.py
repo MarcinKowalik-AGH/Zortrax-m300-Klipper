@@ -12,9 +12,15 @@ PATTERN = ((0, 0), (-1, -1), (1, -1), (1, 1), (-1, 1))
 GRID_COUNT = 61
 CLEARANCE = 5.
 SEARCH_MARGIN = 1.
+PAD_NAMES = ('front_right', 'front_left', 'center', 'rear_right', 'rear_left')
+PAD_CENTERS = ((290., 30.), (30., 30.), (160., 160.), (290., 290.), (30., 290.))
+GEOMETRY_DEFAULTS = dict(corner_pad_width=60., center_pad_width=50., edge_margin=5.)
+GEOMETRY_DEFAULTS.update((name + '_' + axis, value)
+                         for name, point in zip(PAD_NAMES, PAD_CENTERS)
+                         for axis, value in zip('xy', point))
 
 
-def pad_points(corner_width, margin, center_width=None):
+def pad_points(corner_width, margin, center_width=None, centers=POINTS):
     """Keep the legacy two-argument geometry, with a separate center width."""
     if center_width is None:
         center_width = corner_width
@@ -22,15 +28,32 @@ def pad_points(corner_width, margin, center_width=None):
             math.isfinite(width) and .5 <= margin < width / 2 <= 50.
             for width in (corner_width, center_width))):
         raise ValueError('pad widths and edge_margin must leave a positive inset (width <= 100 mm)')
+    if len(centers) != 5 or not all(math.isfinite(v) for point in centers for v in point):
+        raise ValueError('pad centers must contain five finite XY positions')
     points = []
-    for index, (x, y) in enumerate(POINTS):
+    for index, (x, y) in enumerate(centers):
         span = (center_width if index == 2 else corner_width) / 2 - margin
         points.extend((x + dx * span, y + dy * span) for dx, dy in PATTERN)
     # The structured triangulation needs five separated, nested pad clusters.
-    if not (points[8][0] < points[11][0] < points[13][0] < points[4][0]
-            and points[8][1] < points[11][1] < points[13][1] < points[21][1]):
+    if not (max(points[8][0], points[22][0]) < points[11][0]
+            < points[13][0] < min(points[4][0], points[16][0])
+            and max(points[8][1], points[4][1]) < points[11][1]
+            < points[13][1] < min(points[21][1], points[16][1])):
         raise ValueError('pad geometry must leave space between the five contact squares')
+    for a, b, c in pad_triangles():
+        ax, ay = points[a]
+        bx, by = points[b]
+        cx, cy = points[c]
+        if (bx - ax) * (cy - ay) - (by - ay) * (cx - ax) <= 1e-9:
+            raise ValueError('pad corrections must preserve the contact-square layout')
     return tuple(points)
+
+
+def geometry_points(geometry):
+    centers = tuple(tuple(geometry[name + '_' + axis] for axis in 'xy')
+                    for name in PAD_NAMES)
+    return pad_points(geometry['corner_pad_width'], geometry['edge_margin'],
+                      geometry['center_pad_width'], centers)
 
 
 def pad_triangles():
@@ -49,8 +72,9 @@ def pad_triangles():
 
 
 def mesh_bounds(points):
-    return (min(x for x, y in points), min(y for x, y in points),
-            max(x for x, y in points), max(y for x, y in points))
+    # Stay inside both pads on each side when their individual centers differ.
+    return (max(points[6][0], points[21][0]), max(points[1][1], points[6][1]),
+            min(points[2][0], points[17][0]), min(points[19][1], points[24][1]))
 
 
 def surface_grid(points, readings):
@@ -105,13 +129,16 @@ class M300PadMesh:
         if pin not in ('PC7', 'mcu:PC7'):
             raise config.error('M300 pad mesh requires the native PC7 contact probe')
         legacy_width = config.getfloat('pad_width', None)
-        corner_width = config.getfloat('corner_pad_width',
-                                       60. if legacy_width is None else legacy_width)
-        center_width = config.getfloat('center_pad_width',
-                                       50. if legacy_width is None else legacy_width)
+        defaults = dict(GEOMETRY_DEFAULTS)
+        if legacy_width is not None:
+            defaults.update(corner_pad_width=legacy_width, center_pad_width=legacy_width,
+                            edge_margin=1.)
+            defaults.update((name + '_' + axis, value)
+                            for name, point in zip(PAD_NAMES, POINTS)
+                            for axis, value in zip('xy', point))
+        self.geometry = {key: config.getfloat(key, value) for key, value in defaults.items()}
         try:
-            self.points = pad_points(corner_width, config.getfloat(
-                'edge_margin', 5. if legacy_width is None else 1.), center_width)
+            self.points = geometry_points(self.geometry)
         except ValueError as exc:
             raise config.error(str(exc))
         self.max_pad_spread = config.getfloat('max_pad_spread', None, above=0., maxval=.75)
@@ -170,8 +197,9 @@ class M300PadMesh:
                 raise self._error('contact lies outside the usable Z search range')
             readings.append(z)
         summaries = []
-        for index, (x, y) in enumerate(POINTS):
+        for index in range(5):
             start = index * len(PATTERN)
+            x, y = self.points[start]
             values = readings[start:start + len(PATTERN)]
             spread = max(values) - min(values)
             if self.max_pad_spread is not None and spread > self.max_pad_spread:
@@ -229,7 +257,8 @@ class M300PadMesh:
                       mesh_x_pps=0, mesh_y_pps=0, tension=.2)
         mesh = ZMesh(params, profile)
         mesh.build_mesh(surface_grid(self.points, readings))
-        mesh.set_zero_reference(*POINTS[2])
+        # Correcting a pad center must not move the native homing Z datum.
+        mesh.set_zero_reference(*self.printer.lookup_object('m300_motion').home_xy)
         try:
             self.bedmesh.set_mesh(mesh)
             self.bedmesh.save_profile(profile)
@@ -238,9 +267,22 @@ class M300PadMesh:
 
     def cmd_calibrate(self, gcmd):
         profile = gcmd.get('PROFILE', 'm300_pads')
-        if (self.busy or set(gcmd.get_command_parameters()) - {'PROFILE'}
+        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {'PROFILE', 'PREVIEW'}
+        if (self.busy or set(gcmd.get_command_parameters()) - allowed
                 or not re.fullmatch(r'[a-zA-Z0-9_-]{1,32}', profile)):
-            raise self._error('only an idle pad run with an optional simple PROFILE name is supported')
+            raise self._error('requires an idle pad run with a simple PROFILE and supported pad parameters')
+        preview = gcmd.get_int('PREVIEW', 0, minval=0, maxval=1)
+        geometry = {key: gcmd.get_float(key.upper(), value)
+                    for key, value in self.geometry.items()}
+        try:
+            points = geometry_points(geometry)
+        except ValueError as exc:
+            raise self._error(str(exc))
+        self.probe_points.update_probe_points(points, len(points))
+        self.geometry, self.points = geometry, points
+        if preview:
+            self.cmd_status(gcmd)
+            return
         self._preflight()
         self.state, self.busy = 'PROBING', True
         self.samples = None
@@ -282,7 +324,8 @@ class M300PadMesh:
                           % profile)
 
     def get_status(self, eventtime):
-        return dict(state=self.state, busy=self.busy, result=self.report)
+        return dict(state=self.state, busy=self.busy, result=self.report,
+                    geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points))
 
     def cmd_status(self, gcmd):
         status = self.get_status(self.reactor.monotonic())
