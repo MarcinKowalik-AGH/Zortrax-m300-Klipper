@@ -73,6 +73,8 @@ class ActivityGraphicsTests(unittest.TestCase):
         self.assertEqual(procedure_symbol('m300_job',dict(state='WAIT_CLEAN',can_confirm_resume_clean=True)).key,'activity:clean_nozzle')
         self.assertEqual(procedure_symbol('m300_thermal',dict(state='COOLING')).key,'activity:cooling')
         self.assertIsNone(procedure_symbol('m300_maintenance',dict(state='COMPLETE',operation='HOTEND')))
+        self.assertEqual(procedure_symbol('m300_thermal',dict(state='FAULT',reason='unclassified failure')),
+                         ('0x0801be48',False))
 
     def test_all_settings_and_information_pages_have_a_rendered_icon(self):
         with session() as h:

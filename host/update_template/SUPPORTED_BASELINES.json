@@ -370,5 +370,8 @@
   "m300_pad_mesh.py": [
     "8cfef9619a1f390dc56fdf9d87175c580336c976e0525ffe9fd46c19afa5a528",
     "4ef9ad40e997c7d5a575526b3aa638dbcc045fd6c26c51d990e73b43896c699d"
+  ],
+  "m300_activity_graphics.py": [
+    "4f17aaab62e10a8d1415393d95e142959cd8d9eff08cadb630dfd21fd3047855"
   ]
 }

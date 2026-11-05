@@ -93,6 +93,8 @@ def procedure_symbol(owner, status):
     if fault:
         return fault
     state = status.get('state', '')
+    if state in FAULT_STATES:
+        return Symbol('0x0801be48', False)
     if state in TERMINAL:
         return None
     if status.get('can_confirm_resume_clean') is True or state in ('WAIT_CLEAN', 'WAIT_CLEAN_NOZZLE'):
