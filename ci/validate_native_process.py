@@ -97,8 +97,15 @@ def main():
     shutil.copy2(Path(__file__).with_name('m300_ci_models_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_models_fixture.py')
     model_script = 'ZORTRAX_NATIVE_STATUS\nZORTRAX_BROWSER_LIST SOURCE=HOST\nZORTRAX_CI_RUN_MODEL\n'
+    shutil.copy2(Path(__file__).with_name('m300_ci_pad_mesh_fixture.py'),
+                 args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
+    pad_mesh_script = (
+        'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
+        'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\nBED_MESH_CLEAR\n'
+        'BED_MESH_CALIBRATE\n')
     cases=[
         ('native_settings_information',settings_script,False,None),
+        ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
@@ -145,6 +152,10 @@ def main():
         assert not cp.getboolean('output_pin m300_buzzer', 'pwm', fallback=False)
         cp.set('virtual_sdcard','path',str(dest/'gcodes'))
         cp.set('m300_nvm','path',str(dest/'settings.json'))
+        if name == 'native_pad_mesh':
+            cp.read_dict({'bed_mesh': {'mesh_min': '35, 44', 'mesh_max': '269, 275',
+                                       'probe_count': '3, 3', 'mesh_pps': '0, 0'},
+                          'm300_pad_mesh': {'pad_width': '8'}, 'm300_ci_pad_mesh_fixture': {}})
         if name in model_fixtures:
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)
@@ -188,6 +199,13 @@ def main():
             assert process.returncode==0,(name,text[-3000:])
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
         assert 'Unknown command:' not in text, (name, 'undispatched G-code command', text[-4000:])
+        if name == 'native_pad_mesh':
+            status = next(json.loads(line.split('M300_PAD_MESH ', 1)[1])
+                          for line in text.splitlines() if 'M300_PAD_MESH ' in line)
+            assert len(status['probe_points']) == 25 and status['result'] is None
+            assert 'has been saved to profile [m300_pads]' in text
+            assert 'M300_CI_PAD_MESH profile load passed' in text
+            assert 'Traceback' not in text
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
                         if 'M300_SETTINGS ' in line]

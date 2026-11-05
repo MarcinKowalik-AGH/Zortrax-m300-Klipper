@@ -172,3 +172,72 @@ the pinned HomingMove with modeled electrical/stepper boundaries. The original
 renderer matches 110 full reference frames; runtime uses the English subset.
 20,002 original quarter-turn vectors remain covered. Physical acceptance
 remains open; follow [the test sequence](VALIDATION_R16_7.md).
+
+## Optional Klipper pad mesh
+
+Use OEM Autocalibration for the three screws. The optional M300 pad mesh
+measures residual height differences for native Klipper Z compensation.
+It uses the existing PC7 nozzle contact and Klipper's ProbePointsHelper.
+The operator can use this option without replacing the MCU firmware.
+
+Measure the conductive width of all five squares. Use the smallest verified
+width in mm and check that the nominal centers in the table above are inside
+the actual squares. The inset is measured from the edge. Check that a clean
+nozzle can reach all four inset corners of each pad without contacting its
+border. The five OEM centers are fixed for this procedure. The randomized
+offset used for OEM Autocalibration is not used for the mesh.
+
+Add these sections to the existing printer configuration when ready to
+test the probe. Replace `MEASURED_WIDTH` with the verified numeric width.
+Before moving, run `ZORTRAX_PAD_MESH_STATUS` to review all requested positions.
+The configuration is opt-in.
+
+~~~ini
+[bed_mesh]
+mesh_min: 35, 44
+mesh_max: 269, 275
+probe_count: 3, 3
+mesh_pps: 0, 0
+
+[m300_pad_mesh]
+pad_width: MEASURED_WIDTH
+edge_margin: 1.0
+~~~
+
+On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
+four inset corners of each pad. Rectangular, adaptive and manual probing
+options are rejected by the pad adapter. It uses three native contacts per
+position, the median of the three and a bounded Z search. The Z coordinate
+frame is restored after the measurement. A failed search invalidates the
+Z reference and the previous saved mesh remains available.
+
+For the first supervised test, clean the nozzle and pads and confirm that the
+pads represent the printing surface. Heat the bed to the first-layer
+temperature and stabilize the clean nozzle at 180 °C or above. Use the same
+temperatures for later comparisons. Run the commands individually and turn
+off the heaters if calibration fails. Example for a 60 °C bed:
+
+~~~gcode
+BED_MESH_CLEAR
+M190 S60
+M109 S185
+G28
+BED_MESH_CALIBRATE PROFILE=m300_pads
+ZORTRAX_PAD_MESH_STATUS
+TURN_OFF_HEATERS
+~~~
+
+The status command reports the 25 physical positions, each pad's median and
+its spread. A spread over 0.05 mm within a pad or a difference over 0.50 mm
+between pad medians rejects the mesh by default. The four outer pad medians
+define a bilinear surface. A bounded smooth correction accounts for the
+center median. Klipper receives an interpolated 21 × 21 grid, normalized to
+zero at the center pad. The five clusters only constrain the broad bed shape.
+Keep the first print inside the measured rectangle X35–269, Y44–275.
+Outside that rectangle Klipper clamps the correction to the mesh edge.
+
+A successful run leaves a profile in the current session. Use `SAVE_CONFIG`
+to keep it across restarts. After homing in the print-start sequence, use
+`BED_MESH_PROFILE LOAD=m300_pads` to activate the profile. Use
+`BED_MESH_CLEAR` before OEM Autocalibration and after completing the print.
+Measure again after moving the leveling screws or changing the build surface.
