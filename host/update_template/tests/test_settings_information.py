@@ -122,7 +122,7 @@ class SettingsTreeTests(unittest.TestCase):
                 'setting_sort_mode':['Back','Date','Name','Case-sensitive name','File size'],
                 'setting_oled_brightness':['Back'] + list(map(str, range(1, 17))),
                 'setting_led_brightness':['Back'] + list(map(str, range(1, 17))),
-                'information':['Back','Firmware version','Printer information','Help']}
+                'information':['Back','Firmware version','Printer information','Errors','Help']}
             for page,labels in expected.items():
                 h.menu.page=page;title,rows=h.menu.rows(h.now)
                 self.assertEqual([r[0] for r in rows],labels);self.assertTrue(require_rows(rows))
@@ -182,7 +182,9 @@ class SettingsTreeTests(unittest.TestCase):
             press('Help')
             press('Back')
             press('Back')
-            self.assertEqual(visited, set(PAGES) | {'zortrax'})
+            # Error catalogue navigation is exercised with its real service
+            # in test_oem_errors; this older fixture has no MCU error owner.
+            self.assertEqual(visited, (set(PAGES) - {'errors', 'error_catalog'}) | {'zortrax'})
             self.assertEqual(h.menu.page, 'zortrax')
             self.assertEqual(h.hotend.target, 0.)
 

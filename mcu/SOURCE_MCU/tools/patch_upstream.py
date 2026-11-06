@@ -16,9 +16,11 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.14-XY-STEP-TIMER-UART8"
+VERSION = "M300_CLASSIC-0.13.14.18-OEM-ERRORS-UART8"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
+    "src/sched.c": "61c00658d8bb829f1e0344adf3e47939deea7f972381e8928e228fd168fab94b",
+    "src/adccmds.c": "708e25a6ba5dfe93b1556c7bca0c7113676b84cca1a46f31c2d6e669b998a04d",
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",
     "src/Kconfig": "b085a73a30c492ff0185b57b17e0ca9e7e52a45d4ab5d853fde8030486e6a072",
     "src/stm32/Kconfig": "35891c81db96beecf45914b9e124cb748d0e4fe252b97883a4eb18d9674df817",
@@ -72,7 +74,7 @@ config M300_XY_STEP_TIMER
 
     key = "src/stm32/Makefile"
     anchor = "# Add source files\n"
-    f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c
+    f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c stm32/m300_errors.c
 src-$(CONFIG_M300_XY_STEP_TIMER) += stm32/m300_xy_step_timer.c
 ifeq ($(CONFIG_M300_CLASSIC),y)
 CFLAGS_klipper.elf += -Wl,-Map=$(OUT)klipper.map
@@ -84,6 +86,35 @@ endif
                      '#include "internal.h" // enable_pclock\n#if CONFIG_M300_CLASSIC\n#include "m300_uart.h"\n#endif\n', key + ":include")
     f[key] = replace(f[key], 'uint32_t div = DIV_ROUND_CLOSEST(pclk, CONFIG_SERIAL_BAUD);',
                      'uint32_t baud = CONFIG_SERIAL_BAUD;\n#if CONFIG_M300_CLASSIC\n    baud = m300_uart_baud();\n#endif\n    uint32_t div = DIV_ROUND_CLOSEST(pclk, baud);', key + ":baud")
+
+    # Capture the original cause without SPI/serial/actuator work.
+    key = "src/sched.c"
+    anchor = '#include "command.h" // shutdown\n'
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
+#include "board/m300_errors.h"
+#endif
+''', key + ":error-include")
+    anchor = '    SchedStatus.shutdown_status = 2;\n    sched_timer_reset();\n'
+    f[key] = replace(f[key], anchor, '''    SchedStatus.shutdown_status = 2;
+#if CONFIG_M300_CLASSIC
+    m300_error_shutdown(SchedStatus.shutdown_reason);
+#endif
+    sched_timer_reset();
+''', key + ":error-cause")
+
+    key = "src/adccmds.c"
+    anchor = '#include "sched.h" // DECL_TASK\n'
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
+#include "board/m300_errors.h"
+#endif
+''', key + ":error-include")
+    anchor = '            try_shutdown("ADC out of range");\n'
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
+            if (!sched_is_shutdown())
+                m300_error_adc(a->pin.adc, a->pin.chan);
+#endif
+            try_shutdown("ADC out of range");
+''', key + ":error-channel")
 
     # F103-specific startup and pin mode gate; no STM32F2/F4 code is changed.
     key = "src/stm32/stm32f1.c"

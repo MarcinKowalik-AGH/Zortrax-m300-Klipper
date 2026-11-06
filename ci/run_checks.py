@@ -51,6 +51,7 @@ def main():
     pristine = pristine_tree(archive)
     host = stage_host_update(ROOT / '.ci/host-update')
     run('host_package_integrity', [sys.executable, 'VERIFY.py'], cwd=host)
+    run('oem_error_catalogue', [sys.executable, ROOT/'ci/generate_error_catalog.py', '--check'])
     run('host_tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'],
         cwd=host, expected_tests=META['self_contained_host_tests'])
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
@@ -68,6 +69,7 @@ def main():
                               '--upstream', pristine])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',
                         '--upstream', pristine, '--report', report / 'AUTOCOOL.json'])
+    run('mcu_oem_errors', [sys.executable, ROOT/'ci/test_mcu_errors.py', '--upstream', pristine])
     run('cooling_oracle_review', [sys.executable, KIT / 'tests/review_cooling.py',
         '--sdk', KIT, '--report', report / 'COOLING_REVIEW.json'])
     run('guard_snapshot', [sys.executable, ROOT / 'mcu/tests/test_guard_snapshot.py',

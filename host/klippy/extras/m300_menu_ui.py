@@ -19,6 +19,7 @@ from .m300_settings import PAGES as SETTINGS_PAGES, TITLES
 from .m300_nvm import BRIGHTNESS_KEYS
 from .m300_settings_ui import brightness_frame, menu_frame
 from .m300_activity_graphics import fault_symbol, menu_symbol, procedure_symbol
+from .m300_error_codes import CODES
 
 
 class M300MenuUI:
@@ -173,6 +174,20 @@ class M300MenuUI:
     def notice_sprite(self, title, message, now):
         if self.oem_sprites is None:
             return None
+        if str(title).startswith('Error #'):
+            try:
+                code = int(str(title)[7:])
+            except ValueError:
+                code = 0
+            if code in CODES:
+                self.last_sprite = 'activity:' + CODES[code]['icon']
+                return self.oem_sprites.get(self.last_sprite, now)
+        if title == 'Klipper error':
+            errors = self.printer.lookup_object('m300_errors', None)
+            current = getattr(errors, 'current', None)
+            if current:
+                self.last_sprite = current['icon']
+                return self.oem_sprites.get(self.last_sprite, now)
         choice = fault_symbol(dict(state='FAULT', reason=str(title)+' '+str(message)))
         warning = any(word in (str(title)+' '+str(message)).lower()
                       for word in ('error','fault','failed','refused','not allowed'))

@@ -138,6 +138,12 @@ static void mock_shutdown(const char *message) {
     longjmp(failure,1);
 }
 #define shutdown(msg) mock_shutdown(msg)
+#define M300_ERRORS_TEST 1
+#define _DECL_STATIC_STR(msg) (strstr(msg, "Timer too close") ? 1u : \
+    strstr(msg, "Stepper too far in past") ? 2u : 3u)
+static uint8_t panel_shutdown_for_test;
+static uint8_t sched_is_shutdown(void) { return panel_shutdown_for_test; }
+#include "../overlay/src/stm32/m300_errors.c"
 #ifndef M300_PANEL_SOURCE
 #define M300_PANEL_SOURCE "../overlay/src/stm32/m300_panel.c"
 #endif
@@ -429,6 +435,27 @@ int main(void) {
         m300_panel_shutdown();local_wake.wake=1;m300_local_oled_task();
         assert(byte_count==nbytes && panel_fault);
     }
-    printf("PASS M300 panel: GPIO ownership, TX-only SPI/CS/ACK/bounds, %u rejections, quadrature/debounce/short/long/startup-held/shutdown\n",failures);
+    // Local fault detail survives a hard shutdown and can be refined later
+    // by a small metadata command. No host framebuffer / normal lease needed.
+    memset(&error_state,0,sizeof(error_state));
+    panel_fault=oled_configured=0;byte_count=0;
+    m300_panel_init();m300_error_shutdown(99);panel_shutdown_for_test=1;
+    m300_panel_shutdown();m300_local_oled_task();
+    for(unsigned i=0;i<2000 && local_state!=LOCAL_READY;i++) {
+        mock_time=local_timer.waketime;
+        local_timer.func(&local_timer);m300_local_oled_task();
+    }
+    assert(local_state==LOCAL_READY && local_error.kind==M300_ERROR_SHUTDOWN);
+    unsigned generic_bytes=byte_count;
+    uint32_t heat_fault[]={10,0,1};command_m300_error_set(heat_fault);
+    assert(byte_count==generic_bytes); // command/IRQ paths never render SPI
+    for(unsigned i=0;i<2000 && (local_error.code!=10 || local_state!=LOCAL_READY);i++) {
+        mock_time=local_timer.waketime;
+        local_timer.func(&local_timer);m300_local_oled_task();
+    }
+    assert(local_state==LOCAL_READY && local_error.code==10 && local_error.fatal);
+    assert(byte_count>generic_bytes+8192u);
+    assert(local_error.native_id==99 && !oled_host_owned && panel_fault);
+    printf("PASS M300 panel: GPIO ownership, TX-only SPI/CS/ACK/bounds, %u rejections, quadrature/debounce/short/long/startup-held/shutdown; local OEM fault redraw\n",failures);
     return 0;
 }

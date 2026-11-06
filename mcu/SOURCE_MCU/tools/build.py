@@ -20,9 +20,9 @@ PIN = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0'
 APP_START = 0x08008000
 NVM_START = 0x0803A000
-MCU_RELEASE = '0.13.14.17-STATUS-LED-RGB-5S-UART8'
+MCU_RELEASE = '0.13.14.18-OEM-ERRORS-UART8'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
-                     'm300_disarm', 'm300_query', 'm300_oled_',
+                     'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
                      'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',

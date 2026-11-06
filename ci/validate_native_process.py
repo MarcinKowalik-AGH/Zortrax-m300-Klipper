@@ -107,6 +107,15 @@ def main():
         'ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
         'BED_MESH_CALIBRATE\n')
     cases=[
+        ('native_oem_error_catalog',
+         'ZORTRAX_NATIVE_STATUS\nZORTRAX_UI_SHOW PAGE=errors\n'
+         'ZORTRAX_UI_SHOW PAGE=error_catalog\n' + ''.join(
+             'ZORTRAX_ERROR_SHOW CODE=%d\n' % code for code in
+             (2,3,4,10,11,12,13,14,15,30,31,32,33,34,35,40,41,42,75,76,101))
+         + 'ZORTRAX_ERROR_STATUS\n', False, None),
+        ('native_oem_error_shutdown',
+         'ZORTRAX_NATIVE_STATUS\nM112\nZORTRAX_ERROR_STATUS\nZORTRAX_ERROR_SHOW\n',
+         False, 'Shutdown due to M112 command'),
         ('native_settings_information',settings_script,False,None),
         ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
         ('native_pad_mesh_zero_margin',
@@ -237,6 +246,18 @@ def main():
             assert 'M300_CI_PAD_MESH profile load passed' in text
             assert 'M300_CI_PAD_MESH macro preview passed' in text
             assert 'Traceback' not in text
+        if name.startswith('native_oem_error_'):
+            view = next(json.loads(line.split('M300_ERRORS ',1)[1]) for line in text.splitlines()
+                        if 'M300_ERRORS ' in line)
+            assert view['catalogue_size'] == 21 and view['mcu_abi'] == 1, view
+            if name == 'native_oem_error_catalog':
+                assert view['current'] is None and not view['history'], view
+                for code in (2,3,4,10,11,12,13,14,15,30,31,32,33,34,35,40,41,42,75,76,101):
+                    assert 'Error #%03d' % code in text
+            else:
+                assert view['current']['code'] == 0 and view['current']['kind'] == 5, view
+                assert view['current']['fatal'] is True, view
+                assert 'Shutdown due to M112 command' in view['current']['reason'], view
         if name == 'native_pad_mesh_zero_margin':
             assert 'M300_CI_PAD_MESH zero-margin geometry passed' in text
             assert 'M300_CI_PAD_MESH zero-margin profile load passed' in text

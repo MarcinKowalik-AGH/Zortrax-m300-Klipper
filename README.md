@@ -4,7 +4,11 @@
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.17 with Host R16.12**.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.18 with Host R16.12**.
+
+R14.18 adds a [shared 21-code OEM error catalogue](docs/en/ERRORS.md) across
+Klipper, Fluidd and OLED, plus autonomous MCU-local fault descriptions and
+animations after shutdown. Native Klipper timing errors keep their own names.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -44,7 +48,7 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Main release
 
-**MCU R14.17 + host R16.12**, pinned Klipper
+**MCU R14.18 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
 GitHub Actions publishes the verified package to the

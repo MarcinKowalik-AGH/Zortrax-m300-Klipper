@@ -228,6 +228,7 @@ class M300MCU:
                                     when_not_ready=True)
         self.gcode.register_command('ZORTRAX_INPUTS', self.cmd_inputs,
                                     when_not_ready=True)
+        self.printer.load_object(config, 'm300_errors')
         self.gcode.register_command('ZORTRAX_NATIVE_STATUS', self.cmd_native_status,
                                     when_not_ready=True)
         self.gcode.register_command('ZORTRAX_ARM', self.cmd_arm)

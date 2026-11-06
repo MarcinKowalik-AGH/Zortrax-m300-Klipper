@@ -348,6 +348,8 @@ class M300NativeMaintenance(M300Maintenance):
 
     def _fault(self,reason):
         self.state,self.reason='FAULT',str(reason).removeprefix('M300 maintenance: ')
+        from .m300_error_codes import report
+        report(self.printer, self.reason, source='m300_maintenance', fatal=True)
         self.phase_id+=1
         self._pending_z=None
         try:

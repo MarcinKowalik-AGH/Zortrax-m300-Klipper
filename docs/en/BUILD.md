@@ -12,6 +12,10 @@
 The runner is Ubuntu 24.04 with GNU ARM/newlib and Python 3.12. Actual compiler,
 linker and Python versions are included in TOOLCHAIN.json and build logs.
 MCU tests compile native C register doubles; they do not measure F103 cycles.
+R14.18 adds the [shared error catalogue](ERRORS.md), generated MCU text/icons,
+native guard error metadata tests and local OLED fault redraw checks. Run
+`python ci/generate_error_catalog.py` after changing the shared JSON or artwork;
+CI uses `--check` to reject stale generated MCU resources.
 The R14.17 guard model also exercises twelve five-second RGB phases across
 the 32-bit clock wrap, delayed task dispatch, shutdown timer removal and
 attempted generic GPIO/default overrides. These checks preserve the heater

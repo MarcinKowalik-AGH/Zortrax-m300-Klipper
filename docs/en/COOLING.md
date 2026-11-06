@@ -46,7 +46,7 @@ never clears its fault or restores heat/movement autonomously.
 
 ## Supervised acceptance
 
-Install the matching host and flash `MCU/M300_R14_17_SD.zip` using the existing
+Install the matching host and flash `MCU/M300_R14_18_SD.zip` using the existing
 SD bootloader procedure. Preserve the working 750000 baud configuration.
 
 1. With a connected cold printer, read `ZORTRAX_MCU_STATUS` and

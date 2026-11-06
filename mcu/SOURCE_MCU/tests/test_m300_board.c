@@ -151,6 +151,12 @@ static void __attribute__((noreturn)) mock_shutdown(const char *msg)
     longjmp(rejected, 1);
 }
 #define shutdown(msg) mock_shutdown(msg)
+#ifndef M300_OLD_SNAPSHOT_API
+#define M300_ERRORS_TEST 1
+#define _DECL_STATIC_STR(msg) (strstr(msg, "Timer too close") ? 1u : \
+    strstr(msg, "Stepper too far in past") ? 2u : 3u)
+#include "../overlay/src/stm32/m300_errors.c"
+#endif
 #include "../overlay/src/stm32/m300_board.c"
 // The runner generates these from the exact pinned upstream via our patcher.
 #include M300_NATIVE_GPIO_FILE
@@ -184,6 +190,9 @@ static unsigned mode(GPIO_TypeDef *p, unsigned pin)
 
 static void restart_model(void)
 {
+#ifndef M300_OLD_SNAPSHOT_API
+    memset(&error_state, 0, sizeof(error_state));
+#endif
     memset(ports, 0, sizeof(ports));
     memset(&rcc, 0, sizeof(rcc));
     memset(&adc1, 0, sizeof(adc1));

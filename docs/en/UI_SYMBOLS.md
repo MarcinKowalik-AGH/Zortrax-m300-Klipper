@@ -7,8 +7,8 @@ shows its normal busy indicator, including when a macro, the OLED or another
 client starts homing. The phase text is attached to that button as a tooltip
 or title. The circular control highlights the matching home symbol. Its Y
 button uses the Y wait key. No homing procedure opens or closes a Fluidd
-prompt dialog; native command errors remain visible in the console and the
-standard error notification.
+prompt dialog. Actual failures use the [shared error view](ERRORS.md), while
+the original native reason remains in the console and error notification.
 
 The state comes from existing Moonraker subscriptions to `m300_motion` and
 `m300_procedures`. Phase text is accepted only for the current token and
@@ -97,9 +97,11 @@ needed during printer operation.
 All 24 symbols now have explicit runtime bindings. The fault selector only
 explains an existing failure state and its reason/flags. It does not implement
 a jam detector, change thermal limits, declare a new failure or restart hardware.
-Unknown failures retain the original generic warning. The local MCU shutdown
-screen remains the separate R14.15 connection/shutdown screen; host-side fault
-icons do not replace that MCU screen after display ownership is lost. Critical
+Unknown failures retain a generic warning. R14.18 extends the local MCU
+shutdown screen with the shared OEM error text and matching four-frame
+symbols. It renders them locally after display ownership is lost, using
+the original first fault or a permitted refinement of a generic shutdown.
+The MCU screen does not depend on a host framebuffer transfer. Critical
 warning outlines, crosses and exclamation marks remain visible in every frame.
 
 ## Host OLED bindings — menu revision 0.13.16.11

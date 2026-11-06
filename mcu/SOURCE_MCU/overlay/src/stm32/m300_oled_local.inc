@@ -5,6 +5,7 @@
  */
 #include "m300_oled_stock_glyphs.inc"
 #include "m300_oled_activity.inc"
+#include "m300_error_icons.inc"
 enum {
     LOCAL_OFF, LOCAL_WAIT_POWER, LOCAL_WAIT_LOW, LOCAL_WAIT_HIGH,
     LOCAL_INIT_CMDS, LOCAL_WINDOW, LOCAL_FRAME, LOCAL_DISPLAY_ON,
@@ -18,6 +19,7 @@ static uint32_t local_due, local_init_pos, local_frame_pos;
 static uint8_t local_row[128];
 static struct timer local_timer;
 static struct task_wake local_wake;
+static struct m300_error_state local_error;
 static const uint8_t local_init_bytes[] = {
     0xfd,1,0x12,0xae,0,0xb3,1,0x91,0xca,1,0x3f,0xa2,1,0,0xa1,1,0,
     0xa0,2,0x14,0x11,0xb5,1,0,0xab,1,1,0xb4,2,0xa0,0xfd,
@@ -106,13 +108,30 @@ static void local_text(unsigned x,unsigned y,const char *str) {
 static void local_render_icon(unsigned row) {
     if(row<7u || row>=57u)return;
     unsigned y=row-7u;
-    const uint8_t *bits=local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
+    const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
+    const uint8_t *bits=(local_error.code || local_error.kind)
+        ? local_error_frames[error->icon][local_animation_frame]+y*7u
+        : local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
     for(unsigned x=0;x<50u;x++)
         if(bits[x>>3u] & (0x80u>>(x&7u)))local_pixel(200u+x,(int)row,15u);
 }
 static void local_render(unsigned row) {
     local_render_row=row;
     memset(local_row,0,sizeof(local_row));
+    if(local_error.code || local_error.kind) {
+        const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
+        char title[]="Error #000";
+        title[7]='0'+local_error.code/100;
+        title[8]='0'+(local_error.code/10)%10;
+        title[9]='0'+local_error.code%10;
+        local_text(4,2,local_error.code ? title : "ZORTRAX M300 - Error");
+        for(unsigned x=4;x<192;x++)local_pixel(x,12,5);
+        local_text(4,18,error->title);
+        local_text(4,34,error->hint1);
+        local_text(4,50,error->hint2);
+        local_render_icon(row);
+        return;
+    }
     local_text(4,2,"ZORTRAX M300");
     for(unsigned x=4;x<192;x++)local_pixel(x,12,5);
     local_text(4,18,local_reason==3 ? "MCU shutdown" :
@@ -192,6 +211,12 @@ void m300_local_oled_task(void) {
         }
         local_init_pos=pos+count;
     } else if(local_state==LOCAL_WINDOW) {
+        m300_error_snapshot(&local_error);
+        // A connection lease expiry needs no host round trip for diagnosis.
+        if(!local_error.fatal && local_reason>=2u) {
+            local_error.code=0;
+            local_error.kind=local_reason==2u ? M300_ERROR_LINK : M300_ERROR_SHUTDOWN;
+        }
         const uint8_t col[]={0x1c,0x5b},row[]={0,63};
         if(!local_cmd(0x15,col,2) || !local_cmd(0x75,row,2) || !local_cmd(0x5c,0,0)) return;
         local_frame_pos=0;local_state=LOCAL_FRAME;
@@ -207,9 +232,13 @@ void m300_local_oled_task(void) {
             local_state=LOCAL_READY;
         }
     } else if(local_state==LOCAL_READY && !timer_is_before(now,local_due)) {
+        struct m300_error_state current;
+        m300_error_snapshot(&current);
         local_animation_frame=(local_animation_frame+1u)&3u;
         local_due=now+timer_from_us(500000);
-        local_state=LOCAL_ICON_WINDOW;
+        // Late, metadata-only host detail refreshes the local error text.
+        // SPI work remains in bounded task context, outside shutdown/IRQs.
+        local_state=current.revision!=local_error.revision ? LOCAL_WINDOW : LOCAL_ICON_WINDOW;
     } else if(local_state==LOCAL_ICON_WINDOW) {
         // SSD1322 columns address four pixels. 52 x 50 window; last two
         // pixels stay black. Preserve all text and transfer one row per task.

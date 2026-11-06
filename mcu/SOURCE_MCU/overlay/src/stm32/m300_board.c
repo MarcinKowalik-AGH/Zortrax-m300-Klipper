@@ -12,6 +12,7 @@
 #include "command.h"
 #include "internal.h"
 #include "m300.h"
+#include "m300_errors.h"
 #if CONFIG_M300_XY_STEP_TIMER
 #include "m300_xy_step_timer.h"
 #endif
@@ -182,11 +183,15 @@ force_safe(void)
 #endif
 }
 
+static void capture_guard_error(uint8_t reason);
+
 static void
 trip(uint8_t reason)
 {
-    if (!fault)
+    if (!fault) {
         fault = reason;
+        capture_guard_error(reason);
+    }
     force_safe();
     shutdown("M300 local guard latched");
 }
@@ -208,6 +213,45 @@ is_fresh(uint32_t now, uint32_t stamp)
 {
     // Unsigned elapsed time supports CYCCNT wrap; armed checks run every 10 ms.
     return (uint32_t)(now - stamp) < timer_from_us(FRESH_US);
+}
+
+static void
+capture_guard_error(uint8_t reason)
+{
+    uint16_t code = 0;
+    uint8_t kind = M300_ERROR_GUARD;
+    if (reason == M300_FAULT_PLATFORM)
+        kind = M300_ERROR_PLATFORM; // PE15 does not identify small vs large.
+    else if (reason == M300_FAULT_HEARTBEAT)
+        kind = M300_ERROR_LINK;
+    else if (reason == M300_FAULT_ADC_STALE) {
+        uint32_t now = timer_read_time();
+        uint8_t hot_bad = !(adc_seen & ADC_HOT) || !is_fresh(now, hot_time);
+        uint8_t bed_bad = !(adc_seen & ADC_BED) || !is_fresh(now, bed_time);
+        kind = M300_ERROR_SENSOR;
+        code = hot_bad != bed_bad ? (hot_bad ? 15 : 14) : 0;
+    } else if (reason == M300_FAULT_ADC_RANGE) {
+        kind = M300_ERROR_SENSOR;
+        // ADC rails / stale data are sensor faults, never proof of overheat.
+        if (hot_raw == 0 || hot_raw >= 4095)
+            code = 15;
+        else if (bed_raw == 0 || bed_raw >= 4095)
+            code = 14;
+        else if (hot_raw < hot_min || hot_raw > hot_max)
+            code = hot_raw > hot_max ? 11 : 15;
+        else if (bed_raw < bed_min || bed_raw > bed_max)
+            code = bed_raw < bed_min ? 12 : 14;
+    }
+    m300_error_capture(code, kind);
+}
+
+void
+m300_error_adc(void *adc, uint32_t channel)
+{
+    // Native ADC range failures may also occur before ARM. Do not add an
+    // ADC owner or change any native sample/range-check limit.
+    if (adc == ADC1 && (channel == 8 || channel == 9))
+        m300_error_capture(channel == 9 ? 15 : 14, M300_ERROR_SENSOR);
 }
 
 static uint8_t

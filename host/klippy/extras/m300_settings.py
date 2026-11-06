@@ -29,7 +29,8 @@ SETTINGS = (
 CHOICES = {key:values for key,_,values in SETTINGS}
 TITLES = {key:title for key,title,_ in SETTINGS}
 PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
-           'info_firmware':'information','info_printer':'information'}
+           'info_firmware':'information','info_printer':'information',
+           'errors':'information','error_catalog':'errors'}
 PARENTS.update({'setting_'+key:'settings' for key in CHOICES})
 PAGES = frozenset(PARENTS)
 WEB_MENU_ROWS = {
@@ -174,7 +175,11 @@ class M300Settings:
             return TITLES[key],back+[(label,('set',key,value)) for value,label in CHOICES[key]]
         if page=='information':
             return 'Information',back+[(title,('page',target)) for title,target in (
-                ('Firmware version','info_firmware'),('Printer information','info_printer'),('Help','help'))]
+                ('Firmware version','info_firmware'),('Printer information','info_printer'),
+                ('Errors','errors'),('Help','help'))]
+        if page in ('errors', 'error_catalog'):
+            errors = self.printer.lookup_object('m300_errors', None)
+            return errors.rows(page) if errors is not None else ('Errors', back + [('Error service unavailable', None)])
         info=self.information(now)
         if page=='info_firmware':
             title='Firmware version'
@@ -352,6 +357,9 @@ class M300Settings:
             return
         if kind == 'set':
             self.set_option(action[1], action[2])
+        elif kind == 'native_gcode' and self.page in ('errors', 'error_catalog'):
+            self.gcode.run_script_from_command(action[1])
+            return
         else:
             self.page = 'setting_' + action[1] if kind == 'setting' else action[1]
         self.show(refresh=self.page in ('information', 'info_printer'))

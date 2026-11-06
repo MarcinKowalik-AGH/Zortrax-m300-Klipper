@@ -521,6 +521,8 @@ class M300Models:
                 if token == self.token:
                     self.error = str(exc)
                     logging.info('M300 model import refused: %s', self.error)
+                    from .m300_error_codes import report
+                    report(self.printer, exc, source='m300_models')
             finally:
                 for leftover in (stream, raw, physical):
                     if leftover is not None and not leftover.closed:

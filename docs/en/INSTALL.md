@@ -2,7 +2,7 @@
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-The main package pairs the native R16.12 host with MCU R14.17 for M300 Classic.
+The main package pairs the native R16.12 host with MCU R14.18 for M300 Classic.
 The host installer also accepts supported installations running earlier MCU revisions.
 Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
 baseline uses 750,000 baud. The installer preserves the configured baud.
@@ -137,7 +137,7 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_17_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_18_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. A printer already running
@@ -150,12 +150,18 @@ appears only after the new MCU image is flashed using the existing SD procedure.
 Updating the Orange Pi host alone does not install these local MCU graphics.
 The X/Y STEP timer core and UART rate are unchanged from R14.14.
 
+R14.18 adds the [21-code error catalogue and MCU-local fault detail](ERRORS.md).
+Install the host and the matching MCU application for the complete behavior.
+Use `ZORTRAX_ERROR_STATUS` to check error revision `0.13.16.22-OEM-ERRORS`,
+`mcu_abi: 1` and `catalogue_size: 21`. Read-only help such as
+`ZORTRAX_ERROR_SHOW CODE=42` can be inspected without triggering a failure.
+
 R14.16 and the current host use the same temperature-only upper-fan thermostat:
 50 C ON / 45 C OFF. A heater target no longer starts cold automatic cooling.
 The MCU ADC1-stale handoff fix needs the new MCU image as well as the host
 update. See [cooling behavior and acceptance](COOLING.md). Check
 `ZORTRAX_FANS_STATUS` for `fan_revision: 0.13.16.14-THERMOSTAT-50-45` and
-`ZORTRAX_MCU_STATUS` for `mcu_release: 0.13.14.17-STATUS-LED-RGB-5S-UART8`.
+`ZORTRAX_MCU_STATUS` for `mcu_release: 0.13.14.18-OEM-ERRORS-UART8`.
 
 R14.17 retains this thermostat and adds an autonomous shutdown RGB alarm:
 red, green and blue for five seconds each, repeated. Install the host and

@@ -24,6 +24,13 @@ Back button closes the dialog and returns to the underlying Fluidd view.
 The Klipper page shows print state. Motion, temperature and print controls
 are on the Fluidd dashboard.
 
+Information also includes **Errors**: current identity and repair advice,
+acknowledgement of nonfatal notices, and a read-only catalogue of the 21
+Classic M300 OEM codes. The same codes and icons are available in Fluidd,
+the live OLED and the R14.18 MCU-local shutdown screen. See [error handling](ERRORS.md)
+for source bindings and the distinction between an available message and a
+qualified hardware detector. Acknowledgement never clears a safety latch.
+
 | Settings page | Choices | Fluidd access |
 |---|---|---|
 | Light | Dynamic, White, Disabled | `ZORTRAX_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |

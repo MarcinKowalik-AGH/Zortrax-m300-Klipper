@@ -345,6 +345,8 @@ class M300NativeMotion:
                            'oem_leveling':oem_leveling,'initial_clearance':initial_clearance}
         except Exception as exc:
             self.reason = str(exc)
+            from .m300_error_codes import report
+            report(self.printer, exc, source='m300_motion', fatal=self.printer.is_shutdown())
             if self.state != 'CANCELLED':
                 self.failure_phase = self.phase
                 self.state = 'FAULT'
