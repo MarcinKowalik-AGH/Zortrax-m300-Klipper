@@ -332,16 +332,52 @@ or 0..43 with a 2 mm inset. Its five no-inset contacts are (15,15), (0,0),
 (45,0), (45,45) and (0,45). The unmeasured negative coordinates remain
 part of the metal geometry, not legal movement targets.
 
-Preview those two confirmed pads without heating, homing or motion:
+The operator also confirmed that the rear outer-edge reference is Y305
+(15 mm inside the metal) and the middle pad is centered at X150/Y150.
+The complete corrected layout, with zero margins and current X300/Y305
+travel, is therefore:
 
-~~~gcode
-ZORTRAX_BED_MESH CORNER_PAD_WIDTH=60 CENTER_PAD_WIDTH=50 FRONT_LEFT_X=15 FRONT_LEFT_Y=15 FRONT_RIGHT_X=285 FRONT_RIGHT_Y=15 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
+| Pad | Full physical center | Reachable corner X values | Reachable corner Y values |
+| --- | --- | --- | --- |
+| Home-side / front left | 15, 15 | 0, 45 | 0, 45 |
+| Front right | 285, 15 | 255, 300 | 0, 45 |
+| Middle (50 mm wide) | 150, 150 | 125, 175 | 125, 175 |
+| Rear right | 285, 290 | 255, 300 | 260, 305 |
+| Rear left | 15, 290 | 0, 45 | 260, 305 |
+
+In the existing `[m300_pad_mesh]` section, retain unrelated options and set:
+
+~~~ini
+corner_pad_width: 60
+center_pad_width: 50
+front_left_x: 15
+front_left_y: 15
+front_right_x: 285
+front_right_y: 15
+center_x: 150
+center_y: 150
+rear_left_x: 15
+rear_left_y: 290
+rear_right_x: 285
+rear_right_y: 290
+edge_margin: 0
+fit_travel: True
+travel_margin: 0
 ~~~
 
-This example preserves the other three configured centers; it does not infer
-the rear or center-pad position from the front pair. Review all 25 actual
-positions before measuring. To keep the confirmed front geometry after a
-restart, set the corresponding lowercase options in `[m300_pad_mesh]`.
+Alternatively, preview the complete plan through the macro without heating,
+homing or motion:
+
+~~~gcode
+ZORTRAX_BED_MESH CORNER_PAD_WIDTH=60 CENTER_PAD_WIDTH=50 FRONT_LEFT_X=15 FRONT_LEFT_Y=15 FRONT_RIGHT_X=285 FRONT_RIGHT_Y=15 CENTER_X=150 CENTER_Y=150 REAR_LEFT_X=15 REAR_LEFT_Y=290 REAR_RIGHT_X=285 REAR_RIGHT_Y=290 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
+~~~
+
+All coordinates remain operator-configurable; installing this revision does
+not rewrite the physical layout. Review all 25 actual positions before
+measuring. Configured lowercase options persist across restart; a macro
+override applies to the current host session. The native homing contact
+location (normally X150/Y158) is separate from the middle pad's geometric
+center. Correcting the latter does not change that Z datum.
 Both zero margins are supported by revision `0.13.16.19-PAD-ZERO-MARGIN`.
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and

@@ -417,12 +417,17 @@ class PadMeshTests(unittest.TestCase):
 
     def test_home_is_15_mm_inside_the_60_mm_pad_and_zero_margin_keeps_native_zero(self):
         geometry=dict(GEOMETRY_DEFAULTS,corner_pad_width=60.,edge_margin=0.,
-                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.)
+                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.,
+                      rear_left_x=15.,rear_left_y=290.,rear_right_x=285.,rear_right_y=290.,
+                      center_x=150.,center_y=150.)
         nominal=geometry_points(geometry)
         self.assertEqual(nominal[5:10],((15.,15.),(-15.,-15.),(45.,-15.),(45.,45.),(-15.,45.)))
         fitted=fit_pad_points(nominal,(0.,0.),(300.,305.),margin=0.)
         self.assertEqual(fitted[5:10],((15.,15.),(0.,0.),(45.,0.),(45.,45.),(0.,45.)))
         self.assertEqual(fitted[:5],((285.,15.),(255.,0.),(300.,0.),(300.,45.),(255.,45.)))
+        self.assertEqual(fitted[10:15],((150.,150.),(125.,125.),(175.,125.),(175.,175.),(125.,175.)))
+        self.assertEqual(fitted[15:20],((285.,290.),(255.,260.),(300.,260.),(300.,305.),(255.,305.)))
+        self.assertEqual(fitted[20:25],((15.,290.),(0.,260.),(45.,260.),(45.,305.),(0.,305.)))
         self.assertEqual(len(set(fitted)),25)
         self.assertTrue(all(0. <= x <= 300. and 0. <= y <= 305. for x,y in fitted))
         reference=.001*geometry['center_x']+.002*geometry['center_y']
@@ -434,7 +439,9 @@ class PadMeshTests(unittest.TestCase):
 
     def test_metal_inset_keeps_home_zero_and_only_moves_reachable_inner_edges(self):
         geometry=dict(GEOMETRY_DEFAULTS,corner_pad_width=60.,edge_margin=2.,
-                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.)
+                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.,
+                      rear_left_x=15.,rear_left_y=290.,rear_right_x=285.,rear_right_y=290.,
+                      center_x=150.,center_y=150.)
         fitted=fit_pad_points(geometry_points(geometry),(0.,0.),(300.,305.),margin=0.)
         self.assertEqual(fitted[5:10],((15.,15.),(0.,0.),(43.,0.),(43.,43.),(0.,43.)))
         self.assertEqual(fitted[:5],((285.,15.),(257.,0.),(300.,0.),(300.,43.),(257.,43.)))

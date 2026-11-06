@@ -172,7 +172,8 @@ def main():
             if name == 'native_pad_mesh_zero_margin':
                 cp.read_dict({'m300_pad_mesh': {'corner_pad_width':'60','center_pad_width':'50',
                     'edge_margin':'0','travel_margin':'0','front_left_x':'15','front_left_y':'15',
-                    'front_right_x':'285','front_right_y':'15'}})
+                    'front_right_x':'285','front_right_y':'15','center_x':'150','center_y':'150',
+                    'rear_left_x':'15','rear_left_y':'290','rear_right_x':'285','rear_right_y':'290'}})
         if name in model_fixtures:
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)

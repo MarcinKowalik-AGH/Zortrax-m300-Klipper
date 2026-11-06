@@ -14,6 +14,9 @@ class PadMeshFixture:
             assert adapter.geometry['edge_margin'] == adapter.travel_margin == 0.
             assert adapter.points[5:10] == ((15.,15.),(0.,0.),(45.,0.),(45.,45.),(0.,45.))
             assert adapter.points[:5] == ((285.,15.),(255.,0.),(300.,0.),(300.,45.),(255.,45.))
+            assert adapter.points[10:15] == ((150.,150.),(125.,125.),(175.,125.),(175.,175.),(125.,175.))
+            assert adapter.points[15:20] == ((285.,290.),(255.,260.),(300.,260.),(300.,305.),(255.,305.))
+            assert adapter.points[20:25] == ((15.,290.),(0.,260.),(45.,260.),(45.,305.),(0.,305.))
             assert len(set(adapter.points)) == 25
             adapter._publish('m300_zero_pads',[.001*x+.002*y for x,y in adapter.points])
             assert adapter.bedmesh.get_mesh() is None
