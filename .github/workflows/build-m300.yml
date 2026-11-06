@@ -104,6 +104,7 @@ jobs:
             .ci/reports/
             .ci/fileoutput/
             dist/mcu/FULL_ARM_BUILD.log
+            dist/mcu/klipper.dict
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14

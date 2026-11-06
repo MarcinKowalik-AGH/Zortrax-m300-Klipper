@@ -159,6 +159,9 @@ class M300Errors:
             return
         meta = descriptor(record['code'], record['kind'])
         label = identity(record)
+        logging.info('M300_ERROR_VIEW %s', json.dumps(dict(code=record['code'],
+            kind=record['kind'], label=label, title=meta['title'], action=meta['action'],
+            catalogue=code is not None), sort_keys=True))
         self._publishing = True
         try:
             emit = lambda text: self.gcode.respond_raw('// action:' + text)

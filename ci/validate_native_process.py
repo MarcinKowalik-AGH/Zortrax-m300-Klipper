@@ -252,8 +252,11 @@ def main():
             assert view['catalogue_size'] == 21 and view['mcu_abi'] == 1, view
             if name == 'native_oem_error_catalog':
                 assert view['current'] is None and not view['history'], view
+                entries = [json.loads(line.split('M300_ERROR_VIEW ',1)[1]) for line in text.splitlines()
+                           if 'M300_ERROR_VIEW ' in line]
+                assert len(entries) == 21 and all(entry['catalogue'] for entry in entries)
                 for code in (2,3,4,10,11,12,13,14,15,30,31,32,33,34,35,40,41,42,75,76,101):
-                    assert 'Error #%03d' % code in text
+                    assert any(e['code'] == code and e['label'] == 'Error #%03d' % code for e in entries)
             else:
                 assert view['current']['code'] == 0 and view['current']['kind'] == 5, view
                 assert view['current']['fatal'] is True, view
