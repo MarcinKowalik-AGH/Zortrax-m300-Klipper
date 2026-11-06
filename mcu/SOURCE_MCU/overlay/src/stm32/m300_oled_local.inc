@@ -110,7 +110,7 @@ static void local_render_icon(unsigned row) {
     unsigned y=row-7u;
     const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
     const uint8_t *bits=(local_error.code || local_error.kind)
-        ? local_error_frames[error->icon][local_animation_frame]+y*7u
+        ? local_error_rows[local_error_frames[error->icon][local_animation_frame][y]]
         : local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
     for(unsigned x=0;x<50u;x++)
         if(bits[x>>3u] & (0x80u>>(x&7u)))local_pixel(200u+x,(int)row,15u);

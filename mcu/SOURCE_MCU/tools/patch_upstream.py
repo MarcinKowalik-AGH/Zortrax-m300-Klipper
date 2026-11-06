@@ -104,7 +104,8 @@ endif
 
     key = "src/adccmds.c"
     anchor = '#include "sched.h" // DECL_TASK\n'
-    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
+    f[key] = replace(f[key], anchor, anchor + '''#include "autoconf.h"
+#if CONFIG_M300_CLASSIC
 #include "board/m300_errors.h"
 #endif
 ''', key + ":error-include")
