@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.15-PANEL-ANIM-UART8",
+  "mcu_release": "0.13.14.16-THERMOSTAT-50-45-UART8",
   "host_update": "R16.12",
-  "github_commit": "a0bdd786f15f28a37d4b6bac33d6d44d4a774b57",
-  "github_run_id": "42099334753",
+  "github_commit": "0aa59c1f497a1bf3896e6483129c532c9af0eed5",
+  "github_run_id": "42181423343",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -14,5 +14,7 @@
   "xy_velocity_profile": 300,
   "calibration_temperature": 260,
   "filament_temperature": 240,
-  "release_stage": "VERIFIED"
+  "release_stage": "VERIFIED",
+  "hotend_cooling_on_temperature": 50,
+  "hotend_cooling_off_temperature": 45
 }
