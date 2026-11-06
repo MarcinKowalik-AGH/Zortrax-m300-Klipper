@@ -17,6 +17,7 @@ Use **Zortrax M300 → Information → Errors** on OLED or the equivalent
 Fluidd information dialog. It includes the current error and the code
 catalogue. Inspecting a catalogue entry does not raise a fault, change LEDs,
 operate hardware or send an error to the MCU.
+Back from a live catalogue entry restores the catalogue in Fluidd and OLED.
 
 ```gcode
 ZORTRAX_ERROR_STATUS
@@ -79,6 +80,8 @@ Native Klipper faults such as **Timer too close**, **Stepper timing error**,
 and are not assigned invented OEM numbers. Original guard reasons 1–9/255
 remain distinct from OEM codes. Full native reasons remain in the console
 and `klippy.log`.
+Identified native thermal failures retain priority over their homing or
+calibration context when selecting the displayed code.
 
 ## MCU ownership after shutdown
 

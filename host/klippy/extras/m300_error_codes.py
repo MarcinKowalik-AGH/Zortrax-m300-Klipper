@@ -58,6 +58,18 @@ def classify(reason, source='', fatal=False):
         return 35, NONE
     if 'perforated plate contacts' in text:
         return 33, NONE
+    hot = 'extruder' in text or 'hotend' in text or 'nozzle' in text
+    bed = 'heater bed' in text or 'heatbed' in text or 'bed thermistor' in text
+    if any(s in text for s in ('thermistor', 'adc out of range', 'adc stale',
+                                'adc raw range', 'temperature sensor', 'invalid adc')):
+        return (15 if hot else 14 if bed else 0), SENSOR
+    if any(s in text for s in ('overheat', 'overtemp', 'maximum temperature', 'max temp')):
+        return (12 if bed else 11 if hot else 0), SENSOR
+    if hot and any(s in text for s in ('unexpected', 'temperature drop')) and 'drop' in text:
+        return 13, NONE
+    if hot and any(s in text for s in ('not heating', 'heating failed', 'heating timeout',
+                                      'heating timed out')):
+        return 10, NONE
     if any(s in text for s in ('endstop', 'no trigger on x', 'no trigger on y')):
         # Z contact probing is distinct from XY endstop diagnosis.
         if not any(s in text for s in ('stepper z', 'probe', 'pc7')):
@@ -72,18 +84,6 @@ def classify(reason, source='', fatal=False):
             ('calibration failed', 'calibration: ', 'bed span is too large',
              'too many invalid samples', 'adjustment limit')):
         return 41, NONE
-    hot = 'extruder' in text or 'hotend' in text or 'nozzle' in text
-    bed = 'heater bed' in text or 'heatbed' in text or 'bed thermistor' in text
-    if any(s in text for s in ('thermistor', 'adc out of range', 'adc stale',
-                                'adc raw range', 'temperature sensor', 'invalid adc')):
-        return (15 if hot else 14 if bed else 0), SENSOR
-    if any(s in text for s in ('overheat', 'overtemp', 'maximum temperature', 'max temp')):
-        return (12 if bed else 11 if hot else 0), SENSOR
-    if hot and any(s in text for s in ('unexpected', 'temperature drop')) and 'drop' in text:
-        return 13, NONE
-    if hot and any(s in text for s in ('not heating', 'heating failed', 'heating timeout',
-                                      'heating timed out')):
-        return 10, NONE
     if any(s in text for s in ('wrong model family', 'different printer model')):
         return 76, NONE
     if 'required firmware is newer' in text or 'update the firmware' in text:

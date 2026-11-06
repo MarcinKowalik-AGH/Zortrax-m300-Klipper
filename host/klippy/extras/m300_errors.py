@@ -178,6 +178,10 @@ class M300Errors:
                 emit('prompt_text Safety latch remains active. Fix the cause before FIRMWARE_RESTART.')
             else:
                 emit('prompt_footer_button Acknowledge|ZORTRAX_ERROR_ACK ID=%s|primary' % record['id'])
+            if (self.live and not record['fatal']
+                    and self.printer.lookup_object('m300_settings', None) is not None):
+                target = 'error_catalog' if code is not None else 'errors'
+                emit('prompt_footer_button Back|ZORTRAX_UI_SHOW PAGE=%s|info' % target)
             emit('prompt_show')
             oled = self.printer.lookup_object('m300_oled', None)
             if self.live and oled is not None and oled.connected:

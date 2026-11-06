@@ -226,7 +226,9 @@ def main():
             continue
         assert 'M300_DISPLAY ' in text, (name, process.returncode, text[-4000:])
         display_line=next(line.split('M300_DISPLAY ',1)[1] for line in text.splitlines() if 'M300_DISPLAY ' in line)
-        assert json.loads(display_line)['connected'] is True, (name, display_line)
+        # M112 deliberately revokes the host display lease; the MCU local
+        # screen owns the panel after shutdown. Other cases remain connected.
+        assert json.loads(display_line)['connected'] is (name != 'native_oem_error_shutdown'), (name, display_line)
         report_line=next(line.split('M300_NATIVE ',1)[1] for line in text.splitlines() if 'M300_NATIVE ' in line)
         bindings=json.loads(report_line)
         for key,owner in EXPECTED.items():

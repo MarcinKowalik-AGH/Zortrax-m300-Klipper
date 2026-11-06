@@ -59,6 +59,10 @@ class OEMErrorsTests(unittest.TestCase):
         for text, code in cases.items():
             with self.subTest(text=text):
                 self.assertEqual(classify(text)[0], code)
+                if code in (10,11,12,13,14,15):
+                    # Procedure context must not hide the real thermal cause.
+                    self.assertEqual(classify('M300 calibration: ' + text,
+                                              source='m300_calibration')[0], code)
 
     def test_input_preconditions_and_unconfirmed_jam_are_not_diagnosed_as_faults(self):
         for text in ('home XYZ before probing', 'heat the clean nozzle to at least 180 C',
@@ -87,6 +91,7 @@ class OEMErrorsTests(unittest.TestCase):
                 sprite = h.ui.notice_sprite(*h.oled.message, h.now)
                 self.assertIsNotNone(sprite)
                 self.assertEqual(h.ui.last_sprite, 'activity:' + CODES[code]['icon'])
+            self.assertTrue(any('Back|ZORTRAX_UI_SHOW PAGE=error_catalog|info' in line for line in h.lines))
             self.assertIsNone(h.errors.current)
             self.assertFalse(h.errors.history)
             self.assertFalse(h.writes)
@@ -116,6 +121,9 @@ class OEMErrorsTests(unittest.TestCase):
             h.settings.action(token, 1)
             self.assertEqual(h.oled.message[0], 'Error #002')
             self.assertIsNone(h.errors.current)
+            h.run('ZORTRAX_UI_SHOW PAGE=error_catalog')
+            self.assertEqual(h.menu.page, 'error_catalog')
+            self.assertIsNone(h.oled.message)
 
     def test_notice_ack_requires_current_identity_and_never_resumes_or_arms(self):
         with errors_session() as h:
