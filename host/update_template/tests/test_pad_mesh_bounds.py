@@ -92,6 +92,15 @@ class PadBoundsTests(unittest.TestCase):
         self.assertEqual(status['contact_regions'][3]['bounds'],[260.,262.,300.,305.])
         self.assertEqual(status['probe_points'],[list(point) for point in expected])
         self.assertEqual(limits['axis_maximum'],(300.,305.,315.))
+        mesh.run_points=mesh.points
+        mesh.points_measured=25
+        mesh.report={'profile':'previous'}
+        mesh.state='COMPLETE'
+        self.assertTrue(mesh.get_status(0.)['plan_matches_run'])
+        gcode.run_script_from_command(template.render(printer=NS(m300_pad_mesh=mesh),
+            params={'PREVIEW':'1','REAR_RIGHT_BOUNDS':'260,264,300,305'}))
+        self.assertFalse(mesh.get_status(0.)['plan_matches_run'])
+        self.assertEqual(mesh.report,{'profile':'previous'})
 
     def test_asymmetric_rectangles_preserve_a_plane_and_every_contact_without_overshoot(self):
         points=geometry_points(measured_geometry())

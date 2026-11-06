@@ -651,10 +651,10 @@ index ba2423a..bf77454 100644
 
 diff --git a/src/components/widgets/bedmesh/M300PadContactMap.vue b/src/components/widgets/bedmesh/M300PadContactMap.vue
 new file mode 100644
-index 0000000..15ea793
+index 0000000..336e8fe
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadContactMap.vue
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,242 @@
 +<template>
 +  <collapsable-card
 +    v-if="map"
@@ -784,6 +784,9 @@ index 0000000..15ea793
 +        <span><i class="nozzle" />Nozzle</span>
 +      </div>
 +      <div class="mt-2 text-caption">
++        <div v-if="map.preview">
++          Plan preview · 25 positions.
++        </div>
 +        X increases to the right; Y increases downwards. Coordinates in mm.
 +        <div v-if="head">
 +          Nozzle X{{ head[0].toFixed(1) }} / Y{{ head[1].toFixed(1) }}.
@@ -1451,10 +1454,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-contact-map.spec.ts b/src/util/m300-pad-contact-map.spec.ts
 new file mode 100644
-index 0000000..e6d7817
+index 0000000..4233885
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.spec.ts
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,163 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +/// <reference types="node" />
 +// @vitest-environment jsdom
@@ -1488,6 +1491,7 @@ index 0000000..e6d7817
 +      phase: 'IDLE',
 +      busy: false,
 +      state: 'IDLE',
++      plan_matches_run: true,
 +      travel: { configured_x: [0, 300], configured_y: [0, 305], fits: true }
 +    },
 +    toolhead: { homed_axes: 'xyz', position: [299, 304, 5] },
@@ -1599,26 +1603,30 @@ index 0000000..e6d7817
 +    wrapper.destroy()
 +  })
 +
-+  it('updates geometry during a new preview and leaves completed measurements visible', async () => {
++  it('keeps completed points for the matching plan and clears their colors when a preview changes geometry', async () => {
 +    const { source, wrapper } = mountMap()
-+    source.m300_pad_mesh.contact_regions[3].bounds[1] = 264
-+    source.m300_pad_mesh.probe_points[16] = [260, 264]
 +    source.m300_pad_mesh.points_measured = 25
 +    source.m300_pad_mesh.state = 'COMPLETE'
 +    source.m300_pad_mesh.phase = 'COMPLETE'
 +    await Vue.nextTick()
-+    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('y')).toBe('264')
 +    expect(wrapper.findAll('.map-point.measured')).toHaveLength(25)
++    source.m300_pad_mesh.contact_regions[3].bounds[1] = 264
++    source.m300_pad_mesh.probe_points[16] = [260, 264]
++    source.m300_pad_mesh.plan_matches_run = false
++    await Vue.nextTick()
++    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('y')).toBe('264')
++    expect(wrapper.findAll('.map-point.measured')).toHaveLength(0)
++    expect(wrapper.text()).toContain('Plan preview')
 +    expect(wrapper.find('.map-target').exists()).toBe(false)
 +    wrapper.destroy()
 +  })
 +})
 diff --git a/src/util/m300-pad-contact-map.ts b/src/util/m300-pad-contact-map.ts
 new file mode 100644
-index 0000000..bb3b7fd
+index 0000000..cf0d5fc
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.ts
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,64 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +export interface M300ContactRegion {
 +  name: string;
@@ -1635,6 +1643,7 @@ index 0000000..bb3b7fd
 +  maxX: number;
 +  maxY: number;
 +  measured: number;
++  preview: boolean;
 +  probing: boolean;
 +  fits: boolean;
 +}
@@ -1667,8 +1676,9 @@ index 0000000..bb3b7fd
 +    maxX: travel.configured_x[1],
 +    minY: travel.configured_y[0],
 +    maxY: travel.configured_y[1],
-+    measured: raw.points_measured,
-+    probing: raw.busy === true && raw.phase === 'PROBING',
++    measured: raw.plan_matches_run === true ? raw.points_measured : 0,
++    preview: raw.phase === 'IDLE' || raw.plan_matches_run !== true,
++    probing: raw.busy === true && raw.phase === 'PROBING' && raw.plan_matches_run === true,
 +    fits: travel.fits === true
 +  }
 +}
