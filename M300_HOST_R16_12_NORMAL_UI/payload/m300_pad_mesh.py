@@ -41,10 +41,14 @@ def pad_points(corner_width, margin, center_width=None, centers=POINTS):
     """Keep the legacy two-argument geometry, with a separate center width."""
     if center_width is None:
         center_width = corner_width
-    if not (math.isfinite(margin) and all(
-            math.isfinite(width) and .5 <= margin < width / 2 <= 50.
-            for width in (corner_width, center_width))):
-        raise ValueError('pad widths and edge_margin must leave a positive inset (width <= 100 mm)')
+    if not math.isfinite(margin) or margin < 0.:
+        raise ValueError('edge_margin must be finite and >= 0 mm; zero probes the metal edge')
+    if not all(math.isfinite(width) and 0. < width <= 100.
+               for width in (corner_width, center_width)):
+        raise ValueError('pad widths must be finite and in (0, 100] mm')
+    if margin >= min(corner_width, center_width) / 2:
+        raise ValueError('edge_margin %g mm must be less than half of both pad widths '
+                         '(corner %g mm, center %g mm)' % (margin, corner_width, center_width))
     if len(centers) != 5 or not all(math.isfinite(v) for point in centers for v in point):
         raise ValueError('pad centers must contain five finite XY positions')
     points = []
@@ -72,9 +76,9 @@ def validate_layout(points):
 
 def fit_pad_points(points, minimum, maximum, margin=1.):
     """Clip only pad corners to reachable metal; never relocate a pad center."""
-    if (not math.isfinite(margin) or not .5 <= margin <= 5.
+    if (not math.isfinite(margin) or not 0. <= margin <= 5.
             or not all(math.isfinite(v) for bounds in (minimum, maximum) for v in bounds[:2])):
-        raise ValueError('TRAVEL_MARGIN must be 0.5..5 mm with finite XY travel')
+        raise ValueError('TRAVEL_MARGIN must be 0..5 mm with finite XY travel')
     fitted = []
     for start, name in zip(range(0,25,5), PAD_NAMES):
         cx, cy = points[start]
@@ -179,7 +183,7 @@ class M300PadMesh:
                             for axis, value in zip('xy', point))
         self.geometry = {key: config.getfloat(key, value) for key, value in defaults.items()}
         self.fit_travel = config.getboolean('fit_travel', True)
-        self.travel_margin = config.getfloat('travel_margin', 1., minval=.5, maxval=5.)
+        self.travel_margin = config.getfloat('travel_margin', 1., minval=0., maxval=5.)
         if not math.isfinite(self.travel_margin):
             raise config.error('travel_margin must be finite')
         try:
@@ -461,8 +465,8 @@ class M300PadMesh:
         preview = gcmd.get_int('PREVIEW', 0, minval=0, maxval=1)
         fit = bool(gcmd.get_int('FIT_TRAVEL', int(getattr(self,'fit_travel',True)), minval=0, maxval=1))
         travel_margin = gcmd.get_float('TRAVEL_MARGIN', getattr(self,'travel_margin',1.))
-        if not math.isfinite(travel_margin) or not .5 <= travel_margin <= 5.:
-            raise self._error('TRAVEL_MARGIN must be 0.5..5 mm')
+        if not math.isfinite(travel_margin) or not 0. <= travel_margin <= 5.:
+            raise self._error('TRAVEL_MARGIN must be 0..5 mm')
         geometry = {key: gcmd.get_float(key.upper(), value)
                     for key, value in self.geometry.items()}
         try:
@@ -579,7 +583,7 @@ class M300PadMesh:
         nominal = getattr(self,'nominal_points',self.points)
         changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
                    for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
-        return dict(revision='0.13.16.18-PAD-OLED', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.19-PAD-ZERO-MARGIN', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),

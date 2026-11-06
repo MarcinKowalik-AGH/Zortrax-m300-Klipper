@@ -138,12 +138,6 @@ def convert_text(text, stock_xy=None):
             # The M300 native fan adapter supplies the 5 C hysteresis and
             # ignores heater target; retain native pin/PWM ownership.
             block = set_option(block, 'heater_temp', '50')
-        elif section == 'm300_pad_mesh' and option(block, 'pad_width') is None:
-            # Correct only the former 60/50 default pair to the operator's
-            # confirmed 50/50 pads. Preserve custom dimensions and centers.
-            if (float(option(block,'corner_pad_width','50')) == 60.
-                    and float(option(block,'center_pad_width','50')) == 50.):
-                block = set_option(block,'corner_pad_width','50')
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
             def migrate_pad(match):
                 if hashlib.sha256(match[2].strip().encode()).hexdigest() in OLD_PAD_COMMAND_SHAS:

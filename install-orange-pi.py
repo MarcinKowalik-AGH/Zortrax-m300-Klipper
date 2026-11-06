@@ -16,6 +16,7 @@ from zipfile import ZipFile
 
 PACKAGE = Path(__file__).resolve().parent
 MOONRAKER = 'http://127.0.0.1:7125'
+OLD_PAD_GEOMETRY_ERROR = 'pad widths and edge_margin must leave a positive inset (width <= 100 mm)'
 
 
 def run(*args, capture=False, cwd=None):
@@ -31,8 +32,16 @@ def printer(endpoint):
 
 def require_idle():
     info = printer('/printer/info')
+    if info['state'] != 'ready':
+        # The preceding adapter rejected edge_margin=0 while reading config,
+        # before MCU connection. Allow installing its fix from this one known
+        # startup error; print_stats does not exist yet in that state. This
+        # never accepts a runtime shutdown, active print or unknown error.
+        if info['state'] == 'error' and OLD_PAD_GEOMETRY_ERROR in info.get('state_message',''):
+            return info
+        raise ValueError('Wait until Klipper is Ready and the printer is idle')
     stats = printer('/printer/objects/query?print_stats')['status']['print_stats']
-    if info['state'] != 'ready' or stats['state'] not in ('standby', 'complete', 'cancelled', 'error'):
+    if stats['state'] not in ('standby', 'complete', 'cancelled', 'error'):
         raise ValueError('Wait until Klipper is Ready and the printer is idle')
     return info
 
