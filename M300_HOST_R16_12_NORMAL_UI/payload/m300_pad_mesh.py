@@ -2,6 +2,7 @@
 """Native Klipper probing and compensation for the five Classic M300 pads."""
 import json
 import math
+import os
 import re
 import statistics
 
@@ -175,11 +176,16 @@ class M300PadMesh:
         self.bedmesh = self.printer.load_object(config, 'bed_mesh')
         self.state, self.busy = 'IDLE', False
         self.report = None
+        self.run_id = None
+        self.points_measured = 0
+        self.last_error = ''
+        self.last_attempt = None
 
         owner = self
 
         class PadProbePoints(probe.ProbePointsHelper):
             def _move_next(self, probe_num):
+                owner.points_measured = probe_num
                 owner._check_clear()
                 super()._move_next(probe_num)
 
@@ -213,6 +219,7 @@ class M300PadMesh:
 
     def _capture(self, results):
         self._check_clear()
+        self.points_measured = len(results)
         if len(results) != len(self.points):
             raise self._error('incomplete probe result')
         readings = []
@@ -231,11 +238,19 @@ class M300PadMesh:
             x, y = self.points[start]
             values = readings[start:start + len(PATTERN)]
             spread = max(values) - min(values)
-            if self.max_pad_spread is not None and spread > self.max_pad_spread:
-                raise self._error('pad %d is uneven or has inconsistent contact' % index)
             summaries.append(dict(x=x, y=y, z=statistics.median(values), spread=spread))
-        if max(readings) - min(readings) > self.max_bed_span:
-            raise self._error('bed span is too large; run Autocalibration first')
+        span = max(readings) - min(readings)
+        self.last_attempt = dict(run_id=getattr(self,'run_id',None), accepted=False,
+            points=[[x,y,z] for (x,y),z in zip(self.points,readings)], pads=summaries,
+            span_mm=span, min_mm=min(readings), max_mm=max(readings),
+            limit_mm=self.max_bed_span)
+        for index,pad in enumerate(summaries):
+            if self.max_pad_spread is not None and pad['spread'] > self.max_pad_spread:
+                raise self._error('pad %d is uneven or has inconsistent contact' % index)
+        if span > self.max_bed_span:
+            raise self._error('bed span is too large: %.4f mm exceeds max_bed_span %.4f mm; '
+                              'run Autocalibration first. No new mesh profile was created' %
+                              (span,self.max_bed_span))
         self.samples = (readings, summaries)
 
     def _preflight(self):
@@ -332,6 +347,8 @@ class M300PadMesh:
                               'all five centers and pad sizes are retained. '
                               'Use PREVIEW=1 to review the contact plan.' % adjusted)
         self.state, self.busy = 'PROBING', True
+        self.run_id = os.urandom(12).hex()
+        self.points_measured, self.last_error, self.last_attempt = 0, '', None
         self.samples = None
         shifted = completed = False
         try:
@@ -353,9 +370,14 @@ class M300PadMesh:
             self.toolhead.set_position(pos)
             shifted = False
             self._publish(profile, readings)
-            self.report = dict(profile=profile, pads=pads,
+            self.report = dict(profile=profile, pads=pads, run_id=self.run_id,
                                points=[[x, y, z] for (x, y), z in zip(self.points, readings)])
+            if self.last_attempt is not None:
+                self.last_attempt = dict(self.last_attempt, accepted=True)
             completed = True
+        except Exception as exc:
+            self.last_error = str(exc)
+            raise
         finally:
             try:
                 if shifted and not self.printer.is_shutdown():
@@ -404,7 +426,10 @@ class M300PadMesh:
         nominal = getattr(self,'nominal_points',self.points)
         changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
                    for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
-        return dict(revision='0.13.16.15-PAD-TRAVEL', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.16-PAD-TUNE', state=self.state, busy=self.busy, result=self.report,
+                    run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
+                    total_points=len(self.points), last_error=getattr(self,'last_error',''),
+                    last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.5),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
                     fit_travel=getattr(self,'fit_travel',True),
                     travel_margin=getattr(self,'travel_margin',1.), adjusted_points=changes,
