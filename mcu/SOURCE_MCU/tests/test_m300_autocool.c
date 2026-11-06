@@ -96,10 +96,35 @@ int main(void)
 
     for (unsigned f=1;f<=9;++f) {
         local_boot(156);fault=f;shutdown_active=1;sync_fan_policy();
-        unsigned expected = f==M300_FAULT_HEARTBEAT || f==M300_FAULT_DISARM ? 0 : 3;
+        unsigned expected = f==M300_FAULT_HEARTBEAT || f==M300_FAULT_DISARM
+            || f==M300_FAULT_ADC_STALE ? 0 : 3;
         assert(levels()==expected && fault==f);outputs_safe();
     }
     CHECKCASE("critical faults retain full cooling; benign loss never clears fault");
+
+    // Native samples can expire before the heartbeat on an unplugged host.
+    // The guard must stop heat/motion, but fresh independent ADC2 readings
+    // must still release unnecessary cold fan bypass after the handoff.
+    prepare(3);arm_model();now_ticks+=timer_from_us(900000);
+    command_m300_heartbeat(NULL);
+    now_ticks+=timer_from_us(100001);
+    REJECT(guard_check(),M300_FAULT_ADC_STALE);
+    adc_model(156,3000);sync_fan_policy();
+    assert(levels()==3 && cool_mode==COOL_EMERGENCY && cool_owner==2);
+    CHECKCASE("ADC1 stale latch cannot reuse the failed native acquisition");
+    pump(156,3000,10);assert(levels()==0 && cool_owner==2 && cool_valid);
+    assert(fault==M300_FAULT_ADC_STALE && shutdown_active);outputs_safe();
+    CHECKCASE("ADC1 stale handoff accepts only a fresh independent cold ADC2 pair");
+    pump(400,3000,5);assert(levels()==2 && fault==M300_FAULT_ADC_STALE);
+    CHECKCASE("ADC2 continues hot cooling after native acquisition latch");
+    pump(281,3000,5);assert(levels()==0 && fault==M300_FAULT_ADC_STALE);
+    CHECKCASE("ADC2 switches off at 45C without clearing the native latch");
+    pump(0,3000,5);assert(levels()==3 && !cool_valid);
+    CHECKCASE("invalid independent sample restores full bypass after ADC1 failure");
+    pump(156,3000,5);assert(levels()==0 && cool_valid);
+    now_ticks+=timer_from_us(1000001);sync_fan_policy();
+    assert(levels()==3 && !cool_valid && fault==M300_FAULT_ADC_STALE);
+    CHECKCASE("expired independent sample cannot release latched ADC1 cooling bypass");
 
     local_boot(156);pump(0,3000,5);assert(levels()==3 && !cool_valid);
     CHECKCASE("unplugged hot sensor full protective cooling");

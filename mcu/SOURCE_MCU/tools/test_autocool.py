@@ -26,7 +26,7 @@ def main():
         if result.returncode:print(result.stderr)
         result.check_returncode()
     count=re.search(r'PASS_AUTOCOOL_TOTAL cases=(\d+)',result.stdout)
-    if not count or int(count[1])!=52:raise ValueError('Autonomous test scenario census mismatch')
+    if not count or int(count[1])!=58:raise ValueError('Autonomous test scenario census mismatch')
     report={'status':'PASS','autonomous_cooling_scenarios':int(count[1]),'existing_guard_rejection_scenarios':31,'physical_hardware':False,'measured_F103_cycles':False,'upstream_commit':patch_upstream.PIN,'source_sha256':hashlib.sha256((KIT/'overlay/src/stm32/m300_board.c').read_bytes()).hexdigest(),'cooling_source_sha256':hashlib.sha256((KIT/'overlay/src/stm32/m300_cooling.inc').read_bytes()).hexdigest(),'summary':result.stdout}
     if args.report:args.report.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))

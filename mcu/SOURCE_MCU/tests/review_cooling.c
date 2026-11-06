@@ -94,16 +94,17 @@ int main(void) {
     ADC2->DR=3000;ADC2->SR=ADC_SR_EOC;m300_local_cooling_task();
     assert(!(local_seen & ADC_HOT) && !cool_valid);check_outputs(3);
 
-    // Fault latches remain set. Only communication/disarm/normal shutdown may
-    // use valid autonomous thermostat readings; diagnosed electrical faults
-    // retain BOTH outputs HIGH even when the independent reading is cold.
+    // Fault latches remain set. Communication/disarm/normal shutdown and an
+    // ADC1-stale latch backed by valid independent ADC2 readings may cool
+    // thermostatically. Electrical faults keep BOTH outputs HIGH.
     unsigned faults[]={M300_FAULT_HEARTBEAT,M300_FAULT_DISARM,M300_FAULT_SHUTDOWN,
         M300_FAULT_ADC_STALE,M300_FAULT_ADC_RANGE,M300_FAULT_PLATFORM,
         M300_FAULT_CONFIG,M300_FAULT_ARM,M300_FAULT_PIN,M300_FAULT_REQUEST};
     for(unsigned i=0;i<sizeof(faults)/sizeof(faults[0]);i++) {
         restart_model(); local_pair(136,3000); fault=faults[i];
         shutdown_active=1; m300_board_shutdown(); sync_fan_policy();
-        unsigned local=faults[i]==M300_FAULT_HEARTBEAT || faults[i]==M300_FAULT_DISARM || faults[i]==M300_FAULT_SHUTDOWN;
+        unsigned local=faults[i]==M300_FAULT_HEARTBEAT || faults[i]==M300_FAULT_DISARM
+            || faults[i]==M300_FAULT_SHUTDOWN || faults[i]==M300_FAULT_ADC_STALE;
         check_outputs(local?0:3); assert(fault==faults[i]);
     }
 

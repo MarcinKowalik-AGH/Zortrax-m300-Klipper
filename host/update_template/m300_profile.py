@@ -116,6 +116,11 @@ def convert_text(text, stock_xy=None):
             block = set_option(block, 'restart_method', 'command')
         elif section == 'm300_mcu':
             block = set_option(block, 'native_control', 'True')
+        elif section == 'heater_fan hotend':
+            # Same 50 C ON / 45 C OFF thermostat as the autonomous MCU.
+            # The M300 native fan adapter supplies the 5 C hysteresis and
+            # ignores heater target; retain native pin/PWM ownership.
+            block = set_option(block, 'heater_temp', '50')
         elif section in ('output_pin m300_led_r', 'output_pin m300_led_g',
                          'output_pin m300_led_b'):
             block = set_option(block, 'pwm', 'True')

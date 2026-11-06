@@ -18,11 +18,15 @@ from payload.m300_native_fans import M300NativeFans, OEM_DUTY
 from payload.m300_maintenance_ui import fan_frame
 from payload.m300_ui_m11_state import require_rows
 from setup_fluidd import category
+import m300_profile
 
-# Only the physical fan constructor is replaced. The thermostat callback is
-# the exact pinned heater_fan source, not a reimplementation of its decisions.
+# The pinned heater_fan supplies the real queue/callback registration contract;
+# M300 replaces its target-driven callback with its temperature-only thermostat.
 with patch.dict(sys.modules, {'tests.reference.fan':ModuleType('tests.reference.fan')}):
     from tests.reference.native_heater_fan import PrinterHeaterFan
+with patch.dict(sys.modules, {'tests.reference.pulse_counter':ModuleType('tests.reference.pulse_counter'),
+                             'tests.reference.output_pin':ModuleType('tests.reference.output_pin')}):
+    from tests.reference.native_fan import Fan as NativeFan
 
 REFERENCE=json.loads((Path(__file__).parent/'reference/firmware131_maintenance.json').read_text())
 
@@ -152,7 +156,7 @@ class NativeFanContractTests(unittest.TestCase):
         h.assert_restored(self)
 
     def test_native_hotend_thermostat_is_a_floor_at_entry_and_every_toggle(self):
-        for measured,target in ((51.,0.),(25.,230.),(float('nan'),0.),(0.,0.)):
+        for measured,target in ((51.,0.),(float('nan'),0.),(0.,0.)):
             h=FanHarness();h.hotend.temperature=measured;h.hotend.target=target
             h.run('ZORTRAX_FAN_TEST_START')
             self.assertEqual(h.upper.speed,1.)
@@ -162,6 +166,92 @@ class NativeFanContractTests(unittest.TestCase):
             self.assertIn('(Cooling)',view['message'])
             self.assertIn('Automatic upper-fan cooling',view['message'])
             h.run('ZORTRAX_FAN_TEST_END');h.assert_restored(self)
+
+    def test_cold_heater_target_does_not_start_cooling_in_homing_or_fan_test(self):
+        h=FanHarness();h.hotend.target=260.
+        h.thermostat.callback(h.now)
+        self.assertEqual(h.upper.speed,0.)
+        h.run('ZORTRAX_FAN_TEST_START')
+        self.assertFalse(h.fans.get_status(h.now)['upper_cooling'])
+        h.run('ZORTRAX_FAN_UPPER');self.assertEqual(h.upper.speed,OEM_DUTY)
+        h.run('ZORTRAX_FAN_UPPER');self.assertEqual(h.upper.speed,0.)
+        h.run('ZORTRAX_FAN_TEST_END');h.assert_restored(self)
+
+    def test_50_on_45_off_hysteresis_ignores_target_and_preserves_print_cooling(self):
+        h=FanHarness();h.lower.speed=.4
+        for temperature,target,expected in ((25.,260.,0.),(45.,260.,0.),(49.9,260.,0.),
+                (50.,260.,1.),(49.,0.,1.),(45.1,0.,1.),(45.,240.,0.),
+                (48.,240.,0.),(51.,0.,1.)):
+            h.hotend.temperature,h.hotend.target=temperature,target
+            self.assertEqual(h.thermostat.callback(h.now),h.now+1.)
+            self.assertEqual(h.upper.speed,expected,(temperature,target))
+            self.assertEqual(h.lower.speed,.4)
+        status=h.fans.get_status(h.now)
+        self.assertEqual((status['hotend_auto_threshold'],status['hotend_auto_off_threshold'],
+                          status['hotend_auto_hysteresis']),(50.,45.,5.))
+        self.assertFalse(status['hotend_auto_uses_target'])
+
+    def test_host_thresholds_match_the_mcu_raw_hysteresis_for_both_prior_states(self):
+        h=FanHarness()
+        for raw in range(32,1942):
+            h.hotend.temperature=raw*654./4095.
+            for prior in (False,True):
+                h.fans._cooling_on=prior
+                expected=True if raw>=314 else False if raw<=281 else prior
+                self.assertEqual(h.fans._upper_policy(h.now),float(expected),(raw,prior))
+
+    def test_unknown_or_invalid_temperature_forces_cooling_then_valid_cold_releases(self):
+        for invalid in (0.,float('nan'),float('inf'),301.):
+            h=FanHarness();h.hotend.temperature=invalid
+            h.thermostat.callback(h.now);self.assertEqual(h.upper.speed,1.)
+            h.hotend.temperature=47.
+            h.thermostat.callback(h.now);self.assertEqual(h.upper.speed,1.)
+            h.hotend.temperature=44.
+            h.thermostat.callback(h.now);self.assertEqual(h.upper.speed,0.)
+        h=FanHarness();h.thermostat.heaters=[]
+        h.thermostat.callback(h.now);self.assertEqual(h.upper.speed,1.)
+
+    def test_native_ready_registers_the_replacement_callback_on_its_original_timer(self):
+        h=FanHarness();timers=[]
+        h.thermostat.printer=h.printer;h.thermostat.heater_names=['extruder']
+        h.objects['heaters']=NS(lookup_heater=lambda name:h.hotend)
+        h.reactor.register_timer=lambda callback,when=None:timers.append((callback,when))
+        h.thermostat.handle_ready()
+        self.assertEqual(timers,[(h.fans._cooling_callback,h.now+.1)])
+        h.hotend.target=260.;timers[0][0](h.now+.1)
+        self.assertEqual(h.upper.speed,0.)
+
+    def test_repeated_callbacks_and_status_reads_do_not_flood_the_native_fan_queue(self):
+        h=FanHarness();h.hotend.target=260.
+        h.thermostat.callback(h.now)
+        calls=len([event for event in h.events if event[:2]==('fan','UPPER')])
+        for _ in range(20):
+            h.thermostat.callback(h.now);h.fans.get_status(h.now)
+        self.assertEqual(len([event for event in h.events if event[:2]==('fan','UPPER')]),calls)
+        self.assertEqual(h.upper.speed,0.)
+
+    def test_ready_reasserts_cold_off_through_the_actual_native_fan_cache_and_queue(self):
+        h=FanHarness();writes=[]
+        fan=NativeFan.__new__(NativeFan)
+        fan.last_fan_value=fan.last_req_value=0.
+        fan.off_below=fan.kick_start_time=0.;fan.max_power=1.;fan.enable_pin=None
+        fan.mcu_fan=NS(set_pwm=lambda when,value:writes.append((when,value)))
+        fan.gcrq=NS(rqueue=[],send_async_request=lambda value,when=None:fan._apply_speed(h.now,value))
+        h.thermostat.fan=fan
+        h.fans._ready();h.hotend.target=260.
+        h.thermostat.callback(h.now)
+        self.assertEqual(writes,[(h.now,0.)])
+        for _ in range(5):h.thermostat.callback(h.now)
+        self.assertEqual(writes,[(h.now,0.)])
+
+    def test_migration_matches_the_mcu_threshold_and_preserves_other_fan_settings(self):
+        source=('[heater_fan hotend]\npin: PE14\nheater: extruder\nheater_temp: 45\n'
+                'fan_speed: 0.9\ncycle_time: 0.01\nshutdown_speed: 1\n')
+        migrated=m300_profile.convert_text(source)
+        self.assertIn('heater_temp: 50',migrated)
+        for line in ('fan_speed: 0.9','cycle_time: 0.01','shutdown_speed: 1'):
+            self.assertIn(line,migrated)
+        self.assertEqual(m300_profile.convert_text(migrated),migrated)
 
     def test_automatic_callbacks_cannot_lower_an_enabled_cold_test(self):
         h=FanHarness();h.run('ZORTRAX_FAN_UPPER')

@@ -68,6 +68,8 @@ def main():
                               '--upstream', pristine])
     run('autocooling', [sys.executable, KIT / 'tools/test_autocool.py',
                         '--upstream', pristine, '--report', report / 'AUTOCOOL.json'])
+    run('cooling_oracle_review', [sys.executable, KIT / 'tests/review_cooling.py',
+        '--sdk', KIT, '--report', report / 'COOLING_REVIEW.json'])
     run('guard_snapshot', [sys.executable, ROOT / 'mcu/tests/test_guard_snapshot.py',
                           '--upstream', pristine])
     run('native_heater_checks', [sys.executable, ROOT / 'mcu/tests/test_verify_gain.py',

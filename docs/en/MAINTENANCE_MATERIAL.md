@@ -119,13 +119,14 @@ service deadline revokes the session. A stale button cannot toggle a new phase.
 Pending native fan requests must drain before entry. Printing, pause, another
 service, queued movement and FILEOUTPUT cannot start a physical fan test.
 
-Upper automatic cooling is a floor: with a heater target, temperature above
-the native threshold, or invalid temperature evidence, the test cannot switch
+Upper automatic cooling is a floor: at 50 C or above, through the 45–50 C
+hysteresis band while cooling, or with invalid temperature evidence, the test cannot switch
 it off. The screen then says (Cooling) and Automatic upper-fan cooling; Fluidd
 uses those same words. Back restores the saved lower request and recomputes
 CURRENT upper thermostat policy instead of replaying an old OFF. Faults or
 stale MCU status never replay saved duty. Protective MCU cooling remains local.
-The configured native thermostat remains unchanged.
+The heater target alone does not enable the cold upper fan. The host and MCU
+use the same [50/45 C thermostat](COOLING.md).
 
 ## Source evidence and corrections
 

@@ -2,7 +2,7 @@
 """OEM interactive fan test over the two existing native fan queues.
 
 Upper = channel 1 / PE14; lower = channel 0 / PE13. OEM requests toggle
-0/150, not 0/255. The native hotend thermostat is a floor, never disabled.
+0/150, not 0/255. The 50/45 C hotend thermostat is a floor, never disabled.
 All temporary wrappers exist only during the explicitly owned test session.
 """
 import math
@@ -11,17 +11,29 @@ from .m300_fans import M300Fans
 from .m300_native_service import NativeServiceLease, lock_command, require_idle_print, unlock_command
 
 OEM_DUTY = 150. / 255.
+COOLING_ON = 50.
+COOLING_OFF = 45.
 
 
 class M300NativeFans(M300Fans):
     def __init__(self, config):
         super().__init__(config)
+        # Bind before klippy:ready: heater_fan.handle_ready registers the
+        # current callback with its existing timer. The native Fan/PWM queue
+        # and shutdown speed remain the only host output owner.
+        self._cooling_on = True  # Unknown startup state is protective.
+        self.hotend = self.printer.load_object(config, 'heater_fan hotend')
+        self.hotend.callback = self._cooling_callback
         self._output_methods, self._output_commands = [], []
         self.lease = NativeServiceLease(self, lambda: (self.token, self.phase),
             self._stationary, lambda reason: self.end_oem('CANCELLED', reason))
 
     def _ready(self):
         super()._ready()
+        # A configured MCU can retain a preceding host's ON request. Reset
+        # both host caches so native Fan._apply_speed cannot discard the
+        # first cold OFF as an assumed no-op. The write still uses its queue.
+        self.hotend.last_speed = self.owners['HOTEND'].last_fan_value = -1.
         self.toolhead = self.printer.lookup_object('toolhead')
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.job = self.printer.lookup_object('m300_job')
@@ -31,16 +43,30 @@ class M300NativeFans(M300Fans):
         raise self._error('fan test does not authorize movement')
 
     def _upper_policy(self, now):
-        # Use the same heater list/threshold as native heater_fan. A stale
-        # native get_temp() returns zero; do not interpret it as cold evidence.
+        # Temperature alone drives automatic cooling. A heater target is not
+        # evidence that a cold heatsink needs cooling yet. get_temp() returns
+        # zero for stale data; unknown/invalid temperature stays protective.
+        temperatures = []
         for heater in self.hotend.heaters:
             measured, target = heater.get_temp(now)
             if (not math.isfinite(measured) or not math.isfinite(target)
                     or not heater.min_temp < measured <= heater.max_temp):
                 return 1.
-            if target or measured > self.hotend.heater_temp:
-                return self.hotend.fan_speed
-        return 0.
+            temperatures.append(measured)
+        if not temperatures:
+            return 1.
+        hottest = max(temperatures)
+        on = (True if hottest >= COOLING_ON else False if hottest <= COOLING_OFF
+              else self._cooling_on)
+        return self.hotend.fan_speed if on else 0.
+
+    def _cooling_callback(self, now):
+        speed = self._upper_policy(now)
+        self._cooling_on = bool(speed)
+        if speed != self.hotend.last_speed:
+            self.hotend.last_speed = speed
+            self.hotend.fan.set_speed(speed)
+        return now + 1.  # Keep the native heater_fan timer cadence.
 
     def _upper(self, value, *args, **kwargs):
         requested = OEM_DUTY if self.test and self.test['upper'] else 0.
@@ -169,7 +195,11 @@ class M300NativeFans(M300Fans):
         status = super().get_status(now)
         test = self.test or {}
         return dict(status, native_control=True, operation='FAN_TEST',
-            fan_revision='0.13.16.7-OEM-FAN-TEST', upper_enabled=test.get('upper', False),
+            fan_revision='0.13.16.14-THERMOSTAT-50-45',
+            hotend_auto_threshold=COOLING_ON, hotend_auto_off_threshold=COOLING_OFF,
+            hotend_auto_hysteresis=COOLING_ON-COOLING_OFF,
+            hotend_auto_uses_target=False, hotend_auto_latched_on=self._cooling_on,
+            upper_enabled=test.get('upper', False),
             lower_enabled=test.get('lower', False), upper_cooling=bool(self._upper_policy(now))
             if self.hotend is not None else True,
             can_toggle_upper=self.ready and self.test is not None,

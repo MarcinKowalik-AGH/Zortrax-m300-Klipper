@@ -36,7 +36,11 @@ critical_cooling_fault(void)
     // clearing the global fault or enabling heater/motor outputs. A diagnosed
     // acquisition/electrical failure keeps protective full cooling latched.
     return fault && fault != M300_FAULT_HEARTBEAT
-        && fault != M300_FAULT_DISARM && fault != M300_FAULT_SHUTDOWN;
+        && fault != M300_FAULT_DISARM && fault != M300_FAULT_SHUTDOWN
+        // ADC1 reports may stop before heartbeat expiry on host loss. A
+        // fresh, in-range *independent ADC2* pair may then cool normally.
+        // The ADC_STALE fault and all heater/motion gates remain latched.
+        && !(fault == M300_FAULT_ADC_STALE && cool_owner == 2 && cool_valid);
 }
 
 // A current host heartbeat hands acquisition to native ADC1 immediately,
@@ -91,7 +95,8 @@ cooling_policy(uint32_t now)
     // Native analog timers intentionally continue after Klipper shutdown.
     // Their observations remain valid read-only cooling measurements, but
     // never grant a new ARM session. Otherwise use the independent ADC2 pair.
-    if (cool_native_seen == ADC_BOTH && cool_fresh(now, hot_time)
+    if (fault != M300_FAULT_ADC_STALE
+        && cool_native_seen == ADC_BOTH && cool_fresh(now, hot_time)
         && cool_fresh(now, bed_time)) {
         hot = hot_raw; bed = bed_raw;
         cool_age = now - hot_time;
