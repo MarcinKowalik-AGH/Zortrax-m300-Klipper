@@ -75,6 +75,11 @@ Menu revision `0.13.16.13-BRIGHTNESS-MESH-BOUNDS` synchronizes the OLED/Fluidd
 brightness preview and Save operation without expiring Back. Pad mesh preview
 reports requested points against the configured XY travel and can suggest a
 larger inset without changing motor limits. See [pad mesh geometry](docs/en/LEVELING.md#optional-klipper-pad-mesh).
+Pad mesh revision `0.13.16.15-PAD-TRAVEL` corrects the confirmed pad sizes to
+50/50 mm, preserves configured centers and fits unreachable corners inside
+their own pad and the existing XY travel. Its macro respects configuration
+and previews instead of restoring old 60 mm literals. X300/Y305 is exercised
+in both geometry regression tests and the actual Klippy profile integration.
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

@@ -101,6 +101,7 @@ def main():
     shutil.copy2(Path(__file__).with_name('m300_ci_pad_mesh_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
     pad_mesh_script = (
+        'ZORTRAX_BED_MESH PREVIEW=1\n'
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
         'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\n'
         'ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
@@ -158,9 +159,9 @@ def main():
         state_dir=Path(tempfile.mkdtemp(prefix='nvm-',dir=dest))
         cp.set('m300_nvm','path',str(state_dir/'settings.json'))
         if name == 'native_pad_mesh':
-            cp.set('stepper_x', 'position_max', '320')
-            cp.set('stepper_y', 'position_max', '320')
-            cp.read_dict({'bed_mesh': {'mesh_min': '5, 5', 'mesh_max': '315, 315',
+            cp.set('stepper_x', 'position_max', '300')
+            cp.set('stepper_y', 'position_max', '305')
+            cp.read_dict({'bed_mesh': {'mesh_min': '10, 10', 'mesh_max': '299, 304',
                                        'probe_count': '3, 3', 'mesh_pps': '0, 0'},
                           'm300_pad_mesh': {}, 'm300_ci_pad_mesh_fixture': {}})
         if name in model_fixtures:

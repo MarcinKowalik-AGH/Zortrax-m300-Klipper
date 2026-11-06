@@ -180,67 +180,69 @@ measures residual height differences for native Klipper Z compensation.
 It uses the existing PC7 nozzle contact and Klipper's ProbePointsHelper.
 The operator can use this option without replacing the MCU firmware.
 
-The measured corner squares are 60 × 60 mm and the center square is 50 × 50 mm.
-The reported metal edges are X0–60 / X260–320 and Y0–60 / Y260–320.
-The default inset is 5 mm from each edge. Corner pad centers are therefore
-30/290 mm, with the center pad at X160, Y160. These are separate from the OEM
-Autocalibration contact positions. All five centers can be corrected
-individually. The randomized offset used for OEM Autocalibration is not used.
-Each pad contributes its center and four inset corners:
+The operator corrected all five contact squares to **50 × 50 mm**, with
+configured travel **X0–300 / Y0–305**. The earlier 60 mm corner-pad assumption
+is superseded. The five configured centers remain independently adjustable;
+changing a pad's width never moves its center. Defaults retain X30/290,
+Y30/290 and center X160/Y160 from the earlier layout. Those centers must
+match the physical metal: pad width and axis limits alone do not locate them.
+The randomized OEM Autocalibration offset is not used here.
+
+Each pad contributes its center and four corners inset 5 mm from the metal
+edge. `FIT_TRAVEL=1` (the default) clips only unreachable corners to the
+reachable part of that same square, with a 1 mm margin inside configured
+axis limits. It preserves all five centers and all 25 distinct points.
+For the stated centers and X300/Y305 limits, the prepared plan is:
 
 | Pad | Center X, Y (mm) | Corner X coordinates (mm) | Corner Y coordinates (mm) |
 | --- | --- | --- | --- |
-| Front right | 290, 30 | 265, 315 | 5, 55 |
-| Front left | 30, 30 | 5, 55 | 5, 55 |
+| Front right | 290, 30 | 270, 299 | 10, 50 |
+| Front left | 30, 30 | 10, 50 | 10, 50 |
 | Center | 160, 160 | 140, 180 | 140, 180 |
-| Rear right | 290, 290 | 265, 315 | 265, 315 |
-| Rear left | 30, 290 | 5, 55 | 265, 315 |
+| Rear right | 290, 290 | 270, 299 | 270, 304 |
+| Rear left | 30, 290 | 10, 50 | 270, 304 |
 
 Add these sections to the existing printer configuration when ready to test
 the probe. Do not duplicate an existing section. Before moving, run
-`ZORTRAX_PAD_MESH_STATUS` to review all 25 positions and confirm that each one
+`ZORTRAX_BED_MESH PREVIEW=1` to prepare and review all 25 positions and confirm that each one
 lies on conductive metal with nozzle clearance. The configuration is opt-in;
-it does not increase the configured axis travel limits.
-The reported 320 mm travel must also be represented in the existing
-`[stepper_x]` and `[stepper_y]` limits. With the default points, both axes
-must allow at least 315 mm. An existing 300 mm limit is rejected before
-probing. Set `position_max: 320` in those existing sections only when the
-reported homed coordinate and physical travel are confirmed on this printer.
+it does not increase the configured axis travel limits. A center outside
+the reachable region, a collapsed contact rectangle or invalid pad topology
+is rejected before movement. `FIT_TRAVEL=0` requests the exact nominal
+corners and rejects any of them outside the configured travel.
 
-If the printer configuration still limits XY to 300 mm, the metal dimensions
-are valid but the outer default contacts at 315 mm are unreachable. To retain
-those limits, preview a larger inset:
+On an older installed host without travel fitting, this explicit command
+provides the conservative plan confirmed by the operator:
 
 ~~~gcode
-ZORTRAX_BED_MESH EDGE_MARGIN=21 PREVIEW=1
+ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 PREVIEW=1
 ~~~
 
-This keeps all five pad centers and all 25 measurements, with total bounds
-X21–299 and Y21–299. Each corner pad then uses its center and corners 9 mm
-from that center; the center pad uses its center and corners 4 mm away.
-All points remain on the reported 60/50 mm metal squares, but the sampled
-area of each square is smaller. Use the same `EDGE_MARGIN=21` when measuring;
-`PREVIEW=1` does not change the macro's defaults. Do not enter the pad's
-width as its center coordinate.
+It gives X21–299 / Y21–299 and samples only 18 × 18 mm around each pad
+center. On the old host, pass the same three geometry parameters when
+measuring; its macro otherwise restores stale defaults. The updated macro
+forwards only parameters actually supplied, so it respects configured values
+and the most recent preview instead of overwriting them with 60 mm literals.
 
-`PREVIEW=1` and `ZORTRAX_PAD_MESH_STATUS` now report configured travel,
-requested bounds and every point outside those limits without moving or
-requiring a homing session. A fitting inset is suggested only if all five
-centers are reachable and the resulting geometry still supports the 25-point
-surface. No valid inset is suggested for an unreachable center. Keep the
-default 5 mm inset only with verified physical travel to all 315 mm contacts.
+`PREVIEW=1` and `ZORTRAX_PAD_MESH_STATUS` report configured travel, effective
+bounds, all actual points and `adjusted_points` with requested/actual corner
+coordinates. No homing, heating or movement occurs in a preview. Review it
+again after changing a center, size or axis limit. Limits confirm reachability;
+the operator must still confirm conductive metal at every position.
 
 ~~~ini
 [bed_mesh]
-mesh_min: 5, 5
-mesh_max: 315, 315
+mesh_min: 10, 10
+mesh_max: 299, 304
 probe_count: 3, 3
 mesh_pps: 0, 0
 
 [m300_pad_mesh]
-corner_pad_width: 60.0
+corner_pad_width: 50.0
 center_pad_width: 50.0
 edge_margin: 5.0
+fit_travel: True
+travel_margin: 1.0
 ~~~
 
 The `ZORTRAX_BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
@@ -253,11 +255,13 @@ Its parameter fields allow individual corrections without editing Python:
 | `CENTER_X`, `CENTER_Y` | 160, 160 | Center pad center |
 | `REAR_RIGHT_X`, `REAR_RIGHT_Y` | 290, 290 | Rear-right pad center |
 | `REAR_LEFT_X`, `REAR_LEFT_Y` | 30, 290 | Rear-left pad center |
-| `CORNER_PAD_WIDTH` | 60 | Width of each corner square, mm |
+| `CORNER_PAD_WIDTH` | 50 | Width of each corner square, mm |
 | `CENTER_PAD_WIDTH` | 50 | Width of the center square, mm |
 | `EDGE_MARGIN` | 5 | Distance inward from every square edge, mm |
 | `PROFILE` | `m300_pads` | Native profile name |
 | `PREVIEW` | 0 | Set to 1 to show geometry without homing, heating or moving |
+| `FIT_TRAVEL` | 1 | Clip corners to the reachable part of their own pad |
+| `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0.5–5 mm |
 
 For example, preview a 1 mm front-left X correction and a different center:
 
@@ -266,14 +270,13 @@ ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31 CENTER_X=159.5 CENTER_Y=160
 ~~~
 
 Run the same macro with the same corrections and `PREVIEW=0` to measure.
-The macro supplies the table defaults for fields that are not passed.
-To retain corrections as the macro's defaults, change its `default(...)`
-values in `m300_operations.cfg`; keep a copy because a package update
-reinstalls that managed file. Alternatively, set the lowercase names in
-`[m300_pad_mesh]` (for example `front_left_x: 31`) and call
-`BED_MESH_CALIBRATE` directly. Direct calls use those configured defaults and
-accept the same uppercase overrides. Unsaved command overrides last until
-restart. The saved native mesh profile retains the resulting surface.
+The macro and direct native command use the same geometry. To retain a
+correction across restart, set its lowercase name in `[m300_pad_mesh]` (for
+example `front_left_x: 31`). Omitted macro fields no longer override these
+settings. Unsaved command overrides last until restart. The installer corrects
+the recognized former 60/50 default pair to 50/50 and updates the recognized
+old forwarding macro while preserving custom centers and unrelated commands.
+The saved native mesh profile retains the resulting surface.
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
 four inset corners of each pad. Rectangular, adaptive and manual probing
@@ -299,8 +302,8 @@ ZORTRAX_PAD_MESH_STATUS
 TURN_OFF_HEATERS
 ~~~
 
-For a configuration capped at 300 mm, replace the measurement line above with
-`ZORTRAX_BED_MESH PROFILE=m300_pads EDGE_MARGIN=21`. Before a print, load the
+The current default travel fitting supports the confirmed X300/Y305 limits.
+Before a print, load the
 result with `BED_MESH_PROFILE LOAD=m300_pads`; the measurement intentionally
 leaves compensation inactive. `SAVE_CONFIG` stores the generated profile
 and restarts Klipper, so issue it while idle after reviewing the measurements.
@@ -314,13 +317,13 @@ repeatability. An optional `max_pad_spread` can impose an additional limit.
 The interpolation joins the 25 measured positions into 36 triangles with
 continuous piecewise-linear heights. This preserves a plane, uses each
 measurement and avoids polynomial overshoot. The surface is resampled to a
-61 × 61 native Klipper grid (about 5.2 mm spacing), normalized to zero at the
+61 × 61 native Klipper grid, normalized to zero at the
 native homing XY position (normally X150, Y158). Correcting a pad's geometric
 center does not change that Z datum. Native Bed Mesh handles profile storage, visualization and
 motion compensation. The regular-grid conversion approximates triangle
 edges; the 3,721 grid values are interpolated, not additional measurements.
 Curvature in the unmeasured gaps between the five squares remains unknown.
-With the defaults, keep the first print inside X5–315, Y5–315. If individual
+The current default example covers X10–299 / Y10–304. If individual
 pad corrections make the outside edges uneven, the mesh rectangle is reduced
 to stay inside both pads along each side.
 Outside that rectangle Klipper clamps the correction to the mesh edge.
@@ -328,8 +331,8 @@ Outside that rectangle Klipper clamps the correction to the mesh edge.
 Existing `pad_width` configurations retain their common width, 1 mm default
 inset and legacy OEM centers when the direct native command is used. For the
 measured layout, remove `pad_width`, use the explicit widths and 5 mm inset
-shown above, and measure a fresh profile. The new macro explicitly supplies
-the 320 mm layout unless its parameter fields are changed.
+shown above, and measure a fresh profile. The macro preserves these configured
+values and accepts explicit individual overrides.
 
 A successful run leaves a profile in the current session. Use `SAVE_CONFIG`
 to keep it across restarts. After homing in the print-start sequence, use

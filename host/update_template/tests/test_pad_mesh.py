@@ -5,13 +5,94 @@ import unittest
 from payload.m300_calibration_state import POINTS
 from payload.m300_native_service import native_service_frame
 from payload.m300_pad_mesh import (GEOMETRY_DEFAULTS, GRID_COUNT, M300PadMesh,
-                                   geometry_points, mesh_bounds, pad_points,
+                                   fit_pad_points, geometry_points, mesh_bounds, pad_points,
                                    pad_triangles, surface_grid)
 
 
 class PadMeshTests(unittest.TestCase):
+    def test_fifty_mm_pads_fit_x300_y305_without_moving_centers_or_shrinking_all_pads(self):
+        points=geometry_points(GEOMETRY_DEFAULTS)
+        fitted=fit_pad_points(points,(0.,0.),(300.,305.))
+        self.assertEqual(mesh_bounds(fitted),(10.,10.,299.,304.))
+        self.assertEqual(fitted[:5],((290.,30.),(270.,10.),(299.,10.),(299.,50.),(270.,50.)))
+        self.assertEqual(fitted[5:15],points[5:15])
+        self.assertEqual(fitted[15:20],((290.,290.),(270.,270.),(299.,270.),(299.,304.),(270.,304.)))
+        self.assertEqual(len(set(fitted)),25)
+        conservative=geometry_points(dict(GEOMETRY_DEFAULTS,edge_margin=16.))
+        self.assertEqual(fit_pad_points(conservative,(0.,0.),(300.,305.)),conservative)
+        self.assertEqual(mesh_bounds(conservative),(21.,21.,299.,299.))
+        for index,(nominal,actual) in enumerate(zip(points,fitted)):
+            if index%5==0:self.assertEqual(actual,nominal)
+            cx,cy=points[index//5*5]
+            self.assertLess(abs(actual[0]-cx),25.)
+            self.assertLess(abs(actual[1]-cy),25.)
+            self.assertTrue(1. <= actual[0] <= 299. and 1. <= actual[1] <= 304.)
+        reference=.001*160.-.0004*160.
+        grid=surface_grid(fitted,[.001*x-.0004*y for x,y in fitted])
+        for j,row in enumerate(grid):
+            for i,value in enumerate(row):
+                self.assertAlmostEqual(value,.001*(10.+289.*i/60)-.0004*(10.+294.*j/60)-reference)
+        for index in range(25):
+            heights=[0.]*25;heights[index]=.1
+            values=[value for row in surface_grid(fitted,heights) for value in row]
+            self.assertGreater(max(values)-min(values),.02, index)
+
+    def test_travel_fit_never_uses_an_unreachable_center_or_a_collapsed_pad(self):
+        points=geometry_points(GEOMETRY_DEFAULTS)
+        for bounds in ((280.,305.),(300.,280.),(290.5,305.)):
+            with self.assertRaisesRegex(ValueError,'pad center'):
+                fit_pad_points(points,(0.,0.),bounds)
+        for margin in (0.,6.,float('nan')):
+            with self.assertRaisesRegex(ValueError,'TRAVEL_MARGIN'):
+                fit_pad_points(points,(0.,0.),(300.,305.),margin)
+        self.assertEqual(fit_pad_points(points,(0.,0.),(320.,320.)),points)
+
+    def test_macro_inherits_configured_geometry_and_preview_lists_only_changed_corners(self):
+        from test_macro_dispatch import ENV, dispatcher, templates
+        mesh=M300PadMesh.__new__(M300PadMesh)
+        mesh.geometry=dict(GEOMETRY_DEFAULTS,front_left_x=31.25)
+        mesh.points=geometry_points(mesh.geometry)
+        mesh.busy,mesh.state,mesh.report=False,'IDLE',None
+        mesh._error=ValueError;mesh.reactor=NS(monotonic=lambda:0.)
+        limits=dict(homed_axes='',axis_minimum=(0.,0.,0.),axis_maximum=(300.,305.,315.))
+        toolhead=NS(get_kinematics=lambda:NS(get_status=lambda now:limits))
+        mesh.printer=NS(lookup_object=lambda name,default=None:toolhead if name=='toolhead' else default)
+        mesh._preflight=lambda:self.fail('preview attempted physical work')
+        updates=[];mesh.probe_points=NS(update_probe_points=lambda *args:updates.append(args))
+        gcode,_,output=dispatcher();gcode.register_command('BED_MESH_CALIBRATE',mesh.cmd_calibrate)
+        template=ENV.from_string(templates()['ZORTRAX_BED_MESH'])
+        def run(params):
+            gcode.run_script_from_command(template.render(printer=NS(m300_pad_mesh=mesh),params=params))
+        run({'PREVIEW':'1'})
+        self.assertEqual(mesh.geometry['corner_pad_width'],50.)
+        self.assertEqual(mesh.points[5],(31.25,30.))
+        status=mesh.get_status(0.)
+        self.assertTrue(status['travel']['fits'])
+        self.assertEqual(mesh_bounds(mesh.points),(11.25,10.,299.,304.))
+        self.assertTrue(status['adjusted_points'])
+        self.assertTrue(all(change['point']%5 for change in status['adjusted_points']))
+        self.assertTrue(any('Travel fit adjusted' in line for line in output))
+        run({'PREVIEW':'1','FIT_TRAVEL':'0'})
+        self.assertFalse(mesh.get_status(0.)['travel']['fits'])
+        self.assertEqual(mesh.points,geometry_points(mesh.geometry))
+        self.assertEqual(limits['axis_maximum'],(300.,305.,315.))
+
+    def test_known_old_macro_and_60_mm_default_migrate_without_losing_custom_centers(self):
+        from pathlib import Path
+        import m300_profile
+        legacy=(Path(__file__).parent/'reference/pad_mesh_macro_r1613.cfg').read_text()
+        config='[m300_pad_mesh]\ncorner_pad_width: 60\ncenter_pad_width: 50\nfront_left_x: 31.25\n'
+        result=m300_profile.convert_text(config+legacy)
+        self.assertIn('corner_pad_width: 50',result)
+        self.assertIn('front_left_x: 31.25',result)
+        self.assertIn(m300_profile.pad_mesh_command(),result)
+        self.assertEqual(m300_profile.convert_text(result),result)
+        custom=legacy.replace('default(60)','default(61)')
+        self.assertEqual(m300_profile.convert_text(custom),custom)
+        self.assertEqual(m300_profile.convert_text(config.replace('60','52')),config.replace('60','52'))
+
     def test_320_mm_layout_and_individual_center_corrections(self):
-        geometry = dict(GEOMETRY_DEFAULTS)
+        geometry = dict(GEOMETRY_DEFAULTS, corner_pad_width=60.)
         points = geometry_points(geometry)
         self.assertEqual(mesh_bounds(points), (5., 5., 315., 315.))
         self.assertEqual(points[:5], ((290., 30.), (265., 5.), (315., 5.),
@@ -159,7 +240,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.shift, mesh.horizontal_z = 1., 6.
         mesh._error = ValueError
         mesh._preflight = lambda: None
-        mesh.printer = NS(is_shutdown=lambda: False)
+        mesh.printer = NS(is_shutdown=lambda: False, lookup_object=lambda name, default=None: default)
         positions = [[150., 158., 5., 0.]]
         mesh.toolhead = NS(get_position=lambda: positions[-1][:],
                            set_position=lambda pos: positions.append(pos[:]),
@@ -244,15 +325,12 @@ class PadMeshTests(unittest.TestCase):
         self.assertEqual(output, [])
         self.assertEqual(commands[0]['FRONT_RIGHT_X'], '289.25')
         self.assertEqual(commands[0]['PREVIEW'], '1')
-        self.assertEqual(commands[0]['PROFILE'], 'm300_pads')
-        for key, value in GEOMETRY_DEFAULTS.items():
-            if key != 'front_right_x':
-                self.assertEqual(float(commands[0][key.upper()]), value)
+        self.assertEqual(set(commands[0]), {'FRONT_RIGHT_X', 'PREVIEW'})
         self.assertEqual(category('ZORTRAX_BED_MESH'), 'ZORTRAX M300')
 
     def test_actual_preflight_rejects_a_300_mm_limit_before_315_mm_probing(self):
         mesh = M300PadMesh.__new__(M300PadMesh)
-        mesh.geometry = dict(GEOMETRY_DEFAULTS)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS, corner_pad_width=60.)
         mesh.points = geometry_points(mesh.geometry)
         mesh._error = ValueError
         mesh.reactor = NS(monotonic=lambda: 0.)
@@ -278,7 +356,7 @@ class PadMeshTests(unittest.TestCase):
 
     def test_preview_reports_limits_and_fitting_inset_without_moving_or_extending_travel(self):
         mesh = M300PadMesh.__new__(M300PadMesh)
-        mesh.geometry = dict(GEOMETRY_DEFAULTS)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS, corner_pad_width=60.)
         mesh.points = geometry_points(mesh.geometry)
         mesh.busy, mesh.state, mesh.report = False, 'IDLE', None
         mesh._error = ValueError
@@ -288,7 +366,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.printer = NS(lookup_object=lambda name, default=None: toolhead if name == 'toolhead' else default)
         mesh._preflight = lambda: self.fail('preview must not move, heat or home')
         mesh.probe_points = NS(update_probe_points=lambda *args: None)
-        params, output = {'PREVIEW': '1'}, []
+        params, output = {'PREVIEW': '1', 'FIT_TRAVEL':'0'}, []
         gcmd = NS(get=lambda key, default: params.get(key, default), get_command_parameters=lambda: params,
                   get_int=lambda key, default, **kw: int(params.get(key, default)),
                   get_float=lambda key, default: float(params.get(key, default)), respond_info=output.append)

@@ -22,13 +22,13 @@ class PadMeshFixture:
             assert len(matrix) == 61 and all(len(row) == 61 for row in matrix)
             params = mesh.get_mesh_params()
             assert (params['min_x'], params['min_y'], params['max_x'], params['max_y']) == (
-                5., 5., 315., 315.)
+                10., 10., 299., 304.)
             assert abs(mesh.calc_z(150, 158)) < .000001
             assert abs(mesh.calc_z(160, 160) - .0014) < .000001
             assert abs(mesh.calc_z(30, 30) - .2624) < .000001
             gcmd.respond_info('M300_CI_PAD_MESH profile load passed')
         else:
-            assert adapter.points[1] == (265., 5.)
+            assert adapter.points[1] == (270., 10.)
             assert adapter.points[11] == (140., 140.)
             heights = [.1] * 10 + [-.2] * 5 + [.1] * 10
             heights = [z + .0001*(x-160) + .0002*(y-160)

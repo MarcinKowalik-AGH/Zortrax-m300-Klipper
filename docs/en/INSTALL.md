@@ -133,6 +133,13 @@ the OLED/Fluidd brightness bars, preserves Back after saving and reports pad
 geometry against the current XY limits in `ZORTRAX_BED_MESH PREVIEW=1`. It
 does not require another MCU flash when R14.15 is already installed.
 
+The pad mesh update uses confirmed 50/50 mm pads and fits their reachable
+corners to existing XY limits, including X300/Y305. `ZORTRAX_BED_MESH PREVIEW=1`
+reports the actual plan and every adjusted corner. The macro now inherits
+`[m300_pad_mesh]` settings. `ZORTRAX_PAD_MESH_STATUS` reports
+`revision: 0.13.16.15-PAD-TRAVEL`. This is a host-only update; MCU R14.16
+and thermal behavior remain unchanged.
+
 ### OLED RLE benchmark
 
 Run these commands in Fluidd with R14.8 or later running and the printer idle.
