@@ -7,10 +7,231 @@ from payload.m300_calibration_state import POINTS
 from payload.m300_native_service import native_service_frame
 from payload.m300_pad_mesh import (GEOMETRY_DEFAULTS, GRID_COUNT, M300PadMesh,
                                    fit_pad_points, geometry_points, mesh_bounds, pad_points,
-                                   pad_triangles, surface_grid)
+                                   pad_triangles, preparation_targets, surface_grid)
 
 
 class PadMeshTests(unittest.TestCase):
+    def preflight_case(self, homed=''):
+        mesh = M300PadMesh.__new__(M300PadMesh)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS, edge_margin=16.)
+        mesh.points = geometry_points(mesh.geometry)
+        mesh._error = ValueError
+        mesh.busy,mesh.state,mesh.report=False,'IDLE',None
+        mesh.phase,mesh.cancelled='IDLE',False
+        mesh.heat_timeout=60.
+        events,clock,freeze = [],[0.],[False]
+        limits = dict(homed_axes=homed, axis_minimum=(0.,0.,0.), axis_maximum=(300.,305.,315.))
+        position = [150.,158.,5. if 'z' in homed else 315.,0.]
+        contact = [False]
+        def query(when):
+            events.append('contact')
+            return contact[0]
+        endstop = NS(query_endstop=query, get_steppers=lambda:[NS(get_name=lambda:'stepper_z')])
+        temps = dict(hotend=(185.,185.),bed=(60.,60.))
+        def pause(until):
+            events.append('pause')
+            clock[0]=until
+            if not freeze[0]:
+                for name,(actual,target) in temps.items():
+                    temps[name]=(actual+max(-20.,min(20.,target-actual)),target)
+            return until
+        mesh.reactor = NS(monotonic=lambda:clock[0],pause=pause)
+        board = NS(native_control=True,mcu=NS(is_fileoutput=lambda:False),
+                   require_motion=lambda:events.append('motion_ready'),
+                   require_heating=lambda:events.append('heating_ready'))
+        def heater(name):
+            def set_temp(target):
+                events.append(('heat',name,target))
+                temps[name]=(temps[name][0],target)
+            return NS(set_temp=set_temp,min_temp=0.,max_temp=300. if name=='hotend' else 120.)
+        job = NS(board=board,service_busy=lambda:False,get_status=lambda now:dict(busy=False),
+                 _temperatures=lambda now:dict(temps),hotend=heater('hotend'),bed=heater('bed'))
+        kin = NS(get_status=lambda now:dict(limits))
+        toolhead = NS(get_kinematics=lambda:kin,get_position=lambda:position[:],
+                      get_last_move_time=lambda:0.,wait_moves=lambda:events.append('wait'),
+                      register_lookahead_callback=lambda callback:events.append('flush'))
+        active_mesh = [None]
+        def set_mesh(value):active_mesh[0]=value;events.append('clear_mesh')
+        bedmesh = NS(get_mesh=lambda:active_mesh[0],set_mesh=set_mesh)
+        def home(axes):
+            events.append(('home',axes))
+            limits['homed_axes']=''.join(axis for axis in 'xyz' if axis in limits['homed_axes']+axes)
+            if 'z' in axes:position[2]=5.
+            contact[0]=False
+        objects = {'m300_job':job,'toolhead':toolhead,'gcode_move':NS(move_transform=bedmesh),
+            'probe':NS(get_offsets=lambda:(0.,0.,0.),
+                       mcu_probe=NS(mcu_endstop=endstop,homing_helper=NS(z_min_position=0.))),
+            'm300_motion':NS(home=home,z_home_hotend_target=180.)}
+        mesh.bedmesh = bedmesh
+        mesh.gcode = NS(respond_info=lambda message:events.append(message))
+        mesh.printer = NS(lookup_object=lambda name,default=None:objects.get(name,default),
+                          is_shutdown=lambda:False,command_error=ValueError)
+        return mesh,NS(events=events,limits=limits,position=position,contact=contact,
+                       temps=temps,objects=objects,board=board,clock=clock,freeze=freeze,active_mesh=active_mesh)
+
+    def start_preparation(self, mesh):
+        mesh.busy,mesh.state,mesh.run_id,mesh.cancelled=True,'PROBING','a'*24,False
+        mesh._prepare(mesh.run_id)
+
+    def test_unhomed_pad_measurement_uses_native_homing_then_checks_clearance(self):
+        for homed,axes in (('', 'xyz'),('x','xyz'),('y','xyz'),('xy','z'),
+                           ('z','xy'),('xz','y'),('yz','x')):
+            with self.subTest(homed=homed):
+                mesh,case=self.preflight_case(homed)
+                mesh._preflight()
+                self.start_preparation(mesh)
+                homes=[event for event in case.events if isinstance(event,tuple) and event[0]=='home']
+                self.assertEqual(homes,[('home',axes)])
+                self.assertEqual(case.limits['homed_axes'],'xyz')
+                self.assertEqual(case.position[2],5.)
+                self.assertEqual(mesh.shift,1.)
+                self.assertEqual(mesh.horizontal_z,6.)
+                self.assertEqual(mesh.phase,'PROBING')
+                self.assertEqual(case.events[-1],'contact')
+                self.assertLess(case.events.index('motion_ready'),case.events.index(('home',axes)))
+                self.assertEqual(case.temps,dict(hotend=(185.,185.),bed=(60.,60.)))
+
+    def test_already_homed_pad_measurement_does_not_repeat_homing(self):
+        mesh,case=self.preflight_case('xyz')
+        mesh._preflight()
+        self.start_preparation(mesh)
+        self.assertNotIn(('home','xyz'),case.events)
+        case.contact[0]=True
+        with self.assertRaisesRegex(ValueError,'PC7 must be open'):
+            self.start_preparation(mesh)
+
+    def test_missing_xy_with_closed_pc7_uses_native_release_before_xy_homing(self):
+        mesh,case=self.preflight_case('z')
+        case.contact[0]=True
+        mesh._preflight()
+        self.start_preparation(mesh)
+        self.assertIn(('home','xyz'),case.events)
+        self.assertLess(case.events.index('contact'),case.events.index(('home','xyz')))
+        self.assertFalse(case.contact[0])
+
+    def test_pad_preflight_refuses_invalid_inputs_before_any_heating_or_homing(self):
+        def transform(case):case.objects['gcode_move'].move_transform=object()
+        def unsafe_geometry(case):case.limits['axis_maximum']=(280.,305.,315.)
+        def fileoutput(case):case.board.mcu.is_fileoutput=lambda:True
+        def busy_service(case):case.objects['m300_job'].service_busy=lambda:True
+        def active_print(case):case.objects['print_stats']=NS(get_status=lambda now:dict(state='printing'))
+        def offsets(case):case.objects['probe'].get_offsets=lambda:(1.,0.,0.)
+        def unarmed(case):case.board.require_motion=lambda:(_ for _ in ()).throw(ValueError('not armed'))
+        cases = [(transform,'native Bed Mesh motion transform'),(unsafe_geometry,'configured XY travel'),
+                 (fileoutput,'physical MCU'),(busy_service,'physical MCU'),
+                 (active_print,'idle native print'),(offsets,'zero offsets'),(unarmed,'not armed')]
+        for change,message in cases:
+            with self.subTest(change=change.__name__):
+                mesh,case=self.preflight_case()
+                change(case)
+                with self.assertRaisesRegex(ValueError,message):mesh._preflight()
+                self.assertFalse(any(isinstance(event,tuple) for event in case.events))
+        for params in ({'HOTEND_TEMP':170.},{'HOTEND_TEMP':float('nan')},{'BED_TEMP':0.},
+                       {'BED_TEMP':121.},{'HOTEND_TEMP':301.}):
+            mesh,case=self.preflight_case()
+            mesh.temperature_params=params
+            with self.assertRaises(ValueError):mesh._preflight()
+            self.assertFalse(any(isinstance(event,tuple) for event in case.events))
+
+    def test_failed_or_incomplete_native_homing_cannot_start_pad_probing(self):
+        mesh,case=self.preflight_case()
+        mesh.report={'profile':'previous'}
+        mesh.probe_points=NS(update_probe_points=lambda *args:None,
+                             start_probe=lambda cmd:self.fail('probe started after a failed home'))
+        gcmd=NS(get=lambda key,default:default,get_command_parameters=dict,
+                get_int=lambda key,default,**kw:default,get_float=lambda key,default:default)
+        def failed_home(axes):raise ValueError('native homing failed')
+        case.objects['m300_motion'].home=failed_home
+        with self.assertRaisesRegex(ValueError,'native homing failed'):mesh.cmd_calibrate(gcmd)
+        self.assertFalse(mesh.busy)
+        self.assertEqual(mesh.report,{'profile':'previous'})
+        self.assertEqual(case.temps['hotend'][1],0.)
+        self.assertEqual(case.temps['bed'][1],0.)
+        case.objects['m300_motion'].home=lambda axes:None
+        with self.assertRaisesRegex(ValueError,'did not establish XYZ'):mesh.cmd_calibrate(gcmd)
+        self.assertFalse(mesh.busy)
+        self.assertEqual(mesh.report,{'profile':'previous'})
+
+    def test_preparation_temperature_policy_is_a_180_degree_floor(self):
+        for measured,current,expected in ((25.,0.,180.),(180.,0.,180.),(240.,240.,240.),
+                (240.,0.,240.),(240.,180.,240.),(242.,240.,240.),(200.,240.,240.)):
+            with self.subTest(measured=measured,current=current):
+                result=preparation_targets(dict(hotend=(measured,current),bed=(30.,0.)),{})
+                self.assertEqual(result,dict(hotend=expected,bed=60.))
+        result=preparation_targets(dict(hotend=(200.,200.),bed=(80.,80.)),{})
+        self.assertEqual(result,dict(hotend=200.,bed=80.))
+        result=preparation_targets(dict(hotend=(240.,240.),bed=(80.,80.)),
+                                   {'HOTEND_TEMP':180.,'BED_TEMP':60.})
+        self.assertEqual(result,dict(hotend=240.,bed=60.))
+
+    def test_cold_start_heats_both_channels_before_waiting_then_renews_z(self):
+        mesh,case=self.preflight_case('xyz')
+        case.temps.update(hotend=(25.,0.),bed=(25.,0.))
+        case.active_mesh[0]=object()
+        mesh._preflight()
+        self.start_preparation(mesh)
+        self.assertIsNone(case.active_mesh[0])
+        self.assertLess(case.events.index(('heat','hotend',180.)),case.events.index('pause'))
+        self.assertLess(case.events.index(('heat','bed',60.)),case.events.index('pause'))
+        self.assertIn(('home','z'),case.events)
+        self.assertEqual(case.temps,dict(hotend=(180.,180.),bed=(60.,60.)))
+        self.assertEqual(mesh.phase,'PROBING')
+
+    def test_preparation_timeout_and_changed_target_abort_without_reheating(self):
+        mesh,case=self.preflight_case()
+        case.temps['bed']=(25.,0.)
+        case.freeze[0]=True
+        mesh.heat_timeout=1.
+        mesh._preflight()
+        with self.assertRaisesRegex(ValueError,'timed out'):self.start_preparation(mesh)
+        self.assertFalse(any(isinstance(event,tuple) and event[0]=='home' for event in case.events))
+        mesh,case=self.preflight_case()
+        mesh._preflight()
+        old_pause=mesh.reactor.pause
+        def change(until):
+            result=old_pause(until)
+            case.temps['hotend']=(185.,0.)
+            return result
+        mesh.reactor.pause=change
+        with self.assertRaisesRegex(ValueError,'target changed'):self.start_preparation(mesh)
+        self.assertEqual(case.temps['hotend'][1],0.)
+        self.assertFalse(any(isinstance(event,tuple) and event[0]=='home' for event in case.events))
+
+    def test_shutdown_during_lookahead_never_sets_a_positive_heater_target(self):
+        mesh,case=self.preflight_case()
+        mesh._preflight()
+        mesh.toolhead.register_lookahead_callback=lambda callback:mesh._stop('disconnect')
+        with self.assertRaisesRegex(ValueError,'session ended'):self.start_preparation(mesh)
+        heat=[event for event in case.events if isinstance(event,tuple) and event[0]=='heat']
+        self.assertEqual(heat,[('heat','hotend',0.),('heat','bed',0.)])
+        self.assertFalse(mesh.busy)
+
+    def test_preparation_calls_the_real_native_homing_adapter(self):
+        from test_normal_operations import motion_fixture
+        mesh,case=self.preflight_case()
+        case.temps['hotend']=(240.,0.)
+        motion=motion_fixture()
+        motion.homed=set()
+        case.board.hardware=motion.board.hardware
+        motion.reactor,motion.board=mesh.reactor,case.board
+        motion.hotend=case.objects['m300_job'].hotend
+        motion.hotend.get_temp=lambda now:case.temps['hotend']
+        motion.heaters=NS(set_temperature=lambda heater,target,wait=False:heater.set_temp(target))
+        motion.precision.endstop=case.objects['probe'].mcu_probe.mcu_endstop
+        kin=motion.toolhead.get_kinematics()
+        old_status=kin.get_status
+        kin.get_status=lambda now:dict(old_status(now),axis_minimum=(0.,0.,0.),axis_maximum=(300.,305.,315.))
+        motion.toolhead.register_lookahead_callback=lambda callback:None
+        case.objects['toolhead']=motion.toolhead
+        case.objects['m300_motion']=motion
+        mesh._preflight()
+        self.start_preparation(mesh)
+        homes=[event for event in motion.events if event[0]=='home']
+        self.assertEqual(homes,[('home','Y'),('home','X'),('home','Z')])
+        self.assertEqual(motion.state,'COMPLETE')
+        self.assertEqual(mesh.phase,'PROBING')
+        self.assertEqual(case.temps['hotend'],(240.,240.))
+
     def test_fifty_mm_pads_fit_x300_y305_without_moving_centers_or_shrinking_all_pads(self):
         points=geometry_points(GEOMETRY_DEFAULTS)
         fitted=fit_pad_points(points,(0.,0.),(300.,305.))
@@ -91,6 +312,12 @@ class PadMeshTests(unittest.TestCase):
         custom=legacy.replace('default(60)','default(61)')
         self.assertEqual(m300_profile.convert_text(custom),custom)
         self.assertEqual(m300_profile.convert_text(config.replace('60','52')),config.replace('60','52'))
+        current=(Path(__file__).parent/'reference/pad_mesh_macro_r1615.cfg').read_text()
+        updated=m300_profile.convert_text(current)
+        self.assertIn(m300_profile.pad_mesh_command(),updated)
+        self.assertIn('HOTEND_TEMP',updated)
+        self.assertIn('BED_TEMP',updated)
+        self.assertEqual(m300_profile.convert_text(updated),updated)
 
     def test_320_mm_layout_and_individual_center_corrections(self):
         geometry = dict(GEOMETRY_DEFAULTS, corner_pad_width=60.)
@@ -241,6 +468,8 @@ class PadMeshTests(unittest.TestCase):
         mesh.shift, mesh.horizontal_z = 1., 6.
         mesh._error = ValueError
         mesh._preflight = lambda: None
+        mesh._prepare = lambda token: None
+        mesh._check_session = lambda token: None
         mesh.printer = NS(is_shutdown=lambda: False, lookup_object=lambda name, default=None: default)
         positions = [[150., 158., 5., 0.]]
         mesh.toolhead = NS(get_position=lambda: positions[-1][:],
@@ -330,6 +559,8 @@ class PadMeshTests(unittest.TestCase):
         mesh.points = geometry_points(mesh.geometry)
         mesh.shift, mesh.horizontal_z, mesh.max_pad_spread, mesh.max_bed_span = 1., 6., None, .5
         mesh._error, mesh._preflight, mesh._check_clear = ValueError, lambda:None, lambda:None
+        mesh._prepare = lambda token:None
+        mesh._check_session = lambda token:None
         mesh.printer = NS(is_shutdown=lambda:False, lookup_object=lambda name,default=None:default)
         mesh.reactor = NS(monotonic=lambda:0.)
         positions, cleared, published = [[150.,158.,5.,0.]], [], []
@@ -415,12 +646,15 @@ class PadMeshTests(unittest.TestCase):
         gcode.register_command('BED_MESH_CALIBRATE',
                                lambda cmd: commands.append(cmd.get_command_parameters()))
         rendered = template.render(printer=NS(m300_pad_mesh=object()),
-                                   params={'FRONT_RIGHT_X': '289.25', 'PREVIEW': '1'})
+                                   params={'FRONT_RIGHT_X': '289.25', 'PREVIEW': '1',
+                                           'HOTEND_TEMP':'240','BED_TEMP':'60'})
         gcode.run_script_from_command(rendered)
         self.assertEqual(output, [])
         self.assertEqual(commands[0]['FRONT_RIGHT_X'], '289.25')
         self.assertEqual(commands[0]['PREVIEW'], '1')
-        self.assertEqual(set(commands[0]), {'FRONT_RIGHT_X', 'PREVIEW'})
+        self.assertEqual(commands[0]['HOTEND_TEMP'],'240')
+        self.assertEqual(commands[0]['BED_TEMP'],'60')
+        self.assertEqual(set(commands[0]), {'FRONT_RIGHT_X', 'PREVIEW', 'HOTEND_TEMP', 'BED_TEMP'})
         self.assertEqual(category('ZORTRAX_BED_MESH'), 'ZORTRAX M300')
 
     def test_actual_preflight_rejects_a_300_mm_limit_before_315_mm_probing(self):
@@ -446,7 +680,7 @@ class PadMeshTests(unittest.TestCase):
         self.assertEqual(travel['suggested_edge_margin'], 21)
         self.assertEqual(travel['outside_points'][0]['pad'], 'front_right')
         limits['axis_maximum'] = (320., 320., 315.)
-        with self.assertRaisesRegex(ValueError, 'clear the active mesh'):
+        with self.assertRaisesRegex(ValueError, 'native Bed Mesh motion transform'):
             mesh._preflight()
 
     def test_preview_reports_limits_and_fitting_inset_without_moving_or_extending_travel(self):

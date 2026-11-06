@@ -243,13 +243,16 @@ center_pad_width: 50.0
 edge_margin: 5.0
 fit_travel: True
 travel_margin: 1.0
+hotend_temperature: 180.0
+bed_temperature: 60.0
+heat_timeout: 1800.0
 ~~~
 
 The `ZORTRAX_BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
 The M300 Fluidd build opens **Tune** once an actual measurement passes preflight
-and starts probing, including starts from the console. It preserves the selected
+and starts preparation, including starts from the console. It preserves the selected
 printer connection. A geometry-only preview or preflight refusal does not change
-the page, and later manual navigation is respected. Tune shows point progress,
+the page, and later manual navigation is respected. Tune shows heating/homing phases and point progress,
 the five pad summaries and the result of the current attempt.
 Its parameter fields allow individual corrections without editing Python:
 
@@ -267,6 +270,8 @@ Its parameter fields allow individual corrections without editing Python:
 | `PREVIEW` | 0 | Set to 1 to show geometry without homing, heating or moving |
 | `FIT_TRAVEL` | 1 | Clip corners to the reachable part of their own pad |
 | `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0.5–5 mm |
+| `HOTEND_TEMP` | Minimum 180 | Minimum nozzle target; a hotter working temperature is retained |
+| `BED_TEMP` | Active bed target, otherwise 60 | Bed temperature for the measurement, °C |
 
 For example, preview a 1 mm front-left X correction and a different center:
 
@@ -292,17 +297,45 @@ frame is restored after the measurement. A failed search invalidates the
 Z reference and the previous saved mesh remains available.
 
 For the first supervised test, clean the nozzle and pads and confirm that the
-pads represent the printing surface. Heat the bed to the first-layer
-temperature and stabilize the clean nozzle at 180 °C or above. Use the same
-temperatures for later comparisons. Run the commands individually and turn
-off the heaters if calibration fails. Example for a 60 °C bed:
+pads represent the printing surface. One macro now prepares the full native
+measurement. It validates geometry, native heater limits, ownership and fresh
+MCU status before changing outputs; clears an active compensation mesh while
+retaining its saved profile; starts both native heaters together; waits for
+stable temperatures; and performs missing native homing before probing.
+
+The nozzle setting is a **minimum**, normally 180 °C. An active 240 °C target
+is retained. An already-hot idle nozzle is held at its current temperature,
+including after G28 restores its former zero target. A nozzle significantly
+hotter than a lower target is held rather than cooled to 180 °C; ordinary PID
+overshoot within 3 °C retains its working target. The configured native homing
+minimum also applies. The existing bed target is retained unless `BED_TEMP`
+overrides it; an off bed uses `bed_temperature` (60 °C by default).
+
+Use the same temperatures for later comparisons. For example, the operator's
+conservative 25-point plan with a 60 °C bed:
 
 ~~~gcode
-BED_MESH_CLEAR
-M190 S60
-M109 S185
-G28
-ZORTRAX_BED_MESH PROFILE=m300_pads
+ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60
+~~~
+
+To repeat an earlier measurement made with a 185 °C nozzle, add
+`HOTEND_TEMP=185`. This remains a minimum and does not cool a hotter nozzle.
+The native XYZ path is used when multiple axis references are missing; a
+missing XY or Z reference alone uses its corresponding native homing path.
+If heating changes the bed or nozzle temperature significantly, Z is renewed
+after stabilization even if it was previously homed. A closed PC7 before an
+XY-only home selects the native XYZ release path. Failure to establish XYZ
+prevents any pad probing. Native contact stopping, release checks, five
+precision Z references and physical motion limits remain in effect.
+
+Preparation requires both readings within 3 °C of their unchanged targets for
+three seconds, with a bounded `heat_timeout` (default 1800 seconds). A target
+change, lost authority, timeout, disconnect or shutdown aborts preparation;
+failed runs turn both heater targets off. Success leaves the selected targets
+for review or a following print. Read the result and switch off unused heaters
+as separate commands after the measurement:
+
+~~~gcode
 ZORTRAX_PAD_MESH_STATUS
 TURN_OFF_HEATERS
 ~~~

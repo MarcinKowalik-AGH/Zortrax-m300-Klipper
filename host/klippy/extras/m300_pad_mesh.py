@@ -15,10 +15,26 @@ CLEARANCE = 5.
 SEARCH_MARGIN = 1.
 PAD_NAMES = ('front_right', 'front_left', 'center', 'rear_right', 'rear_left')
 PAD_CENTERS = ((290., 30.), (30., 30.), (160., 160.), (290., 290.), (30., 290.))
+TEMPERATURE_SETTLE = 3.
 GEOMETRY_DEFAULTS = dict(corner_pad_width=50., center_pad_width=50., edge_margin=5.)
 GEOMETRY_DEFAULTS.update((name + '_' + axis, value)
                          for name, point in zip(PAD_NAMES, PAD_CENTERS)
                          for axis, value in zip('xy', point))
+
+
+def preparation_targets(temperatures, overrides, minimum_hotend=180., default_bed=60.):
+    """180 C is a floor; retain a hotter working target or an already-hot idle nozzle."""
+    measured, current = temperatures['hotend']
+    bed_current = temperatures['bed'][1]
+    requested = overrides.get('HOTEND_TEMP', minimum_hotend)
+    bed = overrides.get('BED_TEMP', bed_current if bed_current > 0. else default_bed)
+    values = (measured, current, bed_current, requested, bed, minimum_hotend, default_bed)
+    if (not all(math.isfinite(value) for value in values) or requested < 180. or bed <= 0.):
+        raise ValueError('HOTEND_TEMP must be at least 180 C and BED_TEMP must be positive and finite')
+    target = max(minimum_hotend, requested, current)
+    if current < minimum_hotend or measured > current + 3.:
+        target = max(target, measured)
+    return dict(hotend=target, bed=bed)
 
 
 def pad_points(corner_width, margin, center_width=None, centers=POINTS):
@@ -173,13 +189,22 @@ class M300PadMesh:
         self.nominal_points = self.points
         self.max_pad_spread = config.getfloat('max_pad_spread', None, above=0., maxval=.75)
         self.max_bed_span = config.getfloat('max_bed_span', .5, above=0., maxval=.75)
+        self.hotend_temperature = config.getfloat('hotend_temperature', 180., minval=180.)
+        self.bed_temperature = config.getfloat('bed_temperature', 60., above=0.)
+        self.heat_timeout = config.getfloat('heat_timeout', 1800., minval=60., maxval=3600.)
+        if not all(math.isfinite(value) for value in (
+                self.hotend_temperature, self.bed_temperature, self.heat_timeout)):
+            raise config.error('pad preparation temperatures and timeout must be finite')
         self.bedmesh = self.printer.load_object(config, 'bed_mesh')
         self.state, self.busy = 'IDLE', False
+        self.phase, self.cancelled = 'IDLE', False
         self.report = None
         self.run_id = None
         self.points_measured = 0
         self.last_error = ''
         self.last_attempt = None
+        for event in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
+            self.printer.register_event_handler(event, lambda *args,event=event:self._stop(event))
 
         owner = self
 
@@ -203,19 +228,44 @@ class M300PadMesh:
     def _error(self, message):
         return self.printer.command_error('M300 pad mesh: ' + message)
 
+    def _stop(self, reason):
+        if self.busy:
+            self.cancelled = True
+            self.last_error = reason
+            self.state, self.phase, self.busy = 'FAILED', 'FAILED', False
+            self._turn_off()
+
+    def _turn_off(self):
+        job = getattr(self, 'job', None)
+        for name in ('hotend', 'bed'):
+            heater = getattr(job, name, None)
+            if heater is not None:
+                heater.set_temp(0.)
+
+    def _check_session(self, token):
+        if (self.printer.is_shutdown() or self.cancelled or not self.busy
+                or self.state != 'PROBING' or self.run_id != token):
+            raise self._error('measurement session ended during ' + self.phase)
+        self.job.board.require_motion()
+        self.job.board.require_heating()
+
     def _check_clear(self):
         if self.printer.is_shutdown():
             raise self._error('printer shut down during probing')
         self.toolhead.wait_moves()
         self.job.board.require_motion()
         self.job.board.require_heating()
+        self._check_temperatures()
+        if self.endstop.query_endstop(self.toolhead.get_last_move_time()):
+            raise self._error('PC7 must be open at clearance before XY travel')
+
+    def _check_temperatures(self):
         temperatures = self.job._temperatures(self.reactor.monotonic())
         for name, target in self.targets.items():
             measured, current_target = temperatures[name]
-            if target != current_target or abs(measured - target) > 3.:
+            if (not all(math.isfinite(value) for value in (measured, current_target, target))
+                    or target != current_target or abs(measured - target) > 3.):
                 raise self._error('temperature is no longer stable for ' + name)
-        if self.endstop.query_endstop(self.toolhead.get_last_move_time()):
-            raise self._error('PC7 must be open at clearance before XY travel')
 
     def _capture(self, results):
         self._check_clear()
@@ -263,8 +313,6 @@ class M300PadMesh:
         self.toolhead = self.printer.lookup_object('toolhead')
         self.kin = self.toolhead.get_kinematics()
         limits = self.kin.get_status(now)
-        if not set(limits['homed_axes']) >= set('xyz'):
-            raise self._error('home XYZ before probing')
         low, high = limits['axis_minimum'], limits['axis_maximum']
         travel = self._geometry_travel(limits)
         if not travel['fits']:
@@ -274,8 +322,8 @@ class M300PadMesh:
                     *travel['required_x'], *travel['required_y'],
                     *travel['configured_x'], *travel['configured_y']))
         gcode_move = self.printer.lookup_object('gcode_move')
-        if gcode_move.move_transform is not self.bedmesh or self.bedmesh.get_mesh() is not None:
-            raise self._error('clear the active mesh before probing with BED_MESH_CLEAR')
+        if gcode_move.move_transform is not self.bedmesh:
+            raise self._error('requires the native Bed Mesh motion transform')
         printer_probe = self.printer.lookup_object('probe')
         if tuple(printer_probe.get_offsets()) != (0., 0., 0.):
             raise self._error('requires zero offsets for the native nozzle contact probe')
@@ -286,15 +334,84 @@ class M300PadMesh:
             raise self._error('PC7 must own one native Z rail with its configured minimum')
         self.shift = low[2] + SEARCH_MARGIN
         self.horizontal_z = CLEARANCE + self.shift
+        if not low[2] <= self.horizontal_z <= high[2]:
+            raise self._error('configured Z travel cannot provide probe clearance')
+        self.motion = self.printer.lookup_object('m300_motion')
+        self.job.board.require_motion()
+        self.job.board.require_heating()
+        temperatures = self.job._temperatures(now)
+        try:
+            self.targets = preparation_targets(temperatures, getattr(self,'temperature_params',{}),
+                max(getattr(self,'hotend_temperature',180.),self.motion.z_home_hotend_target),
+                getattr(self,'bed_temperature',60.))
+        except ValueError as exc:
+            raise self._error(str(exc))
+        for name in ('hotend','bed'):
+            heater = getattr(self.job,name)
+            if not heater.min_temp <= self.targets[name] <= heater.max_temp:
+                raise self._error('requested temperature outside native heater limits: ' + name)
+        # A reference made before a significant temperature change must be
+        # renewed after the bed and nozzle settle, even if XYZ still says homed.
+        self.renew_z = any(abs(values[0]-self.targets[name]) > 3.
+                           for name,values in temperatures.items())
+
+    def _wait_temperatures(self, token):
+        now = self.reactor.monotonic()
+        deadline = now + getattr(self,'heat_timeout',1800.)
+        stable_since = None
+        while True:
+            self._check_session(token)
+            temperatures = self.job._temperatures(now)
+            stable = True
+            for name,target in self.targets.items():
+                measured,current = temperatures[name]
+                if not all(math.isfinite(value) for value in (measured,current)) or current != target:
+                    raise self._error('temperature target changed during preparation: ' + name)
+                stable = stable and abs(measured-target) <= 3.
+            if stable:
+                if stable_since is None:stable_since=now
+                if now-stable_since >= TEMPERATURE_SETTLE:return
+            else:
+                stable_since = None
+            if now >= deadline:
+                raise self._error('temperature preparation timed out before probing')
+            now = self.reactor.pause(min(now+.5,deadline))
+
+    def _prepare(self, token):
+        self.phase = 'HEATING'
+        self._check_session(token)
+        self.bedmesh.set_mesh(None)
+        # Match native Heater ownership. Flush once, then revalidate before
+        # synchronous targets so a shutdown during lookahead cannot reheat.
+        self.toolhead.register_lookahead_callback(lambda print_time:None)
+        self._check_session(token)
+        self.job.hotend.set_temp(self.targets['hotend'])
+        self.job.bed.set_temp(self.targets['bed'])
+        self._wait_temperatures(token)
+        self.phase = 'HOMING'
+        limits = self.kin.get_status(self.reactor.monotonic())
+        missing = ''.join(axis for axis in 'xyz'
+                          if axis not in limits['homed_axes'] or axis == 'z' and self.renew_z)
+        if missing:
+            axes = missing if missing in ('x','y','xy','z') else 'xyz'
+            if axes in ('x','y','xy'):
+                self.toolhead.wait_moves()
+                if self.endstop.query_endstop(self.toolhead.get_last_move_time()):
+                    axes = 'xyz'  # Native XYZ releases a closed PC7 before XY travel.
+            self.gcode.respond_info('Pad mesh: homing %s before probing' % axes.upper())
+            self.motion.home(axes=axes)
+            self._check_session(token)
+            self.phase = 'STABILIZING'
+            self._wait_temperatures(token)
+        limits = self.kin.get_status(self.reactor.monotonic())
+        if not set(limits['homed_axes']) >= set('xyz'):
+            raise self._error('native homing did not establish XYZ; probing was not started')
+        low,high = limits['axis_minimum'],limits['axis_maximum']
         pos = self.toolhead.get_position()
-        if not (low[2] <= self.horizontal_z <= high[2]
-                and low[2] <= pos[2] + self.shift <= high[2]):
+        if not low[2] <= pos[2]+self.shift <= high[2]:
             raise self._error('move to a safe Z position before measuring')
-        temps = self.job._temperatures(now)
-        self.targets = {name: temps[name][1] for name in ('hotend', 'bed')}
-        if self.targets['hotend'] < 180. or self.targets['bed'] <= 0.:
-            raise self._error('heat the clean nozzle to at least 180 C and the bed to print temperature')
         self._check_clear()
+        self.phase = 'PROBING'
 
     def _publish(self, profile, readings):
         from .bed_mesh import ZMesh
@@ -315,7 +432,8 @@ class M300PadMesh:
 
     def cmd_calibrate(self, gcmd):
         profile = gcmd.get('PROFILE', 'm300_pads')
-        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {'PROFILE', 'PREVIEW', 'FIT_TRAVEL', 'TRAVEL_MARGIN'}
+        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {
+            'PROFILE', 'PREVIEW', 'FIT_TRAVEL', 'TRAVEL_MARGIN', 'HOTEND_TEMP', 'BED_TEMP'}
         if (self.busy or set(gcmd.get_command_parameters()) - allowed
                 or not re.fullmatch(r'[a-zA-Z0-9_-]{1,32}', profile)):
             raise self._error('requires an idle pad run with a simple PROFILE and supported pad parameters')
@@ -340,6 +458,8 @@ class M300PadMesh:
         if preview:
             self.cmd_status(gcmd)
             return
+        self.temperature_params = {key:gcmd.get_float(key) for key in ('HOTEND_TEMP','BED_TEMP')
+                                   if key in gcmd.get_command_parameters()}
         self._preflight()
         adjusted = sum(a != b for a,b in zip(nominal,points))
         if adjusted:
@@ -347,11 +467,15 @@ class M300PadMesh:
                               'all five centers and pad sizes are retained. '
                               'Use PREVIEW=1 to review the contact plan.' % adjusted)
         self.state, self.busy = 'PROBING', True
+        self.phase, self.cancelled = 'PREPARING', False
         self.run_id = os.urandom(12).hex()
+        token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
         self.samples = None
         shifted = completed = False
         try:
+            self._prepare(token)
+            self._check_session(token)
             pos = self.toolhead.get_position()
             pos[2] += self.shift
             self.toolhead.set_position(pos)
@@ -363,13 +487,16 @@ class M300PadMesh:
             native_cmd = self.gcode.create_gcode_command('BED_MESH_CALIBRATE',
                                                        'BED_MESH_CALIBRATE', params)
             self.probe_points.start_probe(native_cmd)
+            self._check_session(token)
             readings, pads = self.samples
             self.toolhead.wait_moves()
+            self._check_session(token)
             pos = self.toolhead.get_position()
             pos[2] -= self.shift
             self.toolhead.set_position(pos)
             shifted = False
             self._publish(profile, readings)
+            self._check_session(token)
             self.report = dict(profile=profile, pads=pads, run_id=self.run_id,
                                points=[[x, y, z] for (x, y), z in zip(self.points, readings)])
             if self.last_attempt is not None:
@@ -377,6 +504,7 @@ class M300PadMesh:
             completed = True
         except Exception as exc:
             self.last_error = str(exc)
+            self._turn_off()
             raise
         finally:
             try:
@@ -389,6 +517,7 @@ class M300PadMesh:
             finally:
                 self.busy = False
                 self.state = 'COMPLETE' if completed else 'FAILED'
+                self.phase = self.state
         gcmd.respond_info('Measured 25 pad positions. Load %s for printing; use SAVE_CONFIG to keep it.'
                           % profile)
 
@@ -426,7 +555,8 @@ class M300PadMesh:
         nominal = getattr(self,'nominal_points',self.points)
         changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
                    for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
-        return dict(revision='0.13.16.16-PAD-TUNE', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.17-PAD-PREPARE', state=self.state, busy=self.busy, result=self.report,
+                    phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.5),

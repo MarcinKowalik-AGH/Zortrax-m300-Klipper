@@ -38,6 +38,13 @@ the printer query parameter. It does not reopen Tune after manual navigation,
 on geometry-only previews, on preflight refusals or for an old completed run.
 No G-code or additional polling is sent to navigate.
 
+Revision `0.13.16.17-PAD-PREPARE` includes the preparation in that live run:
+Tune shows simultaneous heating, native homing, temperature stabilization and
+then the 25-point progress. Nozzle/bed targets are displayed. The nozzle uses
+180 °C as a floor and retains a hotter working temperature; a previously off
+bed defaults to 60 °C. `HOTEND_TEMP` and `BED_TEMP` are editable macro fields.
+`PREVIEW=1` still never heats or homes. No firmware flash is required.
+
 Tune shows progress through 25 positions, five pad medians/spreads and the
 measured range versus its configured limit. A failed attempt retains its
 diagnostics and error, without a Save button or a newly generated map. On

@@ -84,6 +84,10 @@ Pad mesh revision `0.13.16.16-PAD-TUNE` opens Fluidd Tune once probing starts,
 shows progress and rejected-attempt diagnostics, and previews an accepted
 native profile before compensation is activated. Saving is offered only for
 the current accepted run. The default 0.50 mm span limit is preserved.
+Revision `0.13.16.17-PAD-PREPARE` makes the measurement a single command:
+simultaneous native bed/nozzle heating, stable-temperature wait and required
+native homing precede probing. Nozzle temperature uses 180 °C as a minimum
+and retains a hotter working temperature. Tune shows each preparation phase.
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

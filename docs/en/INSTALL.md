@@ -39,9 +39,11 @@ and preserves config.json. A host already on the same R16.12 files skips its
 restart. For a different nginx port, pass `--port`; for an atypical nginx
 configuration, pass `--fluidd-root /absolute/path/to/current/fluidd`.
 
-Pad mesh revision `0.13.16.16-PAD-TUNE` updates the host and compiled Fluidd.
-It opens Tune for an active pad measurement and reports progress, acceptance
-or a detailed rejection. This update does not require another MCU flash.
+Pad mesh revision `0.13.16.17-PAD-PREPARE` updates the host and compiled Fluidd.
+One `ZORTRAX_BED_MESH` now prepares both heaters and required native homing
+before measurement. The nozzle uses 180 °C as a minimum and preserves a
+hotter working temperature. Tune displays preparation and point progress,
+acceptance or a detailed rejection. This update does not require another MCU flash.
 Fully reload Fluidd after installation to load the new web files.
 
 Expect `INSTALLED_M300_R16_12_FULL`, then reload Fluidd. Keep the host receipt

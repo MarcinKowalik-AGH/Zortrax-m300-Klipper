@@ -651,10 +651,10 @@ index ba2423a..bf77454 100644
 
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
-index 0000000..7186cd7
+index 0000000..446d667
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,112 @@
 +<template>
 +  <collapsable-card
 +    v-if="status"
@@ -667,6 +667,7 @@ index 0000000..7186cd7
 +      <v-progress-linear
 +        v-if="status.busy"
 +        :value="100 * status.points_measured / status.total_points"
++        :indeterminate="!!status.phase && status.phase !== 'PROBING'"
 +        class="mb-3"
 +      />
 +      <v-alert
@@ -674,7 +675,16 @@ index 0000000..7186cd7
 +        text
 +      >
 +        <template v-if="status.busy">
-+          Measuring point {{ Math.min(status.points_measured + 1, 25) }} of 25.
++          <template v-if="preparationMessage">
++            {{ preparationMessage }}
++          </template>
++          <template v-else>
++            Measuring point {{ Math.min(status.points_measured + 1, 25) }} of 25.
++          </template>
++          <div v-if="status.targets">
++            Nozzle target: {{ status.targets.hotend.toFixed(1) }} °C.
++            Bed target: {{ status.targets.bed.toFixed(1) }} °C.
++          </div>
 +        </template>
 +        <template v-else-if="accepted">
 +          Profile {{ profileName }} created.
@@ -731,6 +741,16 @@ index 0000000..7186cd7
 +
 +  get accepted () {
 +    return isM300PadMeshAccepted(this.status)
++  }
++
++  get preparationMessage () {
++    const messages: Record<string, string> = {
++      PREPARING: 'Preparing the pad measurement.',
++      HEATING: 'Heating the nozzle and bed together; waiting for stable temperatures.',
++      HOMING: 'Establishing the native axis references.',
++      STABILIZING: 'Checking stable temperatures after homing.'
++    }
++    return messages[this.status?.phase ?? '']
 +  }
 +
 +  get profileName () {
@@ -1185,10 +1205,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..72b018d
+index 0000000..702ad23
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,229 @@
+@@ -0,0 +1,276 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -1417,13 +1437,60 @@ index 0000000..72b018d
 +    delete source.bed_mesh.profiles!.m300_pads
 +    expect(m300PadMeshPreview(source)).toBeUndefined()
 +  })
++
++  it('opens Tune once for preparation and respects navigation through heating and homing', async () => {
++    const source = printer()
++    source.m300_pad_mesh.phase = 'HEATING'
++    const ctx = context(source)
++    const wrapper = shallowMount(M300PadMeshObserver, { mocks: ctx.mocks })
++    expect(ctx.push).toHaveBeenCalledTimes(1)
++    ctx.route.name = 'console'
++    source.m300_pad_mesh.phase = 'HOMING'
++    await Vue.nextTick()
++    source.m300_pad_mesh.phase = 'PROBING'
++    await Vue.nextTick()
++    expect(ctx.push).toHaveBeenCalledTimes(1)
++    wrapper.destroy()
++  })
++
++  it('shows actual preparation phases and the retained hotter nozzle target before point progress', async () => {
++    const source = printer()
++    source.m300_pad_mesh.phase = 'HEATING'
++    source.m300_pad_mesh.targets = { hotend: 240, bed: 60 }
++    const ctx = context(source)
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(M300PadMeshStatus, {
++      mocks: ctx.mocks,
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot, 'v-simple-table': slot }
++    })
++    expect(wrapper.text()).toContain('Heating the nozzle and bed together')
++    expect(wrapper.text()).toContain('Nozzle target: 240.0 °C')
++    expect(wrapper.text()).not.toContain('Measuring point')
++    source.m300_pad_mesh.phase = 'HOMING'
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Establishing the native axis references')
++    source.m300_pad_mesh.phase = 'STABILIZING'
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Checking stable temperatures after homing')
++    source.m300_pad_mesh.phase = 'PROBING'
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Measuring point 1 of 25')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    wrapper.destroy()
++  })
++
++  it('rejects invalid preparation phases and temperature targets', () => {
++    expect(readM300PadMesh({ ...status(), phase: 'UNKNOWN' })).toBeUndefined()
++    expect(readM300PadMesh({ ...status(), targets: { hotend: NaN, bed: 60 } })).toBeUndefined()
++    expect(readM300PadMesh({ ...status(), targets: { hotend: 180 } })).toBeUndefined()
++  })
 +})
 diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
 new file mode 100644
-index 0000000..f546212
+index 0000000..3e7d288
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.ts
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,73 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +export interface M300PadAttempt {
 +  run_id: string;
@@ -1436,6 +1503,8 @@ index 0000000..f546212
 +export interface M300PadMesh {
 +  run_id: string;
 +  state: string;
++  phase?: string;
++  targets?: { hotend: number; bed: number } | null;
 +  busy: boolean;
 +  points_measured: number;
 +  total_points: number;
@@ -1452,6 +1521,10 @@ index 0000000..f546212
 +      status.busy !== (status.state === 'PROBING') || status.total_points !== 25 ||
 +      !Number.isInteger(status.points_measured) || status.points_measured < 0 || status.points_measured > 25 ||
 +      typeof status.last_error !== 'string') return
++  if (status.phase !== undefined && !['IDLE', 'PREPARING', 'HEATING', 'HOMING', 'STABILIZING',
++    'PROBING', 'COMPLETE', 'FAILED'].includes(status.phase)) return
++  if (status.targets !== undefined && status.targets !== null &&
++      (!Number.isFinite(status.targets.hotend) || !Number.isFinite(status.targets.bed))) return
 +  const attempt = status.last_attempt
 +  if (attempt !== null && (!attempt || attempt.run_id !== status.run_id || typeof attempt.accepted !== 'boolean' ||
 +      !Number.isFinite(attempt.span_mm) || !Number.isFinite(attempt.limit_mm) ||
