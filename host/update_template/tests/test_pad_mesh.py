@@ -311,7 +311,7 @@ class PadMeshTests(unittest.TestCase):
         for bounds in ((280.,305.),(300.,280.),(290.5,305.)):
             with self.assertRaisesRegex(ValueError,'pad center'):
                 fit_pad_points(points,(0.,0.),bounds)
-        for margin in (0.,6.,float('nan')):
+        for margin in (-.01,6.,float('nan')):
             with self.assertRaisesRegex(ValueError,'TRAVEL_MARGIN'):
                 fit_pad_points(points,(0.,0.),(300.,305.),margin)
         self.assertEqual(fit_pad_points(points,(0.,0.),(320.,320.)),points)
@@ -344,15 +344,22 @@ class PadMeshTests(unittest.TestCase):
         run({'PREVIEW':'1','FIT_TRAVEL':'0'})
         self.assertFalse(mesh.get_status(0.)['travel']['fits'])
         self.assertEqual(mesh.points,geometry_points(mesh.geometry))
+        run({'PREVIEW':'1','FIT_TRAVEL':'1','CORNER_PAD_WIDTH':'60',
+             'FRONT_LEFT_X':'15','FRONT_LEFT_Y':'15','FRONT_RIGHT_X':'285','FRONT_RIGHT_Y':'15',
+             'EDGE_MARGIN':'0','TRAVEL_MARGIN':'0'})
+        self.assertEqual(mesh.points[5:10],((15.,15.),(0.,0.),(45.,0.),(45.,45.),(0.,45.)))
+        self.assertEqual(mesh.geometry['corner_pad_width'],60.)
+        self.assertEqual(mesh.geometry['edge_margin'],0.)
+        self.assertEqual(mesh.travel_margin,0.)
         self.assertEqual(limits['axis_maximum'],(300.,305.,315.))
 
-    def test_known_old_macro_and_60_mm_default_migrate_without_losing_custom_centers(self):
+    def test_known_old_macro_migrates_without_replacing_explicit_pad_dimensions_or_centers(self):
         from pathlib import Path
         import m300_profile
         legacy=(Path(__file__).parent/'reference/pad_mesh_macro_r1613.cfg').read_text()
         config='[m300_pad_mesh]\ncorner_pad_width: 60\ncenter_pad_width: 50\nfront_left_x: 31.25\n'
         result=m300_profile.convert_text(config+legacy)
-        self.assertIn('corner_pad_width: 50',result)
+        self.assertIn('corner_pad_width: 60',result)
         self.assertIn('front_left_x: 31.25',result)
         self.assertIn(m300_profile.pad_mesh_command(),result)
         self.assertEqual(m300_profile.convert_text(result),result)
@@ -404,9 +411,44 @@ class PadMeshTests(unittest.TestCase):
         for i, (x, y) in enumerate(POINTS):
             self.assertEqual(points[i * 5:(i + 1) * 5],
                              ((x, y), (x-3, y-3), (x+3, y-3), (x+3, y+3), (x-3, y+3)))
-        for width, margin in ((2., 1.), (8., 0.), (float('nan'), 1.)):
+        for width, margin in ((2., 1.), (8., -.01), (float('nan'), 1.)):
             with self.assertRaises(ValueError):
                 pad_points(width, margin)
+
+    def test_home_is_15_mm_inside_the_60_mm_pad_and_zero_margin_keeps_native_zero(self):
+        geometry=dict(GEOMETRY_DEFAULTS,corner_pad_width=60.,edge_margin=0.,
+                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.)
+        nominal=geometry_points(geometry)
+        self.assertEqual(nominal[5:10],((15.,15.),(-15.,-15.),(45.,-15.),(45.,45.),(-15.,45.)))
+        fitted=fit_pad_points(nominal,(0.,0.),(300.,305.),margin=0.)
+        self.assertEqual(fitted[5:10],((15.,15.),(0.,0.),(45.,0.),(45.,45.),(0.,45.)))
+        self.assertEqual(fitted[:5],((285.,15.),(255.,0.),(300.,0.),(300.,45.),(255.,45.)))
+        self.assertEqual(len(set(fitted)),25)
+        self.assertTrue(all(0. <= x <= 300. and 0. <= y <= 305. for x,y in fitted))
+        reference=.001*geometry['center_x']+.002*geometry['center_y']
+        grid=surface_grid(fitted,[.001*x+.002*y for x,y in fitted])
+        x0,y0,x1,y1=mesh_bounds(fitted)
+        for j,row in enumerate(grid):
+            for i,z in enumerate(row):
+                self.assertAlmostEqual(z,.001*(x0+(x1-x0)*i/60)+.002*(y0+(y1-y0)*j/60)-reference)
+
+    def test_metal_inset_keeps_home_zero_and_only_moves_reachable_inner_edges(self):
+        geometry=dict(GEOMETRY_DEFAULTS,corner_pad_width=60.,edge_margin=2.,
+                      front_left_x=15.,front_left_y=15.,front_right_x=285.,front_right_y=15.)
+        fitted=fit_pad_points(geometry_points(geometry),(0.,0.),(300.,305.),margin=0.)
+        self.assertEqual(fitted[5:10],((15.,15.),(0.,0.),(43.,0.),(43.,43.),(0.,43.)))
+        self.assertEqual(fitted[:5],((285.,15.),(257.,0.),(300.,0.),(300.,43.),(257.,43.)))
+
+    def test_zero_margin_still_rejects_invalid_dimensions_and_collapsed_contact_areas(self):
+        for width in (0.,-1.,101.,float('nan'),float('inf')):
+            with self.subTest(width=width),self.assertRaisesRegex(ValueError,'pad widths'):
+                pad_points(width,0.)
+        for margin in (-1.,float('nan'),float('inf')):
+            with self.subTest(margin=margin),self.assertRaisesRegex(ValueError,'edge_margin'):
+                pad_points(60.,margin,50.)
+        for margin in (25.,30.):
+            with self.subTest(margin=margin),self.assertRaisesRegex(ValueError,'half of both'):
+                pad_points(60.,margin,50.)
 
     def test_measured_60_mm_outer_and_50_mm_center_geometry_fits_travel(self):
         points = pad_points(60., 5., 50.)

@@ -1206,10 +1206,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..941afff
+index 0000000..618a60e
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,333 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -1313,10 +1313,11 @@ index 0000000..941afff
 +{% set _m300_pad_args = _m300_pad_args + ['CORNER_PAD_WIDTH=' ~ params.CORNER_PAD_WIDTH] if params.CORNER_PAD_WIDTH is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['CENTER_PAD_WIDTH=' ~ params.CENTER_PAD_WIDTH] if params.CENTER_PAD_WIDTH is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['EDGE_MARGIN=' ~ params.EDGE_MARGIN] if params.EDGE_MARGIN is defined else _m300_pad_args %}
++{% set _m300_pad_args = _m300_pad_args + ['TRAVEL_MARGIN=' ~ params.TRAVEL_MARGIN] if params.TRAVEL_MARGIN is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['BED_TEMP=' ~ params.BED_TEMP] if params.BED_TEMP is defined else _m300_pad_args %}
 +BED_MESH_CALIBRATE {_m300_pad_args|join(' ')}`
 +    const fields = gcodeMacroParams(gcode)
-+    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'BED_TEMP'])
++    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'TRAVEL_MARGIN', 'BED_TEMP'])
 +    const params = Object.fromEntries(fields.map(field => [field.name, { value: field.value }]))
 +    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params)).toBe('ZORTRAX_BED_MESH')
 +    for (const [key, value] of Object.entries({ CORNER_PAD_WIDTH: '50', CENTER_PAD_WIDTH: '50', EDGE_MARGIN: '16', BED_TEMP: '60' })) {
@@ -1350,6 +1351,11 @@ index 0000000..941afff
 +    await wrapper.find('form').trigger('submit')
 +    expect(wrapper.emitted('click')?.[1])
 +      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60'])
++    button.params.EDGE_MARGIN.value = '0'
++    button.params.TRAVEL_MARGIN.value = '0'
++    await wrapper.find('form').trigger('submit')
++    expect(wrapper.emitted('click')?.[2])
++      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=0 TRAVEL_MARGIN=0 BED_TEMP=60'])
 +    wrapper.destroy()
 +  })
 +

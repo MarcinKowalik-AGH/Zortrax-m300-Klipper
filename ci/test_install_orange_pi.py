@@ -9,6 +9,29 @@ import install_orange_pi as installer
 
 
 class OrangePiInstallerTest(unittest.TestCase):
+    def test_known_pad_config_error_can_install_without_unavailable_print_stats(self):
+        info={'state':'error','state_message':installer.OLD_PAD_GEOMETRY_ERROR}
+        with patch.object(installer,'printer',return_value=info) as printer:
+            self.assertEqual(installer.require_idle(),info)
+        printer.assert_called_once_with('/printer/info')
+
+    def test_config_recovery_never_accepts_runtime_shutdown_or_unrelated_startup_errors(self):
+        for state,message in (('shutdown',installer.OLD_PAD_GEOMETRY_ERROR),
+                ('startup',installer.OLD_PAD_GEOMETRY_ERROR),('error','MCU connection failed')):
+            with self.subTest(state=state,message=message):
+                with patch.object(installer,'printer',return_value={'state':state,'state_message':message}) as printer:
+                    with self.assertRaisesRegex(ValueError,'Ready'):installer.require_idle()
+                printer.assert_called_once_with('/printer/info')
+
+    def test_installation_still_refuses_printing_or_paused_ready_host(self):
+        for state in ('printing','paused'):
+            with self.subTest(state=state),patch.object(installer,'run') as run:
+                with patch.object(installer,'printer',side_effect=[{'state':'ready'},
+                        {'status':{'print_stats':{'state':state}}}]):
+                    with self.assertRaisesRegex(ValueError,'idle'):
+                        installer.apply_host(Path('/package/host'),(),{'status':'PLAN_M300_R16_12'})
+                run.assert_not_called()
+
     def test_nginx_port_selects_fluidd(self):
         config = '''
             http {

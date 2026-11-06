@@ -52,6 +52,16 @@ leveling and pad mesh. Successful pad mesh restores prior heater targets
 required.
 Fully reload Fluidd after installation to load the new web files.
 
+Revision `0.13.16.19-PAD-ZERO-MARGIN` permits both `edge_margin: 0` and
+`travel_margin: 0`, preserving native X0/Y0 when a physical pad extends
+beyond the travel limits. Explicit pad dimensions are retained by the installer.
+The usual installer can also repair the preceding adapter's known pad-geometry
+startup error without requiring unavailable `print_stats`. Other startup errors,
+runtime shutdowns, printing and paused states remain refused. The updated host
+must reach Ready before Fluidd deployment continues. Review the corrected
+[home-inside-metal geometry](LEVELING.md#home-can-lie-inside-the-physical-metal)
+before another measurement.
+
 Expect `INSTALLED_M300_R16_12_FULL`, then reload Fluidd. Keep the host receipt
 and the reported Fluidd backup path. The installer does not run printer
 movement, heating or MCU flashing.
@@ -146,7 +156,7 @@ the OLED/Fluidd brightness bars, preserves Back after saving and reports pad
 geometry against the current XY limits in `ZORTRAX_BED_MESH PREVIEW=1`. It
 does not require another MCU flash when R14.15 is already installed.
 
-The pad mesh update uses confirmed 50/50 mm pads and fits their reachable
+The pad mesh adapter uses configured physical pad dimensions and fits their reachable
 corners to existing XY limits, including X300/Y305. `ZORTRAX_BED_MESH PREVIEW=1`
 reports the actual plan and every adjusted corner. The macro now inherits
 `[m300_pad_mesh]` settings. `ZORTRAX_PAD_MESH_STATUS` reports

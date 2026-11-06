@@ -10,7 +10,24 @@ class PadMeshFixture:
             raise gcmd.error('Pad mesh fixture requires FILEOUTPUT')
         adapter = self.printer.lookup_object('m300_pad_mesh')
         check = gcmd.get_int('CHECK', 0)
-        if check == 2:
+        if check == 3:
+            assert adapter.geometry['edge_margin'] == adapter.travel_margin == 0.
+            assert adapter.points[5:10] == ((15.,15.),(0.,0.),(45.,0.),(45.,45.),(0.,45.))
+            assert adapter.points[:5] == ((285.,15.),(255.,0.),(300.,0.),(300.,45.),(255.,45.))
+            assert len(set(adapter.points)) == 25
+            adapter._publish('m300_zero_pads',[.001*x+.002*y for x,y in adapter.points])
+            assert adapter.bedmesh.get_mesh() is None
+            gcmd.respond_info('M300_CI_PAD_MESH zero-margin geometry passed')
+        elif check == 4:
+            mesh=adapter.bedmesh.get_mesh()
+            assert mesh.profile_name == 'm300_zero_pads'
+            params=mesh.get_mesh_params()
+            assert (params['min_x'],params['min_y'],params['max_x'],params['max_y']) == (0.,0.,300.,305.)
+            assert abs(mesh.calc_z(0.,0.) + .466) < .000001
+            assert abs(mesh.calc_z(45.,45.) + .331) < .000001
+            assert abs(mesh.calc_z(300.,305.) - .444) < .000001
+            gcmd.respond_info('M300_CI_PAD_MESH zero-margin profile load passed')
+        elif check == 2:
             assert adapter.points[5] == (31., 30.)
             assert adapter.geometry['front_left_x'] == 31.
             assert adapter.bedmesh.get_mesh().profile_name == 'm300_pads'

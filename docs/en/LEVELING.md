@@ -277,11 +277,11 @@ Its parameter fields allow individual corrections without editing Python:
 | `REAR_LEFT_X`, `REAR_LEFT_Y` | 30, 290 | Rear-left pad center |
 | `CORNER_PAD_WIDTH` | 50 | Width of each corner square, mm |
 | `CENTER_PAD_WIDTH` | 50 | Width of the center square, mm |
-| `EDGE_MARGIN` | 5 | Distance inward from every square edge, mm |
+| `EDGE_MARGIN` | 5 | Distance inward from every physical metal edge, mm; 0 is allowed |
 | `PROFILE` | `m300_pads` | Native profile name |
 | `PREVIEW` | 0 | Set to 1 to show geometry without homing, heating or moving |
 | `FIT_TRAVEL` | 1 | Clip corners to the reachable part of their own pad |
-| `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0.5–5 mm |
+| `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0–5 mm; 0 retains native X0/Y0 |
 | `HOTEND_TEMP` | Minimum 180 | Minimum nozzle target; a hotter working temperature is retained |
 | `BED_TEMP` | Active bed target, otherwise 60 | Bed temperature for the measurement, °C |
 
@@ -305,10 +305,44 @@ Run the same macro with the same corrections and `PREVIEW=0` to measure.
 The macro and direct native command use the same geometry. To retain a
 correction across restart, set its lowercase name in `[m300_pad_mesh]` (for
 example `front_left_x: 31`). Omitted macro fields no longer override these
-settings. Unsaved command overrides last until restart. The installer corrects
-the recognized former 60/50 default pair to 50/50 and updates the recognized
-old forwarding macro while preserving custom centers and unrelated commands.
+settings. Unsaved command overrides last until restart. The installer preserves
+all explicit pad dimensions and centers and updates the recognized old
+forwarding macro without replacing a configured 60/50 mm layout with 50/50.
 The saved native mesh profile retains the resulting surface.
+
+### Home can lie inside the physical metal
+
+Pad centers are expressed in native homed nozzle coordinates, not distances
+from the physical plate edge. In the operator's corrected geometry, the
+60 × 60 mm pad at home extends from −15 to 45 mm along both axes: X0/Y0
+is already 15 mm inside the metal. Its full-pad center is therefore X15/Y15,
+not X30/Y30 or the center of the clipped reachable rectangle.
+
+With `FIT_TRAVEL=1 TRAVEL_MARGIN=0`, fitting intersects the physical pad
+with existing native axis limits; it never expands those limits or changes
+homing. `EDGE_MARGIN` applies to the physical metal first. Consequently:
+
+| Pad on the Y0 side | Physical X bounds | Metal inset 0: reachable X | Metal inset 2: reachable X |
+| --- | --- | --- | --- |
+| Home-side pad, center X15/Y15 | −15..45 | 0..45 | 0..43 |
+| X300-side pad, center X285/Y15 | 255..315 | 255..300 | 257..300 |
+
+For the home-side pad, Y behaves identically: 0..45 with no metal inset,
+or 0..43 with a 2 mm inset. Its five no-inset contacts are (15,15), (0,0),
+(45,0), (45,45) and (0,45). The unmeasured negative coordinates remain
+part of the metal geometry, not legal movement targets.
+
+Preview those two confirmed pads without heating, homing or motion:
+
+~~~gcode
+ZORTRAX_BED_MESH CORNER_PAD_WIDTH=60 CENTER_PAD_WIDTH=50 FRONT_LEFT_X=15 FRONT_LEFT_Y=15 FRONT_RIGHT_X=285 FRONT_RIGHT_Y=15 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
+~~~
+
+This example preserves the other three configured centers; it does not infer
+the rear or center-pad position from the front pair. Review all 25 actual
+positions before measuring. To keep the confirmed front geometry after a
+restart, set the corresponding lowercase options in `[m300_pad_mesh]`.
+Both zero margins are supported by revision `0.13.16.19-PAD-ZERO-MARGIN`.
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
 four inset corners of each pad. Rectangular, adaptive and manual probing

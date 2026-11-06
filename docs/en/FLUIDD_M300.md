@@ -57,6 +57,11 @@ The macro name is a quick button with no parameters. The expanded form's
 50/50 mm, `EDGE_MARGIN=16` and `BED_TEMP=60`; empty fields use the printer's
 configuration/current geometry (margin 5 mm by default). References now occupy
 separate Jinja lines, allowing stock Fluidd to discover all editable fields.
+Both `EDGE_MARGIN=0` and `TRAVEL_MARGIN=0` are preserved by Send and supported
+by pad revision `0.13.16.19-PAD-ZERO-MARGIN`. The first controls inset from
+physical metal; the second controls inset from native travel limits. Correct
+the pad centers for the real home-to-metal offset before measuring; see
+[home inside metal](LEVELING.md#home-can-lie-inside-the-physical-metal).
 
 Tune shows progress through 25 positions, five pad medians/spreads and the
 measured range versus its configured limit. A failed attempt retains its

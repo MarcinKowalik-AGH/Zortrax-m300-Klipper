@@ -109,6 +109,11 @@ def main():
     cases=[
         ('native_settings_information',settings_script,False,None),
         ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
+        ('native_pad_mesh_zero_margin',
+         'ZORTRAX_NATIVE_STATUS\nZORTRAX_BED_MESH PREVIEW=1\nZORTRAX_PAD_MESH_STATUS\n'
+         'ZORTRAX_CI_PAD_MESH CHECK=3\nBED_MESH_PROFILE LOAD=m300_zero_pads\n'
+         'ZORTRAX_CI_PAD_MESH CHECK=4\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
+         False, 'requires an idle native M300 with a physical MCU'),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
@@ -158,12 +163,16 @@ def main():
         # or late writes from an earlier process using the same output root.
         state_dir=Path(tempfile.mkdtemp(prefix='nvm-',dir=dest))
         cp.set('m300_nvm','path',str(state_dir/'settings.json'))
-        if name == 'native_pad_mesh':
+        if name in ('native_pad_mesh','native_pad_mesh_zero_margin'):
             cp.set('stepper_x', 'position_max', '300')
             cp.set('stepper_y', 'position_max', '305')
             cp.read_dict({'bed_mesh': {'mesh_min': '10, 10', 'mesh_max': '299, 304',
                                        'probe_count': '3, 3', 'mesh_pps': '0, 0'},
                           'm300_pad_mesh': {}, 'm300_ci_pad_mesh_fixture': {}})
+            if name == 'native_pad_mesh_zero_margin':
+                cp.read_dict({'m300_pad_mesh': {'corner_pad_width':'60','center_pad_width':'50',
+                    'edge_margin':'0','travel_margin':'0','front_left_x':'15','front_left_y':'15',
+                    'front_right_x':'285','front_right_y':'15'}})
         if name in model_fixtures:
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)
@@ -215,6 +224,10 @@ def main():
             assert 'has been saved to profile [m300_pads]' in text
             assert 'M300_CI_PAD_MESH profile load passed' in text
             assert 'M300_CI_PAD_MESH macro preview passed' in text
+            assert 'Traceback' not in text
+        if name == 'native_pad_mesh_zero_margin':
+            assert 'M300_CI_PAD_MESH zero-margin geometry passed' in text
+            assert 'M300_CI_PAD_MESH zero-margin profile load passed' in text
             assert 'Traceback' not in text
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
