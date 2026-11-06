@@ -526,6 +526,7 @@ class M300PadMesh:
                               'all five centers and pad sizes are retained. '
                               'Use PREVIEW=1 to review the contact plan.' % adjusted)
         self.state, self.busy = 'PROBING', True
+        self.run_points = self.points
         self.phase, self.cancelled = 'PREPARING', False
         self.run_id = os.urandom(12).hex()
         token = self.run_id
@@ -625,6 +626,7 @@ class M300PadMesh:
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
+                    plan_matches_run=getattr(self,'run_points',None) == self.points,
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.5),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
