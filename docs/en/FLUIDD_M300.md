@@ -30,6 +30,24 @@ Remote saves align the open OLED slider and keep Back usable. Stale dialogs
 from navigation or restart are still rejected. No per-step console refresh
 or additional MCU polling is needed.
 
+## Native pad mesh in Tune
+
+The M300 pad adapter reports the current probing run through the existing
+Moonraker object subscription. A new live run opens **Tune** once, preserving
+the printer query parameter. It does not reopen Tune after manual navigation,
+on geometry-only previews, on preflight refusals or for an old completed run.
+No G-code or additional polling is sent to navigate.
+
+Tune shows progress through 25 positions, five pad medians/spreads and the
+measured range versus its configured limit. A failed attempt retains its
+diagnostics and error, without a Save button or a newly generated map. On
+success, an inactive native profile can be previewed in the chart with an
+explicit interpolated-grid label. This read-only preview never sends
+`BED_MESH_PROFILE LOAD` and never replaces an active native mesh. The current
+accepted run offers **Save configuration** while idle; it sends the normal
+`SAVE_CONFIG`, which restarts Klipper. Geometry and physical probing limits
+remain unchanged. See [pad mesh](LEVELING.md#optional-klipper-pad-mesh).
+
 ## Build
 
 The patch applies to [Fluidd v1.37.7](https://github.com/fluidd-core/fluidd/tree/b2edab5bc690f5265a5aa1e56ae3f67669053fd4).
@@ -41,7 +59,8 @@ bash ci/build_fluidd.sh
 ```
 
 The build verifies the exact upstream commit, applies the published patch,
-tests the SVG and fallback, runs type checks and produces
+tests the SVG, fallback, home-button status and pad-mesh navigation/results,
+runs type checks and produces
 `dist/fluidd/M300_FLUIDD_1_37_7_R16_12.zip` with `SHA256SUMS`.
 Corresponding source is the pinned Fluidd commit plus
 [`m300-leveling.patch`](../../frontend/fluidd/m300-leveling.patch)

@@ -1,15 +1,44 @@
 diff --git a/components.d.ts b/components.d.ts
-index 61dc457..b8ca5fc 100644
+index 61dc457..1b5f964 100644
 --- a/components.d.ts
 +++ b/components.d.ts
-@@ -65,6 +65,7 @@ declare module 'vue' {
+@@ -65,6 +65,8 @@ declare module 'vue' {
      KeyboardShortcutsDialog: typeof import('./src/components/common/KeyboardShortcutsDialog.vue')['default']
      KlippyStatusCard: typeof import('./src/components/common/KlippyStatusCard.vue')['default']
      Login: typeof import('./src/components/common/Login.vue')['default']
 +    M300LevelingDiagram: typeof import('./src/components/common/M300LevelingDiagram.vue')['default']
++    M300PadMeshObserver: typeof import('./src/components/common/M300PadMeshObserver.vue')['default']
      ManualProbeDialog: typeof import('./src/components/common/ManualProbeDialog.vue')['default']
      PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
      PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
+diff --git a/src/App.vue b/src/App.vue
+index de67b82..3208c72 100644
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -70,6 +70,7 @@
+         <updating-dialog />
+         <spool-selection-dialog />
+         <action-command-prompt-dialog />
++        <m300-pad-mesh-observer />
+         <keyboard-shortcuts-dialog />
+         <manual-probe-dialog />
+         <bed-screws-adjust-dialog />
+@@ -103,6 +104,7 @@ import type { FlashMessage } from '@/types'
+ import { getFilesFromDataTransfer, hasFilesInDataTransfer } from '@/util/file-system-entry'
+ import type { ThemeConfig } from '@/store/config/types'
+ import ActionCommandPromptDialog from '@/components/common/ActionCommandPromptDialog.vue'
++import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
+ import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue'
+ import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from '@/util/event-helpers'
+ import MmuEditTtgMapDialog from './components/widgets/mmu/MmuEditTtgMapDialog.vue'
+@@ -121,6 +123,7 @@ import AfcPrintStartDialog from './components/widgets/afc/dialogs/AfcPrintStartD
+     FileSystemDownloadDialog,
+     FileSystemUploadDialog,
+     ActionCommandPromptDialog,
++    M300PadMeshObserver,
+     KeyboardShortcutsDialog,
+     MmuEditTtgMapDialog,
+     AfcPrintStartDialog
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
 index dbea2df..2a9916c 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
@@ -285,6 +314,43 @@ index 0000000..bf35ddf
 +    font-size: 12px;
 +  }
 +</style>
+diff --git a/src/components/common/M300PadMeshObserver.vue b/src/components/common/M300PadMeshObserver.vue
+new file mode 100644
+index 0000000..64f2e68
+--- /dev/null
++++ b/src/components/common/M300PadMeshObserver.vue
+@@ -0,0 +1,31 @@
++<template>
++  <span
++    hidden
++    aria-hidden="true"
++  />
++</template>
++
++<script lang="ts">
++import { Component, Mixins, Watch } from 'vue-property-decorator'
++import StateMixin from '@/mixins/state'
++import { readM300PadMesh } from '@/util/m300-pad-mesh'
++
++@Component
++export default class M300PadMeshObserver extends Mixins(StateMixin) {
++  seenRun: string | null = null
++
++  get running () {
++    const status = readM300PadMesh(this.$typedState.printer.printer.m300_pad_mesh)
++    return this.klippyReady && status?.busy && status.state === 'PROBING' ? status.run_id : null
++  }
++
++  @Watch('running', { immediate: true })
++  onRunning (run: string | null) {
++    if (!run || run === this.seenRun) return
++    this.seenRun = run
++    if (this.$route.name !== 'tune') {
++      this.$router.push({ name: 'tune', query: this.$route.query }).catch(() => {})
++    }
++  }
++}
++</script>
 diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
 new file mode 100644
 index 0000000..25908eb
@@ -547,6 +613,140 @@ index 0000000..f7cc2db
 +  }
 +  return controls
 +}
+diff --git a/src/components/widgets/bedmesh/BedMeshCard.vue b/src/components/widgets/bedmesh/BedMeshCard.vue
+index ba2423a..bf77454 100644
+--- a/src/components/widgets/bedmesh/BedMeshCard.vue
++++ b/src/components/widgets/bedmesh/BedMeshCard.vue
+@@ -48,6 +48,12 @@
+     </template>
+
+     <v-card-text>
++      <p
++        v-if="m300Preview"
++        class="text-caption"
++      >
++        Preview: {{ m300Preview.name }} (not active). Interpolated grid from 25 contact positions.
++      </p>
+       <bed-mesh-chart
+         v-if="hasMeshLoaded"
+         ref="chart"
+@@ -69,6 +75,7 @@ import StateMixin from '@/mixins/state'
+ import ToolheadMixin from '@/mixins/toolhead'
+ import BrowserMixin from '@/mixins/browser'
+ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
++import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
+
+ @Component({
+   components: {
+@@ -76,6 +83,10 @@ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
+   }
+ })
+ export default class BedMeshCard extends Mixins(StateMixin, ToolheadMixin, BrowserMixin) {
++  get m300Preview () {
++    return m300PadMeshPreview(this.$typedState.printer.printer)
++  }
++
+   @Prop({ type: Boolean })
+   readonly fullscreen?: boolean
+
+diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
+new file mode 100644
+index 0000000..7186cd7
+--- /dev/null
++++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
+@@ -0,0 +1,92 @@
++<template>
++  <collapsable-card
++    v-if="status"
++    title="M300 pad measurement"
++    icon="$bedMesh"
++    :lazy="false"
++    class="mb-2 mb-md-4"
++  >
++    <v-card-text>
++      <v-progress-linear
++        v-if="status.busy"
++        :value="100 * status.points_measured / status.total_points"
++        class="mb-3"
++      />
++      <v-alert
++        :type="status.state === 'FAILED' ? 'error' : accepted ? 'success' : 'info'"
++        text
++      >
++        <template v-if="status.busy">
++          Measuring point {{ Math.min(status.points_measured + 1, 25) }} of 25.
++        </template>
++        <template v-else-if="accepted">
++          Profile {{ profileName }} created.
++          {{ active ? 'Compensation is active.' : 'Compensation remains inactive until loaded.' }}
++        </template>
++        <template v-else>
++          No new mesh profile was created.
++        </template>
++        <div v-if="status.last_error">
++          {{ status.last_error }}
++        </div>
++      </v-alert>
++      <template v-if="status.last_attempt">
++        <p>
++          Measured range: {{ status.last_attempt.span_mm.toFixed(4) }} mm.
++          Allowed range: {{ status.last_attempt.limit_mm.toFixed(4) }} mm.
++        </p>
++        <v-simple-table dense>
++          <thead><tr><th>Pad</th><th>Median Z (mm)</th><th>Pad spread (mm)</th></tr></thead>
++          <tbody>
++            <tr
++              v-for="(pad, index) in status.last_attempt.pads"
++              :key="index"
++            >
++              <td>{{ names[index] }}</td><td>{{ pad.z.toFixed(4) }}</td><td>{{ pad.spread.toFixed(4) }}</td>
++            </tr>
++          </tbody>
++        </v-simple-table>
++      </template>
++      <app-btn
++        v-if="accepted"
++        :disabled="!klippyReady || printerBusy"
++        class="mt-3"
++        @click="save"
++      >
++        Save configuration
++      </app-btn>
++    </v-card-text>
++  </collapsable-card>
++</template>
++
++<script lang="ts">
++import { Component, Mixins } from 'vue-property-decorator'
++import StateMixin from '@/mixins/state'
++import { isM300PadMeshAccepted, readM300PadMesh } from '@/util/m300-pad-mesh'
++
++@Component
++export default class M300PadMeshStatus extends Mixins(StateMixin) {
++  names = ['Front right', 'Front left', 'Center', 'Rear right', 'Rear left']
++
++  get status () {
++    return readM300PadMesh(this.$typedState.printer.printer.m300_pad_mesh)
++  }
++
++  get accepted () {
++    return isM300PadMeshAccepted(this.status)
++  }
++
++  get profileName () {
++    return this.status?.result?.profile
++  }
++
++  get active () {
++    const bed = this.$typedState.printer.printer.bed_mesh
++    return bed?.profile_name === this.profileName && !!bed?.mesh_matrix?.length
++  }
++
++  save () {
++    if (this.accepted && this.klippyReady && !this.printerBusy) this.sendGcode('SAVE_CONFIG')
++  }
++}
++</script>
 diff --git a/src/components/widgets/toolhead/ToolheadControlBars.vue b/src/components/widgets/toolhead/ToolheadControlBars.vue
 index 711e725..67e7fc8 100644
 --- a/src/components/widgets/toolhead/ToolheadControlBars.vue
@@ -802,6 +1002,27 @@ index 6a1732c..00e08a8 100644
    }
 
    /**
+diff --git a/src/store/mesh/getters.ts b/src/store/mesh/getters.ts
+index 9f27a04..e1448aa 100644
+--- a/src/store/mesh/getters.ts
++++ b/src/store/mesh/getters.ts
+@@ -6,6 +6,7 @@ import type {
+ } from './types'
+ import type { RootState } from '../types'
+ import { transformMesh } from '@/util/transform-mesh'
++import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
+
+ export const getters = {
+
+@@ -101,7 +102,7 @@ export const getters = {
+    * Returns the current mesh, in a usable format for echarts.
+    */
+   getCurrentMeshData: (state, getters, rootState): AppMeshes => {
+-    const bedMesh = rootState.printer.printer.bed_mesh
++    const bedMesh = m300PadMeshPreview(rootState.printer.printer)?.mesh ?? rootState.printer.printer.bed_mesh
+
+     if (bedMesh == null) {
+       return {}
 diff --git a/src/util/m300-homing.spec.ts b/src/util/m300-homing.spec.ts
 new file mode 100644
 index 0000000..99e47b4
@@ -962,3 +1183,339 @@ index 0000000..76ce2ad
 +    : 'Homing ' + axis.toUpperCase()
 +  return { wait: 'onHome' + axis, message }
 +}
+diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
+new file mode 100644
+index 0000000..72b018d
+--- /dev/null
++++ b/src/util/m300-pad-mesh.spec.ts
+@@ -0,0 +1,229 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// @vitest-environment jsdom
++import Vue from 'vue'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++import { shallowMount } from '@vue/test-utils'
++import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
++import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
++import AppBtn from '@/components/ui/AppBtn.vue'
++import { SocketActions } from '@/api/socketActions'
++import { getters } from '@/store/mesh/getters'
++import type { RootState } from '@/store/types'
++import type { MeshState } from '@/store/mesh/types'
++import { isM300PadMeshAccepted, m300PadMeshPreview, readM300PadMesh } from './m300-pad-mesh'
++import type { M300PadMesh } from './m300-pad-mesh'
++
++vi.mock('@/api/socketActions', () => ({ SocketActions: { printerGcodeScript: vi.fn() } }))
++
++const run = 'a'.repeat(24)
++
++function status (state = 'PROBING'): M300PadMesh {
++  const complete = state === 'COMPLETE'
++  return {
++    run_id: run,
++    state,
++    busy: state === 'PROBING',
++    points_measured: state === 'PROBING' ? 0 : 25,
++    total_points: 25,
++    last_error: state === 'FAILED' ? 'Bed span 0.8025 mm exceeds max_bed_span 0.5000 mm' : '',
++    last_attempt: state === 'PROBING'
++      ? null
++      : {
++          run_id: run,
++          accepted: complete,
++          span_mm: complete ? 0.2 : 0.8025,
++          limit_mm: 0.5,
++          pads: Array.from({ length: 5 }, (_, i) => ({ z: i / 100, spread: 0.01 }))
++        },
++    result: complete ? { profile: 'm300_pads', run_id: run } : null
++  }
++}
++
++function printer (state = 'PROBING') {
++  return {
++    webhooks: { state: 'ready' },
++    m300_pad_mesh: status(state),
++    bed_mesh: {
++      profile_name: '',
++      mesh_matrix: [],
++      probed_matrix: [],
++      mesh_min: [0, 0],
++      mesh_max: [0, 0],
++      profiles: {
++        m300_pads: {
++          points: [[0, 0.01, 0.02], [0.01, 0.02, 0.03], [0.02, 0.03, 0.04]],
++          mesh_params: {
++            min_x: 21,
++            min_y: 21,
++            max_x: 299,
++            max_y: 299,
++            algo: 'direct',
++            x_count: 3,
++            y_count: 3,
++            mesh_x_pps: 0,
++            mesh_y_pps: 0,
++            tension: 0.2
++          }
++        }
++      }
++    }
++  } as unknown as Klipper.PrinterState & {
++    bed_mesh: Klipper.BedMeshState;
++    m300_pad_mesh: NonNullable<Klipper.PrinterState['m300_pad_mesh']>;
++  }
++}
++
++function context (source: Klipper.PrinterState) {
++  const state = Vue.observable({ printer: { printer: source } })
++  const query = { printer: 'm300-connection' }
++  const route = Vue.observable({ name: 'home', query })
++  const ready = Vue.observable({ 'printer/getKlippyReady': true, 'printer/getPrinterState': 'idle' })
++  const push = vi.fn().mockResolvedValue(undefined)
++  return {
++    state,
++    route,
++    ready,
++    push,
++    mocks: {
++      $typedState: state, $typedGetters: ready, $route: route, $router: { push }, $typedDispatch: vi.fn()
++    }
++  }
++}
++
++describe('M300 pad measurement in Tune', () => {
++  beforeEach(() => vi.clearAllMocks())
++
++  it('opens Tune for a live run once and preserves the selected printer and later navigation', async () => {
++    const source = printer()
++    source.m300_pad_mesh = { ...status(), run_id: null, state: 'IDLE', busy: false }
++    const ctx = context(source)
++    const wrapper = shallowMount(M300PadMeshObserver, { mocks: ctx.mocks })
++    expect(ctx.push).not.toHaveBeenCalled()
++    source.m300_pad_mesh = status()
++    await Vue.nextTick()
++    expect(ctx.push).toHaveBeenCalledExactlyOnceWith({ name: 'tune', query: ctx.route.query })
++    ctx.route.name = 'console'
++    source.m300_pad_mesh.points_measured = 10
++    await Vue.nextTick()
++    expect(ctx.push).toHaveBeenCalledTimes(1)
++    source.m300_pad_mesh = status('FAILED')
++    await Vue.nextTick()
++    expect(ctx.push).toHaveBeenCalledTimes(1)
++    source.m300_pad_mesh = { ...status(), run_id: 'b'.repeat(24) }
++    await Vue.nextTick()
++    expect(ctx.push).toHaveBeenCalledTimes(2)
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    wrapper.destroy()
++  })
++
++  it('does not switch for a completed, failed, idle, disconnected or already open Tune view', () => {
++    for (const phase of ['COMPLETE', 'FAILED', 'IDLE']) {
++      const ctx = context(printer(phase))
++      const wrapper = shallowMount(M300PadMeshObserver, { mocks: ctx.mocks })
++      expect(ctx.push).not.toHaveBeenCalled()
++      wrapper.destroy()
++    }
++    for (const open of [false, true]) {
++      const ctx = context(printer())
++      ctx.ready['printer/getKlippyReady'] = open
++      if (open) ctx.route.name = 'tune'
++      const wrapper = shallowMount(M300PadMeshObserver, { mocks: ctx.mocks })
++      expect(ctx.push).not.toHaveBeenCalled()
++      wrapper.destroy()
++    }
++  })
++
++  it('ignores malformed and stale status instead of offering acceptance', () => {
++    for (const value of [null, undefined, 'PROBING', [], {}, { ...status(), run_id: 123 },
++      { ...status(), points_measured: 26 }, { ...status(), busy: false },
++      { ...status(), last_attempt: undefined },
++      { ...status('COMPLETE'), last_attempt: { ...status('COMPLETE').last_attempt, run_id: 'b'.repeat(24) } },
++      { ...status('COMPLETE'), last_attempt: { ...status('COMPLETE').last_attempt, pads: [null, null, null, null, null] } }]) {
++      expect(readM300PadMesh(value)).toBeUndefined()
++    }
++    const stale = status('COMPLETE')
++    stale.result!.run_id = 'b'.repeat(24)
++    expect(isM300PadMeshAccepted(readM300PadMesh(stale))).toBe(false)
++    const overLimit = status('COMPLETE')
++    overLimit.last_attempt!.span_mm = 0.8025
++    expect(isM300PadMeshAccepted(readM300PadMesh(overLimit))).toBe(false)
++  })
++
++  it('shows the measured rejection and pad diagnostics without a Save button or a new chart', () => {
++    const ctx = context(printer('FAILED'))
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(M300PadMeshStatus, {
++      mocks: ctx.mocks,
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot, 'v-simple-table': slot }
++    })
++    expect(wrapper.text()).toContain('0.8025 mm exceeds max_bed_span 0.5000 mm')
++    expect(wrapper.text()).toContain('No new mesh profile was created.')
++    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
++    expect(wrapper.text()).not.toContain('Save configuration')
++    expect(m300PadMeshPreview(ctx.state.printer.printer)).toBeUndefined()
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    wrapper.destroy()
++  })
++
++  it('updates live point progress and allows Save only for an accepted current run while idle', async () => {
++    const source = printer()
++    const ctx = context(source)
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(M300PadMeshStatus, {
++      mocks: ctx.mocks,
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot, 'v-simple-table': slot }
++    })
++    expect(wrapper.text()).toContain('Measuring point 1 of 25')
++    source.m300_pad_mesh.points_measured = 7
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Measuring point 8 of 25')
++    source.m300_pad_mesh = status('COMPLETE')
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Compensation remains inactive until loaded.')
++    ctx.ready['printer/getPrinterState'] = 'printing'
++    await Vue.nextTick()
++    wrapper.findComponent(AppBtn).vm.$emit('click')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    ctx.ready['printer/getPrinterState'] = 'idle'
++    await Vue.nextTick()
++    wrapper.findComponent(AppBtn).vm.$emit('click')
++    expect(SocketActions.printerGcodeScript).toHaveBeenCalledExactlyOnceWith('SAVE_CONFIG', { wait: undefined })
++    source.bed_mesh.profile_name = 'm300_pads'
++    source.bed_mesh.mesh_matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Compensation is active.')
++    wrapper.destroy()
++  })
++
++  it('renders an accepted inactive native profile through the real chart getter without loading it', () => {
++    const source = printer('COMPLETE')
++    const bed = source.bed_mesh
++    const preview = m300PadMeshPreview(source)
++    expect(preview?.name).toBe('m300_pads')
++    expect(preview?.mesh.mesh_min).toEqual([21, 21])
++    const meshState: MeshState = { range: 0, wireframe: false, scale: 0, boxScale: 0, flatSurface: false, matrix: 'mesh_matrix' }
++    const result = getters.getCurrentMeshData(meshState, {}, { printer: { printer: source } } as unknown as RootState)
++    expect(result.mesh_matrix.dimensions).toEqual([3, 3])
++    expect(result.mesh_matrix.coordinates).toHaveLength(9)
++    expect(result.mesh_matrix.coordinates[8].value).toEqual([299, 299, 0.04])
++    expect(result.mesh_matrix.range).toBe(0.04)
++    expect(bed.mesh_matrix).toEqual([])
++    expect(bed.profile_name).toBe('')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++  })
++
++  it('never replaces an active native chart, a missing profile or an invalid matrix with a preview', () => {
++    const source = printer('COMPLETE')
++    source.bed_mesh.mesh_matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
++    expect(m300PadMeshPreview(source)).toBeUndefined()
++    source.bed_mesh.mesh_matrix = []
++    const profile = source.bed_mesh.profiles!.m300_pads!
++    for (const points of [[[0, 0], [0, 0], [0, 0]], [[0, 0, 0], [0], [0, 0, 0]],
++      [[0, 0, 0], [0, NaN, 0], [0, 0, 0]]]) {
++      profile.points = points
++      expect(m300PadMeshPreview(source)).toBeUndefined()
++    }
++    delete source.bed_mesh.profiles!.m300_pads
++    expect(m300PadMeshPreview(source)).toBeUndefined()
++  })
++})
+diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
+new file mode 100644
+index 0000000..f546212
+--- /dev/null
++++ b/src/util/m300-pad-mesh.ts
+@@ -0,0 +1,67 @@
++// SPDX-License-Identifier: GPL-3.0-only
++export interface M300PadAttempt {
++  run_id: string;
++  accepted: boolean;
++  span_mm: number;
++  limit_mm: number;
++  pads: { z: number; spread: number }[];
++}
++
++export interface M300PadMesh {
++  run_id: string;
++  state: string;
++  busy: boolean;
++  points_measured: number;
++  total_points: number;
++  last_error: string;
++  last_attempt: M300PadAttempt | null;
++  result?: { profile: string; run_id: string } | null;
++}
++
++export function readM300PadMesh (value: unknown): M300PadMesh | undefined {
++  if (typeof value !== 'object' || value === null || Array.isArray(value)) return
++  const status = value as M300PadMesh | undefined
++  if (!status || typeof status.run_id !== 'string' || !/^[a-f0-9]{24}$/.test(status.run_id) ||
++      !['PROBING', 'COMPLETE', 'FAILED'].includes(status.state) ||
++      status.busy !== (status.state === 'PROBING') || status.total_points !== 25 ||
++      !Number.isInteger(status.points_measured) || status.points_measured < 0 || status.points_measured > 25 ||
++      typeof status.last_error !== 'string') return
++  const attempt = status.last_attempt
++  if (attempt !== null && (!attempt || attempt.run_id !== status.run_id || typeof attempt.accepted !== 'boolean' ||
++      !Number.isFinite(attempt.span_mm) || !Number.isFinite(attempt.limit_mm) ||
++      attempt.span_mm < 0 || attempt.limit_mm <= 0 ||
++      !Array.isArray(attempt.pads) || attempt.pads.length !== 5 ||
++      attempt.pads.some(pad => !pad || !Number.isFinite(pad.z) || !Number.isFinite(pad.spread) || pad.spread < 0))) return
++  return status
++}
++
++export function isM300PadMeshAccepted (status: M300PadMesh | undefined): boolean {
++  return !!status && status.state === 'COMPLETE' && !status.busy && !!status.last_attempt?.accepted &&
++    status.points_measured === status.total_points && status.last_attempt.span_mm <= status.last_attempt.limit_mm &&
++    status.result?.run_id === status.run_id && typeof status.result.profile === 'string' &&
++    /^[\w-]{1,32}$/.test(status.result.profile)
++}
++
++export function m300PadMeshPreview (printer: Klipper.PrinterState): { name: string; mesh: Klipper.BedMeshState } | undefined {
++  const status = readM300PadMesh(printer.m300_pad_mesh)
++  const bed = printer.bed_mesh
++  if (!isM300PadMeshAccepted(status) || !status?.result || !bed || bed.mesh_matrix?.length) return
++  const name = status.result.profile
++  const profile = bed.profiles?.[name]
++  const params = profile?.mesh_params
++  if (!profile || !params || !Array.isArray(profile.points) || profile.points.length < 3 ||
++      profile.points.length > 65 || profile.points.some(row => !Array.isArray(row) || row.length < 3 ||
++        row.length !== profile.points[0].length || row.length > 65 || row.some(z => !Number.isFinite(z))) ||
++      ![params.min_x, params.min_y, params.max_x, params.max_y].every(Number.isFinite) ||
++      params.min_x >= params.max_x || params.min_y >= params.max_y) return
++  return {
++    name,
++    mesh: {
++      ...bed,
++      mesh_min: [params.min_x, params.min_y],
++      mesh_max: [params.max_x, params.max_y],
++      mesh_matrix: profile.points,
++      probed_matrix: profile.points
++    }
++  }
++}
+diff --git a/src/views/Tune.vue b/src/views/Tune.vue
+index 7edad45..a2115b7 100644
+--- a/src/views/Tune.vue
++++ b/src/views/Tune.vue
+@@ -14,6 +14,7 @@
+       cols="12"
+       md="4"
+     >
++      <m300-pad-mesh-status />
+       <bed-mesh-controls
+         v-if="supportsBedMesh"
+         class="mb-2 mb-md-4"
+@@ -45,6 +46,7 @@ import StateMixin from '@/mixins/state'
+
+ import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
+ import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
++import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
+ import EndStopsCard from '@/components/widgets/endstops/EndStopsCard.vue'
+ import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
+ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+@@ -53,6 +55,7 @@ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+   components: {
+     BedMeshCard,
+     BedMeshControls,
++    M300PadMeshStatus,
+     EndStopsCard,
+     RunoutSensorsCard,
+     BeaconCard

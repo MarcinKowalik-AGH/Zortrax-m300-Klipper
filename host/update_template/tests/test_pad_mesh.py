@@ -1,5 +1,6 @@
 """Regression coverage for the optional Classic M300 pad mesh adapter."""
 from types import SimpleNamespace as NS
+import statistics
 import unittest
 
 from payload.m300_calibration_state import POINTS
@@ -269,6 +270,9 @@ class PadMeshTests(unittest.TestCase):
         self.assertEqual(mesh.report, {'profile': 'previous'})
         self.assertEqual(mesh.state, 'FAILED')
         self.assertFalse(mesh.busy)
+        self.assertEqual(mesh.last_error, 'No trigger')
+        failed_run = mesh.run_id
+        self.assertRegex(failed_run, r'^[a-f0-9]{24}$')
 
         def probe_success(params):
             self.assertEqual(positions[-1][2], 6.)
@@ -281,6 +285,97 @@ class PadMeshTests(unittest.TestCase):
         self.assertEqual(published, [('m300_pads', [.01] * 25)])
         self.assertEqual(mesh.state, 'COMPLETE')
         self.assertEqual(len(mesh.report['points']), 25)
+        self.assertEqual(mesh.last_error, '')
+        self.assertNotEqual(mesh.run_id, failed_run)
+        self.assertEqual(mesh.report['run_id'], mesh.run_id)
+
+    def test_operator_75_contacts_retain_diagnostics_but_reject_the_08025_mm_span(self):
+        mesh = M300PadMesh.__new__(M300PadMesh)
+        mesh.geometry = dict(GEOMETRY_DEFAULTS, edge_margin=16.)
+        mesh.points = geometry_points(mesh.geometry)
+        mesh.shift, mesh.max_pad_spread, mesh.max_bed_span = 1., None, .5
+        mesh.run_id, mesh.samples = 'a'*24, None
+        mesh.report = {'profile': 'previous'}
+        mesh._check_clear, mesh._error = lambda: None, ValueError
+        triples = [(.855,.8625,.86),(.845,.8525,.855),(.725,.7275,.73),
+            (.8325,.8325,.8325),(.9675,.9825,.985),(.5475,.5525,.5525),
+            (.415,.415,.415),(.53,.5325,.5325),(.67,.675,.675),(.56,.565,.565),
+            (1.0325,1.035,1.035),(.975,.9775,.9775),(1.015,1.015,1.015),
+            (1.0425,1.0475,1.045),(1.015,1.02,1.0175),(1.1525,1.155,1.155),
+            (1.2125,1.2175,1.22),(1.1125,1.115,1.115),(1.06,1.0625,1.0625),
+            (1.1525,1.1575,1.1575),(.855,.8575,.8575),(.8425,.8475,.8475),
+            (.9475,.9525,.9525),(.88,.8825,.8825),(.785,.7875,.7875)]
+        self.assertAlmostEqual(max(max(t)-min(t) for t in triples), .0175)
+        results = [NS(bed_x=x,bed_y=y,bed_z=statistics.median(t))
+                   for (x,y),t in zip(mesh.points,triples)]
+        with self.assertRaisesRegex(ValueError, '0.8025 mm exceeds max_bed_span 0.5000 mm'):
+            mesh._capture(results)
+        attempt = mesh.last_attempt
+        self.assertFalse(attempt['accepted'])
+        self.assertEqual(attempt['run_id'], mesh.run_id)
+        self.assertAlmostEqual(attempt['span_mm'], .8025)
+        self.assertAlmostEqual(attempt['min_mm'], -.585)
+        self.assertAlmostEqual(attempt['max_mm'], .2175)
+        self.assertEqual(attempt['limit_mm'], .5)
+        self.assertEqual(len(attempt['points']), 25)
+        self.assertEqual(len(attempt['pads']), 5)
+        self.assertEqual(mesh.points_measured, 25)
+        self.assertIsNone(mesh.samples)
+        self.assertEqual(mesh.report, {'profile': 'previous'})
+
+    def test_current_run_status_only_accepts_successful_published_measurements(self):
+        mesh = M300PadMesh.__new__(M300PadMesh)
+        mesh.busy, mesh.state, mesh.report = False, 'IDLE', {'profile':'previous'}
+        mesh.geometry = dict(GEOMETRY_DEFAULTS, edge_margin=16.)
+        mesh.points = geometry_points(mesh.geometry)
+        mesh.shift, mesh.horizontal_z, mesh.max_pad_spread, mesh.max_bed_span = 1., 6., None, .5
+        mesh._error, mesh._preflight, mesh._check_clear = ValueError, lambda:None, lambda:None
+        mesh.printer = NS(is_shutdown=lambda:False, lookup_object=lambda name,default=None:default)
+        mesh.reactor = NS(monotonic=lambda:0.)
+        positions, cleared, published = [[150.,158.,5.,0.]], [], []
+        mesh.toolhead = NS(get_position=lambda:positions[-1][:],
+                           set_position=lambda pos:positions.append(pos[:]), wait_moves=lambda:None)
+        mesh.kin = NS(clear_homing_state=cleared.append)
+        mesh.gcode = NS(create_gcode_command=lambda _,__,params:params)
+        params, observed = {}, []
+        gcmd = NS(get=lambda key,default:params.get(key,default), get_command_parameters=lambda:params,
+                  get_int=lambda key,default,**kw:int(params.get(key,default)),
+                  get_float=lambda key,default:float(params.get(key,default)), respond_info=lambda message:None)
+        mesh._publish = lambda profile,readings:published.append((profile,readings))
+        high = [False]
+        def probe(params):
+            observed.append(mesh.get_status(0.))
+            results = [NS(bed_x=x,bed_y=y,bed_z=1.+.0001*x) for x,y in mesh.points]
+            if high[0]:results[1].bed_z=1.6
+            mesh._capture(results)
+        mesh.probe_points = NS(start_probe=probe,update_probe_points=lambda *args:None)
+        mesh.cmd_calibrate(gcmd)
+        status = mesh.get_status(0.)
+        self.assertEqual(observed[0]['state'], 'PROBING')
+        self.assertTrue(observed[0]['busy'])
+        self.assertEqual(observed[0]['points_measured'], 0)
+        self.assertEqual((status['points_measured'],status['total_points']), (25,25))
+        self.assertTrue(status['last_attempt']['accepted'])
+        self.assertEqual(status['last_attempt']['run_id'], status['result']['run_id'])
+        self.assertEqual(status['run_id'], observed[0]['run_id'])
+        old_report, old_run = mesh.report, mesh.run_id
+        params['PREVIEW']='1'
+        mesh.cmd_calibrate(gcmd)
+        self.assertEqual(mesh.run_id, old_run)  # A geometry-only preview cannot trigger Tune navigation.
+        params.clear()
+        high[0]=True
+        with self.assertRaisesRegex(ValueError,'bed span'):
+            mesh.cmd_calibrate(gcmd)
+        status=mesh.get_status(0.)
+        self.assertEqual(status['state'],'FAILED')
+        self.assertFalse(status['busy'])
+        self.assertIn('No new mesh profile was created',status['last_error'])
+        self.assertFalse(status['last_attempt']['accepted'])
+        self.assertNotEqual(status['run_id'],old_run)
+        self.assertIs(mesh.report,old_report)
+        self.assertEqual(len(published),1)
+        self.assertEqual(cleared,['z'])
+        self.assertEqual(positions[-1][2],5.)
 
     def test_preview_applies_numeric_parameters_without_homing_heating_or_motion(self):
         mesh = M300PadMesh.__new__(M300PadMesh)

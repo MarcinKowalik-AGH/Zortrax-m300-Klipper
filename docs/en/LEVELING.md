@@ -246,6 +246,11 @@ travel_margin: 1.0
 ~~~
 
 The `ZORTRAX_BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
+The M300 Fluidd build opens **Tune** once an actual measurement passes preflight
+and starts probing, including starts from the console. It preserves the selected
+printer connection. A geometry-only preview or preflight refusal does not change
+the page, and later manual navigation is respected. Tune shows point progress,
+the five pad summaries and the result of the current attempt.
 Its parameter fields allow individual corrections without editing Python:
 
 | Parameter | Default | Meaning |
@@ -303,16 +308,32 @@ TURN_OFF_HEATERS
 ~~~
 
 The current default travel fitting supports the confirmed X300/Y305 limits.
-Before a print, load the
+On success, Tune previews the newly stored native profile without activating
+compensation. The chart is explicitly labeled as an interpolated preview from
+25 contact positions; the ordinary active chart takes precedence after loading
+a profile. Before a print, load the
 result with `BED_MESH_PROFILE LOAD=m300_pads`; the measurement intentionally
-leaves compensation inactive. `SAVE_CONFIG` stores the generated profile
-and restarts Klipper, so issue it while idle after reviewing the measurements.
+leaves compensation inactive. The **Save configuration** button is available
+only for a successfully generated profile from the current attempt while idle.
+`SAVE_CONFIG` stores that profile and restarts Klipper, so a temporary
+Shutdown/Disconnect at that point is the expected restart.
 
 The status command reports all 25 heights, each pad's median and its spread.
 All 25 heights contribute to the compensation. A difference over 0.50 mm
 between any two positions rejects the mesh by default. A sloped 60 mm pad can
 have a real spread above 0.05 mm, so pad spread is reported separately from
 repeatability. An optional `max_pad_spread` can impose an additional limit.
+An excessive span produces a detailed error with the measured span and the
+configured limit. Tune retains the rejected attempt's pad diagnostics, without
+offering a new profile or Save button. The previous accepted profile is left
+unchanged. `SAVE_CONFIG` after a failed measurement does not make it valid or
+create the rejected profile. Run OEM `ZORTRAX_LEVEL` to adjust the screws,
+then repeat the mesh at the same stabilized temperatures. A span rejection
+alone does not establish whether the remaining difference is tilt or curvature.
+The reported 75-contact case is covered by regression data: median heights span
+0.8025 mm against the 0.5000 mm limit, although the largest three-repeat spread
+at one location is only 0.0175 mm. These are different checks; the limit is not
+automatically increased to accept the measurement.
 
 The interpolation joins the 25 measured positions into 36 triangles with
 continuous piecewise-linear heights. This preserves a plane, uses each
