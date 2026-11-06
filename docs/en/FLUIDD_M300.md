@@ -32,6 +32,27 @@ or additional MCU polling is needed.
 
 ## Native pad mesh in Tune
 
+Revision `0.13.16.20-PAD-CONTACT-MAP` adds a top view above the native mesh
+chart. It shows the five configured contact areas, all 25 planned points,
+completed/current point colors and an animated live nozzle marker. Native
+X0/Y0 is at the upper left, with X increasing rightwards and Y downwards.
+Measured fields can be rectangular and individually offset, including rear
+right Y262 versus rear left Y260. Geometry is supplied by `m300_pad_mesh`
+status; the UI does not substitute hardcoded pad coordinates.
+
+The map is available during an idle geometry preview as well as a live run.
+It reads `motion_report.live_position` from the existing subscription and
+shows the nozzle after XY homing. Stale/unhomed or non-finite positions are
+hidden, and out-of-travel plans receive a warning. The graphic never sends
+G-code or increases polling. Reduced-motion settings disable smooth marker
+transitions and the current-point pulse.
+
+The five new macro fields `FRONT_LEFT_BOUNDS`, `FRONT_RIGHT_BOUNDS`,
+`CENTER_BOUNDS`, `REAR_LEFT_BOUNDS`, `REAR_RIGHT_BOUNDS` use
+`X_MIN,Y_MIN,X_MAX,Y_MAX`. They directly define each pad's contact corners;
+the separate configured interior sample is retained. See the exact
+[measured rectangles and configuration](LEVELING.md#measured-contact-rectangles).
+
 The M300 pad adapter reports the current probing run through the existing
 Moonraker object subscription. A new live run opens **Tune** once, preserving
 the printer query parameter. It does not reopen Tune after manual navigation,
@@ -61,7 +82,7 @@ Both `EDGE_MARGIN=0` and `TRAVEL_MARGIN=0` are preserved by Send and supported
 by pad revision `0.13.16.19-PAD-ZERO-MARGIN`. The first controls inset from
 physical metal; the second controls inset from native travel limits. Correct
 the pad centers for the real home-to-metal offset before measuring; see
-[home inside metal](LEVELING.md#home-can-lie-inside-the-physical-metal).
+[home inside metal](LEVELING.md#measured-contact-rectangles).
 
 Tune shows progress through 25 positions, five pad medians/spreads and the
 measured range versus its configured limit. A failed attempt retains its

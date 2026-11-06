@@ -310,79 +310,74 @@ all explicit pad dimensions and centers and updates the recognized old
 forwarding macro without replacing a configured 60/50 mm layout with 50/50.
 The saved native mesh profile retains the resulting surface.
 
-### Home can lie inside the physical metal
+### Measured contact rectangles
 
-Pad centers are expressed in native homed nozzle coordinates, not distances
-from the physical plate edge. In the operator's corrected geometry, the
-60 × 60 mm pad at home extends from −15 to 45 mm along both axes: X0/Y0
-is already 15 mm inside the metal. Its full-pad center is therefore X15/Y15,
-not X30/Y30 or the center of the clipped reachable rectangle.
+Native X0/Y0 is a nozzle position after homing, not the physical edge of the
+plate. Initial estimates based on 60 mm squares and 15 mm offsets have been
+superseded by the operator's measured reachable contact bounds:
 
-With `FIT_TRAVEL=1 TRAVEL_MARGIN=0`, fitting intersects the physical pad
-with existing native axis limits; it never expands those limits or changes
-homing. `EDGE_MARGIN` applies to the physical metal first. Consequently:
-
-| Pad on the Y0 side | Physical X bounds | Metal inset 0: reachable X | Metal inset 2: reachable X |
+| Pad | Contact X range, mm | Contact Y range, mm | Configured interior sample X/Y |
 | --- | --- | --- | --- |
-| Home-side pad, center X15/Y15 | −15..45 | 0..45 | 0..43 |
-| X300-side pad, center X285/Y15 | 255..315 | 255..300 | 257..300 |
+| Home-side / front left | 0..43 | 0..51 | 15, 15 |
+| Front right | 260..300 | 0..51 | 285, 15 |
+| Middle | 125..175 | 125..175 | 150, 150 |
+| Rear right | 260..300 | 262..305 | 285, 290 |
+| Rear left | 0..43 | 260..305 | 15, 290 |
 
-For the home-side pad, Y behaves identically: 0..45 with no metal inset,
-or 0..43 with a 2 mm inset. Its five no-inset contacts are (15,15), (0,0),
-(45,0), (45,45) and (0,45). The unmeasured negative coordinates remain
-part of the metal geometry, not legal movement targets.
+The middle rectangle follows the previously specified 50 mm middle pad
+centered at X150/Y150. All five fields and interior samples remain editable.
+Different X/Y lengths and the 2 mm difference between the two rear fields
+are represented directly; no shared square width is inferred.
 
-The operator also confirmed that the rear outer-edge reference is Y305
-(15 mm inside the metal) and the middle pad is centered at X150/Y150.
-The complete corrected layout, with zero margins and current X300/Y305
-travel, is therefore:
-
-| Pad | Full physical center | Reachable corner X values | Reachable corner Y values |
-| --- | --- | --- | --- |
-| Home-side / front left | 15, 15 | 0, 45 | 0, 45 |
-| Front right | 285, 15 | 255, 300 | 0, 45 |
-| Middle (50 mm wide) | 150, 150 | 125, 175 | 125, 175 |
-| Rear right | 285, 290 | 255, 300 | 260, 305 |
-| Rear left | 15, 290 | 0, 45 | 260, 305 |
-
-In the existing `[m300_pad_mesh]` section, retain unrelated options and set:
+Revision `0.13.16.20-PAD-CONTACT-MAP` adds one optional bound tuple per pad,
+ordered **X_MIN,Y_MIN,X_MAX,Y_MAX**. Add these options to the existing
+`[m300_pad_mesh]` section:
 
 ~~~ini
-corner_pad_width: 60
-center_pad_width: 50
-front_left_x: 15
-front_left_y: 15
-front_right_x: 285
-front_right_y: 15
-center_x: 150
-center_y: 150
-rear_left_x: 15
-rear_left_y: 290
-rear_right_x: 285
-rear_right_y: 290
+front_left_bounds: 0, 0, 43, 51
+front_right_bounds: 260, 0, 300, 51
+center_bounds: 125, 125, 175, 175
+rear_left_bounds: 0, 260, 43, 305
+rear_right_bounds: 260, 262, 300, 305
 edge_margin: 0
 fit_travel: True
 travel_margin: 0
 ~~~
 
-Alternatively, preview the complete plan through the macro without heating,
-homing or motion:
+Each explicit tuple defines the four requested contact corners. It overrides
+that pad's legacy square width and `EDGE_MARGIN`, without moving the configured
+interior sample (`FRONT_LEFT_X/Y`, etc.). The interior sample must be strictly
+inside the rectangle. To inset one edge by 2 mm, edit that bound directly;
+for example, change front-left X_MAX from 43 to 41 while retaining X_MIN=0.
+No second automatic metal inset is added. Native XY limits and optional
+`TRAVEL_MARGIN` fitting still apply.
+
+Macro fields use the same names in uppercase. For example:
 
 ~~~gcode
-ZORTRAX_BED_MESH CORNER_PAD_WIDTH=60 CENTER_PAD_WIDTH=50 FRONT_LEFT_X=15 FRONT_LEFT_Y=15 FRONT_RIGHT_X=285 FRONT_RIGHT_Y=15 CENTER_X=150 CENTER_Y=150 REAR_LEFT_X=15 REAR_LEFT_Y=290 REAR_RIGHT_X=285 REAR_RIGHT_Y=290 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
+ZORTRAX_BED_MESH FRONT_LEFT_BOUNDS=0,0,43,51 FRONT_RIGHT_BOUNDS=260,0,300,51 CENTER_BOUNDS=125,125,175,175 REAR_LEFT_BOUNDS=0,260,43,305 REAR_RIGHT_BOUNDS=260,262,300,305 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
 ~~~
 
-All coordinates remain operator-configurable; installing this revision does
-not rewrite the physical layout. Review all 25 actual positions before
-measuring. Configured lowercase options persist across restart; a macro
-override applies to the current host session. The native homing contact
-location (normally X150/Y158) is separate from the middle pad's geometric
-center. Correcting the latter does not change that Z datum.
-Both zero margins are supported by revision `0.13.16.19-PAD-ZERO-MARGIN`.
+`PREVIEW=1` updates the 25-point plan and Tune's top view without heating,
+homing or moving. Review all positions before measuring. Explicit bounds
+are optional; `FRONT_LEFT_BOUNDS=AUTO` returns that pad to its configured
+square width/inset in the current session. Remove its config option or use
+`front_left_bounds: AUTO` to keep that choice across restart. The installer
+preserves custom bounds and migrates the preceding standard forwarding macro
+to expose the five new fields, including zero coordinates and comma-separated
+values. Quoted macro values may contain spaces after commas.
+
+The top view draws the configured contact fields, completed/current probe
+points and the live XY nozzle location from the existing Moonraker status
+subscription. X increases rightwards and Y downwards. Unhomed or unavailable
+XY positions are hidden; the queued movement endpoint is not used as a live
+position. The view sends no movement commands or additional MCU polling.
+The geometric interior sample of a pad remains separate from the native
+homing contact location (normally X150/Y158), which defines the mesh Z datum.
 
 On this configuration `BED_MESH_CALIBRATE` uses the five pad centers and
-four inset corners of each pad. Rectangular, adaptive and manual probing
-options are rejected by the pad adapter. It uses three native contacts per
+four corners of each configured contact area. Arbitrary regular-grid, adaptive
+and manual probing options are rejected by the pad adapter. It uses three native contacts per
 position (at least 75 contacts), their median and a bounded Z search. The
 native repeat tolerance is 0.05 mm at each position. The Z coordinate
 frame is restored after the measurement. A failed search invalidates the

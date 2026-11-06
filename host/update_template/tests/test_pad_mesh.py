@@ -376,6 +376,13 @@ class PadMeshTests(unittest.TestCase):
         updated=m300_profile.convert_text(recent)
         self.assertIn(m300_profile.pad_mesh_command(),updated)
         self.assertEqual(m300_profile.convert_text(updated),updated)
+        recent=(Path(__file__).parent/'reference/pad_mesh_macro_r1619.cfg').read_text()
+        for indent in ('    ','        '):
+            source=recent.replace('    ',indent)
+            updated=m300_profile.convert_text(source)
+            self.assertIn(m300_profile.pad_mesh_command(indent),updated)
+            self.assertEqual(m300_profile.convert_text(updated),updated)
+            self.assertIn('params.REAR_RIGHT_BOUNDS',updated)
         lines=m300_profile.pad_mesh_command().splitlines()
         for field in ('CORNER_PAD_WIDTH','CENTER_PAD_WIDTH','EDGE_MARGIN','BED_TEMP','HOTEND_TEMP'):
             self.assertTrue(any('params.'+field in line for line in lines))

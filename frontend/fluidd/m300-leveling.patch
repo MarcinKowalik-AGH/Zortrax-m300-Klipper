@@ -649,6 +649,251 @@ index ba2423a..bf77454 100644
    @Prop({ type: Boolean })
    readonly fullscreen?: boolean
 
+diff --git a/src/components/widgets/bedmesh/M300PadContactMap.vue b/src/components/widgets/bedmesh/M300PadContactMap.vue
+new file mode 100644
+index 0000000..15ea793
+--- /dev/null
++++ b/src/components/widgets/bedmesh/M300PadContactMap.vue
+@@ -0,0 +1,239 @@
++<template>
++  <collapsable-card
++    v-if="map"
++    title="M300 contact areas — top view"
++    icon="$bedMesh"
++    :lazy="false"
++    class="mb-2 mb-md-4"
++  >
++    <v-card-text>
++      <svg
++        class="m300-contact-map"
++        :viewBox="viewBox"
++        role="img"
++        aria-label="Top view of the five contact areas, probe positions and live nozzle position"
++      >
++        <rect
++          class="map-bed"
++          :x="map.minX"
++          :y="map.minY"
++          :width="map.maxX - map.minX"
++          :height="map.maxY - map.minY"
++        />
++        <g class="map-grid">
++          <line
++            v-for="x in ticksX"
++            :key="`x${x}`"
++            :x1="x"
++            :x2="x"
++            :y1="map.minY"
++            :y2="map.maxY"
++          />
++          <line
++            v-for="y in ticksY"
++            :key="`y${y}`"
++            :x1="map.minX"
++            :x2="map.maxX"
++            :y1="y"
++            :y2="y"
++          />
++        </g>
++        <g class="map-axes">
++          <text
++            v-for="x in ticksX"
++            :key="`x${x}`"
++            :x="x"
++            :y="map.minY - 8"
++            text-anchor="middle"
++          >{{ x }}</text>
++          <text
++            v-for="y in ticksY"
++            :key="`y${y}`"
++            :x="map.minX - 7"
++            :y="y + 3"
++            text-anchor="end"
++          >{{ y }}</text>
++          <text
++            :x="map.maxX + 12"
++            :y="map.minY - 8"
++          >X</text>
++          <text
++            :x="map.minX - 14"
++            :y="map.maxY + 15"
++          >Y</text>
++        </g>
++        <g
++          v-for="region in visibleRegions"
++          :key="region.name"
++          :data-pad="region.name"
++        >
++          <rect
++            class="map-metal"
++            :x="region.x"
++            :y="region.y"
++            :width="region.width"
++            :height="region.height"
++          />
++          <text
++            class="map-pad-name"
++            :x="region.x + region.width - 6"
++            :y="region.y + 11"
++            text-anchor="end"
++          >{{ shortNames[region.name] }}</text>
++        </g>
++        <g
++          v-for="(point, index) in map.points"
++          :key="index"
++        >
++          <circle
++            v-if="inside(point)"
++            class="map-point"
++            :class="{ measured: index < map.measured, current: map.probing && index === map.measured }"
++            :data-point="index"
++            :cx="point[0]"
++            :cy="point[1]"
++            r="2.1"
++          >
++            <title>Point {{ index + 1 }}: X{{ point[0] }} / Y{{ point[1] }}</title>
++          </circle>
++          <circle
++            v-if="inside(point) && map.probing && index === map.measured"
++            class="map-target"
++            :cx="point[0]"
++            :cy="point[1]"
++            r="5"
++          />
++        </g>
++        <template v-if="head && inside(head)">
++          <circle
++            class="map-head-ring"
++            :cx="head[0]"
++            :cy="head[1]"
++            r="6"
++          />
++          <circle
++            class="map-head"
++            data-nozzle
++            :cx="head[0]"
++            :cy="head[1]"
++            r="3.5"
++          />
++        </template>
++      </svg>
++      <div class="map-legend">
++        <span><i class="metal" />Contact area</span>
++        <span><i class="measured" />Measured</span>
++        <span><i class="current" />Current point</span>
++        <span><i class="nozzle" />Nozzle</span>
++      </div>
++      <div class="mt-2 text-caption">
++        X increases to the right; Y increases downwards. Coordinates in mm.
++        <div v-if="head">
++          Nozzle X{{ head[0].toFixed(1) }} / Y{{ head[1].toFixed(1) }}.
++        </div>
++        <div v-else>
++          Nozzle position is available after XY homing.
++        </div>
++      </div>
++      <v-alert
++        v-if="map.regions.some(region => !region.explicit)"
++        type="info"
++        text
++        class="mt-2 mb-0"
++      >
++        Areas follow the configured pad sizes and centers. Set per-pad BOUNDS to use measured contact areas.
++      </v-alert>
++      <v-alert
++        v-if="!map.fits"
++        type="warning"
++        text
++        class="mt-2 mb-0"
++      >
++        The configured probe plan includes positions outside XY travel. Review the geometry before measuring.
++      </v-alert>
++    </v-card-text>
++  </collapsable-card>
++</template>
++
++<script lang="ts">
++import { Component, Mixins } from 'vue-property-decorator'
++import StateMixin from '@/mixins/state'
++import { contactAxisTicks, readM300ContactMap } from '@/util/m300-pad-contact-map'
++
++@Component
++export default class M300PadContactMap extends Mixins(StateMixin) {
++  shortNames: Record<string, string> = {
++    front_left: 'FL', front_right: 'FR', center: 'C', rear_left: 'RL', rear_right: 'RR'
++  }
++
++  get map () {
++    return readM300ContactMap(this.$typedState.printer.printer.m300_pad_mesh)
++  }
++
++  get viewBox () {
++    const map = this.map
++    return map ? `${map.minX - 28} ${map.minY - 22} ${map.maxX - map.minX + 50} ${map.maxY - map.minY + 45}` : ''
++  }
++
++  get ticksX () { return this.map ? contactAxisTicks(this.map.minX, this.map.maxX) : [] }
++  get ticksY () { return this.map ? contactAxisTicks(this.map.minY, this.map.maxY) : [] }
++
++  get visibleRegions () {
++    const map = this.map
++    if (!map) return []
++    return map.regions.map(region => {
++      const x = Math.max(map.minX, region.bounds[0])
++      const y = Math.max(map.minY, region.bounds[1])
++      return {
++        name: region.name,
++        x,
++        y,
++        width: Math.max(0, Math.min(map.maxX, region.bounds[2]) - x),
++        height: Math.max(0, Math.min(map.maxY, region.bounds[3]) - y)
++      }
++    }).filter(region => region.width > 0 && region.height > 0)
++  }
++
++  get head (): [number, number] | undefined {
++    const printer = this.$typedState.printer.printer
++    const homed = printer.toolhead?.homed_axes ?? ''
++    const position = printer.motion_report?.live_position
++    if (!this.klippyReady || !homed.includes('x') || !homed.includes('y') ||
++        !position || position.length < 2 || !position.slice(0, 2).every(Number.isFinite)) return
++    return [position[0], position[1]]
++  }
++
++  inside (point: [number, number]) {
++    const map = this.map
++    return !!map && point[0] >= map.minX && point[0] <= map.maxX && point[1] >= map.minY && point[1] <= map.maxY
++  }
++}
++</script>
++
++<style scoped>
++.m300-contact-map { display: block; width: 100%; height: auto; aspect-ratio: 1; max-height: 560px; background: #141b23; border-radius: 4px; }
++.map-bed { fill: #19222c; stroke: #798797; stroke-width: 0.6; }
++.map-grid line { stroke: #344352; stroke-width: 0.3; }
++.map-axes text { fill: #c9d3df; font: 8px sans-serif; }
++.map-metal { fill: #244e40; stroke: #70be95; stroke-width: 0.7; }
++.map-pad-name { fill: #a8cab7; opacity: 0.65; font: bold 9px sans-serif; }
++.map-point { fill: #a7b5c5; stroke: #141b23; stroke-width: 0.5; }
++.map-point.measured { fill: #65e79b; }
++.map-point.current { fill: #ffbd59; }
++.map-target { fill: none; stroke: #ffbd59; stroke-width: 1; animation: contact-pulse 1.2s ease-in-out infinite; }
++.map-head-ring { fill: #141b23; fill-opacity: 0.5; stroke: white; stroke-width: 0.8; }
++.map-head { fill: #49c8ff; stroke: #041b2c; stroke-width: 0.8; }
++.map-head, .map-head-ring { transition: cx 180ms linear, cy 180ms linear; }
++.map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; font-size: 12px; }
++.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
++.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
++.map-legend .metal { background: #244e40; border: 1px solid #70be95; border-radius: 1px; }
++.map-legend .measured { background: #65e79b; }
++.map-legend .current { background: #ffbd59; }
++.map-legend .nozzle { background: #49c8ff; }
++@keyframes contact-pulse { 50% { opacity: 0.25; } }
++@media (prefers-reduced-motion: reduce) {
++  .map-target { animation: none; }
++  .map-head, .map-head-ring { transition: none; }
++}
++</style>
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
 index 0000000..838ccad
@@ -1204,12 +1449,244 @@ index 0000000..76ce2ad
 +    : 'Homing ' + axis.toUpperCase()
 +  return { wait: 'onHome' + axis, message }
 +}
+diff --git a/src/util/m300-pad-contact-map.spec.ts b/src/util/m300-pad-contact-map.spec.ts
+new file mode 100644
+index 0000000..e6d7817
+--- /dev/null
++++ b/src/util/m300-pad-contact-map.spec.ts
+@@ -0,0 +1,158 @@
++// SPDX-License-Identifier: GPL-3.0-only
++/// <reference types="node" />
++// @vitest-environment jsdom
++import Vue from 'vue'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++import { shallowMount } from '@vue/test-utils'
++import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
++import M300PadContactMap from '@/components/widgets/bedmesh/M300PadContactMap.vue'
++import { SocketActions } from '@/api/socketActions'
++import { contactAxisTicks, readM300ContactMap } from './m300-pad-contact-map'
++
++vi.mock('@/api/socketActions', () => ({ SocketActions: { printerGcodeScript: vi.fn() } }))
++
++function printer () {
++  const regions = [
++    { name: 'front_right', center: [285, 15], bounds: [260, 0, 300, 51], explicit: true },
++    { name: 'front_left', center: [15, 15], bounds: [0, 0, 43, 51], explicit: true },
++    { name: 'center', center: [150, 150], bounds: [125, 125, 175, 175], explicit: true },
++    { name: 'rear_right', center: [285, 290], bounds: [260, 262, 300, 305], explicit: true },
++    { name: 'rear_left', center: [15, 290], bounds: [0, 260, 43, 305], explicit: true }
++  ]
++  const points = regions.flatMap(region => {
++    const [x0, y0, x1, y1] = region.bounds
++    return [region.center, [x0, y0], [x1, y0], [x1, y1], [x0, y1]]
++  })
++  return {
++    m300_pad_mesh: {
++      contact_regions: regions,
++      probe_points: points,
++      points_measured: 0,
++      phase: 'IDLE',
++      busy: false,
++      state: 'IDLE',
++      travel: { configured_x: [0, 300], configured_y: [0, 305], fits: true }
++    },
++    toolhead: { homed_axes: 'xyz', position: [299, 304, 5] },
++    motion_report: { live_position: [15, 15, 5] }
++  }
++}
++
++function mountMap (source = printer()) {
++  const state = Vue.observable({ printer: { printer: source } })
++  const ready = Vue.observable({ 'printer/getKlippyReady': true, 'printer/getPrinterState': 'idle' })
++  const dispatch = vi.fn()
++  const slot = { template: '<section><slot /></section>' }
++  const wrapper = shallowMount(M300PadContactMap, {
++    mocks: { $typedState: state, $typedGetters: ready, $typedDispatch: dispatch },
++    stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot }
++  })
++  return { source, ready, dispatch, wrapper }
++}
++
++describe('M300 top view contact map', () => {
++  beforeEach(() => vi.clearAllMocks())
++
++  it('accepts an idle preview and rejects malformed geometry instead of guessing contact areas', () => {
++    const source = printer()
++    expect(readM300ContactMap(source.m300_pad_mesh)?.regions).toHaveLength(5)
++    expect(contactAxisTicks(0, 305)).toEqual([0, 60, 120, 180, 240, 305])
++    for (const invalid of [null, {}, { ...source.m300_pad_mesh, probe_points: [] },
++      { ...source.m300_pad_mesh, contact_regions: [] }, { ...source.m300_pad_mesh, points_measured: 26 }]) {
++      expect(readM300ContactMap(invalid)).toBeUndefined()
++    }
++    source.m300_pad_mesh.contact_regions[3].bounds[1] = NaN
++    expect(readM300ContactMap(source.m300_pad_mesh)).toBeUndefined()
++  })
++
++  it('draws all five measured rectangles and 25 points in native X-right Y-down coordinates', () => {
++    const { wrapper } = mountMap()
++    expect(wrapper.findAll('[data-pad]')).toHaveLength(5)
++    expect(wrapper.findAll('[data-point]')).toHaveLength(25)
++    const home = wrapper.find('[data-pad="front_left"] rect')
++    expect([home.attributes('x'), home.attributes('y'), home.attributes('width'), home.attributes('height')])
++      .toEqual(['0', '0', '43', '51'])
++    const rear = wrapper.find('[data-pad="rear_right"] rect')
++    expect([rear.attributes('x'), rear.attributes('y'), rear.attributes('width'), rear.attributes('height')])
++      .toEqual(['260', '262', '40', '43'])
++    expect(wrapper.text()).toContain('Y increases downwards')
++    expect(wrapper.find('.map-target').exists()).toBe(false)
++    wrapper.destroy()
++  })
++
++  it('animates the live nozzle independently of the queued endpoint and follows current point progress', async () => {
++    const { source, wrapper, dispatch } = mountMap()
++    expect(wrapper.find('[data-nozzle]').attributes('cx')).toBe('15')
++    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('15')
++    source.toolhead.position = [300, 305, 5]
++    source.motion_report.live_position = [260, 262, 5]
++    source.m300_pad_mesh.phase = 'PROBING'
++    source.m300_pad_mesh.busy = true
++    source.m300_pad_mesh.state = 'PROBING'
++    source.m300_pad_mesh.points_measured = 16
++    await Vue.nextTick()
++    expect(wrapper.find('[data-nozzle]').attributes('cx')).toBe('260')
++    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('262')
++    expect(wrapper.findAll('.map-point.measured')).toHaveLength(16)
++    expect(wrapper.find('.map-point.current').attributes('data-point')).toBe('16')
++    expect(wrapper.find('.map-target').attributes('cy')).toBe('262')
++    await wrapper.find('svg').trigger('click')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    expect(dispatch).not.toHaveBeenCalled()
++    const dir = process.env.M300_MAP_PREVIEW_DIR
++    if (dir) {
++      mkdirSync(dir, { recursive: true })
++      const css = readFileSync('src/components/widgets/bedmesh/M300PadContactMap.vue', 'utf8')
++        .match(/<style scoped>([\s\S]+)<\/style>/)?.[1] ?? ''
++      const svg = wrapper.find('svg').html()
++        .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg" width="700" height="700" style="width:700px;height:700px;max-height:none"')
++        .replace('</svg>', `<style>${css}</style></svg>`)
++      writeFileSync(`${dir}/contact-map.svg`, svg)
++    }
++    wrapper.destroy()
++  })
++
++  it('hides an unreferenced, disconnected or invalid nozzle without presenting a stale location', async () => {
++    const { source, ready, wrapper } = mountMap()
++    source.toolhead.homed_axes = 'z'
++    await Vue.nextTick()
++    expect(wrapper.find('[data-nozzle]').exists()).toBe(false)
++    source.toolhead.homed_axes = 'xyz'
++    ready['printer/getKlippyReady'] = false
++    await Vue.nextTick()
++    expect(wrapper.find('[data-nozzle]').exists()).toBe(false)
++    ready['printer/getKlippyReady'] = true
++    source.motion_report.live_position = [NaN, 25, 5]
++    await Vue.nextTick()
++    expect(wrapper.find('[data-nozzle]').exists()).toBe(false)
++    wrapper.destroy()
++  })
++
++  it('reports unreachable probe points and clips display shapes without changing printer limits', async () => {
++    const { source, wrapper } = mountMap()
++    source.m300_pad_mesh.probe_points[1] = [-10, 0]
++    source.m300_pad_mesh.contact_regions[0].bounds[2] = 315
++    source.m300_pad_mesh.travel.fits = false
++    await Vue.nextTick()
++    expect(wrapper.findAll('[data-point]')).toHaveLength(24)
++    expect(wrapper.text()).toContain('outside XY travel')
++    expect(wrapper.find('[data-pad="front_right"] rect').attributes('width')).toBe('40')
++    expect(source.m300_pad_mesh.travel.configured_x).toEqual([0, 300])
++    expect(source.m300_pad_mesh.contact_regions[0].bounds[2]).toBe(315)
++    wrapper.destroy()
++  })
++
++  it('updates geometry during a new preview and leaves completed measurements visible', async () => {
++    const { source, wrapper } = mountMap()
++    source.m300_pad_mesh.contact_regions[3].bounds[1] = 264
++    source.m300_pad_mesh.probe_points[16] = [260, 264]
++    source.m300_pad_mesh.points_measured = 25
++    source.m300_pad_mesh.state = 'COMPLETE'
++    source.m300_pad_mesh.phase = 'COMPLETE'
++    await Vue.nextTick()
++    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('y')).toBe('264')
++    expect(wrapper.findAll('.map-point.measured')).toHaveLength(25)
++    expect(wrapper.find('.map-target').exists()).toBe(false)
++    wrapper.destroy()
++  })
++})
+diff --git a/src/util/m300-pad-contact-map.ts b/src/util/m300-pad-contact-map.ts
+new file mode 100644
+index 0000000..bb3b7fd
+--- /dev/null
++++ b/src/util/m300-pad-contact-map.ts
+@@ -0,0 +1,62 @@
++// SPDX-License-Identifier: GPL-3.0-only
++export interface M300ContactRegion {
++  name: string;
++  center: [number, number];
++  bounds: [number, number, number, number];
++  explicit: boolean;
++}
++
++export interface M300ContactMap {
++  regions: M300ContactRegion[];
++  points: [number, number][];
++  minX: number;
++  minY: number;
++  maxX: number;
++  maxY: number;
++  measured: number;
++  probing: boolean;
++  fits: boolean;
++}
++
++const names = ['front_right', 'front_left', 'center', 'rear_right', 'rear_left']
++const vector = (value: unknown, size: number): value is number[] =>
++  Array.isArray(value) && value.length === size && value.every(v => typeof v === 'number' && Number.isFinite(v))
++
++export function readM300ContactMap (value: unknown): M300ContactMap | undefined {
++  if (!value || typeof value !== 'object') return
++  const raw = value as Record<string, unknown>
++  const travel = raw.travel as Record<string, unknown> | undefined
++  if (!travel || !vector(travel.configured_x, 2) || !vector(travel.configured_y, 2) ||
++      travel.configured_x[0] >= travel.configured_x[1] || travel.configured_y[0] >= travel.configured_y[1] ||
++      !Array.isArray(raw.contact_regions) || raw.contact_regions.length !== 5 ||
++      !Array.isArray(raw.probe_points) || raw.probe_points.length !== 25 ||
++      !raw.probe_points.every(point => vector(point, 2)) ||
++      typeof raw.points_measured !== 'number' || !Number.isInteger(raw.points_measured) ||
++      raw.points_measured < 0 || raw.points_measured > 25) return
++  const regions = raw.contact_regions as M300ContactRegion[]
++  if (regions.some((region, index) => !region || region.name !== names[index] ||
++      !vector(region.bounds, 4) || !vector(region.center, 2) ||
++      region.bounds[0] >= region.bounds[2] || region.bounds[1] >= region.bounds[3] ||
++      region.center[0] <= region.bounds[0] || region.center[0] >= region.bounds[2] ||
++      region.center[1] <= region.bounds[1] || region.center[1] >= region.bounds[3])) return
++  return {
++    regions,
++    points: raw.probe_points as [number, number][],
++    minX: travel.configured_x[0],
++    maxX: travel.configured_x[1],
++    minY: travel.configured_y[0],
++    maxY: travel.configured_y[1],
++    measured: raw.points_measured,
++    probing: raw.busy === true && raw.phase === 'PROBING',
++    fits: travel.fits === true
++  }
++}
++
++export function contactAxisTicks (min: number, max: number): number[] {
++  const step = Math.max(1, Math.ceil((max - min) / 6 / 10) * 10)
++  const ticks = [min]
++  for (let value = Math.ceil((min + 0.001) / step) * step; value < max; value += step) ticks.push(value)
++  if (ticks.length > 1 && max - ticks[ticks.length - 1] < step / 2) ticks.pop()
++  ticks.push(max)
++  return ticks
++}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..618a60e
+index 0000000..40129c5
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,333 @@
+@@ -0,0 +1,335 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -1314,10 +1791,11 @@ index 0000000..618a60e
 +{% set _m300_pad_args = _m300_pad_args + ['CENTER_PAD_WIDTH=' ~ params.CENTER_PAD_WIDTH] if params.CENTER_PAD_WIDTH is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['EDGE_MARGIN=' ~ params.EDGE_MARGIN] if params.EDGE_MARGIN is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['TRAVEL_MARGIN=' ~ params.TRAVEL_MARGIN] if params.TRAVEL_MARGIN is defined else _m300_pad_args %}
++{% set _m300_pad_args = _m300_pad_args + ['FRONT_LEFT_BOUNDS=' ~ params.FRONT_LEFT_BOUNDS] if params.FRONT_LEFT_BOUNDS is defined else _m300_pad_args %}
 +{% set _m300_pad_args = _m300_pad_args + ['BED_TEMP=' ~ params.BED_TEMP] if params.BED_TEMP is defined else _m300_pad_args %}
 +BED_MESH_CALIBRATE {_m300_pad_args|join(' ')}`
 +    const fields = gcodeMacroParams(gcode)
-+    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'TRAVEL_MARGIN', 'BED_TEMP'])
++    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'TRAVEL_MARGIN', 'FRONT_LEFT_BOUNDS', 'BED_TEMP'])
 +    const params = Object.fromEntries(fields.map(field => [field.name, { value: field.value }]))
 +    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params)).toBe('ZORTRAX_BED_MESH')
 +    for (const [key, value] of Object.entries({ CORNER_PAD_WIDTH: '50', CENTER_PAD_WIDTH: '50', EDGE_MARGIN: '16', BED_TEMP: '60' })) {
@@ -1353,9 +1831,10 @@ index 0000000..618a60e
 +      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60'])
 +    button.params.EDGE_MARGIN.value = '0'
 +    button.params.TRAVEL_MARGIN.value = '0'
++    button.params.FRONT_LEFT_BOUNDS.value = '0,0,43,51'
 +    await wrapper.find('form').trigger('submit')
 +    expect(wrapper.emitted('click')?.[2])
-+      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=0 TRAVEL_MARGIN=0 BED_TEMP=60'])
++      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=0 TRAVEL_MARGIN=0 FRONT_LEFT_BOUNDS=0,0,43,51 BED_TEMP=60'])
 +    wrapper.destroy()
 +  })
 +
@@ -1623,10 +2102,17 @@ index 0000000..7ad4652
 +  }
 +}
 diff --git a/src/views/Tune.vue b/src/views/Tune.vue
-index 7edad45..a2115b7 100644
+index 7edad45..0144776 100644
 --- a/src/views/Tune.vue
 +++ b/src/views/Tune.vue
-@@ -14,6 +14,7 @@
+@@ -8,12 +8,14 @@
+       cols="12"
+       md="8"
+     >
++      <m300-pad-contact-map />
+       <bed-mesh-card fullscreen />
+     </v-col>
+     <v-col
        cols="12"
        md="4"
      >
@@ -1634,19 +2120,21 @@ index 7edad45..a2115b7 100644
        <bed-mesh-controls
          v-if="supportsBedMesh"
          class="mb-2 mb-md-4"
-@@ -45,6 +46,7 @@ import StateMixin from '@/mixins/state'
+@@ -45,6 +47,8 @@ import StateMixin from '@/mixins/state'
 
  import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
  import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
 +import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
++import M300PadContactMap from '@/components/widgets/bedmesh/M300PadContactMap.vue'
  import EndStopsCard from '@/components/widgets/endstops/EndStopsCard.vue'
  import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
  import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
-@@ -53,6 +55,7 @@ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+@@ -53,6 +57,8 @@ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
    components: {
      BedMeshCard,
      BedMeshControls,
 +    M300PadMeshStatus,
++    M300PadContactMap,
      EndStopsCard,
      RunoutSensorsCard,
      BeaconCard

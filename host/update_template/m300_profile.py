@@ -20,9 +20,11 @@ CHOICE_MACROS = {
 }
 PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
-PAD_MESH_FIELDS = ('PROFILE PREVIEW CORNER_PAD_WIDTH CENTER_PAD_WIDTH EDGE_MARGIN '
+LEGACY_PAD_MESH_FIELDS = ('PROFILE PREVIEW CORNER_PAD_WIDTH CENTER_PAD_WIDTH EDGE_MARGIN '
     'FRONT_RIGHT_X FRONT_RIGHT_Y FRONT_LEFT_X FRONT_LEFT_Y CENTER_X CENTER_Y '
     'REAR_RIGHT_X REAR_RIGHT_Y REAR_LEFT_X REAR_LEFT_Y FIT_TRAVEL TRAVEL_MARGIN HOTEND_TEMP BED_TEMP').split()
+PAD_MESH_FIELDS = LEGACY_PAD_MESH_FIELDS + [name+'_BOUNDS' for name in
+    ('FRONT_RIGHT','FRONT_LEFT','CENTER','REAR_RIGHT','REAR_LEFT')]
 OLD_PAD_COMMAND_SHAS = {'43d2381d020cfc8c449cc0aebd664303e3fe4b51677f3f43caa384a684dca86f',
     'bb879deed981f80f8912ec8ce0ca64dc817654460836e4390c9b5e7e21d78760',
     '9e60cebc0cb43c6d113a2a9982e9715d99fb55190508bee4ef57fe936fdf45be'}
@@ -31,13 +33,16 @@ DROP = {'m300_test01'} | {'gcode_macro ' + n for n in (
     'ZORTRAX_TEST_HOTEND_FAN', 'ZORTRAX_FAN_SPEED', 'ZORTRAX_FAN_STOP')}
 
 
-def pad_mesh_command(indent='    '):
+def pad_mesh_command(indent='    ',fields=None):
     # Fluidd discovers one params.FIELD reference per line. Build the one
     # native command from separate lines, preserving omitted config values.
+    fields = PAD_MESH_FIELDS if fields is None else fields
     lines = ['{% set _m300_pad_args = [] %}']
-    lines.extend("{%% set _m300_pad_args = _m300_pad_args + ['%s=' ~ params.%s] "
-                 "if params.%s is defined else _m300_pad_args %%}" % (key,key,key)
-                 for key in PAD_MESH_FIELDS)
+    for key in fields:
+        value = 'params.'+key
+        if key.endswith('_BOUNDS'):value = "("+value+"|replace(' ',''))"
+        lines.append("{%% set _m300_pad_args = _m300_pad_args + ['%s=' ~ %s] "
+                     "if params.%s is defined else _m300_pad_args %%}" % (key,value,key))
     lines.append("BED_MESH_CALIBRATE {_m300_pad_args|join(' ')}")
     return ('\n'+indent).join(lines)
 
@@ -139,6 +144,11 @@ def convert_text(text, stock_xy=None):
             # ignores heater target; retain native pin/PWM ownership.
             block = set_option(block, 'heater_temp', '50')
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
+            indent = re.search(r'(?m)^([ \t]*)\{% set _m300_pad_args = \[\] %\}',block)
+            if indent:
+                prefix = indent[1]
+                old = prefix+pad_mesh_command(prefix,LEGACY_PAD_MESH_FIELDS)
+                block = block.replace(old,prefix+pad_mesh_command(prefix),1)
             def migrate_pad(match):
                 if hashlib.sha256(match[2].strip().encode()).hexdigest() in OLD_PAD_COMMAND_SHAS:
                     return match[1] + pad_mesh_command(match[1])

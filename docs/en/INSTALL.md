@@ -59,7 +59,7 @@ The usual installer can also repair the preceding adapter's known pad-geometry
 startup error without requiring unavailable `print_stats`. Other startup errors,
 runtime shutdowns, printing and paused states remain refused. The updated host
 must reach Ready before Fluidd deployment continues. Review the corrected
-[home-inside-metal geometry](LEVELING.md#home-can-lie-inside-the-physical-metal)
+[home-inside-metal geometry](LEVELING.md#measured-contact-rectangles)
 before another measurement.
 
 Expect `INSTALLED_M300_R16_12_FULL`, then reload Fluidd. Keep the host receipt
@@ -67,6 +67,15 @@ and the reported Fluidd backup path. The installer does not run printer
 movement, heating or MCU flashing.
 
 ## Read-only checks and first tests
+
+Pad revision `0.13.16.20-PAD-CONTACT-MAP` adds separate contact rectangles
+and a live top view in Tune. Add the five `*_bounds` options from
+[the measured layout](LEVELING.md#measured-contact-rectangles) to the existing
+`[m300_pad_mesh]` section, restart, then run `ZORTRAX_BED_MESH PREVIEW=1`.
+The update preserves existing physical geometry instead of guessing new
+bounds. The prior shared 60 mm square estimate is superseded by these
+measured ranges. Re-read the preview before physical probing. MCU firmware
+does not need another flash for this update.
 
 In the Fluidd console run:
 

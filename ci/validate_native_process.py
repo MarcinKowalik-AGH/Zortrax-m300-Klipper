@@ -114,6 +114,13 @@ def main():
          'ZORTRAX_CI_PAD_MESH CHECK=3\nBED_MESH_PROFILE LOAD=m300_zero_pads\n'
          'ZORTRAX_CI_PAD_MESH CHECK=4\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
          False, 'requires an idle native M300 with a physical MCU'),
+        ('native_pad_mesh_bounds',
+         'ZORTRAX_NATIVE_STATUS\nZORTRAX_BED_MESH PREVIEW=1\n'
+         'ZORTRAX_CI_PAD_MESH CHECK=5\nBED_MESH_PROFILE LOAD=m300_contact_pads\n'
+         'ZORTRAX_CI_PAD_MESH CHECK=6\n'
+         'ZORTRAX_BED_MESH REAR_RIGHT_BOUNDS=260,263,300,305 PREVIEW=1\n'
+         'ZORTRAX_CI_PAD_MESH CHECK=7\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
+         False,'requires an idle native M300 with a physical MCU'),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
@@ -163,17 +170,21 @@ def main():
         # or late writes from an earlier process using the same output root.
         state_dir=Path(tempfile.mkdtemp(prefix='nvm-',dir=dest))
         cp.set('m300_nvm','path',str(state_dir/'settings.json'))
-        if name in ('native_pad_mesh','native_pad_mesh_zero_margin'):
+        if name in ('native_pad_mesh','native_pad_mesh_zero_margin','native_pad_mesh_bounds'):
             cp.set('stepper_x', 'position_max', '300')
             cp.set('stepper_y', 'position_max', '305')
             cp.read_dict({'bed_mesh': {'mesh_min': '10, 10', 'mesh_max': '299, 304',
                                        'probe_count': '3, 3', 'mesh_pps': '0, 0'},
                           'm300_pad_mesh': {}, 'm300_ci_pad_mesh_fixture': {}})
-            if name == 'native_pad_mesh_zero_margin':
+            if name in ('native_pad_mesh_zero_margin','native_pad_mesh_bounds'):
                 cp.read_dict({'m300_pad_mesh': {'corner_pad_width':'60','center_pad_width':'50',
                     'edge_margin':'0','travel_margin':'0','front_left_x':'15','front_left_y':'15',
                     'front_right_x':'285','front_right_y':'15','center_x':'150','center_y':'150',
                     'rear_left_x':'15','rear_left_y':'290','rear_right_x':'285','rear_right_y':'290'}})
+            if name == 'native_pad_mesh_bounds':
+                cp.read_dict({'m300_pad_mesh': {'front_left_bounds':'0,0,43,51',
+                    'front_right_bounds':'260,0,300,51','center_bounds':'125,125,175,175',
+                    'rear_left_bounds':'0,260,43,305','rear_right_bounds':'260,262,300,305'}})
         if name in model_fixtures:
             filename, data, _ = model_fixtures[name]
             (dest / 'gcodes' / filename).write_bytes(data)
@@ -229,6 +240,11 @@ def main():
         if name == 'native_pad_mesh_zero_margin':
             assert 'M300_CI_PAD_MESH zero-margin geometry passed' in text
             assert 'M300_CI_PAD_MESH zero-margin profile load passed' in text
+            assert 'Traceback' not in text
+        if name == 'native_pad_mesh_bounds':
+            for message in ('contact rectangles passed','rectangle profile load passed',
+                            'rectangle macro override passed'):
+                assert 'M300_CI_PAD_MESH '+message in text
             assert 'Traceback' not in text
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()

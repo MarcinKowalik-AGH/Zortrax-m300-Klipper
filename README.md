@@ -98,6 +98,12 @@ Revision `0.13.16.19-PAD-ZERO-MARGIN` permits zero metal/travel margins and
 preserves configured dimensions, including 60 mm outer pads. A home point
 15 mm inside a 60 mm pad gives physical bounds −15..45 and a center at 15;
 travel fitting can retain X0/Y0 while removing unreachable negative corners.
+Revision `0.13.16.20-PAD-CONTACT-MAP` supports explicit rectangles for each
+pad and a live top view in Tune, showing the fields, 25 planned/completed
+points and the nozzle from existing Klipper motion reports. The measured
+X0–43 / X260–300 and Y0–51 / Y260–305 ranges, with rear-right Y262, replace
+the previous approximate square layout. See
+[contact rectangles](docs/en/LEVELING.md#measured-contact-rectangles).
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.
