@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.16-THERMOSTAT-50-45-UART8",
+  "mcu_release": "0.13.14.17-STATUS-LED-RGB-5S-UART8",
   "host_update": "R16.12",
-  "github_commit": "b0839febba42e739b889176d513b5a3a83cd782c",
-  "github_run_id": "42280293205",
+  "github_commit": "dfa63219b6e8d063f76155c32efcefacb80b4134",
+  "github_run_id": "42299973802",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,

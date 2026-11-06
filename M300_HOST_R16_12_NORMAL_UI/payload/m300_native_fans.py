@@ -191,6 +191,10 @@ class M300NativeFans(M300Fans):
         # Native heater_fan still owns its own thermostat callback/timing.
         return now+.1
 
+    def get_ownership_status(self, now):
+        # The common LED/lease observer needs no ADC/fan/MCU snapshot.
+        return {'state': self.state, 'busy': self.test is not None or self.sync_pending}
+
     def get_status(self, now):
         status = super().get_status(now)
         test = self.test or {}
