@@ -14,6 +14,7 @@ GRID_COUNT = 61
 CLEARANCE = 5.
 SEARCH_MARGIN = 1.
 PAD_NAMES = ('front_right', 'front_left', 'center', 'rear_right', 'rear_left')
+BOUNDS_FIELDS = tuple(name + '_bounds' for name in PAD_NAMES)
 PAD_CENTERS = ((290., 30.), (30., 30.), (160., 160.), (290., 290.), (30., 290.))
 TEMPERATURE_SETTLE = 3.
 GEOMETRY_DEFAULTS = dict(corner_pad_width=50., center_pad_width=50., edge_margin=5.)
@@ -37,7 +38,19 @@ def preparation_targets(temperatures, overrides, minimum_hotend=180., default_be
     return dict(hotend=target, bed=bed)
 
 
-def pad_points(corner_width, margin, center_width=None, centers=POINTS):
+def parse_pad_bounds(value, name):
+    if value is None or isinstance(value,str) and value.strip().upper() == 'AUTO':
+        return None
+    try:
+        values = tuple(float(v) for v in (value.split(',') if isinstance(value,str) else value))
+    except (TypeError,ValueError):
+        raise ValueError('%s must contain X_MIN,Y_MIN,X_MAX,Y_MAX or AUTO' % name)
+    if len(values) != 4 or not all(map(math.isfinite,values)):
+        raise ValueError('%s must contain four finite coordinates' % name)
+    return values
+
+
+def pad_points(corner_width, margin, center_width=None, centers=POINTS, bounds=None):
     """Keep the legacy two-argument geometry, with a separate center width."""
     if center_width is None:
         center_width = corner_width
@@ -53,6 +66,16 @@ def pad_points(corner_width, margin, center_width=None, centers=POINTS):
         raise ValueError('pad centers must contain five finite XY positions')
     points = []
     for index, (x, y) in enumerate(centers):
+        rectangle = (bounds or {}).get(index)
+        if rectangle is not None:
+            x0,y0,x1,y1 = rectangle
+            if not (x0 < x < x1 and y0 < y < y1 and x1-x0 <= 100. and y1-y0 <= 100.):
+                raise ValueError('%s bounds must enclose its configured center and span at most 100 mm per axis'
+                                 % PAD_NAMES[index])
+            # Explicit contact bounds are the requested corners. Do not
+            # apply the legacy square's width/inset a second time.
+            points.extend(((x,y),(x0,y0),(x1,y0),(x1,y1),(x0,y1)))
+            continue
         span = (center_width if index == 2 else corner_width) / 2 - margin
         points.extend((x + dx * span, y + dy * span) for dx, dy in PATTERN)
     validate_layout(points)
@@ -97,8 +120,10 @@ def fit_pad_points(points, minimum, maximum, margin=1.):
 def geometry_points(geometry):
     centers = tuple(tuple(geometry[name + '_' + axis] for axis in 'xy')
                     for name in PAD_NAMES)
+    bounds = {index:parse_pad_bounds(geometry.get(key),key)
+              for index,key in enumerate(BOUNDS_FIELDS)}
     return pad_points(geometry['corner_pad_width'], geometry['edge_margin'],
-                      geometry['center_pad_width'], centers)
+                      geometry['center_pad_width'], centers,bounds)
 
 
 def pad_triangles():
@@ -182,6 +207,12 @@ class M300PadMesh:
                             for name, point in zip(PAD_NAMES, POINTS)
                             for axis, value in zip('xy', point))
         self.geometry = {key: config.getfloat(key, value) for key, value in defaults.items()}
+        for key in BOUNDS_FIELDS:
+            try:
+                rectangle = parse_pad_bounds(config.get(key,None),key)
+            except ValueError as exc:
+                raise config.error(str(exc))
+            if rectangle is not None:self.geometry[key] = rectangle
         self.fit_travel = config.getboolean('fit_travel', True)
         self.travel_margin = config.getfloat('travel_margin', 1., minval=0., maxval=5.)
         if not math.isfinite(self.travel_margin):
@@ -457,7 +488,7 @@ class M300PadMesh:
 
     def cmd_calibrate(self, gcmd):
         profile = gcmd.get('PROFILE', 'm300_pads')
-        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {
+        allowed = {key.upper() for key in (*GEOMETRY_DEFAULTS,*BOUNDS_FIELDS)} | {
             'PROFILE', 'PREVIEW', 'FIT_TRAVEL', 'TRAVEL_MARGIN', 'HOTEND_TEMP', 'BED_TEMP'}
         if (self.busy or set(gcmd.get_command_parameters()) - allowed
                 or not re.fullmatch(r'[a-zA-Z0-9_-]{1,32}', profile)):
@@ -467,9 +498,12 @@ class M300PadMesh:
         travel_margin = gcmd.get_float('TRAVEL_MARGIN', getattr(self,'travel_margin',1.))
         if not math.isfinite(travel_margin) or not 0. <= travel_margin <= 5.:
             raise self._error('TRAVEL_MARGIN must be 0..5 mm')
-        geometry = {key: gcmd.get_float(key.upper(), value)
-                    for key, value in self.geometry.items()}
+        geometry = {key: gcmd.get_float(key.upper(), self.geometry.get(key,value))
+                    for key,value in GEOMETRY_DEFAULTS.items()}
         try:
+            for key in BOUNDS_FIELDS:
+                rectangle = parse_pad_bounds(gcmd.get(key.upper(),self.geometry.get(key)),key)
+                if rectangle is not None:geometry[key] = rectangle
             nominal = points = geometry_points(geometry)
             toolhead = self.printer.lookup_object('toolhead', None)
             if fit and toolhead is not None:
@@ -583,13 +617,18 @@ class M300PadMesh:
         nominal = getattr(self,'nominal_points',self.points)
         changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
                    for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
-        return dict(revision='0.13.16.19-PAD-ZERO-MARGIN', state=self.state, busy=self.busy, result=self.report,
+        regions = [dict(name=name,center=list(nominal[index*5]),
+                        bounds=[*nominal[index*5+1],*nominal[index*5+3]],
+                        explicit=BOUNDS_FIELDS[index] in self.geometry)
+                   for index,name in enumerate(PAD_NAMES)]
+        return dict(revision='0.13.16.20-PAD-CONTACT-MAP', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.5),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
+                    contact_regions=regions, probe_points=[list(point) for point in self.points],
                     fit_travel=getattr(self,'fit_travel',True),
                     travel_margin=getattr(self,'travel_margin',1.), adjusted_points=changes,
                     travel=self._geometry_travel(limits) if limits else None)
