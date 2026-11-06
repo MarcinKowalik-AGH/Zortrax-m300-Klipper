@@ -22,8 +22,9 @@ PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
 PAD_MESH_FIELDS = ('PROFILE PREVIEW CORNER_PAD_WIDTH CENTER_PAD_WIDTH EDGE_MARGIN '
     'FRONT_RIGHT_X FRONT_RIGHT_Y FRONT_LEFT_X FRONT_LEFT_Y CENTER_X CENTER_Y '
-    'REAR_RIGHT_X REAR_RIGHT_Y REAR_LEFT_X REAR_LEFT_Y FIT_TRAVEL TRAVEL_MARGIN').split()
-OLD_PAD_COMMAND_SHA = '43d2381d020cfc8c449cc0aebd664303e3fe4b51677f3f43caa384a684dca86f'
+    'REAR_RIGHT_X REAR_RIGHT_Y REAR_LEFT_X REAR_LEFT_Y FIT_TRAVEL TRAVEL_MARGIN HOTEND_TEMP BED_TEMP').split()
+OLD_PAD_COMMAND_SHAS = {'43d2381d020cfc8c449cc0aebd664303e3fe4b51677f3f43caa384a684dca86f',
+    'bb879deed981f80f8912ec8ce0ca64dc817654460836e4390c9b5e7e21d78760'}
 DROP = {'m300_test01'} | {'gcode_macro ' + n for n in (
     'PID_ARM', 'PID_HEAT_CHECK', 'PID_STOP', 'ZORTRAX_TEST_PRINT_FAN',
     'ZORTRAX_TEST_HOTEND_FAN', 'ZORTRAX_FAN_SPEED', 'ZORTRAX_FAN_STOP')}
@@ -141,7 +142,7 @@ def convert_text(text, stock_xy=None):
                 block = set_option(block,'corner_pad_width','50')
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
             def migrate_pad(match):
-                if hashlib.sha256(match[2].strip().encode()).hexdigest() == OLD_PAD_COMMAND_SHA:
+                if hashlib.sha256(match[2].strip().encode()).hexdigest() in OLD_PAD_COMMAND_SHAS:
                     return match[1] + pad_mesh_command()
                 return match[0]
             block = re.sub(r'(?m)^([ \t]*)(BED_MESH_CALIBRATE[^\r\n]*)$',migrate_pad,block)
