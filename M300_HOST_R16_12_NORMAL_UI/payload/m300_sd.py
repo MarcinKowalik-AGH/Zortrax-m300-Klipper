@@ -320,6 +320,8 @@ class M300SD:
         self.work_generation = self.work_deadline = None
         if error is not None:
             self.last_error = str(error)
+            from .m300_error_codes import report
+            report(self.printer, error, source='m300_sd')
             self.state = 'error' if self.connected else 'disconnected'
             self.info = None
         else:

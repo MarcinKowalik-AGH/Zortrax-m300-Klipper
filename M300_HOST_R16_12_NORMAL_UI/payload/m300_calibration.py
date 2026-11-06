@@ -556,6 +556,8 @@ class M300Calibration:
         if self.machine.state == 'FAULT' and self.machine.reason:
             reason = self.machine.reason
         self.machine.terminate(reason, self.reactor.monotonic(), fault=True)
+        from .m300_error_codes import report
+        report(self.printer, reason, source='m300_calibration', fatal=shutdown)
         self._moves = None
         self._cleanup_pending = True
         self._off()

@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.17-STATUS-LED-RGB-5S-UART8",
+  "mcu_release": "0.13.14.18-OEM-ERRORS-UART8",
   "host_update": "R16.12",
-  "github_commit": "dfa63219b6e8d063f76155c32efcefacb80b4134",
-  "github_run_id": "42299973802",
+  "github_commit": "2244a384e92b9e5a7d088ceff81ff5c20628c5f2",
+  "github_run_id": "42313504838",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,

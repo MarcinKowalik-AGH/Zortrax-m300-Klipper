@@ -413,6 +413,9 @@ class M300Maintenance:
         """One printer-state policy, independent of the open OLED/Fluidd page."""
         if self.state == 'FAULT':
             return 'ERROR'
+        errors = self.printer.lookup_object('m300_errors', None)
+        if getattr(errors, 'current', None) is not None:
+            return 'ERROR'
         busy = self.is_busy()
         paused = False
         heating = self.state == 'HEATING'

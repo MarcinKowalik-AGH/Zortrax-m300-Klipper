@@ -566,6 +566,9 @@ class M300PadMesh:
             completed = True
         except Exception as exc:
             self.last_error = str(exc)
+            from .m300_error_codes import report
+            report(self.printer, exc, source='m300_pad_mesh',
+                   fatal=self.printer.is_shutdown())
             self._turn_off()
             raise
         finally:

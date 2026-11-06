@@ -94,6 +94,9 @@ class M300Browser:
             card = self.printer.lookup_object('m300_sd', None) if source == 'sd' else None
             self.card_cid = (getattr(card, 'info', None) or {}).get('cid')
             self.preview=None
+            if source == 'sd' and not entries:
+                from .m300_error_codes import report
+                report(self.printer, 'No models on SD card', source='m300_browser', code=101)
             return {'generation': generation, 'source':source, 'directory':directory,
                     'files':[dict(name=e.name, path=e.path, directory=e.is_dir,
                                   size=e.size, modified=e.mtime) for e in self.catalog.entries]}

@@ -881,7 +881,11 @@ class M300OLED:
         leveling_frame = getattr(ui, 'leveling_frame', None)
         leveling_wire = (leveling_frame(self.page, now, Frame)
                          if leveling_frame is not None and not self.message else None)
-        if print_wire is not None:
+        errors = self.printer.lookup_object('m300_errors', None)
+        error_notice = (errors is not None and self.message is not None
+                        and (self.message[0] == 'Klipper error'
+                             or self.message[0].startswith('Error #')))
+        if print_wire is not None and not error_notice:
             key = ('native_print_context', print_wire)
         elif self.message:
             title, message = (english_label(x) for x in self.message)
@@ -919,7 +923,9 @@ class M300OLED:
                    else ('menu', tuple(labels), self.selection, sprite))
         if key != self._render_key:
             if key[0] == 'notice':
-                wire = notice_frame(title, message, Frame, key[2])
+                wire = errors.render_notice(title, message, Frame, key[2]) if errors else None
+                if wire is None:
+                    wire = notice_frame(title, message, Frame, key[2])
             elif key[0] == 'menu':
                 wire = menu_frame(tuple(labels), (), self.selection, Frame, sprite)
             else:

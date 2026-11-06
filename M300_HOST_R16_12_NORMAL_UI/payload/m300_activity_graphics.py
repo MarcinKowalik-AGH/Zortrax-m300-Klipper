@@ -114,6 +114,7 @@ def procedure_symbol(owner, status):
 
 
 PAGE_SYMBOLS = {
+    'errors': PREFIX+'emergency_stop', 'error_catalog': '0x0801dc08',
     'info_printer': '0x0801dc08', 'info_firmware': PREFIX+'firmware_update',
     'setting_oled_brightness': PREFIX+'oled_brightness',
     'setting_led_brightness': PREFIX+'led_brightness',

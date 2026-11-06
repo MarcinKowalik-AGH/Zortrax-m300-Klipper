@@ -348,6 +348,12 @@ class M300Procedures:
             self.reactor.update_timer(self.timer, self.reactor.NOW)
 
     def _prompt(self, view):
+        errors = self.printer.lookup_object('m300_errors', None)
+        if (view['state'] in ('FAULT', 'ERROR', 'FAILED')
+                and getattr(errors, 'current', None) is not None):
+            errors.show()
+            self.last_prompt = view['view_id']
+            return
         if view['owner'] in ('m300_motion', 'm300_pad_mesh'):
             # Native home buttons and Tune own the web presentation. Phase
             # changes never open or close an unrelated Fluidd modal dialog.
