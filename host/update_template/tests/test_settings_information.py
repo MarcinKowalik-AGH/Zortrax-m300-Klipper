@@ -429,7 +429,7 @@ class IndicatorAndSleepTests(unittest.TestCase):
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[0.,0.,0.])
             h.run('ZORTRAX_LIGHT MODE=DYNAMIC')
             h.print_state='printing';h.m._indicators(h.now)
-            self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,0.])
+            self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,1.])
             h.print_state='paused';h.m._indicators(h.now)
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,0.,1.])
             h.print_state='error';h.m._indicators(h.now)

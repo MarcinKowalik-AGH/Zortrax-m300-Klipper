@@ -36,7 +36,34 @@ are on the Fluidd dashboard.
 
 The existing host NVM saves choices. Selecting the active value avoids a disk
 write. Disabled Buzzer also ends an active host beep. Dynamic Light follows the
-printer, including purple during a native print pause and red on faults.
+printer through one state policy, independently of the open OLED or Fluidd menu:
+
+| Printer state | Dynamic LED color |
+|---|---|
+| Ready, including passive cooling after a completed procedure | Green |
+| Nozzle/bed heating, homing preheat or thermal test/PID heating | Red |
+| Pause, pausing or resuming; includes material heating while paused | Purple |
+| Printing and other active procedures once temperature is ready | White |
+| Failed procedure, native print error or MCU shutdown | Red → green → blue, five seconds per color, repeated |
+
+Priority is error, pause, heating, active work, Ready. A manual temperature
+target remains red when no print or other procedure is active. Opening a menu
+does not change this state. Homing, OEM leveling, the 25-point pad mesh,
+material handling and fan tests all use the same observer. Normal fixed White,
+Disabled and sleep-light choices remain available; an error overrides them.
+The host alarm retains the selected LED brightness and restarts at red only
+after the preceding error has cleared. It sends pin updates only on a color or
+brightness change. No status-color UART polling or new heating/motion owner
+is introduced. `ZORTRAX_MAINTENANCE_STATUS` includes `status_led` revision
+`0.13.16.21-STATUS-LED`, the last applied RGB and alarm timing.
+
+MCU R14.17 repeats the error sequence locally at full brightness after shutdown,
+including host loss while the MCU guard is armed. It uses the permanent task
+wake, so shutdown's removal of user timers cannot stop the sequence. Queued
+generic GPIO/default writes cannot overwrite it. It neither clears the latch
+nor changes heater, motor, fan or 50/45 C thermostat policy. This offline part
+requires the R14.17 MCU application; the other shared colors are host changes.
+
 LED brightness applies to both Dynamic and White. The two brightness settings
 are independent and default to level 16 on existing installations.
 Each OLED brightness control has one compact 16-segment bar at x16–173 and

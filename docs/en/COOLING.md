@@ -1,4 +1,4 @@
-# Hotend cooling: MCU R14.16 and native host
+# Hotend cooling: MCU R14.16 onward and native host
 
 The upper fan, PE14, cools the hotend heatsink. The lower fan, PE13, is print
 cooling: native M106/M107 and the slicer control it while connected. Normal
@@ -46,11 +46,11 @@ never clears its fault or restores heat/movement autonomously.
 
 ## Supervised acceptance
 
-Install the matching host and flash `MCU/M300_R14_16_SD.zip` using the existing
+Install the matching host and flash `MCU/M300_R14_17_SD.zip` using the existing
 SD bootloader procedure. Preserve the working 750000 baud configuration.
 
 1. With a connected cold printer, read `ZORTRAX_MCU_STATUS` and
-   `ZORTRAX_FANS_STATUS`. Confirm R14.16 and valid temperature telemetry.
+   `ZORTRAX_FANS_STATUS`. Confirm R14.17 or later and valid temperature telemetry.
 2. Start normal supervised heating or homing. The automatic upper request
    stays off below 50 C, then turns on at the threshold. The lower fan should
    follow its native print request, normally zero during homing.

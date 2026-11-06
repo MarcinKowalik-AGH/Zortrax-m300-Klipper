@@ -4,7 +4,7 @@
 
 ## Project overview — November 3, 2026
 
-Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.16 with Host R16.12**.
+Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.17 with Host R16.12**.
 
 ### Actual printer photographs — OLED / Klipper
 
@@ -44,7 +44,7 @@ and Models menu support G-code and the audited Classic M300 Z-code subset.
 
 ## Main release
 
-**MCU R14.16 + host R16.12**, pinned Klipper
+**MCU R14.17 + host R16.12**, pinned Klipper
 `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`, STM32F103 M300 Classic.
 
 GitHub Actions publishes the verified package to the
@@ -64,6 +64,11 @@ R14.16 aligns native host and offline MCU [hotend cooling](docs/en/COOLING.md):
 50 C ON / 45 C OFF, based on measured temperature rather than heater target.
 An ADC1-stale handoff can cool thermostatically only with fresh independent
 ADC2 evidence; the shutdown and heater/motion locks remain latched.
+R14.17 adds the shared [status LED policy](docs/en/SETTINGS_INFORMATION.md):
+Ready green, heating red, pause purple and printing/active work white.
+Errors repeat red → green → blue at five seconds per color. The MCU retains
+that error indication after shutdown without UART traffic or user timers.
+The timer motion core, guards and 50/45 C cooling behavior are retained.
 Host menu revision `0.13.16.11-ACTIVITY-SYMBOLS` assigns these graphics to the
 corresponding OLED screens and reported states. Brightness controls retain
 16 segments in a shorter bar alongside the icon. See the

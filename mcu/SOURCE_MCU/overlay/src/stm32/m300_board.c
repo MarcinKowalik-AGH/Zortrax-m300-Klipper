@@ -55,6 +55,8 @@ DECL_CONSTANT("M300_FAN_POLICY", 3);
 DECL_CONSTANT("M300_LOCAL_COOLING_ABI", 1);
 DECL_CONSTANT("M300_LOCAL_COOLING_ON_RAW", 314);
 DECL_CONSTANT("M300_LOCAL_COOLING_OFF_RAW", 281);
+DECL_CONSTANT("M300_STATUS_LED_ABI", 1);
+DECL_CONSTANT("M300_STATUS_LED_ERROR_STEP_US", 5000000);
 DECL_CONSTANT_STR("M300_OUTPUT_MODE", "SOFTWARE_PWM_ONLY");
 
 #define GUARD_US 10000
@@ -106,6 +108,8 @@ raw_pullup(GPIO_TypeDef *regs, unsigned pin)
     raw_write(regs, 1u << pin, 1);
     raw_mode(regs, pin, 0x8); // F103 input with ODR-selected pull-up
 }
+
+#include "m300_status_led.inc"
 
 static void
 raw_safe_outputs(void)
@@ -298,6 +302,7 @@ m300_board_init(void)
     // Generic timer_init() is later in DECL_INIT and resets CYCCNT.
     // Early GPIO protection is already active from m300_early_init().
     guard_timer_started=0;
+    status_led_error_active = status_led_error_phase = 0;
 }
 DECL_INIT(m300_board_init);
 
@@ -317,6 +322,7 @@ m300_board_shutdown(void)
     if (!fault)
         fault = M300_FAULT_SHUTDOWN;
     force_safe();
+    status_led_error_start();
 }
 DECL_SHUTDOWN(m300_board_shutdown);
 
@@ -416,7 +422,7 @@ m300_filter_gpio(void *regs, uint32_t bit, uint32_t val)
         return fan_forced ? !!(cool_levels & mask) : val;
     }
     if (role == PIN_AUX)
-        return val;
+        return status_led_filter(regs, bit, val);
     trip(M300_FAULT_PIN);
     return 0;
 }

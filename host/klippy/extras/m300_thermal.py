@@ -404,19 +404,22 @@ class M300Thermal:
         return now + .1
 
     def led_rgb(self, now):
+        indicators = self.printer.lookup_object('m300_maintenance', None)
+        if indicators is not None and getattr(indicators, 'ready', False):
+            # Ownership/temperature reads in the common policy do not call
+            # this diagnostic, so the same state colors need no second writer.
+            return indicators.status_led_rgb(now)
         if self.state == 'FAULT':
             return (1, 0, 0)
-        if self.active:
-            return (0, 0, 1) if self.state == 'CHECK_COAST' else (1, 1, 0)
         try:
-            if self.native_control:
-                temperatures = [h.get_temp(now) for h in self.heaters.values()]
-                if any(target > 0. and current < target-2. for current, target in temperatures):
-                    return (1, 1, 0)
-                if any(target > 0. for current, target in temperatures):
-                    return (0, 0, 1)
-            if any(h.get_temp(now)[0] > 50. for h in self.heaters.values()):
-                return (0, 0, 1)
+            temperatures = [h.get_temp(now) for h in self.heaters.values()]
+            if self.state in ('CHECK_HEATING', 'PID_RUNNING') or any(
+                    target > 0. and current < target-2. for current, target in temperatures):
+                return (1, 0, 0)
+            if self.active:
+                return (1, 1, 1)
+            if any(target > 0. for current, target in temperatures):
+                return (1, 0, 0)
         except Exception:
             return (1, 0, 0)
         return (0, 1, 0)

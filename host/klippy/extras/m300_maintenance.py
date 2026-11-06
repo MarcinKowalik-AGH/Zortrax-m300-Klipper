@@ -11,6 +11,10 @@ import math
 from .m300_nvm import MAX_BRIGHTNESS
 
 IDLE_JOB = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
+LED_ERROR_COLORS = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+LED_ERROR_SECONDS = 5.
+LED_COLORS = {'READY': (0, 1, 0), 'HEATING': (1, 0, 0),
+              'PAUSE': (1, 0, 1), 'WORKING': (1, 1, 1)}
 
 
 def other_service(printer, names, now):
@@ -56,6 +60,8 @@ class M300Maintenance:
         self._fan_kind = None
         self._old_fan_speed = None
         self._lights = None
+        self._light_state = 'READY'
+        self._light_error_since = None
         self._beep_until = 0.
         self._last_activity = self.reactor.monotonic()
         self._timer = self.reactor.register_timer(self._tick)
@@ -403,32 +409,28 @@ class M300Maintenance:
             self._pin('m300_buzzer', 1)
             self._beep_until = self.reactor.monotonic() + .05
 
-    def _dynamic_lights(self, now):
+    def _indicator_state(self, now):
+        """One printer-state policy, independent of the open OLED/Fluidd page."""
         if self.state == 'FAULT':
-            return (1, 0, 0)
+            return 'ERROR'
         busy = self.is_busy()
         paused = False
+        heating = self.state == 'HEATING'
         stats = self.printer.lookup_object('print_stats', None)
         if stats is not None:
             try:
                 native_state = stats.get_status(now).get('state')
                 if native_state == 'error':
-                    return (1, 0, 0)
+                    return 'ERROR'
                 paused = native_state == 'paused'
                 busy = busy or native_state == 'printing'
             except Exception:
-                return (1, 0, 0)
-        thermal = self.printer.lookup_object('m300_thermal', None)
-        if thermal is not None and thermal.ready:
-            status = thermal.get_status(now)
-            rgb = thermal.led_rgb(now)
-            if status['state'] == 'FAULT' or rgb == (1, 0, 0):
-                return (1, 0, 0)
-            if not paused and (status['busy'] or rgb == (0, 0, 1)
-                               or status.get('native_heating') is True):
-                return rgb
+                return 'ERROR'
+        native_pause = self.printer.lookup_object('pause_resume', None)
+        paused = paused or bool(getattr(native_pause, 'is_paused', False))
         for name in ('m300_job', 'm300_filament', 'm300_calibration',
-                     'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans'):
+                     'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans',
+                     'm300_thermal', 'm300_pad_mesh'):
             obj = self.job if name == 'm300_job' else self.printer.lookup_object(name, None)
             if obj is None:
                 continue
@@ -436,16 +438,48 @@ class M300Maintenance:
                 status = getattr(obj, 'get_ownership_status', obj.get_status)(now)
                 if (not isinstance(status, dict) or type(status.get('busy')) is not bool
                         or not isinstance(status.get('state'), str) or not status['state'].strip()):
-                    return (1, 0, 0)
+                    return 'ERROR'
                 state = status['state'].upper()
-                if state == 'FAULT':
-                    return (1, 0, 0)
+                if state in ('FAULT', 'FAILED', 'FILE_ERROR', 'ERROR'):
+                    return 'ERROR'
+                paused = paused or state in ('PAUSING', 'PAUSED', 'RESUMING')
+                phase = str(status.get('phase', '')).upper()
+                heating = heating or (status['busy'] and (
+                    state in ('HEATING', 'CHECK_HEATING', 'PID_RUNNING')
+                    or phase in ('HEATING', 'Z_PREHEAT', 'PREHEAT')))
                 busy = busy or status['busy'] or state in ('SLEEP', 'SLEEPING')
             except Exception:
-                return (1, 0, 0)
+                return 'ERROR'
+        targets = False
+        try:
+            for heater in (self.job.hotend, self.job.bed):
+                measured, target = heater.get_temp(now)
+                if not all(math.isfinite(v) for v in (measured, target)) or target < 0.:
+                    return 'ERROR'
+                targets = targets or target > 0.
+                heating = heating or target > 0. and measured < target - 2.
+        except Exception:
+            return 'ERROR'
         if paused:
-            return (1, 0, 1)
-        return (1, 1, 0) if busy else (0, 1, 0)
+            return 'PAUSE'
+        if heating:
+            return 'HEATING'
+        if busy:
+            return 'WORKING'
+        return 'HEATING' if targets else 'READY'
+
+    def status_led_rgb(self, now):
+        self._light_state = self._indicator_state(now)
+        if self._light_state == 'ERROR':
+            if self._light_error_since is None:
+                self._light_error_since = now
+            phase = int(max(0., now - self._light_error_since) // LED_ERROR_SECONDS)
+            return LED_ERROR_COLORS[phase % len(LED_ERROR_COLORS)]
+        self._light_error_since = None
+        return LED_COLORS[self._light_state]
+
+    def _dynamic_lights(self, now):
+        return self.status_led_rgb(now)
 
     def _indicators(self, now):
         if self._beep_until and now >= self._beep_until:
@@ -453,12 +487,15 @@ class M300Maintenance:
             self._beep_until = 0.
         light = self._setting('light_mode', 'DYNAMIC')
         asleep = self.state in ('SLEEP', 'SLEEPING')
-        if light == 'DISABLE' or asleep and not self._setting('sleep_light', False):
+        automatic = self.status_led_rgb(now)
+        if self._light_state == 'ERROR':
+            values = automatic
+        elif light == 'DISABLE' or asleep and not self._setting('sleep_light', False):
             values = (0, 0, 0)
         elif light == 'WHITE':
             values = (1, 1, 1)
         else:
-            values = self._dynamic_lights(now)
+            values = automatic
         brightness = self._setting('led_brightness', MAX_BRIGHTNESS) / MAX_BRIGHTNESS
         values = tuple(value * brightness for value in values)
         if values != self._lights:
@@ -521,6 +558,10 @@ class M300Maintenance:
                 'session_token': self.token, 'operation': self.operation,
                 'reason': self.reason, 'deadline': self._deadline,
                 'sleep': self.state in ('SLEEP', 'SLEEPING'),
+                'status_led': {'revision': '0.13.16.21-STATUS-LED',
+                               'state': self._light_state, 'rgb': self._lights,
+                               'error_step_seconds': LED_ERROR_SECONDS,
+                               'error_since': self._light_error_since},
                 'wake_heats': False, 'wake_restores_position': False}
 
     def cmd_service(self, gcmd):

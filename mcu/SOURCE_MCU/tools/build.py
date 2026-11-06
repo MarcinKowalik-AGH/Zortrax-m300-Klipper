@@ -20,7 +20,7 @@ PIN = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0'
 APP_START = 0x08008000
 NVM_START = 0x0803A000
-MCU_RELEASE = '0.13.14.16-THERMOSTAT-50-45-UART8'
+MCU_RELEASE = '0.13.14.17-STATUS-LED-RGB-5S-UART8'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
@@ -120,6 +120,7 @@ def validate(work, output, env, log):
                           'M300_SOFTWARE_PWM_ONLY': 1, 'M300_FAN_POLICY': 3,
                           'M300_LOCAL_COOLING_ABI': 1, 'M300_LOCAL_COOLING_ON_RAW': 314,
                           'M300_LOCAL_COOLING_OFF_RAW': 281,
+                          'M300_STATUS_LED_ABI': 1, 'M300_STATUS_LED_ERROR_STEP_US': 5000000,
                           'M300_OUTPUT_MODE': 'SOFTWARE_PWM_ONLY',
                           'M300_SD_ABI': 1, 'M300_SD_READ_ONLY': 1,
                           'M300_SD_MAX_CHUNK': 32, 'M300_SD_TASK_BYTES': 32,

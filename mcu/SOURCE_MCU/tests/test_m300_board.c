@@ -416,6 +416,55 @@ int main(void)
     shutdown_active=1; m300_board_shutdown(); command_m300_query(NULL);
     assert(snapshot[2]==0 && snapshot[3]==255 && snapshot[12]==1);
     assert(!irq_depth);
+
+#ifndef M300_OLD_SNAPSHOT_API
+    // The historical negative control predates the LED task; its unchanged
+    // guard/ADC race tests above must still execute against that old source.
+    // RGB alarm survives the scheduler user-timer reset and timer wrap.
+    // Healthy RGB/buzzer writes remain native; a fault only claims RGB.
+    restart_model();
+    struct gpio_out red = gpio_out_setup(GPIO('D',7),0);
+    struct gpio_out green = gpio_out_setup(GPIO('B',5),0);
+    struct gpio_out blue = gpio_out_setup(GPIO('D',6),0);
+    struct gpio_out buzzer = gpio_out_setup(GPIO('C',4),0);
+    write_pin(green,1);
+    unsigned healthy_writes = bsrr_count;
+    m300_status_led_task();
+    assert(bsrr_count==healthy_writes && !status_led_error_active);
+    assert(GPIOB->ODR & (1u<<5));
+    now_ticks=UINT32_MAX-timer_from_us(1000000);
+    shutdown_active=1; m300_board_shutdown();
+    scheduled=NULL; // sched_timer_reset removes the guard timer, not tasks.
+    uint32_t epoch=now_ticks;
+    for (unsigned phase=0;phase<12;phase++) {
+        now_ticks=epoch+phase*timer_from_us(STATUS_LED_STEP_US);
+        m300_status_led_task();
+        assert(status_led_error_phase==phase%3);
+        assert(!!(GPIOD->ODR & (1u<<7))==(phase%3==0));
+        assert(!!(GPIOB->ODR & (1u<<5))==(phase%3==1));
+        assert(!!(GPIOD->ODR & (1u<<6))==(phase%3==2));
+        // Native shutdown/default/PWM writes cannot replace the alarm color.
+        write_pin(red,0);write_pin(green,0);write_pin(blue,0);
+        assert(!!(GPIOD->ODR & (1u<<7))==(phase%3==0));
+        assert(!!(GPIOB->ODR & (1u<<5))==(phase%3==1));
+        assert(!!(GPIOD->ODR & (1u<<6))==(phase%3==2));
+        write_pin(buzzer,1);assert(GPIOC->ODR & (1u<<4));
+        write_pin(buzzer,0);assert(!(GPIOC->ODR & (1u<<4)));
+        assert(!armed && fault==M300_FAULT_SHUTDOWN && !scheduled);
+        assert(!(GPIOC->ODR & (3u<<8)) && !(GPIOD->ODR & (1u<<14)));
+        unsigned writes=bsrr_count;
+        now_ticks+=timer_from_us(STATUS_LED_STEP_US)-1;
+        m300_status_led_task();
+        assert(bsrr_count==writes && status_led_error_phase==phase%3);
+        // Repeated shutdown reports must not restart a color's five seconds.
+        m300_board_shutdown();
+        assert(status_led_error_since==epoch+phase*timer_from_us(STATUS_LED_STEP_US));
+    }
+    // A delayed task advances to the correct phase, without repeated writes.
+    now_ticks=status_led_error_since+timer_from_us(STATUS_LED_STEP_US)*4;
+    m300_status_led_task();assert(status_led_error_phase==0);
+    restart_model();assert(!status_led_error_active);
+#endif
     printf("PASS M300 native guard: %u rejection scenarios; early safe/MS, native GPIO reset/write/toggle, fan shadow resync, ADC EOC/cancel, bounded ranges, queue gates, local latch, freshness/wrap, status/shutdown\n", rejection_count);
     return 0;
 }
