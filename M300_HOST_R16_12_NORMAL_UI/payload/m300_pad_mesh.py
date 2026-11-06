@@ -14,7 +14,7 @@ CLEARANCE = 5.
 SEARCH_MARGIN = 1.
 PAD_NAMES = ('front_right', 'front_left', 'center', 'rear_right', 'rear_left')
 PAD_CENTERS = ((290., 30.), (30., 30.), (160., 160.), (290., 290.), (30., 290.))
-GEOMETRY_DEFAULTS = dict(corner_pad_width=60., center_pad_width=50., edge_margin=5.)
+GEOMETRY_DEFAULTS = dict(corner_pad_width=50., center_pad_width=50., edge_margin=5.)
 GEOMETRY_DEFAULTS.update((name + '_' + axis, value)
                          for name, point in zip(PAD_NAMES, PAD_CENTERS)
                          for axis, value in zip('xy', point))
@@ -34,6 +34,11 @@ def pad_points(corner_width, margin, center_width=None, centers=POINTS):
     for index, (x, y) in enumerate(centers):
         span = (center_width if index == 2 else corner_width) / 2 - margin
         points.extend((x + dx * span, y + dy * span) for dx, dy in PATTERN)
+    validate_layout(points)
+    return tuple(points)
+
+
+def validate_layout(points):
     # The structured triangulation needs five separated, nested pad clusters.
     if not (max(points[8][0], points[22][0]) < points[11][0]
             < points[13][0] < min(points[4][0], points[16][0])
@@ -46,7 +51,26 @@ def pad_points(corner_width, margin, center_width=None, centers=POINTS):
         cx, cy = points[c]
         if (bx - ax) * (cy - ay) - (by - ay) * (cx - ax) <= 1e-9:
             raise ValueError('pad corrections must preserve the contact-square layout')
-    return tuple(points)
+
+
+def fit_pad_points(points, minimum, maximum, margin=1.):
+    """Clip only pad corners to reachable metal; never relocate a pad center."""
+    if (not math.isfinite(margin) or not .5 <= margin <= 5.
+            or not all(math.isfinite(v) for bounds in (minimum, maximum) for v in bounds[:2])):
+        raise ValueError('TRAVEL_MARGIN must be 0.5..5 mm with finite XY travel')
+    fitted = []
+    for start, name in zip(range(0,25,5), PAD_NAMES):
+        cx, cy = points[start]
+        x0, y0 = points[start+1]
+        x1, y1 = points[start+3]
+        x0, y0 = max(x0, minimum[0]+margin), max(y0, minimum[1]+margin)
+        x1, y1 = min(x1, maximum[0]-margin), min(y1, maximum[1]-margin)
+        if not (x0 < cx < x1 and y0 < cy < y1):
+            raise ValueError('%s pad center X%g Y%g has no reachable four-corner area; '
+                             'correct its center or verify XY travel' % (name,cx,cy))
+        fitted.extend(((cx,cy),(x0,y0),(x1,y0),(x1,y1),(x0,y1)))
+    validate_layout(fitted)
+    return tuple(fitted)
 
 
 def geometry_points(geometry):
@@ -137,10 +161,15 @@ class M300PadMesh:
                             for name, point in zip(PAD_NAMES, POINTS)
                             for axis, value in zip('xy', point))
         self.geometry = {key: config.getfloat(key, value) for key, value in defaults.items()}
+        self.fit_travel = config.getboolean('fit_travel', True)
+        self.travel_margin = config.getfloat('travel_margin', 1., minval=.5, maxval=5.)
+        if not math.isfinite(self.travel_margin):
+            raise config.error('travel_margin must be finite')
         try:
             self.points = geometry_points(self.geometry)
         except ValueError as exc:
             raise config.error(str(exc))
+        self.nominal_points = self.points
         self.max_pad_spread = config.getfloat('max_pad_spread', None, above=0., maxval=.75)
         self.max_bed_span = config.getfloat('max_bed_span', .5, above=0., maxval=.75)
         self.bedmesh = self.printer.load_object(config, 'bed_mesh')
@@ -271,23 +300,37 @@ class M300PadMesh:
 
     def cmd_calibrate(self, gcmd):
         profile = gcmd.get('PROFILE', 'm300_pads')
-        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {'PROFILE', 'PREVIEW'}
+        allowed = {key.upper() for key in GEOMETRY_DEFAULTS} | {'PROFILE', 'PREVIEW', 'FIT_TRAVEL', 'TRAVEL_MARGIN'}
         if (self.busy or set(gcmd.get_command_parameters()) - allowed
                 or not re.fullmatch(r'[a-zA-Z0-9_-]{1,32}', profile)):
             raise self._error('requires an idle pad run with a simple PROFILE and supported pad parameters')
         preview = gcmd.get_int('PREVIEW', 0, minval=0, maxval=1)
+        fit = bool(gcmd.get_int('FIT_TRAVEL', int(getattr(self,'fit_travel',True)), minval=0, maxval=1))
+        travel_margin = gcmd.get_float('TRAVEL_MARGIN', getattr(self,'travel_margin',1.))
+        if not math.isfinite(travel_margin) or not .5 <= travel_margin <= 5.:
+            raise self._error('TRAVEL_MARGIN must be 0.5..5 mm')
         geometry = {key: gcmd.get_float(key.upper(), value)
                     for key, value in self.geometry.items()}
         try:
-            points = geometry_points(geometry)
+            nominal = points = geometry_points(geometry)
+            toolhead = self.printer.lookup_object('toolhead', None)
+            if fit and toolhead is not None:
+                limits = toolhead.get_kinematics().get_status(self.reactor.monotonic())
+                points = fit_pad_points(points, limits['axis_minimum'], limits['axis_maximum'], travel_margin)
         except ValueError as exc:
             raise self._error(str(exc))
         self.probe_points.update_probe_points(points, len(points))
         self.geometry, self.points = geometry, points
+        self.nominal_points, self.fit_travel, self.travel_margin = nominal, fit, travel_margin
         if preview:
             self.cmd_status(gcmd)
             return
         self._preflight()
+        adjusted = sum(a != b for a,b in zip(nominal,points))
+        if adjusted:
+            gcmd.respond_info('Pad travel fit: adjusted %d corner points inside XY limits; '
+                              'all five centers and pad sizes are retained. '
+                              'Use PREVIEW=1 to review the contact plan.' % adjusted)
         self.state, self.busy = 'PROBING', True
         self.samples = None
         shifted = completed = False
@@ -358,8 +401,13 @@ class M300PadMesh:
     def get_status(self, eventtime):
         toolhead = self.printer.lookup_object('toolhead', None)
         limits = toolhead.get_kinematics().get_status(eventtime) if toolhead is not None else None
-        return dict(state=self.state, busy=self.busy, result=self.report,
+        nominal = getattr(self,'nominal_points',self.points)
+        changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
+                   for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
+        return dict(revision='0.13.16.15-PAD-TRAVEL', state=self.state, busy=self.busy, result=self.report,
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
+                    fit_travel=getattr(self,'fit_travel',True),
+                    travel_margin=getattr(self,'travel_margin',1.), adjusted_points=changes,
                     travel=self._geometry_travel(limits) if limits else None)
 
     def cmd_status(self, gcmd):
@@ -371,6 +419,10 @@ class M300PadMesh:
                 *travel['required_x'], *travel['required_y'],
                 *travel['configured_x'], *travel['configured_y'],
                 'fits' if travel['fits'] else 'OUTSIDE TRAVEL'))
+            if status['adjusted_points']:
+                gcmd.respond_info('Travel fit adjusted %d corners inside the pads; '
+                                  'pad centers are unchanged. FIT_TRAVEL=0 requests exact geometry.' %
+                                  len(status['adjusted_points']))
             if 'suggested_edge_margin' in travel:
                 gcmd.respond_info('Keep the configured travel: preview a smaller contact area with '
                     'BED_MESH_CALIBRATE EDGE_MARGIN=%g PREVIEW=1. '
