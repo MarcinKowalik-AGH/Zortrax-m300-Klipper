@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.13-BRIGHTNESS-MESH-BOUNDS"
+    MENU_REVISION = "0.13.16.14-PAD-OLED"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -642,13 +642,29 @@ class M300Menu:
             if mesh is None:
                 return 'Bed mesh', back+[('Native pad mesh is not configured', None)]
             status = mesh.get_status(now)
-            rows = back+[('State: '+self.clean(status.get('state', 'IDLE')), None)]
+            context = getattr(self,'_procedure_return',None)
+            token = status.get('session_token')
+            if context is not None and context['session'] == ('m300_pad_mesh',token):
+                back = [('Back',('procedure_return','m300_pad_mesh',token))]
+            from .m300_procedures import PAD_MESH_PHASES
+            phase = status.get('phase',status.get('state','IDLE'))
+            measured = status.get('points_measured',0)
+            message = ('Measuring %d / 25' % min(measured+1,25) if phase=='PROBING' else
+                       PAD_MESH_PHASES.get(phase,status.get('state','IDLE').title()))
+            rows = back+[(message,None)]
+            targets = status.get('targets')
+            if status.get('busy') and targets:
+                rows.extend([('Nozzle: %.0f C' % targets['hotend'],None),
+                             ('Bed: %.0f C' % targets['bed'],None)])
+            if status.get('last_error'):
+                rows.extend((line,None) for line in textwrap.wrap(
+                    self.clean(status['last_error']),width=23,max_lines=4,placeholder='...'))
             if not status.get('busy'):
                 rows.append(('Measure 25 pad points', ('native_gcode', 'ZORTRAX_BED_MESH')))
             result = status.get('result') or {}
             if result:
                 rows.append(('Profile: '+self.clean(result.get('profile', '')), None))
-            rows.append(('Five pads / 25 contacts', None))
+            rows.append(('25 points / 75 contacts', None))
             return 'Bed mesh', self._notice(rows)
         if self.page == 'native_moves' and native:
             return 'Move axes', back + [
@@ -891,6 +907,8 @@ class M300Menu:
         return {'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
                 'ZORTRAX_HOME_Z':('m300_motion','HOME_Z'),
                 'ZORTRAX_HOME_ALL':('m300_motion','HOME_ALL'),
+                'ZORTRAX_BED_MESH':('m300_pad_mesh','BED_MESH'),
+                'BED_MESH_CALIBRATE':('m300_pad_mesh','BED_MESH'),
                 'ZORTRAX_LEVEL':('m300_calibration',None),
                 'ZORTRAX_HEAT':('m300_maintenance','HOTEND'),
                 'ZORTRAX_LOAD':('m300_filament','LOAD'),
@@ -968,8 +986,11 @@ class M300Menu:
                 self._native_script(action[1])
             elif kind == 'procedure_return':
                 view = self._service('m300_procedures').view(now)
-                if (view['owner'], view['token']) != tuple(action[1:3]) or view['busy']:
+                if ((view['owner'], view['token']) != tuple(action[1:3])
+                        or view['busy'] and view['owner'] != 'm300_pad_mesh'):
                     raise self._error('procedure changed; review the current screen')
+                # Bed-mesh Back dismisses presentation only; the native
+                # measurement and its physical ownership continue unchanged.
                 operation = view['snapshots'][view['owner']].get('operation')
                 if self.return_from_procedure(view['owner'], operation, view['token'], explicit=True):
                     return '_procedure_view_restored'

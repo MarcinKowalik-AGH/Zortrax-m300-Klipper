@@ -19,6 +19,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.busy,mesh.state,mesh.report=False,'IDLE',None
         mesh.phase,mesh.cancelled='IDLE',False
         mesh.heat_timeout=60.
+        mesh.max_bed_span,mesh.max_pad_spread=.5,None
         events,clock,freeze = [],[0.],[False]
         limits = dict(homed_axes=homed, axis_minimum=(0.,0.,0.), axis_maximum=(300.,305.,315.))
         position = [150.,158.,5. if 'z' in homed else 315.,0.]
@@ -43,10 +44,13 @@ class PadMeshTests(unittest.TestCase):
             def set_temp(target):
                 events.append(('heat',name,target))
                 temps[name]=(temps[name][0],target)
-            return NS(set_temp=set_temp,min_temp=0.,max_temp=300. if name=='hotend' else 120.)
+            return NS(set_temp=set_temp,get_temp=lambda now:temps[name],
+                      min_temp=0.,max_temp=300. if name=='hotend' else 120.)
         job = NS(board=board,service_busy=lambda:False,get_status=lambda now:dict(busy=False),
                  _temperatures=lambda now:dict(temps),hotend=heater('hotend'),bed=heater('bed'))
-        kin = NS(get_status=lambda now:dict(limits))
+        def clear_homing_state(axes):
+            limits['homed_axes']=''.join(axis for axis in limits['homed_axes'] if axis not in axes)
+        kin = NS(get_status=lambda now:dict(limits),clear_homing_state=clear_homing_state)
         toolhead = NS(get_kinematics=lambda:kin,get_position=lambda:position[:],
                       get_last_move_time=lambda:0.,wait_moves=lambda:events.append('wait'),
                       register_lookahead_callback=lambda callback:events.append('flush'))
@@ -61,7 +65,7 @@ class PadMeshTests(unittest.TestCase):
         objects = {'m300_job':job,'toolhead':toolhead,'gcode_move':NS(move_transform=bedmesh),
             'probe':NS(get_offsets=lambda:(0.,0.,0.),
                        mcu_probe=NS(mcu_endstop=endstop,homing_helper=NS(z_min_position=0.))),
-            'm300_motion':NS(home=home,z_home_hotend_target=180.)}
+            'm300_motion':NS(home=home,z_home_hotend_target=180.,ensure_xy_clearance=lambda check:check())}
         mesh.bedmesh = bedmesh
         mesh.gcode = NS(respond_info=lambda message:events.append(message))
         mesh.printer = NS(lookup_object=lambda name,default=None:objects.get(name,default),
@@ -72,6 +76,49 @@ class PadMeshTests(unittest.TestCase):
     def start_preparation(self, mesh):
         mesh.busy,mesh.state,mesh.run_id,mesh.cancelled=True,'PROBING','a'*24,False
         mesh._prepare(mesh.run_id)
+
+    def complete_command(self, mesh, case, publish=None):
+        mesh.toolhead=case.objects['toolhead']
+        mesh.toolhead.set_position=lambda position:case.position.__setitem__(slice(None),position)
+        mesh.gcode.create_gcode_command=lambda name,text,params:params
+        mesh._publish=publish or (lambda profile,readings:None)
+        mesh.probe_points=NS(update_probe_points=lambda *args:None,
+            start_probe=lambda cmd:mesh._capture([
+                NS(bed_x=x,bed_y=y,bed_z=1.+.0001*x) for x,y in mesh.points]))
+        gcmd=NS(get=lambda key,default:default,get_command_parameters=dict,
+                get_int=lambda key,default,**kw:default,get_float=lambda key,default:default,
+                respond_info=lambda message:None)
+        mesh.cmd_calibrate(gcmd)
+
+    def test_successful_automatic_measurement_turns_previously_off_heaters_back_off(self):
+        for measured in (25.,240.):
+            with self.subTest(measured=measured):
+                mesh,case=self.preflight_case('xyz')
+                case.temps.update(hotend=(measured,0.),bed=(25.,0.))
+                self.complete_command(mesh,case)
+                self.assertEqual(mesh.state,'COMPLETE')
+                self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(0.,0.))
+                self.assertEqual(mesh.targets['hotend'],max(measured,180.))
+
+    def test_completion_restores_prior_working_targets_without_overriding_an_explicit_off(self):
+        for original,off,expected in ((240.,False,240.),(180.,False,180.),(240.,True,0.)):
+            with self.subTest(original=original,off=off):
+                mesh,case=self.preflight_case('xyz')
+                case.temps.update(hotend=(240.,original),bed=(80.,80.))
+                def publish(profile,readings):
+                    if off:case.objects['m300_job'].hotend.set_temp(0.)
+                self.complete_command(mesh,case,publish)
+                self.assertEqual(mesh.state,'COMPLETE')
+                self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(expected,80.))
+
+    def test_failed_measurement_never_restores_previous_positive_heat(self):
+        mesh,case=self.preflight_case('xyz')
+        case.temps.update(hotend=(240.,240.),bed=(80.,80.))
+        def reject(profile,readings):raise ValueError('publication failed')
+        with self.assertRaisesRegex(ValueError,'publication failed'):
+            self.complete_command(mesh,case,reject)
+        self.assertEqual(mesh.state,'FAILED')
+        self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(0.,0.))
 
     def test_unhomed_pad_measurement_uses_native_homing_then_checks_clearance(self):
         for homed,axes in (('', 'xyz'),('x','xyz'),('y','xyz'),('xy','z'),
@@ -318,6 +365,13 @@ class PadMeshTests(unittest.TestCase):
         self.assertIn('HOTEND_TEMP',updated)
         self.assertIn('BED_TEMP',updated)
         self.assertEqual(m300_profile.convert_text(updated),updated)
+        recent=(Path(__file__).parent/'reference/pad_mesh_macro_r1617.cfg').read_text()
+        updated=m300_profile.convert_text(recent)
+        self.assertIn(m300_profile.pad_mesh_command(),updated)
+        self.assertEqual(m300_profile.convert_text(updated),updated)
+        lines=m300_profile.pad_mesh_command().splitlines()
+        for field in ('CORNER_PAD_WIDTH','CENTER_PAD_WIDTH','EDGE_MARGIN','BED_TEMP','HOTEND_TEMP'):
+            self.assertTrue(any('params.'+field in line for line in lines))
 
     def test_320_mm_layout_and_individual_center_corrections(self):
         geometry = dict(GEOMETRY_DEFAULTS, corner_pad_width=60.)
@@ -655,6 +709,9 @@ class PadMeshTests(unittest.TestCase):
         self.assertEqual(commands[0]['HOTEND_TEMP'],'240')
         self.assertEqual(commands[0]['BED_TEMP'],'60')
         self.assertEqual(set(commands[0]), {'FRONT_RIGHT_X', 'PREVIEW', 'HOTEND_TEMP', 'BED_TEMP'})
+        rendered=template.render(printer=NS(m300_pad_mesh=object()),params={})
+        gcode.run_script_from_command(rendered)
+        self.assertEqual(commands[-1],{})
         self.assertEqual(category('ZORTRAX_BED_MESH'), 'ZORTRAX M300')
 
     def test_actual_preflight_rejects_a_300_mm_limit_before_315_mm_probing(self):

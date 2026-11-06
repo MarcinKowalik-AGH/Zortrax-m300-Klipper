@@ -88,6 +88,13 @@ Revision `0.13.16.17-PAD-PREPARE` makes the measurement a single command:
 simultaneous native bed/nozzle heating, stable-temperature wait and required
 native homing precede probing. Nozzle temperature uses 180 °C as a minimum
 and retains a hotter working temperature. Tune shows each preparation phase.
+Revision `0.13.16.18-PAD-OLED` opens the animated OLED five-pad page for
+remote starts, retains it through internal homing and restores its invoking
+screen after success. The multiline macro exposes all Fluidd parameter fields;
+its name remains the ordinary quick button and Send submits field overrides.
+G28, OEM leveling and pad mesh establish shared 5 mm Z clearance before XY.
+Successful pad mesh restores the previous heater targets, including off;
+failed runs turn both targets off.
 
 MCU R14.7 adds a local encoder-release stop for OLED platform movement and retains the factory serial and OEM print-time queries.
 MCU R14.8 adds a Thumb-2 repeat fill for OLED RLE and a read-only cycle benchmark.

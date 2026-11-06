@@ -86,7 +86,8 @@ class Harness:
             _temperatures=lambda now:{'hotend':(self.hotend.temperature,self.hotend.target),
                                       'bed':(self.bed.temperature,self.bed.target)},
             get_status=lambda now:{'state':'IDLE','busy':False})
-        self.motion = NS(home_oem=lambda xy:self.motion.home('xyz'),get_status=lambda now:{'state':'COMPLETE','busy':False},home=self.home)
+        self.motion = NS(home_oem=lambda xy:self.motion.home('xyz'),get_status=lambda now:{'state':'COMPLETE','busy':False},
+                         home=self.home,ensure_xy_clearance=lambda check:check())
         self.objects = {'m300_motion':self.motion,'m300_job':self.job,
                         'm300_procedures':NS(timer='procedures')}
         self.printer = NS(command_error=RuntimeError, is_shutdown=lambda:self.shutdown,
@@ -190,6 +191,17 @@ class Harness:
 
 
 class NativeLevelingTests(unittest.TestCase):
+    def test_wizard_requests_z_clearance_before_starting_its_heaters(self):
+        h=Harness()
+        seen=[]
+        def clearance(check):
+            check()
+            seen.append((h.hotend.target,h.bed.target))
+        h.motion.ensure_xy_clearance=clearance
+        h.c.start()
+        self.assertEqual(seen,[(0.,0.)])
+        self.assertEqual(h.hotend.target,260.)
+
     def setUp(self):
         self.patch=patch.dict(sys.modules,{'payload.homing':homing})
         self.patch.start();self.addCleanup(self.patch.stop)

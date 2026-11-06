@@ -131,7 +131,7 @@ The example values are offline fixtures, not live measurements.
 | Printer information | Original information symbol; the four shared data fields remain on one page |
 | Firmware version / Help | Static memory-chip symbol / original Help symbol |
 | Board / OLED link / temperature diagnostics | Connection symbol / matching heater symbol; other informational diagnostics retain the original information symbol |
-| Bed mesh | Five-pad symbol; animation only while the native pad-mesh owner reports busy |
+| Bed mesh | Five-pad symbol; four-frame animation while preparing or measuring, with phase and point text |
 | Back | Existing left-pointing navigation indicator; context symbols remain where appropriate |
 
 When `[m300_pad_mesh]` is configured, Klipper also offers a Bed mesh page.
@@ -139,6 +139,11 @@ It reads the existing owner's state and invokes the existing `ZORTRAX_BED_MESH`
 macro. Its measurement action is absent while that owner is busy. Geometry,
 preflight, probing, compensation and optional configuration stay under the
 existing native implementation.
+Starting that same macro from Fluidd or the console now opens this page
+automatically. Nested native homing retains the parent measurement view.
+Success returns to the invoking screen; manual navigation remains in place,
+and Back dismisses presentation without cancelling the native measurement.
+Failures keep their reason and existing fault symbol visible until Back.
 
 The brightness bar now occupies x16–173: sixteen eight-pixel segments at a
 ten-pixel pitch. The 50px symbol occupies x200–249, leaving a clear gap.

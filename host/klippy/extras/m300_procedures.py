@@ -15,19 +15,27 @@ from .m300_oem_procedure_ui import describe as describe_service
 from .m300_maintenance_ui import describe as describe_maintenance
 from .m300_native_service import require_idle_print
 
-OWNERS = ('m300_filament', 'm300_calibration', 'm300_maintenance',
+OWNERS = ('m300_pad_mesh', 'm300_filament', 'm300_calibration', 'm300_maintenance',
           'm300_thermal', 'm300_fans', 'm300_job', 'm300_motion')
 HOMING_TITLES = {'HOME_X': 'Homing X', 'HOME_Y': 'Homing Y', 'HOME_XY': 'Homing XY',
                  'HOME_Z': 'Homing Z', 'HOME_ALL': 'Homing ALL'}
 HOMING_COMMANDS = {'HOME_X': 'G28 X', 'HOME_Y': 'G28 Y', 'HOME_XY': 'G28 X Y',
                    'HOME_Z': 'G28 Z', 'HOME_ALL': 'G28'}
 HOMING_PHASES = {
+    'Z_INITIAL_CLEARANCE':'Lowering platform before XY',
     'HOME_Y': 'Homing Y', 'HOME_X': 'Homing X', 'Z_PREHEAT': 'Heating nozzle for Z',
     'Z_CHECK_CONTACT': 'Checking Z contact', 'Z_CONTACT_POSITION': 'Moving to Z contact',
     'HOME_Z_NATIVE_PROBE': 'Homing Z', 'Z_FIVE_CONTACT_REFERENCES': 'Refining Z reference',
     'Z_FINAL_CLEARANCE': 'Moving to Z clearance',
 }
-TERMINAL = ('COMPLETE', 'CANCELLED', 'FAULT', 'ERROR')
+TERMINAL = ('COMPLETE', 'CANCELLED', 'FAULT', 'ERROR', 'FAILED')
+PAD_MESH_PHASES = {
+    'IDLE':'Ready to measure', 'PREPARING':'Preparing measurement',
+    'CLEARANCE':'Lowering platform',
+    'HEATING':'Heating nozzle / bed', 'HOMING':'Homing axes',
+    'STABILIZING':'Stabilizing', 'COMPLETE':'Measurement complete',
+    'FAILED':'Measurement failed',
+}
 VERBS = ('CONFIRM', 'PURGE', 'PAUSE', 'RESUME', 'CONFIRM_CLEAN', 'CANCEL',
          'BACK', 'TOGGLE_UPPER', 'TOGGLE_LOWER')
 
@@ -61,6 +69,7 @@ class M300Procedures:
             self.printer.register_event_handler(event, self.invalidate)
         self.printer.register_event_handler('klippy:ready', self._ready)
         self.printer.register_event_handler('m300:homing_view_changed', self._homing_changed)
+        self.printer.register_event_handler('m300:pad_mesh_view_changed', self._homing_changed)
         for name, callback in (
                 ('ZORTRAX_PROCEDURE_STATUS', self.cmd_status),
                 ('ZORTRAX_PROCEDURE_SHOW', self.cmd_show),
@@ -134,7 +143,9 @@ class M300Procedures:
                 tuple(status.get('can_' + v.lower()) is True for v in VERBS),
                 status.get('can_confirm_resume_clean') is True,
                 status.get('ready') is True, status.get('upper_enabled'),
-                status.get('lower_enabled'), status.get('upper_cooling'))
+                status.get('lower_enabled'), status.get('upper_cooling'),
+                ((status.get('phase'), status.get('points_measured'), status.get('last_error'))
+                 if name == 'm300_pad_mesh' else None))
 
     def view(self, now, owner_override=None):
         snapshots = {name: self._read(name, now) for name in OWNERS}
@@ -163,6 +174,10 @@ class M300Procedures:
             owner = recent
         else:
             owner = active[0] if active else recent
+        if snapshots['m300_pad_mesh'].get('busy') is True:
+            # Native G28 is a child of the measurement. Its phase/completion
+            # must not steal the OLED or consume the parent's return context.
+            owner = 'm300_pad_mesh'
         if owner_override in snapshots and snapshots[owner_override]['state'] != 'UNAVAILABLE':
             owner = owner_override
         status = snapshots[owner] if owner else {'state': 'IDLE', 'busy': False}
@@ -203,10 +218,18 @@ class M300Procedures:
         if owner == 'm300_motion':
             title = HOMING_TITLES[status['operation']]
             message = HOMING_PHASES.get(status.get('phase'), message)
+        if owner == 'm300_pad_mesh':
+            title = 'Bed mesh'
+            measured = status.get('points_measured', 0)
+            message = (('Measuring %d / 25' % min(measured+1,25))
+                       if status.get('phase') == 'PROBING' else
+                       PAD_MESH_PHASES.get(status.get('phase'), state.replace('_',' ').title()))
         stats = self._read('print_stats', now)
         elapsed = (number(stats.get('print_duration')) if owner == 'm300_job' else
                    max(0., now - self.started.get(owner, now)))
         progress = number(status.get('progress')) if owner == 'm300_job' else None
+        if owner == 'm300_pad_mesh':
+            progress = status.get('points_measured',0) / 25.
         screen = (describe(status, language) if owner == 'm300_calibration'
                   else describe_service(owner,status,language))
         if screen:
@@ -224,7 +247,7 @@ class M300Procedures:
                 'message': message if screen or maintenance_screen else clean(message), 'view_id': self.view_id,
                 'token': status.get('session_token'), 'phase': status.get('phase_id'),
                 'actions': actions, 'busy': status.get('busy') is True,
-                'reason': clean(status.get('reason') or status.get('resume_block_reason')),
+                'reason': clean(status.get('reason') or status.get('last_error') or status.get('resume_block_reason')),
                 'progress': None if progress is None else max(0., min(1., progress)),
                 'elapsed': elapsed, 'phase_remaining': number(status.get('phase_remaining')),
                 'filename': clean(status.get('filename')),
@@ -235,7 +258,7 @@ class M300Procedures:
 
     def rows(self, now):
         view = self.view(now)
-        if view['owner'] == 'm300_motion':
+        if view['owner'] in ('m300_motion', 'm300_pad_mesh'):
             rows = [(view['title'], None), (view['message'], None)]
             if view['busy']:
                 rows.append(('Please wait', None))
@@ -325,9 +348,9 @@ class M300Procedures:
             self.reactor.update_timer(self.timer, self.reactor.NOW)
 
     def _prompt(self, view):
-        if view['owner'] == 'm300_motion':
-            # Homing stays on the OLED and Fluidd's native home buttons. Do not
-            # open a modal or close another operator dialog at a phase change.
+        if view['owner'] in ('m300_motion', 'm300_pad_mesh'):
+            # Native home buttons and Tune own the web presentation. Phase
+            # changes never open or close an unrelated Fluidd modal dialog.
             self.last_prompt = view['view_id']
             return
         if view['snapshots'].get(view['owner'], {}).get('platform_panel_local'):
@@ -366,18 +389,23 @@ class M300Procedures:
         if view['owner'] and not view['snapshots'][view['owner']].get('platform_panel_local'):
             if view['view_id'] != self.last_prompt:
                 homing = view['owner'] == 'm300_motion'
+                pad_mesh = view['owner'] == 'm300_pad_mesh'
                 finished_service = (view['state'] in ('COMPLETE', 'CANCELLED') and
-                    (homing or ((view.get('maintenance_screen') or view.get('leveling_screen'))
+                    (homing or pad_mesh or ((view.get('maintenance_screen') or view.get('leveling_screen'))
                      and view['owner'] in ('m300_maintenance','m300_filament',
                                            'm300_calibration','m300_fans'))))
                 if finished_service:
-                    if not homing:
+                    if not (homing or pad_mesh):
                         self._emit('prompt_end')
                     self.last_prompt=view['view_id']
                 else:
                     self._prompt(view)
                 maintenance_screen = view.get('maintenance_screen')
-                if maintenance_screen and view['busy']:
+                if pad_mesh and not finished_service:
+                    menu = self.printer.lookup_object('m300_menu',None)
+                    if menu is not None:
+                        menu.present_procedure(view,'bed_mesh')
+                elif maintenance_screen and view['busy']:
                     menu=self.printer.lookup_object('m300_menu',None)
                     oled=self.printer.lookup_object('m300_oled',None)
                     # A held platform must keep its acknowledged row; changing
@@ -424,6 +452,8 @@ class M300Procedures:
                     text = view['leveling_screen']['text']
                 elif view['owner'] == 'm300_motion':
                     text = view['title'] + ' ' + view['message']
+                elif view['owner'] == 'm300_pad_mesh':
+                    text = 'Bed mesh: ' + view['message']
                 else:
                     prefix = (str(view['snapshots'][view['owner']].get('operation') or 'Filament')
                               if view['owner'] == 'm300_filament' else
@@ -450,7 +480,7 @@ class M300Procedures:
         # the shared object small at normal subscription rates.
         view.pop('snapshots')
         return dict(view, installed=True, ready=self.live,
-                    revision='0.13.16.7-OEM-PROCEDURES', automatic_resume=False)
+                    revision='0.13.16.8-PAD-OLED', automatic_resume=False)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('ZORTRAX_PROCEDURE ' + json.dumps(

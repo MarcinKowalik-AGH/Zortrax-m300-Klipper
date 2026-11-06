@@ -45,6 +45,19 @@ then the 25-point progress. Nozzle/bed targets are displayed. The nozzle uses
 bed defaults to 60 °C. `HOTEND_TEMP` and `BED_TEMP` are editable macro fields.
 `PREVIEW=1` still never heats or homes. No firmware flash is required.
 
+Revision `0.13.16.18-PAD-OLED` binds this same live run to the physical panel.
+Fluidd quick-button, parameter-form and console starts all open the Bed mesh
+OLED page, with its four-frame 500 ms five-pad animation and phase/point text.
+Internal homing keeps the parent measurement view. Successful completion restores
+the prior OLED screen/cursor/history, manual navigation is respected, and failure
+stays visible until Back. These updates never open a Fluidd prompt over Tune.
+
+The macro name is a quick button with no parameters. The expanded form's
+**Send** submits its filled values. To match the console example, fill widths
+50/50 mm, `EDGE_MARGIN=16` and `BED_TEMP=60`; empty fields use the printer's
+configuration/current geometry (margin 5 mm by default). References now occupy
+separate Jinja lines, allowing stock Fluidd to discover all editable fields.
+
 Tune shows progress through 25 positions, five pad medians/spreads and the
 measured range versus its configured limit. A failed attempt retains its
 diagnostics and error, without a Save button or a newly generated map. On

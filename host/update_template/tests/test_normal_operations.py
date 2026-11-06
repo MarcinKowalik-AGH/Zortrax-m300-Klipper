@@ -67,6 +67,86 @@ def motion_fixture():
 
 
 class NormalHomingTests(unittest.TestCase):
+    def test_parent_clearance_is_not_accumulated_at_the_native_z_max(self):
+        m=motion_fixture()
+        m.toolhead.set_position([150.,158.,310.,17.])
+        m.ensure_xy_clearance(lambda:m._check(m.token))
+        m.home(axes='xyz')
+        self.assertEqual([event[1][2] for event in m.events if event[0]=='move' and event[1][2] is not None],[315.,5.])
+        self.assertTrue(m.result['initial_clearance']['clearance_reused'])
+
+    def test_z_disable_invalidates_the_prepared_clearance(self):
+        m=motion_fixture()
+        m.toolhead.set_position([150.,158.,0.,17.])
+        m.ensure_xy_clearance(lambda:m._check(m.token))
+        m._z_enable_changed(0.,False)
+        m.ensure_xy_clearance(lambda:m._check(m.token))
+        self.assertEqual([event[1][2] for event in m.events if event[0]=='move'],[5.,10.])
+
+    def test_open_pc7_after_failed_contact_gets_five_mm_retreat_before_any_xy(self):
+        for axes,oem in (('xyz',False),('xyz',True),('xy',False)):
+            with self.subTest(axes=axes,oem=oem):
+                m=motion_fixture()
+                m.toolhead.set_position([281.,281.,.1,17.])
+                m.homed=set('xy')
+                m.home(axes=axes,oem_leveling=oem)
+                self.assertEqual(m.events[0],('move',(None,None,5.1),5.))
+                self.assertLess(m.events.index(m.events[0]),next(i for i,event in enumerate(m.events) if event[0]=='home'))
+                self.assertEqual(m.toolhead.get_position()[3],17.)
+
+    def test_valid_low_z_moves_to_five_mm_before_native_home(self):
+        m=motion_fixture()
+        m.homed=set('xyz')
+        m.toolhead.set_position([150.,158.,.1,17.])
+        m.home(axes='xy')
+        self.assertEqual(m.events,[('move',(None,None,5.),5.),('home','Y'),('home','X')])
+        self.assertEqual(m.homed,set('xyz'))
+
+    def test_valid_bottom_position_is_already_clear_and_never_overruns_z_max(self):
+        m=motion_fixture()
+        m.homed=set('xyz')
+        m.toolhead.set_position([150.,158.,315.,17.])
+        m.home(axes='xy')
+        self.assertEqual(m.events,[('home','Y'),('home','X')])
+        self.assertEqual(m.toolhead.get_position()[2],315.)
+
+    def test_unknown_z_without_clearance_room_never_moves_xy_even_with_open_pc7(self):
+        m=motion_fixture()
+        m.homed.clear()
+        m.toolhead.set_position([150.,158.,314.,17.])
+        with self.assertRaisesRegex(RuntimeError,'CLEARANCE'):
+            m.home(axes='xyz')
+        self.assertEqual(m.events,[])
+        self.assertEqual(m.toolhead.get_kinematics().rails[2].get_range(),(0.,315.))
+
+    def test_cancel_during_temporary_clearance_frame_cannot_queue_a_move(self):
+        m=motion_fixture()
+        original=m.toolhead.set_position
+        def interrupt(position,homing_axes=''):
+            original(position,homing_axes)
+            m._stop('request_restart')
+        m.toolhead.set_position=interrupt
+        with self.assertRaisesRegex(RuntimeError,'session ended'):
+            m.home(axes='xyz')
+        self.assertEqual(m.events,[])
+        self.assertNotIn('z',m.homed)
+
+    def test_failed_probe_below_zero_only_borrows_z_for_the_relative_retreat(self):
+        m=motion_fixture()
+        m.toolhead.set_position([150.,158.,-.2,17.])
+        m.home(axes='xy')
+        self.assertEqual(m.events[0],('move',(None,None,5.),5.))
+        self.assertNotIn('z',m.homed)
+        self.assertEqual(m.toolhead.get_kinematics().rails[2].get_range(),(0.,315.))
+
+    def test_open_contact_reclosed_after_clearance_aborts_before_xy(self):
+        m=motion_fixture()
+        m.precision.endstop.query_endstop.side_effect=[False,False,True]
+        with self.assertRaisesRegex(RuntimeError,'NO_RELEASE'):
+            m.home(axes='xyz')
+        self.assertFalse(any(event[0]=='home' for event in m.events))
+        self.assertEqual([event for event in m.events if event[0]=='move'],[('move',(None,None,304.),5.)])
+
     def test_operator_homing_presentation_leaves_leveling_and_print_in_control(self):
         for axes, leveling, printing, expected in (
                 ('x', False, False, 'HOME_X'), ('y', False, False, 'HOME_Y'),
@@ -84,30 +164,30 @@ class NormalHomingTests(unittest.TestCase):
                 self.assertEqual(status['state'], 'COMPLETE')
                 self.assertEqual(motion.printer.send_event.called, expected is not None)
 
-    def test_xy_needs_no_heat_or_clearance_declaration_and_keeps_z_e(self):
+    def test_xy_lifts_unknown_z_before_xy_without_heating_or_changing_e(self):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xy')
-        self.assertEqual(m.events, [('home', 'Y'), ('home', 'X')])
-        self.assertEqual(m.toolhead.get_position()[2:], [299., 17.])
+        self.assertEqual(m.events, [('move',(None,None,304.),5.),('home','Y'),('home','X')])
+        self.assertEqual(m.toolhead.get_position()[2:], [304., 17.])
 
     def test_xyz_preheats_180_then_native_xy_native_z_and_five_mm_clearance(self):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xyz')
-        self.assertEqual(m.events, [('heat', 180., False), ('home', 'Y'), ('home', 'X'),
+        self.assertEqual(m.events, [('move',(None,None,304.),5.),('heat', 180., False), ('home', 'Y'), ('home', 'X'),
             ('move', (150., 158., None), 50.), ('home', 'Z'),
             ('move', (None, None, 5.), 5.), ('heat', 0., False)])
         self.assertEqual(m.toolhead.get_position()[3], 17.)
         self.assertEqual(m.get_status(1.)['homed_axes'], 'xyz')
 
-    def test_repeated_z_home_does_not_accumulate_clearance_or_request_z304(self):
+    def test_repeated_z_home_finishes_at_five_mm_without_accumulating_clearance(self):
         m = motion_fixture()
         for _ in range(3):
             m.home(axes='z')
             self.assertEqual(m.toolhead.get_position()[2], 5.)
         ztargets = [e[1][2] for e in m.events if e[0] == 'move' and e[1][2] is not None]
-        self.assertEqual(ztargets, [5., 5., 5.])
+        self.assertEqual(ztargets, [304., 5., 5., 5.])
 
     def test_active_pc7_without_known_z_releases_before_heat_and_xy(self):
         m = motion_fixture()
@@ -120,7 +200,7 @@ class NormalHomingTests(unittest.TestCase):
         m.precision.endstop.query_endstop.side_effect = query
         m.home(axes='xyz')
         self.assertEqual(z_homed_at_query, [False] * 4)
-        self.assertEqual(m.events[:4], [('move', (None, None, 300.), 1.),
+        self.assertEqual(m.events[:4], [('move', (None, None, 304.), 5.),
             ('heat', 180., False), ('home', 'Y'), ('home', 'X')])
         self.assertEqual(m.events[-3:], [('home', 'Z'),
             ('move', (None, None, 5.), 5.), ('heat', 0., False)])
@@ -131,9 +211,9 @@ class NormalHomingTests(unittest.TestCase):
         m.precision.endstop.query_endstop.return_value = True
         with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
             m.home(axes='xyz')
-        self.assertEqual(m.events, [('move', (None, None, 300.), 1.)])
+        self.assertEqual(m.events, [('move', (None, None, 304.), 5.)])
         self.assertNotIn('z', m.homed)
-        self.assertEqual(m.get_status(1.)['failure_phase'], 'Z_CHECK_CONTACT')
+        self.assertEqual(m.get_status(1.)['failure_phase'], 'Z_INITIAL_CLEARANCE')
 
     def test_homed_active_pc7_gets_one_bounded_retreat_and_recheck(self):
         for reopens in (False, True):
@@ -148,36 +228,37 @@ class NormalHomingTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
                         m.home(axes='z')
                     self.assertEqual(len(m.events), 1)
-                self.assertEqual(m.events[0], ('move', (None, None, 300.), 1.))
+                self.assertEqual(m.events[0], ('move', (None, None, 304.), 5.))
                 m.board.require_motion.assert_called_once()
 
-    def test_contact_that_closes_at_center_releases_before_native_z_seek(self):
+    def test_contact_that_closes_at_center_stops_before_native_z_seek(self):
         m = motion_fixture()
-        m.precision.endstop.query_endstop.side_effect = [False, False, True, False]
-        m.home(axes='z')
-        self.assertEqual(m.events[1:4], [('move', (150., 158., None), 50.),
-            ('move', (None, None, 300.), 1.), ('home', 'Z')])
+        m.precision.endstop.query_endstop.side_effect = [False,False,False,True]
+        with self.assertRaisesRegex(RuntimeError,'NO_RELEASE'):
+            m.home(axes='z')
+        self.assertNotIn(('home','Z'),m.events)
+        self.assertEqual([event for event in m.events if event[0]=='move'],[
+            ('move',(None,None,304.),5.),('move',(150.,158.,None),50.)])
 
     def test_contact_reclosed_after_retreat_refuses_xy_and_another_retreat(self):
         m = motion_fixture()
         m.precision.endstop.query_endstop.side_effect = [True, False, True]
         with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE: PC7 closed again'):
             m.home(axes='xyz')
-        self.assertEqual(m.events, [('move', (None, None, 300.), 1.),
+        self.assertEqual(m.events, [('move', (None, None, 304.), 5.),
             ('heat', 180., False), ('heat', 0., False)])
         self.assertNotIn('z', m.homed)
 
     def test_retreat_respects_native_z_limit(self):
-        for z, expected_moves in ((314.75, [('move', (None, None, 315.), 1.)]),
-                                  (315., [])):
+        for z in (314.75,315.):
             with self.subTest(z=z):
-                m = motion_fixture()
-                m.toolhead.set_position([100., 100., z, 17.])
-                m.precision.endstop.query_endstop.return_value = True
-                with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
+                m=motion_fixture()
+                m.toolhead.set_position([100.,100.,z,17.])
+                m.precision.endstop.query_endstop.return_value=True
+                with self.assertRaisesRegex(RuntimeError,'CLEARANCE'):
                     m.home(axes='z')
-                self.assertEqual(m.events, expected_moves)
-                self.assertNotIn('z', m.homed)
+                self.assertEqual(m.events,[])
+                self.assertNotIn('z',m.homed)
 
     def test_failed_retreat_discards_temporary_z_frame(self):
         m = motion_fixture()
@@ -230,7 +311,7 @@ class NormalHomingTests(unittest.TestCase):
         m = motion_fixture()
         m.hotend.measured = 179.9
         def warm(until):
-            self.assertEqual(m.events, [('heat', 180., False)])
+            self.assertEqual(m.events, [('move',(None,None,304.),5.),('heat', 180., False)])
             m.hotend.measured = 180.
             return until
         m.reactor.pause = Mock(side_effect=warm)
@@ -254,7 +335,7 @@ class NormalHomingTests(unittest.TestCase):
             m.home(axes='z')
         self.assertEqual(m.events, [])
 
-    def test_native_endstop_error_cleans_owned_heat_without_clearance_move(self):
+    def test_native_endstop_error_cleans_owned_heat_without_any_final_clearance_move(self):
         m = motion_fixture()
         def error(params):
             raise RuntimeError('Endstop still triggered after retract')
@@ -263,7 +344,7 @@ class NormalHomingTests(unittest.TestCase):
             m.home(axes='z')
         self.assertEqual(m.hotend.target, 0.)
         self.assertEqual(m.state, 'FAULT')
-        self.assertFalse(any(e[0] == 'move' and e[1][2] is not None for e in m.events))
+        self.assertEqual([e[1][2] for e in m.events if e[0]=='move' and e[1][2] is not None],[304.])
 
     def test_restart_during_preheat_cannot_continue_old_homing(self):
         m = motion_fixture()
@@ -275,7 +356,8 @@ class NormalHomingTests(unittest.TestCase):
         m.heaters.set_temperature = interrupted
         with self.assertRaisesRegex(RuntimeError, 'session ended'):
             m.home(axes='z')
-        self.assertFalse(any(e[0] in ('move', 'home') for e in m.events))
+        self.assertFalse(any(e[0]=='home' for e in m.events))
+        self.assertEqual([e for e in m.events if e[0]=='move'],[('move',(None,None,304.),5.)])
         self.assertEqual(m.state, 'CANCELLED')
         self.assertEqual(m.hotend.target, 0.)
 
@@ -290,7 +372,7 @@ class NormalHomingTests(unittest.TestCase):
             m.home(axes='z')
         self.assertEqual([e for e in m.events if e[0] == 'heat'], [('heat', 180., False)])
 
-    def test_preheat_has_its_own_deadline_and_never_moves_on_timeout(self):
+    def test_preheat_timeout_never_reaches_xy_or_z_homing(self):
         m = motion_fixture()
         clock = [0.]
         m.reactor.monotonic = lambda: clock[0]
@@ -303,12 +385,12 @@ class NormalHomingTests(unittest.TestCase):
             m.home(axes='z')
         self.assertEqual(clock[0], 600.)
         self.assertEqual(m.failure_phase, 'Z_PREHEAT')
-        self.assertEqual(m.events, [('heat', 180., False), ('heat', 0., False)])
+        self.assertEqual(m.events, [('move',(None,None,304.),5.),('heat',180.,False),('heat',0.,False)])
 
     def test_native_g28_x0_y0_selectors_are_accepted(self):
         m = motion_fixture()
         m.cmd_G28(NS(get_command_parameters=lambda: {'G': '28', 'X': '0', 'Y': '0'}, error=RuntimeError))
-        self.assertEqual(m.events, [('home', 'Y'), ('home', 'X')])
+        self.assertEqual(m.events, [('move',(None,None,304.),5.),('home','Y'),('home','X')])
 
     def test_stale_oem_job_cannot_start_homing(self):
         m = motion_fixture()

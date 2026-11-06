@@ -35,7 +35,8 @@ XY settings. Z lift, contact approach and release use their separate speeds.
 
 1. Start Maintenance → Autocalibration or `ZORTRAX_LEVEL`. Require an idle
    native print, healthy connector/MCU and fresh native temperature status,
-   empty motion queue and an initially open PC7 contact.
+   empty motion queue. Establish 5 mm Z clearance before heating or XY motion,
+   then require an open PC7 contact.
 2. Heat the nozzle to 260°C. Readiness is a lower threshold of 258°C, with the
    configured stable-readiness interval. Show the original hot-head warning.
 3. After its confirmation, home **Y, then X**, move to the session center
@@ -122,13 +123,19 @@ timing or measured travel on a stock board before changing those setpoints.
 `ZORTRAX_MOTION_STATUS` reports the installed rail speeds, Z cap and contact
 traverse, refinement and clearance speeds.
 
-Z homing reads PC7 before preheat, before XY motion and at the Z seek. A
-closed contact allows one positive-Z retreat per homing session, capped at
-1 mm and 1 mm/s and limited by the native Z travel range. When Z is unhomed,
-Klipper clears the temporary frame used to queue this move before checking
-PC7 again. Native homing continues after an open reading and establishes
-the Z reference through the normal contact sequence. A contact that stays
-closed or closes again after the retreat stops the session with `NO_RELEASE`.
+Native G28, OEM Autocalibration and pad mesh share an initial Z-only clearance
+check before heating or XY motion, including when PC7 is already open after
+an interrupted probe. With unknown Z, the platform retreats by at least 5 mm
+at the configured lift speed using a temporary native coordinate frame;
+Klipper clears that temporary homing state before proceeding. A valid Z
+reference already at 5 mm clearance needs no additional retreat. Logical Z
+travel limits are unchanged; insufficient room aborts before XY. This does
+not establish an absolute Z reference: genuine native contact homing does.
+An open PC7 reading is required after the move and rechecked before XY and
+the Z seek. Persistent or renewed contact stops the session with `NO_RELEASE`.
+An unchanged position can reuse the verified clearance during nested homing
+instead of adding another 5 mm. Restart or disabling the Z motor invalidates
+that evidence; disabling Z also clears its homing reference.
 
 The default idle script shuts down heaters, releases X/Y/E and keeps an
 already energized Z motor. It clears the X/Y references. The installer
@@ -254,6 +261,11 @@ and starts preparation, including starts from the console. It preserves the sele
 printer connection. A geometry-only preview or preflight refusal does not change
 the page, and later manual navigation is respected. Tune shows heating/homing phases and point progress,
 the five pad summaries and the result of the current attempt.
+The physical OLED automatically opens its Bed mesh page for the same run,
+shows preparation/probing progress with the four-frame five-pad animation,
+and returns to the invoking screen after success. An internal G28 cannot
+replace that parent view. Back leaves the screen while measurement continues;
+manual navigation is respected. A rejected measurement stays visible for review.
 Its parameter fields allow individual corrections without editing Python:
 
 | Parameter | Default | Meaning |
@@ -272,6 +284,16 @@ Its parameter fields allow individual corrections without editing Python:
 | `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0.5–5 mm |
 | `HOTEND_TEMP` | Minimum 180 | Minimum nozzle target; a hotter working temperature is retained |
 | `BED_TEMP` | Active bed target, otherwise 60 | Bed temperature for the measurement, °C |
+
+Clicking the **macro name** in Fluidd sends `ZORTRAX_BED_MESH` without arguments.
+It uses `[m300_pad_mesh]` and current command/preview geometry. To reproduce an
+explicit console command, expand the arrow, fill the fields and press **Send**.
+For the conservative operator plan set `CORNER_PAD_WIDTH=50`,
+`CENTER_PAD_WIDTH=50`, `EDGE_MARGIN=16` and `BED_TEMP=60`. Empty fields inherit
+configuration; they do not mean zero. The default margin is 5 mm, so an empty
+quick button can use a different 25-point plan from that explicit 16 mm command.
+The updated macro places parameter references on separate Jinja lines so stock
+Fluidd exposes every field, then emits exactly one native calibration command.
 
 For example, preview a 1 mm front-left X correction and a different center:
 
@@ -300,8 +322,10 @@ For the first supervised test, clean the nozzle and pads and confirm that the
 pads represent the printing surface. One macro now prepares the full native
 measurement. It validates geometry, native heater limits, ownership and fresh
 MCU status before changing outputs; clears an active compensation mesh while
-retaining its saved profile; starts both native heaters together; waits for
-stable temperatures; and performs missing native homing before probing.
+retaining its saved profile; establishes the shared 5 mm Z clearance before
+XY; starts both native heaters together; waits for stable temperatures; and
+performs missing native homing before probing. A persistent closed PC7 or
+insufficient logical Z travel aborts before a horizontal move.
 
 The nozzle setting is a **minimum**, normally 180 °C. An active 240 °C target
 is retained. An already-hot idle nozzle is held at its current temperature,
@@ -331,13 +355,15 @@ precision Z references and physical motion limits remain in effect.
 Preparation requires both readings within 3 °C of their unchanged targets for
 three seconds, with a bounded `heat_timeout` (default 1800 seconds). A target
 change, lost authority, timeout, disconnect or shutdown aborts preparation;
-failed runs turn both heater targets off. Success leaves the selected targets
-for review or a following print. Read the result and switch off unused heaters
-as separate commands after the measurement:
+failed runs turn both heater targets off. Successful completion restores the
+targets present before the run, as ordinary G28 does: a procedure that starts
+with both targets off turns them off again automatically. A prior printing
+setpoint is restored, and an explicit heater-off request is not overwritten.
+Native automatic hotend cooling continues to follow measured temperature
+(50 °C on, 45 °C off). Read the result after the measurement:
 
 ~~~gcode
 ZORTRAX_PAD_MESH_STATUS
-TURN_OFF_HEATERS
 ~~~
 
 The current default travel fitting supports the confirmed X300/Y305 limits.

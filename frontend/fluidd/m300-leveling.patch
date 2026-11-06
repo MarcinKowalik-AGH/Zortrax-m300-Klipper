@@ -651,10 +651,10 @@ index ba2423a..bf77454 100644
 
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
-index 0000000..446d667
+index 0000000..838ccad
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,113 @@
 +<template>
 +  <collapsable-card
 +    v-if="status"
@@ -746,6 +746,7 @@ index 0000000..446d667
 +  get preparationMessage () {
 +    const messages: Record<string, string> = {
 +      PREPARING: 'Preparing the pad measurement.',
++      CLEARANCE: 'Lowering the platform before XY travel.',
 +      HEATING: 'Heating the nozzle and bed together; waiting for stable temperatures.',
 +      HOMING: 'Establishing the native axis references.',
 +      STABILIZING: 'Checking stable temperatures after homing.'
@@ -1205,10 +1206,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..702ad23
+index 0000000..941afff
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,327 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -1216,8 +1217,11 @@ index 0000000..702ad23
 +import { shallowMount } from '@vue/test-utils'
 +import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
 +import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
++import MacroBtn from '@/components/widgets/macros/MacroBtn.vue'
 +import AppBtn from '@/components/ui/AppBtn.vue'
 +import { SocketActions } from '@/api/socketActions'
++import gcodeMacroParams from '@/util/gcode-macro-params'
++import { gcodeCommandBuilder } from '@/util/gcode-helpers'
 +import { getters } from '@/store/mesh/getters'
 +import type { RootState } from '@/store/types'
 +import type { MeshState } from '@/store/mesh/types'
@@ -1303,6 +1307,51 @@ index 0000000..702ad23
 +
 +describe('M300 pad measurement in Tune', () => {
 +  beforeEach(() => vi.clearAllMocks())
++
++  it('discovers pad fields and distinguishes the quick button from the parameter form submission', async () => {
++    const gcode = `{% set _m300_pad_args = [] %}
++{% set _m300_pad_args = _m300_pad_args + ['CORNER_PAD_WIDTH=' ~ params.CORNER_PAD_WIDTH] if params.CORNER_PAD_WIDTH is defined else _m300_pad_args %}
++{% set _m300_pad_args = _m300_pad_args + ['CENTER_PAD_WIDTH=' ~ params.CENTER_PAD_WIDTH] if params.CENTER_PAD_WIDTH is defined else _m300_pad_args %}
++{% set _m300_pad_args = _m300_pad_args + ['EDGE_MARGIN=' ~ params.EDGE_MARGIN] if params.EDGE_MARGIN is defined else _m300_pad_args %}
++{% set _m300_pad_args = _m300_pad_args + ['BED_TEMP=' ~ params.BED_TEMP] if params.BED_TEMP is defined else _m300_pad_args %}
++BED_MESH_CALIBRATE {_m300_pad_args|join(' ')}`
++    const fields = gcodeMacroParams(gcode)
++    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'BED_TEMP'])
++    const params = Object.fromEntries(fields.map(field => [field.name, { value: field.value }]))
++    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params)).toBe('ZORTRAX_BED_MESH')
++    for (const [key, value] of Object.entries({ CORNER_PAD_WIDTH: '50', CENTER_PAD_WIDTH: '50', EDGE_MARGIN: '16', BED_TEMP: '60' })) {
++      params[key].value = value
++    }
++    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params))
++      .toBe('ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60')
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(MacroBtn, {
++      propsData: { macro: { name: 'ZORTRAX_BED_MESH', config: { gcode }, disabledWhilePrinting: false } },
++      mocks: {
++        $typedGetters: {
++          'printer/getKlippyReady': true,
++          'printer/getPrinterState': 'idle',
++          'printer/getKlippyApp': { isKalicoOrDangerKlipper: false }
++        },
++        $t: (key: string) => key
++      },
++      stubs: {
++        'v-menu': slot,
++        'app-btn-group': slot,
++        'v-form': { template: '<form @submit.prevent="$emit(\'submit\', $event)"><slot /></form>' }
++      }
++    })
++    const button = wrapper.vm as MacroBtn
++    expect(Object.keys(button.params)).toEqual(fields.map(field => field.name))
++    button.handleClick()
++    expect(wrapper.emitted('click')?.[0]).toEqual(['ZORTRAX_BED_MESH'])
++    for (const [key, param] of Object.entries(params)) button.params[key].value = param.value
++    await Vue.nextTick()
++    await wrapper.find('form').trigger('submit')
++    expect(wrapper.emitted('click')?.[1])
++      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60'])
++    wrapper.destroy()
++  })
 +
 +  it('opens Tune for a live run once and preserves the selected printer and later navigation', async () => {
 +    const source = printer()
@@ -1466,6 +1515,9 @@ index 0000000..702ad23
 +    expect(wrapper.text()).toContain('Heating the nozzle and bed together')
 +    expect(wrapper.text()).toContain('Nozzle target: 240.0 °C')
 +    expect(wrapper.text()).not.toContain('Measuring point')
++    source.m300_pad_mesh.phase = 'CLEARANCE'
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Lowering the platform before XY travel')
 +    source.m300_pad_mesh.phase = 'HOMING'
 +    await Vue.nextTick()
 +    expect(wrapper.text()).toContain('Establishing the native axis references')
@@ -1487,7 +1539,7 @@ index 0000000..702ad23
 +})
 diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
 new file mode 100644
-index 0000000..3e7d288
+index 0000000..7ad4652
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.ts
 @@ -0,0 +1,73 @@
@@ -1521,7 +1573,7 @@ index 0000000..3e7d288
 +      status.busy !== (status.state === 'PROBING') || status.total_points !== 25 ||
 +      !Number.isInteger(status.points_measured) || status.points_measured < 0 || status.points_measured > 25 ||
 +      typeof status.last_error !== 'string') return
-+  if (status.phase !== undefined && !['IDLE', 'PREPARING', 'HEATING', 'HOMING', 'STABILIZING',
++  if (status.phase !== undefined && !['IDLE', 'PREPARING', 'CLEARANCE', 'HEATING', 'HOMING', 'STABILIZING',
 +    'PROBING', 'COMPLETE', 'FAILED'].includes(status.phase)) return
 +  if (status.targets !== undefined && status.targets !== null &&
 +      (!Number.isFinite(status.targets.hotend) || !Number.isFinite(status.targets.bed))) return

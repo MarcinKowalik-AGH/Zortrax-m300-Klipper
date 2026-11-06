@@ -228,12 +228,18 @@ class M300PadMesh:
     def _error(self, message):
         return self.printer.command_error('M300 pad mesh: ' + message)
 
+    def _notify_view(self):
+        notify = getattr(self.printer, 'send_event', None)
+        if notify is not None:
+            notify('m300:pad_mesh_view_changed')
+
     def _stop(self, reason):
         if self.busy:
             self.cancelled = True
             self.last_error = reason
             self.state, self.phase, self.busy = 'FAILED', 'FAILED', False
             self._turn_off()
+            self._notify_view()
 
     def _turn_off(self):
         job = getattr(self, 'job', None)
@@ -248,6 +254,16 @@ class M300PadMesh:
             raise self._error('measurement session ended during ' + self.phase)
         self.job.board.require_motion()
         self.job.board.require_heating()
+
+    def _restore_targets(self, token):
+        previous = getattr(self,'previous_targets',None)
+        if previous is None:return
+        for name,target in previous.items():
+            self._check_session(token)
+            heater = getattr(self.job,name)
+            # An explicit off/change after probing must not be overwritten.
+            if heater.get_temp(self.reactor.monotonic())[1] == self.targets[name]:
+                heater.set_temp(target)
 
     def _check_clear(self):
         if self.printer.is_shutdown():
@@ -340,6 +356,7 @@ class M300PadMesh:
         self.job.board.require_motion()
         self.job.board.require_heating()
         temperatures = self.job._temperatures(now)
+        self.previous_targets = {name:values[1] for name,values in temperatures.items()}
         try:
             self.targets = preparation_targets(temperatures, getattr(self,'temperature_params',{}),
                 max(getattr(self,'hotend_temperature',180.),self.motion.z_home_hotend_target),
@@ -378,13 +395,16 @@ class M300PadMesh:
             now = self.reactor.pause(min(now+.5,deadline))
 
     def _prepare(self, token):
-        self.phase = 'HEATING'
+        self.phase = 'CLEARANCE'
         self._check_session(token)
         self.bedmesh.set_mesh(None)
         # Match native Heater ownership. Flush once, then revalidate before
         # synchronous targets so a shutdown during lookahead cannot reheat.
         self.toolhead.register_lookahead_callback(lambda print_time:None)
         self._check_session(token)
+        self.motion.ensure_xy_clearance(lambda:self._check_session(token))
+        self._check_session(token)
+        self.phase = 'HEATING'
         self.job.hotend.set_temp(self.targets['hotend'])
         self.job.bed.set_temp(self.targets['bed'])
         self._wait_temperatures(token)
@@ -406,6 +426,7 @@ class M300PadMesh:
         limits = self.kin.get_status(self.reactor.monotonic())
         if not set(limits['homed_axes']) >= set('xyz'):
             raise self._error('native homing did not establish XYZ; probing was not started')
+        self.motion.ensure_xy_clearance(lambda:self._check_session(token))
         low,high = limits['axis_minimum'],limits['axis_maximum']
         pos = self.toolhead.get_position()
         if not low[2] <= pos[2]+self.shift <= high[2]:
@@ -472,6 +493,7 @@ class M300PadMesh:
         token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
         self.samples = None
+        self._notify_view()
         shifted = completed = False
         try:
             self._prepare(token)
@@ -497,6 +519,7 @@ class M300PadMesh:
             shifted = False
             self._publish(profile, readings)
             self._check_session(token)
+            self._restore_targets(token)
             self.report = dict(profile=profile, pads=pads, run_id=self.run_id,
                                points=[[x, y, z] for (x, y), z in zip(self.points, readings)])
             if self.last_attempt is not None:
@@ -518,6 +541,7 @@ class M300PadMesh:
                 self.busy = False
                 self.state = 'COMPLETE' if completed else 'FAILED'
                 self.phase = self.state
+                self._notify_view()
         gcmd.respond_info('Measured 25 pad positions. Load %s for printing; use SAVE_CONFIG to keep it.'
                           % profile)
 
@@ -555,7 +579,8 @@ class M300PadMesh:
         nominal = getattr(self,'nominal_points',self.points)
         changes = [dict(point=index,pad=PAD_NAMES[index//5],requested=list(a),actual=list(b))
                    for index,(a,b) in enumerate(zip(nominal,self.points)) if a != b]
-        return dict(revision='0.13.16.17-PAD-PREPARE', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.18-PAD-OLED', state=self.state, busy=self.busy, result=self.report,
+                    operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
