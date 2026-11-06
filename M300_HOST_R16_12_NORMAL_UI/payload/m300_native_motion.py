@@ -39,6 +39,7 @@ class M300NativeMotion:
         self.ready = False
         self.precision = self.homing_speeds = None
         self._z_target = None
+        self._xy_clearance_position = None
         self.toolhead = self.hotend = self.heaters = self.native_G28 = None
         self.printer.load_object(config, 'homing')
         self.printer.register_event_handler('klippy:connect', self._connect)
@@ -83,6 +84,9 @@ class M300NativeMotion:
         from .m300_native_z import M300ZRefinement
         self.precision = M300ZRefinement(self, probe)
         self.homing_speeds = self._homing_speeds(kin)
+        enables = self.printer.lookup_object('stepper_enable',None)
+        if enables is not None:
+            enables.lookup_enable('stepper_z').register_state_callback(self._z_enable_changed)
 
     def _ready(self):
         self.ready = True
@@ -90,11 +94,18 @@ class M300NativeMotion:
 
     def _stop(self, event='host lifecycle'):
         self.token += 1
+        self._xy_clearance_position = None
         self.ready = False
         if self.is_busy():
             self.failure_phase = self.phase
             self.state, self.phase = 'CANCELLED', 'INVALIDATED'
             self.reason = '%s during %s' % (event, self.failure_phase)
+
+    def _z_enable_changed(self, print_time, enabled):
+        if not enabled:
+            self._xy_clearance_position = None
+            if self.toolhead is not None:
+                self.toolhead.get_kinematics().clear_homing_state('z')
 
     def _phase(self, name):
         self.phase, self.phase_id = name, self.phase_id + 1
@@ -135,52 +146,68 @@ class M300NativeMotion:
         cmd = self.gcode.create_gcode_command('G28', 'G28 ' + ' '.join(params), params)
         return self.native_G28(cmd)
 
-    def _check_z_contact(self, token, release_used=False):
+    def ensure_xy_clearance(self, check):
+        """Bounded Z-only retreat; a temporary frame never establishes homed Z."""
         if self.board.mcu.is_fileoutput():
-            return release_used
+            return dict(physical_contact_checked=False)
         self.toolhead.wait_moves()
-        self._check(token)
+        check()
         endstop = self.precision.endstop
         active = endstop.query_endstop(self.toolhead.get_last_move_time())
-        self._check(token)
-        if not active:
-            return release_used
-        if release_used:
-            raise self.printer.command_error(
-                'M300 homing NO_RELEASE: PC7 closed again after the bounded retreat. Check QUERY_PROBE.')
+        check()
         kin = self.toolhead.get_kinematics()
         rail = kin.rails[2]
         if rail.get_homing_info().positive_dir:
-            raise self.printer.command_error(
-                'M300 homing NO_RELEASE: expected Z homing toward the minimum.')
+            raise self.printer.command_error('M300 homing CLEARANCE: expected Z homing toward the minimum')
         unhomed = 'z' not in kin.get_status(self.reactor.monotonic())['homed_axes']
         position = self.toolhead.get_position()
-        lower, upper = rail.get_range()
-        if unhomed:
-            position[2] = max(lower, position[2])
-        retreat = min(1., upper - position[2])
-        if retreat <= 0.:
-            raise self.printer.command_error('M300 homing NO_RELEASE: no room to lower the platform')
-        self.board.require_motion()
-        try:
-            if unhomed:
-                # Open a temporary native Z frame solely to queue the retreat.
-                # PC7 being closed does not establish a Z reference.
-                self.toolhead.set_position(position, homing_axes='z')
-                self._check(token)
-            self.toolhead.manual_move([None, None, position[2] + retreat],
-                                      min(self.lift_speed, 1.))
-        finally:
-            if unhomed:
-                kin.clear_homing_state('z')
+        signature = (tuple(position),not unhomed)
+        if not active and getattr(self,'_xy_clearance_position',None) == signature:
+            # Reuse only the unchanged, electrically open position just
+            # prepared by a parent wizard; never accumulate another 5 mm.
+            return dict(commanded_distance_mm=0.,clearance_reused=True,
+                        physical_contact_checked=True,pc7_open=True)
+        self._xy_clearance_position = None
+        lower,upper = rail.get_range()
+        clearance = max(5.,self.clearance)
+        start = max(lower,position[2]) if unhomed else position[2]
+        target = (start+clearance if unhomed or active else
+                  max(start,self.precision.probe.get_offsets()[2]+clearance))
+        if not math.isfinite(target) or not lower <= target <= upper:
+            raise self.printer.command_error(
+                'M300 homing CLEARANCE: no room for %.1f mm Z clearance within native bounds; XY was not started'
+                % clearance)
+        if target > start:
+            self.board.require_motion()
+            try:
+                if unhomed:
+                    position[2]=start
+                    self.toolhead.set_position(position,homing_axes='z')
+                    check()
+                self.toolhead.manual_move([None,None,target],self.lift_speed)
+            finally:
+                if unhomed:
+                    kin.clear_homing_state('z')
+            self.toolhead.wait_moves()
+            check()
+        active = endstop.query_endstop(self.toolhead.get_last_move_time())
+        check()
+        if active:
+            raise self.printer.command_error(
+                'M300 homing NO_RELEASE: PC7 is still closed after the initial Z clearance; XY was not started')
+        self._xy_clearance_position = (tuple(self.toolhead.get_position()),not unhomed)
+        return dict(commanded_distance_mm=target-start,temporary_z_frame=unhomed,
+                    physical_contact_checked=True,pc7_open=True)
+
+    def _check_z_contact(self, token):
+        if self.board.mcu.is_fileoutput():return
         self.toolhead.wait_moves()
         self._check(token)
-        active = endstop.query_endstop(self.toolhead.get_last_move_time())
+        active = self.precision.endstop.query_endstop(self.toolhead.get_last_move_time())
         self._check(token)
         if active:
             raise self.printer.command_error(
-                'M300 homing NO_RELEASE: PC7 is still closed after the bounded retreat. Check QUERY_PROBE.')
-        return True
+                'M300 homing NO_RELEASE: PC7 closed again after the initial Z clearance; motion stopped')
 
     def cmd_idle_release(self, gcmd):
         # This is the default idle script's motor stage. Preserve a held Z
@@ -254,9 +281,9 @@ class M300NativeMotion:
         previous_target, owned_target = None, None
         reference = None
         try:
+            self._phase('Z_INITIAL_CLEARANCE')
+            initial_clearance = self.ensure_xy_clearance(lambda:self._check(token))
             if 'z' in axes:
-                self._phase('Z_CHECK_CONTACT')
-                release_used = self._check_z_contact(token)
                 self._phase('Z_PREHEAT')
                 _, previous_target = self.hotend.get_temp(self.reactor.monotonic())
                 target = max(previous_target, self.z_home_hotend_target)
@@ -265,7 +292,7 @@ class M300NativeMotion:
                     owned_target = target
                 self._preheat(token, target, oem_leveling)
                 self._phase('Z_CHECK_CONTACT')
-                release_used = self._check_z_contact(token, release_used)
+                self._check_z_contact(token)
             # Both OEM G28/Z-code and M07 home Y before X.
             for axis in 'yx':
                 if axis in axes:
@@ -281,7 +308,7 @@ class M300NativeMotion:
                 self.toolhead.wait_moves()
                 self._check(token)
                 self._phase('HOME_Z_NATIVE_PROBE')
-                self._check_z_contact(token, release_used)
+                self._check_z_contact(token)
                 if not oem_leveling and not self.board.mcu.is_fileoutput():
                     self.precision.check_temperature()
                 self._native_home('z')
@@ -315,7 +342,7 @@ class M300NativeMotion:
             self._phase('COMPLETE')
             self.result = {'axes': axes, 'position': list(self.toolhead.get_position()),
                            'native_endstop_stopping': True,'z_reference':reference,
-                           'oem_leveling':oem_leveling}
+                           'oem_leveling':oem_leveling,'initial_clearance':initial_clearance}
         except Exception as exc:
             self.reason = str(exc)
             if self.state != 'CANCELLED':
@@ -352,7 +379,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.12-NATIVE-HOMING-MIN-TEMP', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.13-INITIAL-Z-CLEARANCE', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'operation': self.operator_homing,
@@ -368,6 +395,7 @@ class M300NativeMotion:
                 'z_home_temperature_tolerance_c': self.z_home_temperature_tolerance,
                 'homing_speed_mm_s': self.homing_speeds,
                 'z_contact_clearance_mm': self.clearance,
+                'z_initial_clearance_mm': max(5.,self.clearance),
                 'z_steps_per_mm': hardware['effective_z_steps_per_mm'],
                 'hardware_revision': hardware['hardware_revision'],
                 'native_G28': 'extras.homing.PrinterHoming.cmd_G28',

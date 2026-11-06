@@ -24,18 +24,22 @@ PAD_MESH_FIELDS = ('PROFILE PREVIEW CORNER_PAD_WIDTH CENTER_PAD_WIDTH EDGE_MARGI
     'FRONT_RIGHT_X FRONT_RIGHT_Y FRONT_LEFT_X FRONT_LEFT_Y CENTER_X CENTER_Y '
     'REAR_RIGHT_X REAR_RIGHT_Y REAR_LEFT_X REAR_LEFT_Y FIT_TRAVEL TRAVEL_MARGIN HOTEND_TEMP BED_TEMP').split()
 OLD_PAD_COMMAND_SHAS = {'43d2381d020cfc8c449cc0aebd664303e3fe4b51677f3f43caa384a684dca86f',
-    'bb879deed981f80f8912ec8ce0ca64dc817654460836e4390c9b5e7e21d78760'}
+    'bb879deed981f80f8912ec8ce0ca64dc817654460836e4390c9b5e7e21d78760',
+    '9e60cebc0cb43c6d113a2a9982e9715d99fb55190508bee4ef57fe936fdf45be'}
 DROP = {'m300_test01'} | {'gcode_macro ' + n for n in (
     'PID_ARM', 'PID_HEAT_CHECK', 'PID_STOP', 'ZORTRAX_TEST_PRINT_FAN',
     'ZORTRAX_TEST_HOTEND_FAN', 'ZORTRAX_FAN_SPEED', 'ZORTRAX_FAN_STOP')}
 
 
-def pad_mesh_command():
-    # Omitted fields belong to [m300_pad_mesh], not stale macro literals.
-    # Explicit params.FIELD references retain editable Fluidd macro fields.
-    return 'BED_MESH_CALIBRATE ' + ' '.join(
-        '{%% if params.%s is defined %%}%s={params.%s}{%% endif %%}' % (key,key,key)
-        for key in PAD_MESH_FIELDS)
+def pad_mesh_command(indent='    '):
+    # Fluidd discovers one params.FIELD reference per line. Build the one
+    # native command from separate lines, preserving omitted config values.
+    lines = ['{% set _m300_pad_args = [] %}']
+    lines.extend("{%% set _m300_pad_args = _m300_pad_args + ['%s=' ~ params.%s] "
+                 "if params.%s is defined else _m300_pad_args %%}" % (key,key,key)
+                 for key in PAD_MESH_FIELDS)
+    lines.append("BED_MESH_CALIBRATE {_m300_pad_args|join(' ')}")
+    return ('\n'+indent).join(lines)
 
 
 def split_saved(text):
@@ -143,7 +147,7 @@ def convert_text(text, stock_xy=None):
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
             def migrate_pad(match):
                 if hashlib.sha256(match[2].strip().encode()).hexdigest() in OLD_PAD_COMMAND_SHAS:
-                    return match[1] + pad_mesh_command()
+                    return match[1] + pad_mesh_command(match[1])
                 return match[0]
             block = re.sub(r'(?m)^([ \t]*)(BED_MESH_CALIBRATE[^\r\n]*)$',migrate_pad,block)
         elif section in ('output_pin m300_led_r', 'output_pin m300_led_g',

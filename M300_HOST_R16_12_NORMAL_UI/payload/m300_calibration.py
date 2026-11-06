@@ -424,7 +424,14 @@ class M300Calibration:
                 raise self._error('calibration requires an empty motion queue')
             if self.nvm.is_busy():
                 raise self._error('NVM write in progress')
-            # A shorted contact must be rejected before the first Z/XY move.
+            if self.native_mode:
+                def check_clearance():
+                    if generation != self._cancel_generation:
+                        raise self._error('calibration start cancelled during Z clearance')
+                    self._guard()
+                self.printer.lookup_object('m300_motion').ensure_xy_clearance(check_clearance)
+            # Persistent contact after the Z-only clearance cannot enter
+            # heating, homing XY or the calibration contact sequence.
             # The endstop query can yield: repeat all preconditions afterwards.
             contact = self.endstop.query_endstop(self.toolhead.get_last_move_time())
             if self.workflow == 'M07_STOCK' and generation != self._cancel_generation:
