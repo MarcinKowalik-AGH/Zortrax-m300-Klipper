@@ -3,7 +3,7 @@
 The current `[m300_print_control]` adds a shared bounded pause park at
 **X300 Y305**, a 5 mm Z lift, bed/motor hold, nozzle standby at 600 seconds
 and nozzle OFF at 1800 seconds. Resume first restores the original print
-temperatures. See the [parameters and compatibility audit](../pl/PRINT_CONTROL.md).
+temperatures. See the [parameters and compatibility audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md).
 
 | OLED context | Operator action | Shared native behavior |
 |---|---|---|

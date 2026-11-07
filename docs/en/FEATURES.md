@@ -2,7 +2,7 @@
 
 [Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
-Current host print workflow: [Start/End, protected pause, M600 and compatibility audit](../pl/PRINT_CONTROL.md).
+Current host print workflow: [Start/End, protected pause, M600 and compatibility audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md).
 This extends the earlier acceptance inventory below; hardware acceptance remains separate.
 
 | Function | Owner / presentation | Evidence / boundary |
