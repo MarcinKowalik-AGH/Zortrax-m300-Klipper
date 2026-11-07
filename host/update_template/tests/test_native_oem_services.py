@@ -495,7 +495,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
         oled, menu, ui, _, _ = physical_panel(h)
         menu.page = 'main'
         frames = []
-        for label, icon, expected_width in (('Klipper', 'project-klipper', 62),
+        for label, icon, expected_width in (('Klipper', 'project-klipper', 50),
                                             ('Zortrax M300', 'project-zortrax', 50)):
             _, rows = oled._rows(h.now)
             oled.selection = next(i for i, row in enumerate(rows) if row[0] == label)
@@ -504,8 +504,9 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             width, height, pixels = ui.oem_sprites.get(icon)
             self.assertEqual((width, height, len(pixels)), (expected_width, 50, expected_width * 25))
             self.assertLessEqual(set(pixels), {0x00, 0x0F, 0xF0, 0xFF})
-            self.assertTrue(any(pixels[:width // 2]))
-            self.assertTrue(any(pixels[-width // 2:]))
+            # Thin outlined marks retain a small common native pixel margin.
+            self.assertTrue(any(pixels[:width * 3]))
+            self.assertTrue(any(pixels[-width * 3:]))
             frames.append(pixels)
         self.assertNotEqual(*frames)
         oled.selection = 0

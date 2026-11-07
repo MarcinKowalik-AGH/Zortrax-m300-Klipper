@@ -48,6 +48,24 @@ def gif_frames(data):
 
 
 class ArtworkContracts(unittest.TestCase):
+    def test_project_menu_marks_have_native_frames_and_matching_animation_exports(self):
+        folder=OUT.parent/'menu-symbols'
+        spec=json.loads((HOST_FRAMES.parent/'m300_menu_sprites.json').read_text())
+        self.assertEqual(set(spec['symbols']),{'project-klipper','project-zortrax'})
+        for name,record in spec['symbols'].items():
+            self.assertEqual((record['width'],record['height'],record['frame_ms']),(50,50,500))
+            frames=[zlib.decompress(base64.b64decode(f['zlib_b64'])) for f in record['frames']]
+            self.assertEqual(len(set(frames)),4)
+            for index,(raw,frame) in enumerate(zip(frames,record['frames'])):
+                self.assertEqual(len(raw),1250)
+                self.assertEqual(hashlib.sha256(raw).hexdigest(),frame['sha256'])
+                self.assertLessEqual(set(raw),{0,15,240,255})
+                svg=ET.fromstring((folder/('%s_%d.svg'%(name,index))).read_text())
+                self.assertEqual((svg.get('width'),svg.get('height')),('50','50'))
+                png=(folder/('%s_%d.png'%(name,index))).read_bytes()
+                self.assertEqual(struct.unpack_from('>II',png,16),(50,50))
+            self.assertEqual(gif_frames((folder/(name+'.gif')).read_bytes()),[500]*4)
+
     def test_all_symbols_have_four_distinct_native_frames(self):
         catalog = json.loads((OUT/'catalog.json').read_text())
         bank = json.loads((OUT/'native_frames.json').read_text())

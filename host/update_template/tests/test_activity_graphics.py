@@ -25,6 +25,19 @@ def right_icon(wire):
 
 
 class ActivityGraphicsTests(unittest.TestCase):
+    def test_project_marks_animate_at_existing_cadence_without_control_io(self):
+        with session() as h:
+            h.menu.page='main'
+            _,rows=h.menu.rows(h.now)
+            for index,key in ((0,'project-klipper'),(1,'project-zortrax')):
+                frames=[h.ui.get_oem_sprite('m04',rows,index,frame*.5) for frame in range(4)]
+                self.assertEqual(h.ui.last_sprite,key)
+                self.assertEqual({(w,height,len(raw)) for w,height,raw in frames},{(50,50,1250)})
+                self.assertEqual(len({raw for _,_,raw in frames}),4)
+                self.assertLessEqual(set(b''.join(raw for _,_,raw in frames)),{0,15,240,255})
+                self.assertEqual(h.ui.get_oem_sprite('m04',rows,index,2.),frames[0])
+            self.assertFalse(any(event[0] in ('heat','move','fan') for event in h.events))
+
     def test_all_native_frames_decode_and_cache_stays_bounded(self):
         graphics=ActivityGraphics()
         for name in graphics.spec['symbols']:

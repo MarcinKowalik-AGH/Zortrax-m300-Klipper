@@ -149,6 +149,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=4080, help='Existing Fluidd nginx port')
     parser.add_argument('--fluidd-root', type=Path, help='Override nginx web root detection')
+    parser.add_argument('--organize-config', action='store_true',
+                        help='Organize current configuration, retaining hardware values and saved PID')
     args = parser.parse_args()
     if not (PACKAGE / 'SHA256SUMS').is_file():
         parser.exit(1, 'Run this installer from the extracted GitHub Actions artifact.\n')
@@ -159,6 +161,8 @@ def main():
         info = require_idle()
         host = PACKAGE / 'M300_HOST_R16_12_NORMAL_UI'
         host_args = ('--root', info['klipper_path'], '--config', info['config_file'])
+        if args.organize_config:
+            host_args += ('--organize-config',)
         plan = json.loads(run(sys.executable, 'install.py', *host_args, cwd=host, capture=True))
         run('sudo', '-v')
         config = run('sudo', 'nginx', '-T', capture=True)
@@ -175,6 +179,9 @@ def main():
             run(sys.executable, 'setup_fluidd.py', '--apply', '--config-directory',
                 Path(info['config_file']).parent, cwd=host)
             backup = deploy_web(source, root, build_id)
+        if args.organize_config and any(Path(p).name == 'moonraker.conf' for p in plan.get('files', ())):
+            run('sudo', 'systemctl', 'restart', 'moonraker.service')
+            wait_ready()
         print(json.dumps({'status': 'INSTALLED_M300_R16_12_FULL', 'fluidd_root': str(root),
                           'fluidd_backup': str(backup) if backup else None, 'mcu_flashed': False}))
     except (ValueError, OSError, KeyError, IndexError, subprocess.CalledProcessError) as exc:

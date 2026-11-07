@@ -3,6 +3,7 @@
 import argparse
 import base64
 import configparser
+import glob
 import io
 import json
 from pathlib import Path
@@ -48,14 +49,26 @@ EXPECTED = {
 }
 
 def flat_config(path):
+    path = Path(path).resolve()
     files = native_config.read_tree(path)
-    sections = []
-    for text in files.values():
-        for name, block in native_config.blocks(text)[1]:
-            if not name.lower().startswith('include '):
-                sections.append(block)
-    saved = native_config.split_saved(files[Path(path).resolve()])[1]
-    return '\n'.join(sections) + saved
+
+    def expand(current, ancestors=()):
+        if current in ancestors:
+            raise ValueError('Recursive configuration include: ' + str(current))
+        for name, block in native_config.blocks(files[current])[1]:
+            if name.lower().startswith('include '):
+                pattern = Path(name[8:].strip()).expanduser()
+                if not pattern.is_absolute():
+                    pattern = current.parent / pattern
+                for match in sorted(glob.glob(str(pattern))):
+                    yield from expand(Path(match).resolve(), ancestors + (current,))
+            else:
+                yield block
+
+    # Match Klipper's in-place include expansion. Grouping whole files would
+    # incorrectly load heaters before conversion tables included above them.
+    saved = native_config.split_saved(files[path])[1]
+    return '\n'.join(expand(path)) + saved
 
 def binary_print_fixture():
     record = json.loads((ROOT / 'host/update_template/tests/reference/models_zcode.json').read_text())

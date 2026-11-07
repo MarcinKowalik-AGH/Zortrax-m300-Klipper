@@ -14,6 +14,35 @@ The installer checks the existing module hashes before it writes anything.
 
 ## Install directly from Git on Orange Pi
 
+### Optional configuration cleanup
+
+To organize the current native configuration while installing the ready build:
+
+```bash
+git -C "$HOME/m300-orange-pi" pull --ff-only &&
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --organize-config
+```
+
+This separates the original ADC temperature tables into
+`m300_temperature_sensors.cfg` and M300 procedure/settings sections into
+`m300_services.cfg`. The main `printer.cfg` keeps hardware declarations and
+its exact SAVE_CONFIG block. Existing PID aliases move into
+`klipper_calibration.cfg`. Values, active macros, state paths and identities
+are retained; only recognizable inactive legacy fragments and redundant empty
+sections are retired. A second run is byte-identical.
+
+The project installer manages the prebuilt Fluidd extension. Cleanup removes
+the exact stock `fluidd-core/fluidd` web updater that would replace it, and an
+unused stock `fluidd-config` updater. Custom updater sources remain intact.
+Duplicate trusted-client entries are removed without changing the effective
+access set. Moonraker restarts only when its configuration was changed.
+The existing transactional backup/rollback covers all changed files.
+
+The two project menu marks use monochrome 50×50 frames, four frames at 500 ms,
+and the existing bounded sprite cache/display cadence. MCU R14.18 remains
+compatible; this update does not require flashing it again.
+See [the configuration audit](CONFIGURATION_AUDIT.md).
+
 GitHub Actions builds and verifies the host, Fluidd and MCU. The same run
 publishes a compact checkout with the ready-to-install files. Run this on the
 Orange Pi as the Klipper user while the printer is idle:

@@ -266,3 +266,202 @@ def read_tree(path):
 def missing_macros(template, existing):
     prefix, chunks, saved = blocks(template)
     return prefix + ''.join(block for name, block in chunks if name.lower() not in existing) + saved
+
+
+THERMAL_TABLES = 'm300_temperature_sensors.cfg'
+SERVICE_CONFIG = 'm300_services.cfg'
+LAYOUT_MARKER = '# M300 organized configuration v1'
+SERVICE_SECTIONS = frozenset(('m300_pad_mesh', 'm300_job', 'm300_filament',
+    'm300_nvm', 'm300_sd', 'm300_maintenance', 'm300_calibration', 'm300_motion',
+    'm300_menu', 'm300_material_ui', 'm300_menu_ui', 'm300_browser',
+    'm300_zcode_policy', 'm300_settings', 'm300_models', 'm300_print_ui'))
+PID_MACROS = frozenset('gcode_macro '+name for name in
+    ('PID_HOTEND', 'PID_BED', 'PID_SAVE', 'PID_STATUS'))
+
+
+def _without_option(block, key):
+    return re.sub(r'(?mi)^[ \t]*'+re.escape(key)+r'[ \t]*[:=][^\r\n]*(?:\r?\n|$)', '', block)
+
+
+def _format_block(block):
+    # Continuation lines, Jinja, option values and SAVE_CONFIG are not parsed
+    # as assignments. In particular, no thermal number is rounded or fitted.
+    lines = []
+    for line in block.rstrip().splitlines():
+        if re.match(r'^#(?:control\s*=\s*watermark| R8 PID transition:| M300 R16\.[0-9]+ native| Confirmed M300-specific presentation/settings\.)', line):
+            continue
+        if line and not line[0].isspace() and not line.startswith(('#', ';', '[')):
+            line = re.sub(r'^([^:=\s]+)[ \t]*[:=][ \t]*', r'\1: ', line, count=1)
+        lines.append(line.expandtabs(4).rstrip())
+    return '\n'.join(lines).rstrip()+'\n\n'
+
+
+def organize_tree(tree, root):
+    """Opt-in layout cleanup of the active include graph, never backup files.
+
+    Preserve hardware values, active macros, state paths/identity and the exact
+    root SAVE_CONFIG block. New files are inside the same configuration root.
+    Unknown duplicate sections and custom target files are not overwritten.
+    """
+    root = root.resolve()
+    tree = {p.resolve(): text for p, text in tree.items()}
+    parsed = {p: blocks(text) for p, text in tree.items()}
+    flat = [(p, name, block) for p, (_, sections, _) in parsed.items()
+            for name, block in sections if not name.lower().startswith('include ')]
+    names = {}
+    for p, name, block in flat:
+        names.setdefault(name.lower(), []).append((p, block))
+    for name, records in names.items():
+        meaningful = [block for _, block in records
+                      if any(line.strip() and not line.lstrip().startswith(('#', ';'))
+                             for line in block.splitlines()[1:])]
+        if len(meaningful) > 1:
+            raise ValueError('Organize requires unambiguous sections: '+name)
+    section_map = {name: block for _, name, block in flat}
+    native = option(section_map.get('m300_mcu', ''), 'native_control', 'False').lower() in ('true', '1', 'yes', 'on')
+    if not native:
+        raise ValueError('Organize requires an already native M300 configuration')
+    main_saved = parsed[root][2]
+    for path, (_, _, saved) in parsed.items():
+        if saved and path != root:
+            raise ValueError('Keep SAVE_CONFIG only in the main printer configuration')
+    custom_cycle = any(re.search(r'\bZORTRAX_CYCLE_(?:STATUS|ACTION)\b', block)
+                       for _, name, block in flat if name.startswith('gcode_macro '))
+    cycle = section_map.get('m300_cycle', '')
+    cycle_keys = set(re.findall(r'(?m)^([^\s#;\[:=]+)\s*[:=]', cycle))
+    retire_cycle = (bool(cycle) and cycle_keys <= {'qualified'} and not custom_cycle
+                    and option(cycle, 'qualified', 'False').lower() in ('false', '0', 'no', 'off')
+                    and option(section_map.get('m300_job', ''), 'workflow_qualified', 'False').lower()
+                    in ('false', '0', 'no', 'off'))
+    report = dict(layout=1, thermal_sections=[], service_sections=[],
+                  removed_empty_duplicates=[], removed_inactive=[], pid_macros=[])
+    thermal, services, pid = [], [], []
+    kept = {}
+    emitted = set()
+    for path, (prefix, sections, saved) in parsed.items():
+        out = []
+        for name, block in sections:
+            lower = name.lower()
+            if lower.startswith('include '):
+                out.append(block)
+                continue
+            content = any(line.strip() and not line.lstrip().startswith(('#', ';'))
+                          for line in block.splitlines()[1:])
+            if len(names.get(lower, ())) > 1 and not content:
+                report['removed_empty_duplicates'].append(name)
+                continue
+            if lower in emitted:
+                continue
+            emitted.add(lower)
+            if retire_cycle and name == 'm300_cycle':
+                report['removed_inactive'].append('m300_cycle: unqualified legacy M08')
+                continue
+            if retire_cycle and name == 'm300_resources':
+                block = _without_option(block, 'require_cycle_owner')
+            if retire_cycle and name == 'm300_job':
+                block = _without_option(block, 'm08_cycle_enabled')
+            if name == 'm300_maintenance':
+                for key, default in (('max_jog_distance', 5.), ('jog_speed', 1.), ('fan_test_seconds', 5.)):
+                    value = option(block, key)
+                    if value is not None and float(value) == default:
+                        block = _without_option(block, key)
+                        report['removed_inactive'].append('m300_maintenance.'+key+': redundant legacy default')
+            if name == 'gcode_macro ZORTRAX_PRINT':
+                _, commands = gcode_body(block)
+                known = ['{% if params.FILENAME is not defined %}',
+                    '{action_raise_error("Select a checked file: ZORTRAX_PRINT FILENAME=...")}',
+                    '{% endif %}', 'START_PRINT {rawparams}']
+                if commands == known and option(section_map.get('m300_job', ''), 'workflow_qualified', 'False').lower() in ('false', '0', 'no', 'off'):
+                    report['removed_inactive'].append('ZORTRAX_PRINT: disabled legacy checked-file wrapper')
+                    continue
+            if lower.startswith('adc_temperature '):
+                # Retain every original conversion line byte-for-byte.
+                thermal.append(block.rstrip()+'\n\n')
+                report['thermal_sections'].append(name)
+            elif name in SERVICE_SECTIONS:
+                services.append(_format_block(block))
+                report['service_sections'].append(name)
+            elif name in PID_MACROS:
+                pid.append(_format_block(block))
+                report['pid_macros'].append(name)
+            else:
+                out.append(_format_block(block))
+        kept[path] = (prefix, out, saved)
+    result = {}
+    for path, (prefix, out, saved) in kept.items():
+        if path.name in (THERMAL_TABLES, SERVICE_CONFIG):
+            if prefix and not prefix.startswith(LAYOUT_MARKER):
+                raise ValueError('Refusing an unrecognized generated configuration file: '+str(path))
+            if out:
+                raise ValueError('Unrelated sections in generated configuration file: '+str(path))
+            continue
+        if path == root:
+            old_prefix = prefix if not prefix.startswith(('# M300 TEST01:', '# Zortrax M300 Classic - hardware')) else ''
+            prefix = ('# Zortrax M300 Classic - hardware and native Klipper settings.\n'
+                      '# Procedure settings: '+SERVICE_CONFIG+'\n'
+                      '# Temperature conversions: '+THERMAL_TABLES+'\n\n'+old_prefix)
+        elif path.name == 'm300_fluidd.cfg' and prefix.startswith('# ZORTRAX M300 / R7.'):
+            prefix = '# M300 Classic native procedures and shared Fluidd commands.\n\n'
+        content = prefix+''.join(out)
+        if path == root:
+            for name, values in ((THERMAL_TABLES, thermal), (SERVICE_CONFIG, services)):
+                include = '[include '+name+']\n'
+                if values and not any(section.lower() == 'include '+name
+                                      for section, _ in blocks(content)[1]):
+                    # Sensors must precede heater loading. Services use native
+                    # resources after the main hardware declarations.
+                    if name == THERMAL_TABLES:
+                        at = len(prefix)
+                        content = content[:at]+include+'\n'+content[at:]
+                    else:
+                        content = content.rstrip()+'\n\n'+include+'\n'
+        if path.name == 'klipper_calibration.cfg':
+            content = '# Standard native Klipper PID calibration aliases.\n\n'+''.join(out)+''.join(pid)
+        result[path] = content.rstrip()+'\n\n'+saved
+    for name, data, title in ((THERMAL_TABLES, thermal, 'Original temperature conversion tables; values are unchanged.'),
+                              (SERVICE_CONFIG, services, 'M300 procedure, geometry, menu and persistent-state settings.')):
+        if data:
+            path = root.parent/name
+            if path.exists() and path not in tree:
+                raise ValueError('Refusing to overwrite a non-included configuration file: '+str(path))
+            result[path] = LAYOUT_MARKER+'\n# '+title+'\n\n'+''.join(data)
+    calibration = root.parent/'klipper_calibration.cfg'
+    if pid and calibration not in result:
+        raise ValueError('Organize requires the installed klipper_calibration.cfg include')
+    if split_saved(result[root])[1] != main_saved:
+        raise ValueError('SAVE_CONFIG changed during layout cleanup')
+    return result, report
+
+
+def organize_moonraker(text, *, fluidd_config_unused=False):
+    """Retire stock web updaters superseded by the verified project bundle.
+
+    Match exact upstream repositories. Preserve server, paths, CORS and the
+    effective trusted-client set; this is not a security-policy migration.
+    """
+    prefix, sections, saved = blocks(text)
+    out, removed = [], []
+    for name, block in sections:
+        repo = option(block, 'repo', option(block, 'origin', ''))
+        if (name == 'update_manager fluidd' and repo == 'fluidd-core/fluidd'
+                and option(block, 'type') == 'web'):
+            removed.append(name)
+            continue
+        if (name == 'update_manager fluidd-config' and fluidd_config_unused
+                and repo.rstrip('/').removesuffix('.git') == 'https://github.com/fluidd-core/fluidd-config'):
+            removed.append(name)
+            continue
+        if name == 'authorization':
+            lines, seen, in_clients = [], set(), False
+            for line in block.splitlines(keepends=True):
+                if line and not line[0].isspace() and not line.startswith(('#', ';', '[')):
+                    in_clients = bool(re.match(r'^trusted_clients\s*[:=]', line))
+                if in_clients and line[:1].isspace() and line.strip() and not line.lstrip().startswith(('#', ';')):
+                    value = line.strip()
+                    if value in seen:
+                        continue
+                    seen.add(value)
+                lines.append(line)
+            block = ''.join(lines)
+        out.append(block)
+    return prefix+''.join(out)+saved, removed

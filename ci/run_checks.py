@@ -57,7 +57,7 @@ def main():
     run('repository_contracts', [sys.executable, '-m', 'unittest', 'discover',
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
     run('ui_activity_artwork', [sys.executable, ROOT/'ci/check_ui_symbols.py', '-v'],
-        expected_tests=3)
+        expected_tests=4)
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
         '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])
@@ -102,9 +102,11 @@ def main():
             '--root', host_tree, '--output', ROOT / '.ci/installed-config'])
         run('real_installer_r153_migration', [sys.executable, ROOT / 'ci/validate_install.py',
             '--root', host_tree, '--output', ROOT / '.ci/installed-r153', '--baseline', 'r153'])
+        run('real_installer_organized_migration', [sys.executable, ROOT / 'ci/validate_install.py',
+            '--root', host_tree, '--output', ROOT / '.ci/installed-organized', '--organize-config'])
         run('native_host_reconnect_policy', [sys.executable, ROOT / 'ci/validate_host_reconnect.py',
             '--root', host_tree, '--package', host])
-        fixture = ROOT / '.ci/installed-config/printer.cfg'
+        fixture = ROOT / '.ci/installed-organized/printer.cfg'
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/fileoutput'])
