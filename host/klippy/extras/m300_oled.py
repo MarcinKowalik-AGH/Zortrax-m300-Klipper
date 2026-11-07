@@ -223,6 +223,9 @@ class M300OLED:
                     ('blocks', 'wire', 'queued', 'peak', 'fault', 'spi_hz', 'max_busy_ticks')}
         def deliver(now):
             if self.connected and generation == self.generation:
+                if snapshot['fault'] and not (self.mcu_oled_stats or {}).get('fault', 0):
+                    from .m300_error_codes import report
+                    report(self.printer, 'OLED DMA fault; MCU reset required', source='m300_oled')
                 self.mcu_oled_stats = snapshot
                 if snapshot['fault']:
                     self.stream.stop('OLED DMA fault; MCU reset required', 'reset_required')
@@ -465,6 +468,8 @@ class M300OLED:
                     self.commands[kind].send([token, *args])
         except TimeoutError as exc:
             logging.error('M300 optional OLED stopped: %s', exc)
+            from .m300_error_codes import report
+            report(self.printer, 'OLED transport: ' + str(exc), source='m300_oled')
             if link is not None:
                 if self.fast:
                     link.on_stop()

@@ -195,10 +195,46 @@ class OEMErrorsTests(unittest.TestCase):
     def test_original_fault_owner_cannot_replace_shared_error_prompt(self):
         with errors_session() as h:
             h.errors.record('Calibration failed', source='m300_calibration')
-            h.flush_errors();h.lines.clear()
+            h.flush_errors()
             h.p._prompt(dict(state='FAULT', owner='m300_calibration', view_id='failed-phase'))
-            self.assertTrue(any('prompt_begin ZORTRAX M300 - Error #041' in line for line in h.lines))
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #041'), 1)
             self.assertEqual(h.p.last_prompt, 'failed-phase')
+
+    def test_fault_owner_before_queued_publish_opens_the_same_error_only_once(self):
+        with errors_session() as h:
+            h.errors.record('Probe triggered prior to movement', source='m300_motion')
+            h.p._prompt(dict(state='FAULT', owner='m300_motion', view_id='failed-home'))
+            h.flush_errors()
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #042'), 1)
+            self.assertEqual(len(h.errors.history), 1)
+            self.assertEqual(len(h.writes), 1)
+
+    def test_explicit_refresh_reopens_notice_but_later_owner_updates_do_not(self):
+        with errors_session() as h:
+            h.errors.record('Probe triggered prior to movement', source='m300_motion')
+            h.flush_errors()
+            h.gcode.respond_raw('// action:prompt_end')
+            h.p._prompt(dict(state='FAULT', owner='m300_motion', view_id='failed-home'))
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #042'), 1)
+            h.run('ZORTRAX_ERROR_SHOW')
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #042'), 2)
+
+    def test_ack_before_queued_publish_does_not_reopen_a_cleared_error(self):
+        with errors_session() as h:
+            record = h.errors.record('Probe triggered prior to movement', source='m300_motion')
+            h.errors.acknowledge(record['id'])
+            h.lines.clear();h.flush_errors()
+            self.assertEqual(h.lines, [])
+            self.assertIsNone(h.errors.current)
+
+    def test_new_error_identity_is_published_after_previous_notice_was_shown(self):
+        with errors_session() as h:
+            h.errors.record('Probe triggered prior to movement', source='m300_motion')
+            h.flush_errors()
+            h.errors.record('Endstop stepper_x still triggered after retract', source='m300_motion')
+            h.flush_errors()
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #042'), 1)
+            self.assertEqual(h.lines.count('// action:prompt_begin ZORTRAX M300 - Error #034'), 1)
 
     def test_duplicate_reports_do_not_flood_uart_or_history(self):
         with errors_session() as h:

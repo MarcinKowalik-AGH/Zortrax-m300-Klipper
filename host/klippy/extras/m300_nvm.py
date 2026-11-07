@@ -524,6 +524,8 @@ class M300NVM:
         try:
             return self.executor.submit(self.store.update, mutation)
         except (NVMError, OSError, TypeError, KeyError) as exc:
+            from .m300_error_codes import report
+            report(self.printer, exc, source='m300_nvm')
             raise self.printer.command_error('M300 NVM: ' + str(exc))
         finally:
             self._busy = False
@@ -637,6 +639,8 @@ class M300NVM:
             elif self.calibration_write_outcome != 'DURABLE':
                 self.calibration_write_outcome = 'PUBLICATION_UNCERTAIN'
             if isinstance(exc, (NVMError, OSError, ValueError, TypeError, KeyError)):
+                from .m300_error_codes import report
+                report(self.printer, exc, source='m300_nvm')
                 raise self.printer.command_error('NVM: ' + str(exc))
             raise
         finally:

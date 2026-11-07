@@ -163,6 +163,8 @@ class M300Display:
             self.connected = False
             self.error = str(exc)
             logging.exception('Optional M300 display idle unavailable')
+            from .m300_error_codes import report
+            report(self.printer, exc, source='m300_display')
 
     def _stop(self, *args):
         self.connected = False

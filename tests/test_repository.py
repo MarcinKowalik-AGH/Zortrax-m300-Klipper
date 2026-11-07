@@ -113,6 +113,26 @@ class RepositoryContracts(unittest.TestCase):
                                   or key.value not in ('optimize_windows', 'optimized_frames')]
                         item.keys = [key for key, _ in fields]
                         item.values = [value for _, value in fields]
+                # Remove only the exact fault-observer additions, then still
+                # require equality of transport, scheduling and SPI lifecycle.
+                observer = ast.parse("from .m300_error_codes import report\n"
+                    "report(self.printer, 'OLED transport: ' + str(exc), source='m300_oled')\n"
+                    "if snapshot['fault'] and not (self.mcu_oled_stats or {}).get('fault', 0):\n"
+                    "    from .m300_error_codes import report\n"
+                    "    report(self.printer, 'OLED DMA fault; MCU reset required', source='m300_oled')\n").body
+                for method_name, additions in (('_send_one', observer[:2]), ('_stats', observer[2:])):
+                    method = next(n for n in node.body if isinstance(n, ast.FunctionDef)
+                                  and n.name == method_name)
+                    expected = {ast.dump(n): 0 for n in additions}
+                    class StripObserver(ast.NodeTransformer):
+                        def visit(self, item):
+                            key = ast.dump(item)
+                            if key in expected:
+                                expected[key] += 1
+                                return None
+                            return super().visit(item)
+                    StripObserver().visit(method)
+                    self.assertEqual(set(expected.values()), {1})
             return {n.name:ast.dump(n,include_attributes=False) for n in node.body
                     if isinstance(n,ast.FunctionDef)}
         old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')

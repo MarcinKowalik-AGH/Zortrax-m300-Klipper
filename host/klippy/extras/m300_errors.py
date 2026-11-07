@@ -33,6 +33,7 @@ class M300Errors:
         self._set_cmd = self._query_cmd = None
         self._publishing = False
         self._publish_pending = False
+        self._presented_id = None
         self._last_wire = None
         self._oled_notice = self._oled_meta = None
         self.mcu.register_config_callback(self._build_config)
@@ -69,6 +70,8 @@ class M300Errors:
 
     def _output(self, line):
         if not self._publishing and line.startswith('!! '):
+            if self.current and clean(line[3:]) == self.current['reason']:
+                return  # Typed owner diagnosis wins over text classification.
             self.record(line[3:], source='gcode')
 
     def _shutdown(self, message, details):
@@ -115,13 +118,15 @@ class M300Errors:
                 return old
             old_specific = bool(old['code'] or old['kind'] not in (SHUTDOWN, GUARD))
             new_specific = bool(code or kind not in (SHUTDOWN, GUARD))
+            if not new_specific:
+                return old  # A lifecycle consequence cannot replace the root.
             if old_specific and (source != 'mcu_local' or not new_specific):
                 return old
         if old and (old['code'], old['kind'], old['reason'], old['fatal']) == (
                 code, kind, reason, bool(fatal)):
             return old
         self.sequence += 1
-        meta = descriptor(code, kind)
+        meta = descriptor(code, kind, fatal=fatal)
         self.current = dict(code=code, kind=kind, fatal=bool(fatal), source=source,
                             reason=reason, id='%s-%d' % (self.epoch, self.sequence),
                             timestamp=self.reactor.monotonic(), state='FAULT',
@@ -150,14 +155,17 @@ class M300Errors:
     def _publish(self, now):
         self._publish_pending = False
         if self.current is not None:
-            self.show()
+            self.show(automatic=True)
 
-    def show(self, code=None):
+    def show(self, code=None, *, automatic=False):
         record = self.current if code is None else dict(code=code, kind=NONE, fatal=False)
         if record is None:
-            self.gcode.respond_info('M300: no active error')
+            if not automatic:
+                self.gcode.respond_info('M300: no active error')
             return
-        meta = descriptor(record['code'], record['kind'])
+        if automatic and code is None and record['id'] == self._presented_id:
+            return  # Owner changes and the queued observer publish one notice.
+        meta = descriptor(record['code'], record['kind'], fatal=record['fatal'])
         label = identity(record)
         logging.info('M300_ERROR_VIEW %s', json.dumps(dict(code=record['code'],
             kind=record['kind'], label=label, title=meta['title'], action=meta['action'],
@@ -183,6 +191,8 @@ class M300Errors:
                 target = 'error_catalog' if code is not None else 'errors'
                 emit('prompt_footer_button Back|ZORTRAX_UI_SHOW PAGE=%s|info' % target)
             emit('prompt_show')
+            if code is None:
+                self._presented_id = record['id']
             oled = self.printer.lookup_object('m300_oled', None)
             if self.live and oled is not None and oled.connected:
                 # Existing notice navigation preserves the previous page;

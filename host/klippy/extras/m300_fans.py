@@ -288,6 +288,9 @@ class M300Fans:
             return
         self.phase += 1
         self.state, self.reason = state, reason
+        if state == 'FAULT':
+            from .m300_error_codes import report
+            report(self.printer, reason, source='m300_fans', fatal=self.printer.is_shutdown())
         try:
             forced, fresh = self._cooling(self.reactor.monotonic())
             if not fresh or forced:
@@ -309,6 +312,8 @@ class M300Fans:
         self.test = None
         self.phase += 1
         self.state, self.reason = 'FAULT', 'Fan output failure: ' + str(exc)
+        from .m300_error_codes import report
+        report(self.printer, self.reason, source='m300_fans', fatal=True)
         for write in (self._print_async, self._hotend_async):
             try:
                 write(1.)

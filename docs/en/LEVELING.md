@@ -97,6 +97,19 @@ The M07 wizard's initial center contact is a different source routine,
 The host retains native coarse endstop acquisition for this initial home.
 Setting `[probe] samples: 5` is not a substitute for either sequence.
 
+Both native coarse Z passes check PC7 before arming their endstop. If the
+ordinary retract leaves PC7 closed before the second pass, the host performs
+one additional Z-only retreat of at least 5 mm at `z_lift_speed`, within the
+native Z range, and verifies release. A persistent short stops the procedure
+before another approach; there is no retry loop. A contact that closes after
+this check still fails the unchanged native no-movement guard. The first
+pass cannot recover inside Klipper's temporary force-position frame.
+`ZORTRAX_MOTION_STATUS` exposes `native_z_checks` (pass number, input state,
+retreat and verified release). The same bounded checks apply to the native
+coarse contact used by OEM leveling. They do not change refinement, XY motion,
+homing speeds or UART settings. This recovery has software-model coverage;
+physical contact and release still require validation on the printer.
+
 ## Homing speed comparison with 1.3.1
 
 The verified 1.3.1 application homes Y before X in both its normal dispatcher

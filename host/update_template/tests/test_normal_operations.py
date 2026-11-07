@@ -17,6 +17,7 @@ def motion_fixture():
     motion.operator_homing = None
     motion.reason, motion.result, motion.ready = '', None, True
     motion.homing_speeds = motion.failure_phase = None
+    motion.native_z_checks = []
     motion.home_xy, motion.travel_speed = (150., 158.), 50.
     motion.z_home_hotend_target, motion.clearance, motion.lift_speed = 180., 5., 5.
     motion.z_home_temperature_tolerance = 5.

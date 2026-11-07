@@ -319,11 +319,15 @@ class M300Maintenance:
 
     def _fault(self, reason):
         self.token += 1
-        self._off()
         self._move_permit = None
         self.state, self.reason = 'FAULT', reason
-        if not self.printer.is_shutdown():
-            self.printer.invoke_async_shutdown('M300 maintenance: ' + reason)
+        from .m300_error_codes import report
+        report(self.printer, reason, source='m300_maintenance', fatal=True)
+        try:
+            self._off()
+        finally:
+            if not self.printer.is_shutdown():
+                self.printer.invoke_async_shutdown('M300 maintenance: ' + reason)
 
     def sleep(self):
         self._idle()

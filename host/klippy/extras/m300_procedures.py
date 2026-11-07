@@ -94,7 +94,9 @@ class M300Procedures:
         self.last_keys.clear()
         self.started.clear()
         self._release_display()
-        self._emit('prompt_end')
+        errors = self.printer.lookup_object('m300_errors', None)
+        if not (self.printer.is_shutdown() and getattr(errors, 'current', None) is not None):
+            self._emit('prompt_end')
         self.reactor.update_timer(self.timer, self.reactor.NEVER)
         calibration = self._read('m300_calibration', self.reactor.monotonic())
         if calibration.get('state') == 'FAULT':
@@ -351,7 +353,7 @@ class M300Procedures:
         errors = self.printer.lookup_object('m300_errors', None)
         if (view['state'] in ('FAULT', 'ERROR', 'FAILED')
                 and getattr(errors, 'current', None) is not None):
-            errors.show()
+            errors.show(automatic=True)
             self.last_prompt = view['view_id']
             return
         if view['owner'] in ('m300_motion', 'm300_pad_mesh'):

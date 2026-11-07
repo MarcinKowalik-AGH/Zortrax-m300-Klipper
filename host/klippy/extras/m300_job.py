@@ -422,6 +422,9 @@ class M300Job:
         self._discard_ops()
         self._close_context()
         # Fault dispatch must precede any file close, feeder wait or other yield.
+        if signal_shutdown and not was_fault:
+            from .m300_error_codes import report
+            report(self.printer, reason, source='m300_job', fatal=True)
         if signal_shutdown and not was_fault and not self.printer.is_shutdown():
             self.printer.invoke_async_shutdown('M300 job fault: ' + str(reason))
         service = self._service()
@@ -708,6 +711,8 @@ class M300Job:
         self.machine.fail(str(reason), self.reactor.monotonic(), kind='FILE_ERROR')
         if self.machine.state != 'FILE_ERROR' or token == self.machine.token:
             return
+        from .m300_error_codes import report
+        report(self.printer, reason, source='m300_job_file', code=4)
         token = self.machine.token
         self._cleanup_pending = True
         self._discard_ops()

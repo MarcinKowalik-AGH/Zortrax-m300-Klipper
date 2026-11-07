@@ -61,11 +61,15 @@ class M300NativeFans(M300Fans):
         return self.hotend.fan_speed if on else 0.
 
     def _cooling_callback(self, now):
-        speed = self._upper_policy(now)
-        self._cooling_on = bool(speed)
-        if speed != self.hotend.last_speed:
-            self.hotend.last_speed = speed
-            self.hotend.fan.set_speed(speed)
+        try:
+            speed = self._upper_policy(now)
+            self._cooling_on = bool(speed)
+            if speed != self.hotend.last_speed:
+                self.hotend.last_speed = speed
+                self.hotend.fan.set_speed(speed)
+        except Exception as exc:
+            self._failed(exc)
+            return self.reactor.NEVER
         return now + 1.  # Keep the native heater_fan timer cadence.
 
     def _upper(self, value, *args, **kwargs):
@@ -154,6 +158,9 @@ class M300NativeFans(M300Fans):
             return
         self.phase += 1
         self.state, self.reason = state, reason
+        if state == 'FAULT':
+            from .m300_error_codes import report
+            report(self.printer, reason, source='m300_fans', fatal=self.printer.is_shutdown())
         self._unlock_outputs()
         self.lease.release()
         try:

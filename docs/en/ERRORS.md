@@ -83,6 +83,26 @@ and `klippy.log`.
 Identified native thermal failures retain priority over their homing or
 calibration context when selecting the displayed code.
 
+Each actual procedure failure reports directly to the shared service, including
+asynchronous filament, fan, thermal, model-stream and persistence failures.
+Native print `note_error` is observed even if no console error is emitted.
+The conservative console observer also recognizes native PID interruption and
+file-open/list failures. Busy owners, stale UI tokens, invalid jog distances
+and other input preconditions remain command rejections.
+
+An unclassified nonfatal failure appears as **Procedure failed**, with its
+original cause and no invented OEM number. This does not assert that Klipper
+shut down. Fault metadata never grants motion or heat. The shared reporter
+is best effort: an observer exception cannot interrupt a procedure's safety
+cleanup or its existing shutdown request.
+
+An error identity is presented automatically once across the procedure and
+central callbacks. `ZORTRAX_ERROR_SHOW` explicitly reopens it. A dismissed
+notice is not reopened by another view update of the same failed procedure.
+Nested SD/import calls retain the first typed diagnosis of the same exception;
+generic lifecycle consequences cannot overwrite an already latched cause.
+See [the procedure audit](PROCEDURE_ERROR_AUDIT.md) for coverage and limits.
+
 ## MCU ownership after shutdown
 
 The MCU records its first specific local cause before generic shutdown

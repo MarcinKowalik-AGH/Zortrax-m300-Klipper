@@ -108,8 +108,10 @@ class ReadOnlySnapshot:
         self._close_scheduled = False
         try:
             self._finish_close()
-        except Exception:
+        except Exception as exc:
             logging.exception('M300 deferred snapshot close')
+            from .m300_error_codes import report
+            report(self._owner.printer, exc, source='m300_job_file', code=4, fatal=True)
             if not self._owner.printer.is_shutdown():
                 self._owner.printer.invoke_async_shutdown('M300 snapshot close failed')
 
