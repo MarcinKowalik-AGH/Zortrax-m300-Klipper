@@ -21,11 +21,11 @@ def symbol(name, animated=False):
 
 class ActivityGraphics:
     """Decode only visible frames; at most 32 native 1,250-byte frames cached."""
-    def __init__(self, path=None):
+    def __init__(self, path=None, *, expected_symbols=24):
         path = path or Path(__file__).with_name('m300_activity_sprites.json')
         self.spec = json.loads(Path(path).read_text())
         if (self.spec.get('format') != 'M300_ACTIVITY_SPRITES_V1'
-                or len(self.spec.get('symbols', {})) != 24):
+                or len(self.spec.get('symbols', {})) != expected_symbols):
             raise ValueError('Invalid M300 activity artwork catalog')
         for record in self.spec['symbols'].values():
             if ((record.get('width'), record.get('height'), record.get('frame_ms')) != (50,50,500)

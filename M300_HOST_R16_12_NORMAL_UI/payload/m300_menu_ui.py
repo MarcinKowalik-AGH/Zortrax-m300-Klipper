@@ -167,6 +167,8 @@ class M300MenuUI:
             filament=snapshot('m300_filament') if (panel_page.startswith('filament')
                 or menu_page=='material_status') else {},
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
+        if self.last_sprite in ('project-klipper', 'project-zortrax'):
+            return self.oem_sprites.get(self.last_sprite, now)
         if menu_page not in ('procedure', 'calibration', 'material_status') and not panel_page.startswith(('job', 'filament')):
             return self.oem_sprites.get(self.last_sprite)
         return self.oem_sprites.get(self.last_sprite, now)

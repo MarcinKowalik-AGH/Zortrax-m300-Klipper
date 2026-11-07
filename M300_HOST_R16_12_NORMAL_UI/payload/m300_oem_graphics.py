@@ -17,19 +17,9 @@ from .m300_activity_graphics import ActivityGraphics, PREFIX
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
 HOMING_HOURGLASS = '0x0801c2b8'
-# Project marks use binary pixels at the OEM sprite height.
-PROJECT_MENU_ICONS = {
-    'project-klipper': (62, 50, zlib.decompress(base64.b64decode(
-        'eNrF1IENxCAIBVA2YP8t2YBTEUsRC+nlciZNqi+VX20FZji1Ts/MrVGIyGKxN+1Xxn2SsPAgGuUjXZ'
-        'M/MgThpaIwbj5HSry59mvsw2sX26LvfmnODK76uh+Ezo1SzrP62jhV1Gq3dDZXidHMamqYRby+vXuu'
-        'CpvwPnaFTXgXW6urR5rxHMEgtnleOPqrEgZZUtpeyvztKKsOL7iNCx/OEvwXj908suz1d8y/ZY7PSO'
-        'NU5w9eL7tx'
-    ))),
-    'project-zortrax': (50, 50, zlib.decompress(base64.b64decode(
-        'eNrd1MENwCAIBdC/wd9/SzagMU0qUDB4MWk58gxKVADNAqDmIQtAFoNS4CfBty8VjNRBwD7M60mBrw'
-        'bj+ibweVIBbN6CLdQCV8iAXz/hPpEousCww28fw+kfVY6M/elTDCzBBZqZW2c='
-    ))),
-}
+# Project marks share the activity decoder and its bounded lazy frame cache.
+PROJECT_MENU_ICONS = frozenset(('project-klipper', 'project-zortrax'))
+
 MAIN = {'klipper':'project-klipper','zortrax':'project-zortrax',
         'models':'0x0801c690','maintenance':'0x0801c958',
         'material':'0x0801cdd8','settings':'0x0801d3bc',
@@ -79,7 +69,10 @@ class OEMGraphics:
                 self.activity = ActivityGraphics()
             return self.activity.get(addr, now)
         if addr in PROJECT_MENU_ICONS:
-            return PROJECT_MENU_ICONS[addr]
+            if not hasattr(self, 'project'):
+                self.project = ActivityGraphics(
+                    Path(__file__).with_name('m300_menu_sprites.json'), expected_symbols=2)
+            return self.project.get(addr, now)
         desc=self.frames.get(addr)
         if desc is None:
             return None

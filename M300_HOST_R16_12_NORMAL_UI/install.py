@@ -43,6 +43,7 @@ NAMES += ('m300_models.py', 'm300_sd.py', 'm300_fat.py', 'm300_binary.py',
           'm300_zcode.py', 'm300_job_sd.py')
 NAMES += ('m300_print_ui.py', 'm300_print_hold.py', 'm300_resources.py')
 NAMES += ('m300_activity_graphics.py', 'm300_activity_sprites.json')
+NAMES += ('m300_menu_sprites.json',)
 NAMES += ('m300_errors.py', 'm300_error_codes.py', 'm300_error_codes.json')
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
@@ -127,7 +128,7 @@ def already_included(config, settings):
     return included
 
 
-def plan(root, config):
+def plan(root, config, *, organize_config=False):
     root, config = root.resolve(), config.resolve()
     check_api(root)
     if not config.is_file():
@@ -187,6 +188,23 @@ def plan(root, config):
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
     desired[config] = text.encode()
+    if organize_config:
+        active = {p: desired[p].decode() for p in tree}
+        # Newly added canonical macro files are already referenced by the
+        # planned root, but need not exist on disk until the atomic apply.
+        for name in (*CONFIG_FILES, 'm300_display.cfg'):
+            p = config.parent/name
+            if p in desired:
+                active[p] = desired[p].decode()
+        organized, _ = profile.organize_tree(active, config)
+        desired.update({p: text.encode() for p, text in organized.items()})
+        moonraker = config.parent/'moonraker.conf'
+        if moonraker.exists():
+            if not moonraker.resolve().is_relative_to(config.parent):
+                raise ValueError('Moonraker configuration must be inside the config directory to organize it')
+            unused = not any(p.name == 'fluidd.cfg' for p in tree)
+            updated, _ = profile.organize_moonraker(moonraker.read_text(), fluidd_config_unused=unused)
+            desired[moonraker] = updated.encode()
     return [(p, p.read_bytes() if p.exists() else None, data)
             for p, data in desired.items()
             if not p.exists() or p.read_bytes() != data]
@@ -251,6 +269,7 @@ def rollback(receipt, root, config):
     allowed |= {Path(row['path']).resolve() for row in doc['changes']
                 if Path(row['path']).suffix == '.cfg'
                 and Path(row['path']).resolve().is_relative_to(config.parent.resolve())}
+    allowed.add(config.parent.resolve()/'moonraker.conf')
     entries = []
     for row in doc['changes']:
         p = Path(row['path'])
@@ -300,6 +319,8 @@ def main():
     parser.add_argument('--root', type=Path)
     parser.add_argument('--config', type=Path)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--organize-config', action='store_true',
+                        help='Separate thermal tables and procedure settings; preserve hardware values and PID')
     parser.add_argument('--rollback', type=Path)
     args = parser.parse_args()
     try:
@@ -310,9 +331,10 @@ def main():
             print(json.dumps({'status': 'ROLLED_BACK_R16',
                               'files': rollback(args.rollback, root, config)}))
             return
-        changes = plan(root, config)
+        changes = plan(root, config, organize_config=args.organize_config)
         result = {'status': 'PLAN_M300_R16_12' if changes else 'ALREADY_M300_R16_12',
                   'host_update': 'R16.12',
+                  'organize_config': args.organize_config,
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,
