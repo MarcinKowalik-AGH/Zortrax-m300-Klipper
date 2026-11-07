@@ -217,7 +217,7 @@ class M300Errors:
             oled.render_at = 0.
 
     def rows(self, page):
-        back = [('Back', ('page', 'information' if page == 'errors' else 'errors'))]
+        back = [('Back', ('page', 'help' if page == 'errors' else 'errors'))]
         if page == 'error_catalog':
             return 'OEM error codes', back + [('#%03d %s' % (code, item['oled']),
                 ('native_gcode', 'ZORTRAX_ERROR_SHOW CODE=%d' % code)) for code, item in CODES.items()]

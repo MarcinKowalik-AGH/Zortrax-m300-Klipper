@@ -13,8 +13,8 @@ frames and text are generated from the same source catalogue and checked
 in CI. The OLED font, navigation speed, X/Y STEP timer implementation,
 UART baud, temperature thresholds and 50/45 C cooling policy are retained.
 
-Use **Zortrax M300 → Information → Errors** on OLED or the equivalent
-Fluidd information dialog. It includes the current error and the code
+Use **Zortrax M300 → Information → Help → Errors** on OLED or the equivalent
+Fluidd Help dialog. It includes the current error and the code
 catalogue. Inspecting a catalogue entry does not raise a fault, change LEDs,
 operate hardware or send an error to the MCU.
 Back from a live catalogue entry restores the catalogue in Fluidd and OLED.

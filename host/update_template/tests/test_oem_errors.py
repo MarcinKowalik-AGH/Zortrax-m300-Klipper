@@ -109,10 +109,13 @@ class OEMErrorsTests(unittest.TestCase):
     def test_error_menu_and_web_use_same_catalogue_and_commands(self):
         with errors_session() as h:
             _, rows = h.settings.rows('information', h.now)
+            self.assertNotIn(('Errors', ('page', 'errors')), rows)
+            _, rows = h.settings.rows('help', h.now)
             self.assertIn(('Errors', ('page', 'errors')), rows)
             h.menu.page = 'errors'
             title, rows = h.menu.rows(h.now)
             self.assertEqual(title, 'Errors')
+            self.assertEqual(rows[0], ('Back', ('page', 'help')))
             self.assertIn(('Code catalogue', ('page', 'error_catalog')), rows)
             _, rows = h.settings.rows('error_catalog', h.now)
             self.assertEqual(len(rows), 22)

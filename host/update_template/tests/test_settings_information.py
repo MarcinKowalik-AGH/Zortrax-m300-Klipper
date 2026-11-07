@@ -122,7 +122,7 @@ class SettingsTreeTests(unittest.TestCase):
                 'setting_sort_mode':['Back','Date','Name','Case-sensitive name','File size'],
                 'setting_oled_brightness':['Back'] + list(map(str, range(1, 17))),
                 'setting_led_brightness':['Back'] + list(map(str, range(1, 17))),
-                'information':['Back','Firmware version','Printer information','Errors','Help']}
+                'information':['Back','Firmware version','Printer information','Help']}
             for page,labels in expected.items():
                 h.menu.page=page;title,rows=h.menu.rows(h.now)
                 self.assertEqual([r[0] for r in rows],labels);self.assertTrue(require_rows(rows))
@@ -655,7 +655,8 @@ class InformationTests(unittest.TestCase):
             h.run('ZORTRAX_HELP')
             self.assertTrue(any(PROJECT_URL in line for line in h.lines))
             self.assertEqual((h.oled.page, h.menu.page), ('m04', 'help'))
-            joined=''.join(label for label,_ in h.menu.rows(h.now)[1][1:4])
+            lines = [label for label,action in h.menu.rows(h.now)[1] if action is None]
+            joined=''.join(lines[:3])
             self.assertEqual('https://'+joined,PROJECT_URL)
             self.assertFalse(any('zortrax.com' in line for line in h.lines))
 
