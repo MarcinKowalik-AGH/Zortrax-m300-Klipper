@@ -608,6 +608,9 @@ class M300Filament:
         self._cleanup_pending = True
         self._move_permit = self._waiting = self._intent = self._drain_deadline = None
         self._need_drain = False
+        if signal_shutdown and not was_fault:
+            from .m300_error_codes import report
+            report(self.printer, reason, source='m300_filament', fatal=True)
         if signal_shutdown and not was_fault and not self.printer.is_shutdown():
             self.printer.invoke_async_shutdown('M300 filament fault: ' + str(reason))
         self._off()

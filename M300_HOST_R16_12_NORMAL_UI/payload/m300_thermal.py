@@ -318,12 +318,17 @@ class M300Thermal:
             self.heaters[self.selected].set_control(self.old_control)
         self.state = 'FAULT' if fault else 'CANCELLING'
         self.phase += 1
-        self._off()
         self.reason = reason
         if fault:
             self.active = False
-            self.printer.invoke_async_shutdown('Thermal test: ' + reason)
-        elif not self.running_native:
+            from .m300_error_codes import report
+            report(self.printer, reason, source='m300_thermal', fatal=True)
+        try:
+            self._off()
+        finally:
+            if fault:
+                self.printer.invoke_async_shutdown('Thermal test: ' + reason)
+        if not fault and not self.running_native:
             self._finish(reason, cancelled=True)
 
     def cancel(self, token, phase):

@@ -238,7 +238,9 @@ class NativeModelStream(ReadOnlySnapshot):
     def _io(self, operation, *args):
         try:
             return super()._io(operation, *args)
-        except (OSError, UnicodeError):
+        except (OSError, UnicodeError) as exc:
+            from .m300_error_codes import report
+            report(self._owner.printer, exc, source='native_model_read', code=4, fatal=True)
             if not self._owner.printer.is_shutdown():
                 self._owner.printer.invoke_async_shutdown('M300 local model snapshot read failed')
             raise
@@ -279,6 +281,7 @@ class M300Models:
         self.v_sd._load_file = self._load_native_model
         stats = self.v_sd.print_stats
         native_complete, native_pause = stats.note_complete, stats.note_pause
+        native_error = getattr(stats, 'note_error', None)
 
         def complete():
             was_printing = stats.state == 'printing'
@@ -294,6 +297,14 @@ class M300Models:
                 active.stream.expected_seek = self.v_sd.file_position
 
         stats.note_complete, stats.note_pause = complete, pause
+        if native_error is not None:
+            def failed(message):
+                native_error(message)
+                if stats.state == 'error':
+                    from .m300_error_codes import report
+                    report(self.printer, message, source='native_print',
+                           fatal=self.printer.is_shutdown())
+            stats.note_error = failed
         record = lock_command(self.gcode, 'SDCARD_PRINT_FILE', self._dispatch_print)
         if record is not None:
             self.native_print = record[1]
@@ -386,6 +397,8 @@ class M300Models:
         except Exception as exc:
             self.counter_error = str(exc)
             logging.exception('M300 native completed job counter was not persisted')
+            from .m300_error_codes import report
+            report(self.printer, exc, source='m300_nvm')
 
     def _reprint_available(self, now):
         model = self.completed

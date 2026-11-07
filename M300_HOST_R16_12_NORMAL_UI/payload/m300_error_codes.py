@@ -5,6 +5,7 @@ Keep ambiguous hardware diagnoses unnumbered. In particular PE15 does not
 prove which platform connector failed, and an ADC rail does not prove heat.
 """
 import json
+import logging
 from pathlib import Path
 
 CATALOG = json.loads(Path(__file__).with_name('m300_error_codes.json').read_text())
@@ -17,8 +18,14 @@ def clean(value, limit=240):
     return ' '.join(str(value or '').replace('|', '/').split())[:limit]
 
 
-def descriptor(code=0, kind=SHUTDOWN):
-    return CODES[code] if code in CODES else KINDS.get(kind, KINDS[SHUTDOWN])
+def descriptor(code=0, kind=SHUTDOWN, *, fatal=True):
+    meta = CODES[code] if code in CODES else KINDS.get(kind, KINDS[SHUTDOWN])
+    if not code and kind == SHUTDOWN and not fatal:
+        # An unnumbered operational notice does not assert a native shutdown.
+        return dict(meta, title='Procedure failed', oled='Procedure failed',
+                    action='Read the original cause, correct it, then repeat the procedure.',
+                    hint=['Check original cause', 'Repeat when ready'])
+    return meta
 
 
 def classify(reason, source='', fatal=False):
@@ -37,6 +44,10 @@ def classify(reason, source='', fatal=False):
         return 3, NONE
     if origin == 'm300_sd':
         return (4 if 'timeout' in text or 'read failed' in text else 2), NONE
+    if text in ('unable to get file list', 'unable to open file'):
+        return 2, NONE
+    if text == 'pid calibrate interrupted':
+        return 0, SHUTDOWN
     if any(s in text for s in ('timer too close', 'rescheduled timer in the past')):
         return 0, TIMER
     if 'stepper too far in past' in text or 'step timer' in text:
@@ -108,10 +119,30 @@ def identity(record):
 
 
 def report(printer, reason, *, source, code=None, kind=NONE, fatal=False):
-    """Optional event sink for existing owners, including old installations."""
-    service = printer.lookup_object('m300_errors', None)
-    if service is not None:
-        if code is None and source in ('m300_motion', 'm300_maintenance', 'm300_pad_mesh'):
+    """Explicit fault sink; reporting must never interrupt safety cleanup.
+
+    Owners call this only for an actual failed operation. Input rejections
+    remain ordinary command errors. The same exception retains its first
+    typed diagnosis across nested SD/import/procedure boundaries.
+    """
+    try:
+        service = printer.lookup_object('m300_errors', None)
+        if service is None:
+            return None
+        exception = reason if isinstance(reason, BaseException) else None
+        previous = getattr(exception, '_m300_error_id', None)
+        current = getattr(service, 'current', None)
+        if current and previous == current['id']:
+            if current['fatal'] or not fatal:
+                return current
+            code, kind, reason = current['code'], current['kind'], current['reason']
+        if code is None:
             found = classify(reason, source, fatal)
             code, kind = found if found is not None else (0, SHUTDOWN)
-        service.record(reason, source=source, code=code, kind=kind, fatal=fatal)
+        record = service.record(reason, source=source, code=code, kind=kind, fatal=fatal)
+        if exception is not None and isinstance(record, dict):
+            exception._m300_error_id = record['id']
+        return record
+    except Exception:
+        logging.exception('M300 fault report unavailable; owner safety cleanup continues')
+        return None
