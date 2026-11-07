@@ -13,6 +13,18 @@ def rgb(h):
 
 
 class StatusLightsTests(unittest.TestCase):
+    def test_print_preparation_barriers_are_red_or_white_and_real_pause_is_purple(self):
+        with session() as h:
+            control=NS(state='STARTING',phase='HEATING',busy=True)
+            control.get_status=lambda now:dict(state=control.state,phase=control.phase,busy=control.busy)
+            h.objects['m300_print_control']=control
+            h.print_state='paused'  # Worker barrier, not pause_resume.is_paused.
+            self.assertEqual(rgb(h),(1.,0.,0.))
+            control.state,control.phase='ENDING','END_PARK'
+            self.assertEqual(rgb(h),(1.,1.,1.))
+            control.state,control.phase='RESUMING','HEATING'
+            self.assertEqual(rgb(h),(1.,0.,1.))
+
     def test_ready_menu_navigation_does_not_change_the_printer_color(self):
         with session() as h:
             for page in ('main', 'klipper', 'zortrax', 'maintenance', 'material', *PAGES):

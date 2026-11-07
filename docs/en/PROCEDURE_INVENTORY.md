@@ -22,7 +22,7 @@ separate diagnostic code.
 | Maintenance → Move the platform up/down | Native Z with an acknowledged held row on OLED, or ZORTRAX_PLATFORM_UP/DOWN for a finite command. | Up is negative Z toward the nozzle. Down is positive Z. Release, row change or stale input stops new quanta. Fluidd commands specify a finite distance and speed. |
 | Maintenance → Fan test | ZORTRAX_FAN_TEST_START, ZORTRAX_FAN_UPPER, ZORTRAX_FAN_LOWER and ZORTRAX_FAN_TEST_END use the same fan-test session. | Each toggle requests 0 or 150/255. The automatic upper fan requirement overrides the requested off state. Back restores the lower request and recomputes the current upper thermostat requirement. |
 | Material → Load / Unload | ZORTRAX_LOAD and ZORTRAX_UNLOAD share native E-only transport. | Default 240°C, 238°C readiness, operator confirmation before transport. Load defaults to 130 mm and Unload to 110 mm. Both turn heating off at completion. |
-| Paused print → Change the material | ZORTRAX_CHANGE or M600 verifies native pause ownership, saved PAUSE_STATE and file position. | Retract 110 mm, wait for insertion confirmation, load 150 mm and restore the pause state and previous target. The parent remains paused until an explicit Resume. |
+| Paused print → Change the material | ZORTRAX_CHANGE or M600 first uses the protected pause/park, then verifies native pause ownership, saved PAUSE_STATE and file position. | Retract 110 mm, wait for insertion confirmation, load 150 mm and restore the pause state and original print target. Confirm filament flow, then explicitly Resume. |
 | Settings | Shared host NVM for light, buzzer, display sleep and model sorting. English is the only operator language. | Choice changes take effect on both surfaces. Sorting changes expire the browser generation. Re-selecting an active value avoids an NVM write. |
 | Information / Help | Existing MCU identity, build/config metadata and optional Moonraker history refresh. | History is asynchronous and reports cache or error status. Printer serial is unavailable without actual serial data. Help links to the project repository. |
 | Service / Tests | Separate diagnostic status, material/calibration aliases and deliberate XY motion checks. | Use motion and heating tests while idle. Test results describe the tested setup and do not grant automatic hardware qualification. |
@@ -45,8 +45,8 @@ separate diagnostic code.
 The UI must keep the native print state and the actual file session together.
 A queued click or hold rechecks both under the G-code mutex. A filename alone
 cannot distinguish a delayed action on one run from the next run of the same
-file. A native SD pause can also be reported without a usable PAUSE_STATE
-after a low-level M25, so Change and Resume require a restorable pause. At
+file. With the current print controller M25 follows protected PAUSE; older
+configurations may still expose a raw SD pause without PAUSE_STATE. At
 EOF, accepted motion may still be in Klipper's queue. The completion path
 waits for the queue before prompting for removal and starting a new job.
 
@@ -77,7 +77,7 @@ filename alone cannot prove which snapshot the operator selected.
 | Ordinary Z versus M07 | Ordinary G28 uses five successive release references after coarse contact. M07's first center contact is its own coarse home. It uses a common session XY offset in the range ±3 mm and nominal points 0, 1, 2, 3 and 4. |
 | M07 correction | Measure 0 → 1 → 4 → 3 and fix the maximum initial corner raw count as the reference. Compare rear left then rear right and remeasure the pair. Use the signed truncating mean of points 0 and 1 for the front screw. Rear limits are inclusive from −0.20 to +0.10 mm. Front limits are strict. Round required turns upward to quarters with the original binary32 coefficient. Measure point 2 for review. The saved observation does not apply a live mesh. |
 | Native services | Gate exclusive procedures on actual job ownership, MCU freshness, position when required, and native heater/fan limits. Contact search and release have finite endpoints and deadlines. Standalone material transport can run without XY/Z home. Material and platform movement use bounded segments or quanta and stop issuing work on cancellation. |
-| Normal pause and stop | PAUSE saves parser and position state and stops the worker at its native boundary. It is distinct from emergency shutdown. The installed CANCEL_PRINT wrapper turns heaters off and delegates to native cancellation. M112 remains the immediate native emergency path. |
+| Normal pause and stop | The current print controller saves native PAUSE_STATE, drains and parks X300 Y305 after Z clearance. It retains bed/motors during a long pause. Cancel revokes preparation before native file cancellation; M112 remains the immediate native emergency path. |
 | Display and panel | Acknowledge frame transfers. Bind actions to view/session/phase, expire queued clicks on context changes, and keep a visible progress screen dim while busy after inactivity. Idle shows the moon notice and then turns off. An invisible wake gesture is consumed before accepting actions on the visible screen. |
 | Cooling and faults | Local MCU protective cooling and guard remain independent of the OLED. A fan-test session can request a duty, but automatic upper cooling keeps priority. A fault or lifecycle change revokes service and gesture authority. |
 | Host reconnect | After identification, permit one native restart attempt for a recognized previous-session heartbeat loss or a still-armed prior host session. Fresh native configuration and guard evidence are required. Restart clears old operation authority. |

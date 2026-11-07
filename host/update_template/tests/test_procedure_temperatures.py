@@ -14,7 +14,7 @@ def filament():
            _cleanup_pending=False,_resume_checking=False,_ops=[],_waiting=None,
            _executing=False,sd=NS(is_preparing=False),pause=Mock())
     printer=NS(get_reactor=lambda:reactor,command_error=RuntimeError,is_shutdown=lambda:False,
-               lookup_object=lambda name:NS(register_command=Mock()),
+               lookup_object=lambda name,default=None:default if name=='m300_print_control' else NS(register_command=Mock()),
                load_object=lambda config,name:job,register_event_handler=Mock())
     config=NS(get_printer=lambda:printer,getfloat=lambda name,default,**kw:default,
               getboolean=lambda name,default:True if name=='filament_qualified' else default,

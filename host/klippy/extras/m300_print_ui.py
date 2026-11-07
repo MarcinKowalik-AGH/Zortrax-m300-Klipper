@@ -12,7 +12,7 @@ from .m300_settings_ui import MENU_LABEL_PIXELS, SPRITE_LABEL_PIXELS
 from .m300_ui_m11_state import clean_label, fit_label
 
 COMMANDS = {'pause': 'PAUSE', 'resume': 'RESUME', 'change': 'ZORTRAX_CHANGE',
-            'stop': 'CANCEL_PRINT'}
+            'stop': 'CANCEL_PRINT', 'ready': 'FILAMENT_READY'}
 PAUSE_ROWS = (('Resume the print', 'resume'), ('Change the material', 'change'),
               ('Stop the print', 'ask_stop'))
 STOP_ROWS = (('No', 'keep'), ('Yes, stop the print', 'stop'))
@@ -76,6 +76,9 @@ class M300PrintUI:
     def view(self, now, *, include_dismissed=False):
         if not self.ready or self.printer.is_shutdown():
             return None
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None and control.busy:
+            return None  # Native status/temperature footer; menus remain reachable.
         stats = self.sd.print_stats
         state = stats.state
         filename = stats.filename
@@ -94,6 +97,11 @@ class M300PrintUI:
             name = getattr(self.sd.current_file, 'name', filename)
             file_key = (id(self.sd.current_file), getattr(stats, 'last_pause_time', None)
                         if state == 'paused' else None)
+            if control is not None and state=='paused':
+                status=control.get_status(now)
+                file_key=(*file_key,control.generation,
+                          status['requires_filament_ready'],status['material_change_complete'],
+                          status['can_confirm_filament'])
             identity = self.epoch, name, file_key
             if phase == 'PAUSED' and self.confirm_stop == identity:
                 phase = 'STOP_CONFIRM'
@@ -109,6 +117,16 @@ class M300PrintUI:
             if include_dismissed or self.dismissed != self.epoch:
                 return (key, token)
         return None
+
+    def pause_rows(self,now):
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None:
+            status=control.get_status(now)
+            if status['requires_filament_ready'] and status['material_change_complete']:
+                first=(('Confirm material flow','ready') if status['can_confirm_filament']
+                       else ('Heat nozzle to resume','resume'))
+                return (first,*PAUSE_ROWS[1:])
+        return PAUSE_ROWS
 
     def render(self, now, panel_context, frame_type, *, show_status, sprites=None):
         view = self.view(now)
@@ -131,7 +149,7 @@ class M300PrintUI:
         selected = -1
         if phase == 'PAUSED':
             title = 'PAUSE MENU'
-            rows = PAUSE_ROWS
+            rows = self.pause_rows(now)
             selected = self.selected
             lines = tuple(label for label, _ in rows)
         elif phase == 'STOP_CONFIRM':

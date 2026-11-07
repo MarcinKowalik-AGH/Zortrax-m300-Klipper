@@ -113,6 +113,8 @@ def main():
     model_script = 'ZORTRAX_NATIVE_STATUS\nZORTRAX_BROWSER_LIST SOURCE=HOST\nZORTRAX_CI_RUN_MODEL\n'
     shutil.copy2(Path(__file__).with_name('m300_ci_pad_mesh_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
+    shutil.copy2(Path(__file__).with_name('m300_ci_print_fixture.py'),
+                 args.root / 'klippy/extras/m300_ci_print_fixture.py')
     pad_mesh_script = (
         'ZORTRAX_CI_PAD_MESH CHECK=8\n'
         'BED_MESH PREVIEW=1\n'
@@ -157,6 +159,8 @@ def main():
         ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nG90\nG1 X250 F18000\nTEST_ZORTRAX_XY SPEED=60\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
     ]
     cases.extend((name, model_script, False, None) for name in model_fixtures)
+    cases.extend((name,'ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_RUN\n',False,None)
+                 for name in ('native_print_lifecycle','native_print_cancel'))
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
         'factory_hw04_800': (0xe4, 0xaabb0103, 'factory', 800),
@@ -215,6 +219,13 @@ def main():
             if name == 'native_models_reprint':
                 cp.set('m300_ci_models_fixture', 'replay', 'True')
             assert not cp.getboolean('m300_job', 'workflow_qualified')
+        if name in ('native_print_lifecycle','native_print_cancel'):
+            cp.add_section('m300_ci_print_fixture')
+            cp.set('m300_ci_print_fixture','mode','cancel' if name.endswith('cancel') else 'lifecycle')
+            cp.set('stepper_y','position_max','305')
+            if not cp.has_section('bed_mesh'):
+                cp.read_dict({'bed_mesh':{'mesh_min':'0,0','mesh_max':'300,305',
+                              'probe_count':'3,3','algorithm':'lagrange'}})
         if synthetic:
             if not cp.has_section('force_move'):cp.add_section('force_move')
             cp.set('force_move','enable_force_move','True')
@@ -229,8 +240,9 @@ def main():
         (dest/'input.gcode').write_text('ZORTRAX_DISPLAY_STATUS\n' + script)
         command=[sys.executable,str(args.root/'klippy/klippy.py'),str(dest/'printer.cfg'),
                  '-i',str(dest/'input.gcode'),'-o',str(dest/'protocol.bin'),'-d',str(args.dictionary)]
-        process=subprocess.run(command,capture_output=True,text=True,timeout=30)
-        text=process.stdout+process.stderr
+        command+=['-l',str(dest/'klippy.log')]
+        process=subprocess.run(command,capture_output=True,text=True,timeout=45)
+        text=process.stdout+process.stderr+(dest/'klippy.log').read_text()
         (dest/'klippy.log').write_text(text)
         if name == 'factory_erased_refused':
             assert error in text, (name, text[-3000:])
@@ -245,7 +257,16 @@ def main():
         assert json.loads(display_line)['connected'] is (name != 'native_oem_error_shutdown'), (name, display_line)
         report_line=next(line.split('M300_NATIVE ',1)[1] for line in text.splitlines() if 'M300_NATIVE ' in line)
         bindings=json.loads(report_line)
-        for key,owner in EXPECTED.items():
+        expected=dict(EXPECTED)
+        if cp.has_section('m300_print_control'):
+            for key in ('G0','G1','SAVE_CONFIG','PID_CALIBRATE','PAUSE','RESUME'):
+                expected[key+':native_backend']=EXPECTED[key]
+            for key in ('G0','G1','SAVE_CONFIG','PID_CALIBRATE'):
+                expected[key]='extras.m300_print_control.M300PrintControl._connect.<locals>.guarded'
+            for key in ('G28','PAUSE','RESUME'):
+                expected[key]='extras.m300_print_control.M300PrintControl.cmd_'+key
+            expected['G28:m300_backend']=EXPECTED['G28']
+        for key,owner in expected.items():
             assert bindings['owners'][key]==owner,(name,key,bindings['owners'][key],owner)
         if error:
             assert error in text,(name,'expected native refusal absent',text[-2000:])
@@ -320,6 +341,18 @@ def main():
             else:
                 assert result['position'][:3] == ([155., 158., 5.] if kind == 'G-code'
                                                    else [110., 110., 10.]), result
+        if name in ('native_print_lifecycle','native_print_cancel'):
+            result=next(json.loads(line.split('M300_CI_PRINT ',1)[1])
+                        for line in text.splitlines() if 'M300_CI_PRINT ' in line)
+            assert result['targets']==[0.,0.] and result['file_consumed'],result
+            assert result['control']['state']=='IDLE' and not result['control']['paused'],result
+            assert result['position'][:2]==[300.,305.],result
+            if name.endswith('cancel'):
+                assert result['state']=='cancelled' and result['marks']==['STARTED'],result
+            else:
+                assert result['state']=='complete',result
+                assert result['marks']==['STARTED','RESUMED','CHANGED','ENDED'],result
+                assert 'FILAMENT_READY' in result['actions'] and result['actions'].count('RESUME')==2,result
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)

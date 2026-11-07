@@ -2,6 +2,9 @@
 
 [Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
+Current host print workflow: [Start/End, protected pause, M600 and compatibility audit](../pl/PRINT_CONTROL.md).
+This extends the earlier acceptance inventory below; hardware acceptance remains separate.
+
 | Function | Owner / presentation | Evidence / boundary |
 |---|---|---|
 | Native XYZE, heaters, fans, PID, SAVE_CONFIG | Existing Klipper objects and Klipper menu | Native bindings, preserved calibration and FILEOUTPUT planning |

@@ -46,6 +46,8 @@ class RepositoryContracts(unittest.TestCase):
             # The footer helper alone cannot update an older status screen:
             # both sides of its import must be shipped by the real installer.
             self.assertTrue({'m300_klipper_status.py', 'm300_status_footer.py'} <= set(installer.NAMES))
+            self.assertTrue({'m300_print_control.py','m300_job_state.py','m300_filament.py',
+                             'm300_native_service.py','m300_procedures.py'} <= set(installer.NAMES))
             for name in installer.NAMES:
                 self.assertEqual((stage / 'payload' / name).read_bytes(),
                                  (ROOT / 'host/klippy/extras' / name).read_bytes())

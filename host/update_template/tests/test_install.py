@@ -109,7 +109,11 @@ class InstallerTests(unittest.TestCase):
         source = ('[idle_timeout]\ntimeout: 425\ngcode:\n    TURN_OFF_HEATERS\n'
                   '    M118 Custom park\n    M84\n'
                   '[m300_motion]\nmode: native\nhome_travel_speed: 61\nz_lift_speed: 3\n')
-        self.assertEqual(install.profile.convert_text(source), source)
+        result=install.profile.convert_text(source)
+        self.assertIn('ZORTRAX_PAUSE_IDLE',result)
+        self.assertIn('        M118 Custom park\n        M84',result)
+        self.assertIn('[m300_motion]\nmode: native\nhome_travel_speed: 61\nz_lift_speed: 3\n',result)
+        self.assertEqual(install.profile.convert_text(result),result)
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

@@ -845,7 +845,8 @@ class PadMeshTests(unittest.TestCase):
         mesh = NS(get_mesh=lambda: None)
         toolhead = object()
         parser = NS(move_transform=mesh)
-        printer = NS(lookup_object=lambda name, default=None: NS(bedmesh=mesh))
+        printer = NS(lookup_object=lambda name, default=None:
+                     {'bed_mesh':mesh,'m300_pad_mesh':NS(bedmesh=mesh)}.get(name,default))
         self.assertTrue(native_service_frame(printer, parser, toolhead))
         mesh.get_mesh = object
         self.assertFalse(native_service_frame(printer, parser, toolhead))

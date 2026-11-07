@@ -43,6 +43,9 @@ class ModelsFixture:
         if view['state'] != 'READY':
             raise gcmd.error('model preparation failed: ' + str(view))
         assert self.sd.current_file is None and self.sd.work_timer is None
+        if view['format']=='Z-code' and self.printer.lookup_object('m300_print_control',None) is not None:
+            from .m300_ci_print_fixture import prepare
+            prepare(self.printer)
         self.gcode.run_script_from_command('ZORTRAX_MODELS_START TOKEN=' + view['token'])
         assert self.sd.current_file is not None and self.sd.work_timer is not None
         self.started = True
@@ -52,6 +55,13 @@ class ModelsFixture:
         if self.sd.work_timer is not None:
             return False
         if self.started:
+            control=self.printer.lookup_object('m300_print_control',None)
+            if control is not None:
+                key=control.state,control.phase
+                if key!=getattr(self,'control_debug',None):
+                    self.control_debug=key
+                    self.gcode.respond_info('M300_CI_PAUSE_PHASE '+str((key,control._drained(self.reactor.monotonic()),self.gcode.get_mutex().test())))
+            if control is not None and control.busy:return False
             now = self.reactor.monotonic()
             stats = self.sd.print_stats.get_status(now)
             if stats['state'] == 'paused' and self.format == 'Z-code' and not self.resumed:

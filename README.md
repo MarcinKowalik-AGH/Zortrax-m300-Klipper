@@ -2,6 +2,9 @@
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
+Protected native pause/resume, rear-right park X300 Y305, long-pause bed hold,
+M600 and shared Start/End: [workflow, parameters and audit (PL)](docs/pl/PRINT_CONTROL.md).
+
 ## Project overview — November 3, 2026
 
 Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.18 with Host R16.12**.

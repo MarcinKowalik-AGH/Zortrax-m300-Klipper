@@ -303,6 +303,9 @@ class M300NativeMotion:
         return self.home(axes='xyz',oem_leveling=True,contact_xy=contact_xy)
 
     def home(self, owner_job=None, job_token=None, axes='xyz',oem_leveling=False,contact_xy=None):
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None and control.context is not None:
+            raise self.printer.command_error('Cancel the protected print before homing')
         axes = axes.lower()
         if not axes or any(a not in 'xyz' for a in axes) or len(set(axes)) != len(axes):
             raise self.printer.command_error('M300 homing axes must be X/Y/Z')

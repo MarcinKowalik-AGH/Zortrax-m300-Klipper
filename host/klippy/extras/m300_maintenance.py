@@ -436,10 +436,13 @@ class M300Maintenance:
             except Exception:
                 return 'ERROR'
         native_pause = self.printer.lookup_object('pause_resume', None)
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None and control.state in ('STARTING','ENDING','CANCELLING'):
+            paused=False  # Native SD worker barrier is not an operator pause.
         paused = paused or bool(getattr(native_pause, 'is_paused', False))
         for name in ('m300_job', 'm300_filament', 'm300_calibration',
                      'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans',
-                     'm300_thermal', 'm300_pad_mesh'):
+                     'm300_thermal', 'm300_pad_mesh', 'm300_print_control'):
             obj = self.job if name == 'm300_job' else self.printer.lookup_object(name, None)
             if obj is None:
                 continue

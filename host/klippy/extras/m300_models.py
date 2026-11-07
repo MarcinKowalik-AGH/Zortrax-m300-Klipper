@@ -202,6 +202,11 @@ class NativeModelStream(ReadOnlySnapshot):
         self.expected_seek = 0
         self.eof = self.retained = False
 
+    def fileno(self):
+        # Protected native pauses verify this same read-only execution file,
+        # including imports/reprint snapshots, without reopening its pathname.
+        return self._io('fileno')
+
     def read(self, size=-1):
         result = super().read(size)
         if size > 0 and not result:

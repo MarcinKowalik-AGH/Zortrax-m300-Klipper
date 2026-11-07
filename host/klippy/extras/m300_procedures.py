@@ -529,6 +529,8 @@ class M300Procedures:
                 self.printer.lookup_object('m300_calibration').start(temp)
             elif operation=='HEAT':
                 self.printer.lookup_object('m300_maintenance').start('HOTEND',temp)
+            elif operation=='CHANGE' and self.printer.lookup_object('m300_print_control',None) is not None:
+                self.printer.lookup_object('m300_print_control').request_change(gcmd,temperature=temp)
             else:
                 self.printer.lookup_object('m300_filament').start(operation, temperature=temp)
         except self.printer.command_error as exc:

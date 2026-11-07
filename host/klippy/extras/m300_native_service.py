@@ -26,6 +26,9 @@ BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M22
 
 
 def require_idle_print(printer, now):
+    control=printer.lookup_object('m300_print_control',None)
+    if control is not None and control.busy:
+        raise printer.command_error('M300 print preparation owns motion')
     stats = printer.lookup_object('print_stats', None)
     sd = printer.lookup_object('virtual_sdcard', None)
     if (getattr(sd, 'work_timer', None) is not None
@@ -41,7 +44,9 @@ def native_service_frame(printer, gcode_move, toolhead, *, paused_extrusion=Fals
     if transform in (None, toolhead):
         return True
     pad_mesh = printer.lookup_object('m300_pad_mesh', None)
-    return (pad_mesh is not None and transform is pad_mesh.bedmesh
+    bedmesh = printer.lookup_object('bed_mesh',None)
+    if bedmesh is None and pad_mesh is not None:bedmesh=pad_mesh.bedmesh
+    return (bedmesh is not None and transform is bedmesh
             and (paused_extrusion or transform.get_mesh() is None))
 
 

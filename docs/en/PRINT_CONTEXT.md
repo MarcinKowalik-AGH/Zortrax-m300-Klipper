@@ -1,10 +1,15 @@
 # Native print contexts on OLED and Fluidd
 
+The current `[m300_print_control]` adds a shared bounded pause park at
+**X300 Y305**, a 5 mm Z lift, bed/motor hold, nozzle standby at 600 seconds
+and nozzle OFF at 1800 seconds. Resume first restores the original print
+temperatures. See the [parameters and compatibility audit](../pl/PRINT_CONTROL.md).
+
 | OLED context | Operator action | Shared native behavior |
 |---|---|---|
 | Klipper status during printing | Short press to open the menu. Hold the knob for 10 seconds to pause. | PAUSE stops the native virtual SD worker and saves the pause state. Fluidd Pause leads to the same menu. |
 | PAUSE MENU | Resume the print | RESUME restores the saved position and resumes the same file. |
-| PAUSE MENU | Change the material | The existing CHANGE wizard owns the screen until the change ends. The print remains paused for explicit Resume. |
+| PAUSE MENU | Change the material | The existing CHANGE wizard owns the screen until the change ends. Confirm material flow, then explicitly Resume. A cold nozzle offers reheat before flow confirmation. |
 | PAUSE MENU | Stop the print → Yes, stop the print | CANCEL_PRINT turns off the heaters and delegates cancellation to native Klipper. Fluidd Cancel uses the same command. |
 | PRINTING DONE | Remove the model, then hold for 10 seconds to reprint | Starts the retained copy as a new native job. A short press closes the OLED notice. |
 
@@ -41,8 +46,9 @@ replay is available only for jobs the host could retain and verify.
 [Fluidd status and Reprint source](https://github.com/fluidd-core/fluidd/blob/develop/src/components/widgets/status/PrinterStatusCard.vue) ·
 [Moonraker print start](https://github.com/Arksine/moonraker/blob/master/moonraker/components/klippy_apis.py)
 
-A native M25 SD pause does not save PAUSE_STATE. Its OLED screen directs
-the operator to M24. The contextual PAUSE MENU is available for a saved
-native PAUSE. Normal pause/stop run at the native command boundary.
+With the current print controller, M25 follows the same protected PAUSE
+path as M601 and Fluidd. M24 cannot bypass a protected pause. Older
+configurations without the controller retain native M25/M24 behavior.
+Normal pause/stop run at the native command boundary.
 
 [Procedure inventory](PROCEDURE_INVENTORY.md) · [Installation](INSTALL.md)
