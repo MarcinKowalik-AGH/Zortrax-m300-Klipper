@@ -331,7 +331,7 @@ class PadMeshTests(unittest.TestCase):
         mesh._preflight=lambda:self.fail('preview attempted physical work')
         updates=[];mesh.probe_points=NS(update_probe_points=lambda *args:updates.append(args))
         gcode,_,output=dispatcher();gcode.register_command('BED_MESH_CALIBRATE',mesh.cmd_calibrate)
-        template=ENV.from_string(templates()['ZORTRAX_BED_MESH'])
+        template=ENV.from_string(templates()['BED_MESH'])
         def run(params):
             gcode.run_script_from_command(template.render(printer=NS(m300_pad_mesh=mesh),params=params))
         run({'PREVIEW':'1'})
@@ -366,7 +366,8 @@ class PadMeshTests(unittest.TestCase):
         self.assertIn(m300_profile.pad_mesh_command(),result)
         self.assertEqual(m300_profile.convert_text(result),result)
         custom=legacy.replace('default(60)','default(61)')
-        self.assertEqual(m300_profile.convert_text(custom),custom)
+        self.assertEqual(m300_profile.convert_text(custom),custom.replace('[gcode_macro ZORTRAX_BED_MESH]',
+                                                                        '[gcode_macro BED_MESH]'))
         self.assertEqual(m300_profile.convert_text(config.replace('60','52')),config.replace('60','52'))
         current=(Path(__file__).parent/'reference/pad_mesh_macro_r1615.cfg').read_text()
         updated=m300_profile.convert_text(current)
@@ -752,7 +753,7 @@ class PadMeshTests(unittest.TestCase):
     def test_macro_passes_geometry_and_preview_through_the_native_lexer(self):
         from test_macro_dispatch import ENV, dispatcher, templates
         from setup_fluidd import category
-        template = ENV.from_string(templates()['ZORTRAX_BED_MESH'])
+        template = ENV.from_string(templates()['BED_MESH'])
         gcode, printer, output = dispatcher()
         commands = []
         gcode.register_command('BED_MESH_CALIBRATE',
@@ -770,7 +771,7 @@ class PadMeshTests(unittest.TestCase):
         rendered=template.render(printer=NS(m300_pad_mesh=object()),params={})
         gcode.run_script_from_command(rendered)
         self.assertEqual(commands[-1],{})
-        self.assertEqual(category('ZORTRAX_BED_MESH'), 'Klipper')
+        self.assertEqual(category('BED_MESH'), 'Klipper')
 
     def test_actual_preflight_rejects_a_300_mm_limit_before_315_mm_probing(self):
         mesh = M300PadMesh.__new__(M300PadMesh)

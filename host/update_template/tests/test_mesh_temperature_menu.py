@@ -44,12 +44,23 @@ class MeshTemperatureMenuTests(unittest.TestCase):
     def test_mesh_moves_to_klipper_group_without_unhiding_or_recoloring_the_macro(self):
         before=dict(categories=[dict(id='z',name='ZORTRAX M300')],stored=[
             dict(name='ZORTRAX_BED_MESH',categoryId='z',visible=False,color='purple')])
-        after,assigned=merge_groups(before,['ZORTRAX_BED_MESH','ZORTRAX_LEVEL'])
+        after,assigned=merge_groups(before,['BED_MESH','ZORTRAX_LEVEL'])
         target=next(c['id'] for c in after['categories'] if c['name']=='Klipper')
-        self.assertEqual(after['stored'][0],dict(name='ZORTRAX_BED_MESH',categoryId=target,visible=False,color='purple'))
-        self.assertEqual(assigned['ZORTRAX_BED_MESH'],'Klipper')
+        self.assertEqual(after['stored'][0],dict(name='BED_MESH',categoryId=target,visible=False,color='purple'))
+        self.assertEqual(assigned['BED_MESH'],'Klipper')
         self.assertEqual(category('ZORTRAX_LEVEL'),'ZORTRAX M300')
         self.assertEqual(merge_groups(after,list(assigned))[0],after)
+
+    def test_bed_mesh_rename_keeps_custom_arguments_and_saved_profile_text(self):
+        saved = '#*# [bed_mesh m300_pads]\n#*# points =\n#*#   0.1, 0.2\n'
+        source = ('[gcode_macro ZORTRAX_BED_MESH]\ndescription: Custom pad setup\n'
+                  'gcode:\n    BED_MESH_CALIBRATE BED_TEMP=65 {rawparams}\n\n' + saved)
+        migrated = m300_profile.convert_text(source)
+        self.assertIn('[gcode_macro BED_MESH]', migrated)
+        self.assertNotIn('[gcode_macro ZORTRAX_BED_MESH]', migrated)
+        self.assertIn('BED_MESH_CALIBRATE BED_TEMP=65 {rawparams}', migrated)
+        self.assertTrue(migrated.endswith(saved))
+        self.assertEqual(m300_profile.convert_text(migrated), migrated)
 
     def test_mesh_oled_entry_and_idle_back_belong_to_klipper(self):
         with session() as h:

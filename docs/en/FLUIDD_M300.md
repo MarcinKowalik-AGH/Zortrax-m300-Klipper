@@ -33,6 +33,30 @@ or additional MCU polling is needed.
 
 ## Native pad mesh in Tune
 
+`BED_MESH` is the visible Klipper macro, including the matching OLED action.
+The installer renames the previous `ZORTRAX_BED_MESH` macro and its Fluidd
+preferences while preserving custom arguments, geometry and saved profiles.
+The native `BED_MESH_CALIBRATE` entry still uses the same 25 contact positions.
+
+After `SAVE_CONFIG` restarts Klipper, Tune previews the saved `m300_pads`
+profile in the native colored 3D chart, with minimum, maximum and range in mm.
+The native chart appears first once a mesh is available; the contact-area
+drawing remains below it. During probing the contact-area drawing is first.
+This preview does not load compensation or send a motion/heater command.
+`BED_MESH_PROFILE LOAD=m300_pads` or the native profile's Load button enables
+the saved compensation and displays the active native chart.
+
+At that point the contact-area drawing can display corrections interpolated
+from the saved native grid. These are explicitly labeled as saved mesh values;
+they are not presented as original three-tap measurements, which are session
+data. Failed or unfinished runs do not borrow an earlier profile's heights.
+
+The `TEST M300` macro category is optional service diagnostics, not part of
+printing or Bed Mesh. Status macros read diagnostics; XY test macros perform
+deliberate test movements. Other diagnostic entries exercise OLED transport
+or shared service procedures. They never run automatically and can be hidden
+in Fluidd's macro settings without disabling ordinary printer functions.
+
 Revision `0.13.16.20-PAD-CONTACT-MAP` adds a top view above the native mesh
 chart. It shows the five configured contact areas, all 25 planned points,
 completed/current point colors and an animated live nozzle marker. Native
@@ -85,8 +109,8 @@ temperatures and the measurement targets for nozzle and bed, through the
 existing subscription. No firmware flash is required.
 
 Bed Mesh belongs to the Klipper OLED submenu and Fluidd macro group. The
-`ZORTRAX_BED_MESH` command spelling remains compatible with existing scripts;
-it does not add an OEM Zortrax menu procedure. Flat-frame K/Z marks use the
+`BED_MESH` macro forwards parameters to the native `BED_MESH_CALIBRATE`
+adapter; it does not add an OEM Zortrax menu procedure. Flat-frame K/Z marks use the
 same 50×50 geometry as the activity icons, without the former triangular roof.
 
 Revision `0.13.16.18-PAD-OLED` binds this same live run to the physical panel.

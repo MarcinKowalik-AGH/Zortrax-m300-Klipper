@@ -81,13 +81,13 @@ class PadMeshOLEDTests(unittest.TestCase):
     def test_oled_start_restores_clicked_row_and_history_after_completion(self):
         with session() as h:
             mesh,update=pad(h)
-            h.gcode.register_command('ZORTRAX_BED_MESH',None)
-            h.gcode.register_command('ZORTRAX_BED_MESH',lambda cmd:update())
+            h.gcode.register_command('BED_MESH',None)
+            h.gcode.register_command('BED_MESH',lambda cmd:update())
             h.menu.page='bed_mesh'
             h.ui.history.stack[:]=['main','klipper']
             rows=h.menu.rows(h.now)[1]
             selected=next(i for i,(_,action) in enumerate(rows)
-                          if action==('native_gcode','ZORTRAX_BED_MESH'))
+                          if action==('native_gcode','BED_MESH'))
             h.oled.selection=selected
             before=len(h.callbacks)
             h.oled._select(h.now)

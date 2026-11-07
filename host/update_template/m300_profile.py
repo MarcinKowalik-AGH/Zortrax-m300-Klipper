@@ -7,7 +7,8 @@ import re
 
 HEADER = re.compile(r'^\[([^]\r\n]+)\]\s*(?:[#;].*)?$', re.M)
 MACRO_RENAMES = {'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
-                 'TEST_M300_XY': 'TEST_ZORTRAX_XY'}
+                 'TEST_M300_XY': 'TEST_ZORTRAX_XY',
+                 'ZORTRAX_BED_MESH': 'BED_MESH'}
 RETIRED_LEVEL_MACROS = {'TEST_M300_LEVEL', 'TEST_ZORTRAX_LEVEL'}
 LEVEL_WRAPPER = re.compile(
     r'ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=\{params\.TEMP\|default\((180|260)\)\|float\}')
@@ -152,7 +153,7 @@ def convert_text(text, stock_xy=None):
             hotend = option(block, 'hotend_temperature')
             if hotend is not None and float(hotend) == 180.:
                 block = set_option(block, 'hotend_temperature', '260')
-        elif section == 'gcode_macro ZORTRAX_BED_MESH':
+        elif section == 'gcode_macro BED_MESH':
             indent = re.search(r'(?m)^([ \t]*)\{% set _m300_pad_args = \[\] %\}',block)
             if indent:
                 prefix = indent[1]

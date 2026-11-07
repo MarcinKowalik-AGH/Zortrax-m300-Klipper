@@ -137,7 +137,7 @@ The example values are offline fixtures, not live measurements.
 | Back | Existing left-pointing navigation indicator; context symbols remain where appropriate |
 
 When `[m300_pad_mesh]` is configured, Klipper also offers a Bed mesh page.
-It reads the existing owner's state and invokes the existing `ZORTRAX_BED_MESH`
+It reads the existing owner's state and invokes the existing `BED_MESH`
 macro. Its measurement action is absent while that owner is busy. Geometry,
 preflight, probing, compensation and optional configuration stay under the
 existing native implementation.

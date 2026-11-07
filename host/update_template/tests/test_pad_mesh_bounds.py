@@ -79,7 +79,7 @@ class PadBoundsTests(unittest.TestCase):
         mesh._preflight=lambda:self.fail('preview started physical work')
         mesh.probe_points=NS(update_probe_points=lambda *args:None)
         gcode,_,output=dispatcher();gcode.register_command('BED_MESH_CALIBRATE',mesh.cmd_calibrate)
-        template=ENV.from_string(templates()['ZORTRAX_BED_MESH'])
+        template=ENV.from_string(templates()['BED_MESH'])
         params={'PREVIEW':'1','TRAVEL_MARGIN':'0'}
         params.update((name.upper()+'_BOUNDS',', '.join(map(str,bounds))) for name,bounds in RECTANGLES.items())
         gcode.run_script_from_command(template.render(printer=NS(m300_pad_mesh=mesh),params=params))

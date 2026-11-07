@@ -114,10 +114,10 @@ def main():
     shutil.copy2(Path(__file__).with_name('m300_ci_pad_mesh_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
     pad_mesh_script = (
-        'ZORTRAX_BED_MESH PREVIEW=1\n'
+        'BED_MESH PREVIEW=1\n'
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
         'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\n'
-        'ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
+        'BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
         'BED_MESH_CALIBRATE\n')
     cases=[
         ('native_oem_error_catalog',
@@ -132,15 +132,15 @@ def main():
         ('native_settings_information',settings_script,False,None),
         ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
         ('native_pad_mesh_zero_margin',
-         'ZORTRAX_NATIVE_STATUS\nZORTRAX_BED_MESH PREVIEW=1\nZORTRAX_PAD_MESH_STATUS\n'
+         'ZORTRAX_NATIVE_STATUS\nBED_MESH PREVIEW=1\nZORTRAX_PAD_MESH_STATUS\n'
          'ZORTRAX_CI_PAD_MESH CHECK=3\nBED_MESH_PROFILE LOAD=m300_zero_pads\n'
          'ZORTRAX_CI_PAD_MESH CHECK=4\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
          False, 'requires an idle native M300 with a physical MCU'),
         ('native_pad_mesh_bounds',
-         'ZORTRAX_NATIVE_STATUS\nZORTRAX_BED_MESH PREVIEW=1\n'
+         'ZORTRAX_NATIVE_STATUS\nBED_MESH PREVIEW=1\n'
          'ZORTRAX_CI_PAD_MESH CHECK=5\nBED_MESH_PROFILE LOAD=m300_contact_pads\n'
          'ZORTRAX_CI_PAD_MESH CHECK=6\n'
-         'ZORTRAX_BED_MESH REAR_RIGHT_BOUNDS=260,263,300,305 PREVIEW=1\n'
+         'BED_MESH REAR_RIGHT_BOUNDS=260,263,300,305 PREVIEW=1\n'
          'ZORTRAX_CI_PAD_MESH CHECK=7\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
          False,'requires an idle native M300 with a physical MCU'),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),

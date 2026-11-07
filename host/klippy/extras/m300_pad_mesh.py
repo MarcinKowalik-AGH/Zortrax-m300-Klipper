@@ -400,7 +400,7 @@ class M300PadMesh:
         if not travel['fits']:
             raise self._error('pad geometry falls outside the configured XY travel: '
                 'requested X%g..%g Y%g..%g; configured X%g..%g Y%g..%g. '
-                'Use ZORTRAX_BED_MESH PREVIEW=1 for a fitting inset.' % (
+                'Use BED_MESH PREVIEW=1 for a fitting inset.' % (
                     *travel['required_x'], *travel['required_y'],
                     *travel['configured_x'], *travel['configured_y']))
         gcode_move = self.printer.lookup_object('gcode_move')
@@ -659,7 +659,7 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(revision='0.13.16.25-PAD-NATIVE-WINDOW', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.26-SAVED-MESH-VIEW', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),

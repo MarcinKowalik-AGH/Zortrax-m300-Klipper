@@ -224,7 +224,7 @@ For the stated centers and X300/Y305 limits, the prepared plan is:
 
 Add these sections to the existing printer configuration when ready to test
 the probe. Do not duplicate an existing section. Before moving, run
-`ZORTRAX_BED_MESH PREVIEW=1` to prepare and review all 25 positions and confirm that each one
+`BED_MESH PREVIEW=1` to prepare and review all 25 positions and confirm that each one
 lies on conductive metal with nozzle clearance. The configuration is opt-in;
 it does not increase the configured axis travel limits. A center outside
 the reachable region, a collapsed contact rectangle or invalid pad topology
@@ -235,7 +235,7 @@ On an older installed host without travel fitting, this explicit command
 provides the conservative plan confirmed by the operator:
 
 ~~~gcode
-ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 PREVIEW=1
+BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 PREVIEW=1
 ~~~
 
 It gives X21–299 / Y21–299 and samples only 18 × 18 mm around each pad
@@ -268,7 +268,7 @@ bed_temperature: 60.0
 heat_timeout: 1800.0
 ~~~
 
-The `ZORTRAX_BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
+The `BED_MESH` macro appears in the Fluidd **ZORTRAX M300** group.
 The M300 Fluidd build opens **Tune** once an actual measurement passes preflight
 and starts preparation, including starts from the console. It preserves the selected
 printer connection. A geometry-only preview or preflight refusal does not change
@@ -298,7 +298,7 @@ Its parameter fields allow individual corrections without editing Python:
 | `HOTEND_TEMP` | Default 260; minimum 180 | Requested mesh nozzle target; a hotter working temperature is retained |
 | `BED_TEMP` | Active bed target, otherwise 60 | Bed temperature for the measurement, °C |
 
-Clicking the **macro name** in Fluidd sends `ZORTRAX_BED_MESH` without arguments.
+Clicking the **macro name** in Fluidd sends `BED_MESH` without arguments.
 It uses `[m300_pad_mesh]` and current command/preview geometry. To reproduce an
 explicit console command, expand the arrow, fill the fields and press **Send**.
 For the conservative operator plan set `CORNER_PAD_WIDTH=50`,
@@ -311,7 +311,7 @@ Fluidd exposes every field, then emits exactly one native calibration command.
 For example, preview a 1 mm front-left X correction and a different center:
 
 ~~~gcode
-ZORTRAX_BED_MESH PREVIEW=1 FRONT_LEFT_X=31 CENTER_X=159.5 CENTER_Y=160
+BED_MESH PREVIEW=1 FRONT_LEFT_X=31 CENTER_X=159.5 CENTER_Y=160
 ~~~
 
 Run the same macro with the same corrections and `PREVIEW=0` to measure.
@@ -368,7 +368,7 @@ No second automatic metal inset is added. Native XY limits and optional
 Macro fields use the same names in uppercase. For example:
 
 ~~~gcode
-ZORTRAX_BED_MESH FRONT_LEFT_BOUNDS=0,0,43,51 FRONT_RIGHT_BOUNDS=260,0,300,51 CENTER_BOUNDS=125,125,175,175 REAR_LEFT_BOUNDS=0,260,43,305 REAR_RIGHT_BOUNDS=260,262,300,305 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
+BED_MESH FRONT_LEFT_BOUNDS=0,0,43,51 FRONT_RIGHT_BOUNDS=260,0,300,51 CENTER_BOUNDS=125,125,175,175 REAR_LEFT_BOUNDS=0,260,43,305 REAR_RIGHT_BOUNDS=260,262,300,305 EDGE_MARGIN=0 TRAVEL_MARGIN=0 PREVIEW=1
 ~~~
 
 `PREVIEW=1` updates the 25-point plan and Tune's top view without heating,
@@ -422,7 +422,7 @@ Use the same temperatures for later comparisons. For example, the operator's
 conservative 25-point plan with a 60 °C bed:
 
 ~~~gcode
-ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60
+BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60
 ~~~
 
 To repeat an earlier measurement made with a 185 °C nozzle, add

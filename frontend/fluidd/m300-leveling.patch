@@ -1,100 +1,3 @@
-diff --git a/components.d.ts b/components.d.ts
-index 61dc457..97cbc50 100644
---- a/components.d.ts
-+++ b/components.d.ts
-@@ -65,6 +65,8 @@ declare module 'vue' {
-     KeyboardShortcutsDialog: typeof import('./src/components/common/KeyboardShortcutsDialog.vue')['default']
-     KlippyStatusCard: typeof import('./src/components/common/KlippyStatusCard.vue')['default']
-     Login: typeof import('./src/components/common/Login.vue')['default']
-+    M300LevelingDiagram: typeof import('./src/components/common/M300LevelingDiagram.vue')['default']
-+    M300PadMeshObserver: typeof import('./src/components/common/M300PadMeshObserver.vue')['default']
-     ManualProbeDialog: typeof import('./src/components/common/ManualProbeDialog.vue')['default']
-     PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
-     PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
-@@ -80,83 +82,8 @@ declare module 'vue' {
-     SystemPrinters: typeof import('./src/components/common/SystemPrinters.vue')['default']
-     UpdatingDialog: typeof import('./src/components/common/UpdatingDialog.vue')['default']
-     VAlert: typeof import('vuetify/lib')['VAlert']
--    VApp: typeof import('vuetify/lib')['VApp']
--    VAppBar: typeof import('vuetify/lib')['VAppBar']
--    VBadge: typeof import('vuetify/lib')['VBadge']
--    VBreadcrumbs: typeof import('vuetify/lib')['VBreadcrumbs']
--    VBreadcrumbsItem: typeof import('vuetify/lib')['VBreadcrumbsItem']
--    VBtn: typeof import('vuetify/lib')['VBtn']
--    VBtnToggle: typeof import('vuetify/lib')['VBtnToggle']
--    VCard: typeof import('vuetify/lib')['VCard']
--    VCardActions: typeof import('vuetify/lib')['VCardActions']
--    VCardSubtitle: typeof import('vuetify/lib')['VCardSubtitle']
-     VCardText: typeof import('vuetify/lib')['VCardText']
--    VCardTitle: typeof import('vuetify/lib')['VCardTitle']
--    VCheckbox: typeof import('vuetify/lib')['VCheckbox']
--    VChip: typeof import('vuetify/lib')['VChip']
--    VCol: typeof import('vuetify/lib')['VCol']
--    VColorPicker: typeof import('vuetify/lib')['VColorPicker']
--    VCombobox: typeof import('vuetify/lib')['VCombobox']
--    VContainer: typeof import('vuetify/lib')['VContainer']
--    VDataTable: typeof import('vuetify/lib')['VDataTable']
--    VDialog: typeof import('vuetify/lib')['VDialog']
--    VDivider: typeof import('vuetify/lib')['VDivider']
--    VExpandTransition: typeof import('vuetify/lib')['VExpandTransition']
--    VExpansionPanel: typeof import('vuetify/lib')['VExpansionPanel']
--    VExpansionPanelContent: typeof import('vuetify/lib')['VExpansionPanelContent']
--    VExpansionPanelHeader: typeof import('vuetify/lib')['VExpansionPanelHeader']
--    VExpansionPanels: typeof import('vuetify/lib')['VExpansionPanels']
--    VFadeTransition: typeof import('vuetify/lib')['VFadeTransition']
--    VFooter: typeof import('vuetify/lib')['VFooter']
--    VForm: typeof import('vuetify/lib')['VForm']
--    VIcon: typeof import('vuetify/lib')['VIcon']
--    VImg: typeof import('vuetify/lib')['VImg']
--    VItemGroup: typeof import('vuetify/lib')['VItemGroup']
--    VLayout: typeof import('vuetify/lib')['VLayout']
--    VList: typeof import('vuetify/lib')['VList']
--    VListGroup: typeof import('vuetify/lib')['VListGroup']
--    VListItem: typeof import('vuetify/lib')['VListItem']
--    VListItemAction: typeof import('vuetify/lib')['VListItemAction']
--    VListItemContent: typeof import('vuetify/lib')['VListItemContent']
--    VListItemGroup: typeof import('vuetify/lib')['VListItemGroup']
--    VListItemIcon: typeof import('vuetify/lib')['VListItemIcon']
--    VListItemSubtitle: typeof import('vuetify/lib')['VListItemSubtitle']
--    VListItemTitle: typeof import('vuetify/lib')['VListItemTitle']
--    VMain: typeof import('vuetify/lib')['VMain']
--    VMenu: typeof import('vuetify/lib')['VMenu']
--    VNavigationDrawer: typeof import('vuetify/lib')['VNavigationDrawer']
--    VOverlay: typeof import('vuetify/lib')['VOverlay']
--    VProgressCircular: typeof import('vuetify/lib')['VProgressCircular']
-     VProgressLinear: typeof import('vuetify/lib')['VProgressLinear']
--    VRadio: typeof import('vuetify/lib')['VRadio']
--    VRadioGroup: typeof import('vuetify/lib')['VRadioGroup']
--    VRow: typeof import('vuetify/lib')['VRow']
--    VSelect: typeof import('vuetify/lib')['VSelect']
--    VSheet: typeof import('vuetify/lib')['VSheet']
--    VSimpleCheckbox: typeof import('vuetify/lib')['VSimpleCheckbox']
-     VSimpleTable: typeof import('vuetify/lib')['VSimpleTable']
--    VSlider: typeof import('vuetify/lib')['VSlider']
--    VSnackbar: typeof import('vuetify/lib')['VSnackbar']
--    VSpacer: typeof import('vuetify/lib')['VSpacer']
--    VStepper: typeof import('vuetify/lib')['VStepper']
--    VStepperContent: typeof import('vuetify/lib')['VStepperContent']
--    VStepperHeader: typeof import('vuetify/lib')['VStepperHeader']
--    VStepperItems: typeof import('vuetify/lib')['VStepperItems']
--    VStepperStep: typeof import('vuetify/lib')['VStepperStep']
--    VSubheader: typeof import('vuetify/lib')['VSubheader']
--    VSwitch: typeof import('vuetify/lib')['VSwitch']
--    VTab: typeof import('vuetify/lib')['VTab']
--    VTabItem: typeof import('vuetify/lib')['VTabItem']
--    VTabs: typeof import('vuetify/lib')['VTabs']
--    VTabsItems: typeof import('vuetify/lib')['VTabsItems']
--    VTextarea: typeof import('vuetify/lib')['VTextarea']
--    VTextField: typeof import('vuetify/lib')['VTextField']
--    VTimeline: typeof import('vuetify/lib')['VTimeline']
--    VTimelineItem: typeof import('vuetify/lib')['VTimelineItem']
--    VToolbar: typeof import('vuetify/lib')['VToolbar']
--    VToolbarItems: typeof import('vuetify/lib')['VToolbarItems']
--    VToolbarTitle: typeof import('vuetify/lib')['VToolbarTitle']
--    VTooltip: typeof import('vuetify/lib')['VTooltip']
--    VVirtualScroll: typeof import('vuetify/lib')['VVirtualScroll']
-   }
- }
 diff --git a/src/App.vue b/src/App.vue
 index de67b82..bfe5c31 100644
 --- a/src/App.vue
@@ -753,10 +656,10 @@ index 0000000..f7cc2db
 +  return controls
 +}
 diff --git a/src/components/widgets/bedmesh/BedMeshCard.vue b/src/components/widgets/bedmesh/BedMeshCard.vue
-index ba2423a..bf77454 100644
+index ba2423a..5ba2dfc 100644
 --- a/src/components/widgets/bedmesh/BedMeshCard.vue
 +++ b/src/components/widgets/bedmesh/BedMeshCard.vue
-@@ -48,6 +48,12 @@
+@@ -48,6 +48,21 @@
      </template>
  
      <v-card-text>
@@ -764,12 +667,21 @@ index ba2423a..bf77454 100644
 +        v-if="m300Preview"
 +        class="text-caption"
 +      >
-+        Preview: {{ m300Preview.name }} (not active). Interpolated grid from 25 contact positions.
++        {{ m300Preview.saved ? 'Saved profile' : 'Preview' }}: {{ m300Preview.name }} (not active).
++        Interpolated grid from 25 contact positions.
++      </p>
++      <p
++        v-if="hasMeshLoaded"
++        class="text-caption"
++        data-mesh-summary
++      >
++        Min {{ mesh[matrix].min.toFixed(4) }} mm · Max {{ mesh[matrix].max.toFixed(4) }} mm ·
++        Range {{ mesh[matrix].range.toFixed(4) }} mm
 +      </p>
        <bed-mesh-chart
          v-if="hasMeshLoaded"
          ref="chart"
-@@ -69,6 +75,7 @@ import StateMixin from '@/mixins/state'
+@@ -69,6 +84,7 @@ import StateMixin from '@/mixins/state'
  import ToolheadMixin from '@/mixins/toolhead'
  import BrowserMixin from '@/mixins/browser'
  import type { AppMeshes, MatrixType } from '@/store/mesh/types'
@@ -777,7 +689,7 @@ index ba2423a..bf77454 100644
  
  @Component({
    components: {
-@@ -76,6 +83,10 @@ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
+@@ -76,6 +92,10 @@ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
    }
  })
  export default class BedMeshCard extends Mixins(StateMixin, ToolheadMixin, BrowserMixin) {
@@ -790,10 +702,10 @@ index ba2423a..bf77454 100644
  
 diff --git a/src/components/widgets/bedmesh/M300PadContactMap.vue b/src/components/widgets/bedmesh/M300PadContactMap.vue
 new file mode 100644
-index 0000000..da4f18f
+index 0000000..810b9a5
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadContactMap.vue
-@@ -0,0 +1,279 @@
+@@ -0,0 +1,290 @@
 +<template>
 +  <collapsable-card
 +    v-if="map"
@@ -884,7 +796,7 @@ index 0000000..da4f18f
 +          <circle
 +            v-if="inside(point)"
 +            class="map-point"
-+            :class="{ measured: index < map.measured, current: map.probing && index === map.measured }"
++            :class="{ measured: index < map.measured, saved: map.heightSource === 'saved_mesh' && map.heights[index] !== null, current: map.probing && index === map.measured }"
 +            :data-point="index"
 +            :cx="point[0]"
 +            :cy="screenY(point[1])"
@@ -910,7 +822,7 @@ index 0000000..da4f18f
 +          :text-anchor="label.anchor"
 +        >
 +          {{ label.value }}
-+          <title>Point {{ label.index + 1 }} contact Z: {{ label.z.toFixed(4) }} mm</title>
++          <title>Point {{ label.index + 1 }} {{ map.heightSource === 'saved_mesh' ? 'saved mesh correction' : 'contact Z' }}: {{ label.z.toFixed(4) }} mm</title>
 +        </text>
 +        <template v-if="head && inside(head)">
 +          <circle
@@ -930,16 +842,23 @@ index 0000000..da4f18f
 +      </svg>
 +      <div class="map-legend">
 +        <span><i class="metal" />Contact area</span>
-+        <span><i class="measured" />Measured</span>
++        <span v-if="map.heightSource === 'saved_mesh'"><i class="saved" />Saved mesh (interpolated)</span>
++        <span v-else><i class="measured" />Measured</span>
 +        <span><i class="current" />Current point</span>
 +        <span><i class="nozzle" />Nozzle</span>
 +      </div>
 +      <div class="mt-2 text-caption">
-+        <div v-if="map.preview">
++        <div v-if="map.preview && map.heightSource !== 'saved_mesh'">
 +          Plan preview · 25 positions.
 +        </div>
 +        X0/Y0 is at the bottom left. X increases to the right; Y increases upwards.
-+        Contact Z in mm; each height is the native median of three taps.
++        <div v-if="map.heightSource === 'saved_mesh'">
++          Saved profile {{ map.profileName }}: interpolated Z correction in mm.
++          Original tap measurements are not retained after restart.
++        </div>
++        <div v-else>
++          Contact Z in mm; each height is the native median of three taps.
++        </div>
 +        <div v-if="head">
 +          Nozzle X{{ head[0].toFixed(1) }} / Y{{ head[1].toFixed(1) }}.
 +        </div>
@@ -971,6 +890,7 @@ index 0000000..da4f18f
 +import { Component, Mixins } from 'vue-property-decorator'
 +import StateMixin from '@/mixins/state'
 +import { contactAxisTicks, readM300ContactMap } from '@/util/m300-pad-contact-map'
++import { m300PadMeshSurface } from '@/util/m300-pad-mesh'
 +
 +@Component
 +export default class M300PadContactMap extends Mixins(StateMixin) {
@@ -979,7 +899,8 @@ index 0000000..da4f18f
 +  }
 +
 +  get map () {
-+    return readM300ContactMap(this.$typedState.printer.printer.m300_pad_mesh)
++    const printer = this.$typedState.printer.printer
++    return readM300ContactMap(printer.m300_pad_mesh, m300PadMeshSurface(printer))
 +  }
 +
 +  get viewBox () {
@@ -1055,6 +976,7 @@ index 0000000..da4f18f
 +.map-height { fill: #f0f6ff; font: 8px monospace; font-variant-numeric: tabular-nums; stroke: none; }
 +.map-point { fill: #a7b5c5; stroke: #141b23; stroke-width: 0.5; }
 +.map-point.measured { fill: #65e79b; }
++.map-point.saved { fill: #b1baff; }
 +.map-point.current { fill: #ffbd59; }
 +.map-target { fill: none; stroke: #ffbd59; stroke-width: 1; animation: contact-pulse 1.2s ease-in-out infinite; }
 +.map-head-ring { fill: #141b23; fill-opacity: 0.5; stroke: white; stroke-width: 0.8; }
@@ -1065,6 +987,7 @@ index 0000000..da4f18f
 +.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 +.map-legend .metal { background: #244e40; border: 1px solid #70be95; border-radius: 1px; }
 +.map-legend .measured { background: #65e79b; }
++.map-legend .saved { background: #b1baff; }
 +.map-legend .current { background: #ffbd59; }
 +.map-legend .nozzle { background: #49c8ff; }
 +@keyframes contact-pulse { 50% { opacity: 0.25; } }
@@ -1849,10 +1772,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-contact-map.spec.ts b/src/util/m300-pad-contact-map.spec.ts
 new file mode 100644
-index 0000000..66e9d12
+index 0000000..187e76b
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.spec.ts
-@@ -0,0 +1,219 @@
+@@ -0,0 +1,257 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +/// <reference types="node" />
 +// @vitest-environment jsdom
@@ -2071,14 +1994,54 @@ index 0000000..66e9d12
 +      expect(readM300ContactMap(source.m300_pad_mesh)?.heights.every(z => z === null)).toBe(true)
 +    }
 +  })
++
++  it('labels saved mesh corrections after restart without inventing original tap measurements or enabling compensation', () => {
++    const source = printer()
++    const restarted = {
++      ...source,
++      m300_pad_mesh: { ...source.m300_pad_mesh, total_points: 25, run_id: null, plan_matches_run: false },
++      bed_mesh: {
++        profile_name: '',
++        mesh_matrix: [],
++        probed_matrix: [],
++        mesh_min: [0, 0],
++        mesh_max: [0, 0],
++        profiles: {
++          m300_pads: {
++            points: [[0, 0.15, 0.3], [0.23955, 0.38955, 0.53955], [0.4791, 0.6291, 0.7791]],
++            mesh_params: { min_x: 0, min_y: 0, max_x: 300, max_y: 305, algo: 'direct', x_count: 3, y_count: 3 }
++          }
++        }
++      }
++    }
++    const state = Vue.observable({ printer: { printer: restarted } })
++    const slot = { template: '<section><slot /></section>' }
++    const wrapper = shallowMount(M300PadContactMap, {
++      mocks: { $typedState: state, $typedGetters: { 'printer/getKlippyReady': true } },
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot }
++    })
++    expect(wrapper.findAll('[data-height]')).toHaveLength(25)
++    expect(wrapper.find('[data-height="6"]').text()).toContain('+0.000')
++    expect(wrapper.find('[data-height="18"]').text()).toContain('+0.779')
++    expect(wrapper.text()).toContain('Saved profile m300_pads: interpolated Z correction')
++    expect(wrapper.text()).not.toContain('native median of three taps')
++    expect(wrapper.findAll('.map-point.measured')).toHaveLength(0)
++    expect(wrapper.findAll('.map-point.saved')).toHaveLength(25)
++    expect(restarted.m300_pad_mesh.measurements).toEqual([])
++    expect(restarted.bed_mesh.profile_name).toBe('')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    wrapper.destroy()
++  })
 +})
 diff --git a/src/util/m300-pad-contact-map.ts b/src/util/m300-pad-contact-map.ts
 new file mode 100644
-index 0000000..4dc4659
+index 0000000..34d9947
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.ts
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,102 @@
 +// SPDX-License-Identifier: GPL-3.0-only
++import type { M300PadSurface } from './m300-pad-mesh'
++
 +export interface M300ContactRegion {
 +  name: string;
 +  center: [number, number];
@@ -2098,13 +2061,15 @@ index 0000000..4dc4659
 +  probing: boolean;
 +  fits: boolean;
 +  heights: (number | null)[];
++  heightSource: 'contact' | 'saved_mesh' | 'none';
++  profileName?: string;
 +}
 +
 +const names = ['front_right', 'front_left', 'center', 'rear_right', 'rear_left']
 +const vector = (value: unknown, size: number): value is number[] =>
 +  Array.isArray(value) && value.length === size && value.every(v => typeof v === 'number' && Number.isFinite(v))
 +
-+export function readM300ContactMap (value: unknown): M300ContactMap | undefined {
++export function readM300ContactMap (value: unknown, surface?: M300PadSurface): M300ContactMap | undefined {
 +  if (!value || typeof value !== 'object') return
 +  const raw = value as Record<string, unknown>
 +  const travel = raw.travel as Record<string, unknown> | undefined
@@ -2132,10 +2097,31 @@ index 0000000..4dc4659
 +      measured.forEach((point, index) => { heights[index] = point[2] })
 +    }
 +  }
++  let heightSource: M300ContactMap['heightSource'] = heights.some(z => z !== null) ? 'contact' : 'none'
++  if (heightSource === 'none' && surface?.saved && raw.state === 'IDLE' && raw.busy === false) {
++    const mesh = surface.mesh
++    const grid = mesh.mesh_matrix!
++    const [x0, y0] = mesh.mesh_min!
++    const [x1, y1] = mesh.mesh_max!
++    points.forEach(([x, y], index) => {
++      if (x < x0 || x > x1 || y < y0 || y > y1) return
++      const col = (x - x0) / (x1 - x0) * (grid[0].length - 1)
++      const row = (y - y0) / (y1 - y0) * (grid.length - 1)
++      const i = Math.min(Math.floor(col), grid[0].length - 2)
++      const j = Math.min(Math.floor(row), grid.length - 2)
++      const u = col - i
++      const v = row - j
++      heights[index] = (1 - v) * ((1 - u) * grid[j][i] + u * grid[j][i + 1]) +
++        v * ((1 - u) * grid[j + 1][i] + u * grid[j + 1][i + 1])
++    })
++    if (heights.some(z => z !== null)) heightSource = 'saved_mesh'
++  }
 +  return {
 +    regions,
 +    points,
 +    heights,
++    heightSource,
++    profileName: heightSource === 'saved_mesh' ? surface?.name : undefined,
 +    minX: travel.configured_x[0],
 +    maxX: travel.configured_x[1],
 +    minY: travel.configured_y[0],
@@ -2157,10 +2143,10 @@ index 0000000..4dc4659
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..7bd1d31
+index 0000000..1e0141d
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,372 @@
+@@ -0,0 +1,463 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -2168,6 +2154,8 @@ index 0000000..7bd1d31
 +import { shallowMount } from '@vue/test-utils'
 +import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
 +import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
++import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
++import Tune from '@/views/Tune.vue'
 +import MacroBtn from '@/components/widgets/macros/MacroBtn.vue'
 +import AppBtn from '@/components/ui/AppBtn.vue'
 +import { SocketActions } from '@/api/socketActions'
@@ -2282,15 +2270,15 @@ index 0000000..7bd1d31
 +    const fields = gcodeMacroParams(gcode)
 +    expect(fields.map(field => field.name)).toEqual(['CORNER_PAD_WIDTH', 'CENTER_PAD_WIDTH', 'EDGE_MARGIN', 'TRAVEL_MARGIN', 'FRONT_LEFT_BOUNDS', 'BED_TEMP'])
 +    const params = Object.fromEntries(fields.map(field => [field.name, { value: field.value }]))
-+    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params)).toBe('ZORTRAX_BED_MESH')
++    expect(gcodeCommandBuilder('BED_MESH', params)).toBe('BED_MESH')
 +    for (const [key, value] of Object.entries({ CORNER_PAD_WIDTH: '50', CENTER_PAD_WIDTH: '50', EDGE_MARGIN: '16', BED_TEMP: '60' })) {
 +      params[key].value = value
 +    }
-+    expect(gcodeCommandBuilder('ZORTRAX_BED_MESH', params))
-+      .toBe('ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60')
++    expect(gcodeCommandBuilder('BED_MESH', params))
++      .toBe('BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60')
 +    const slot = { template: '<div><slot /></div>' }
 +    const wrapper = shallowMount(MacroBtn, {
-+      propsData: { macro: { name: 'ZORTRAX_BED_MESH', config: { gcode }, disabledWhilePrinting: false } },
++      propsData: { macro: { name: 'BED_MESH', config: { gcode }, disabledWhilePrinting: false } },
 +      mocks: {
 +        $typedGetters: {
 +          'printer/getKlippyReady': true,
@@ -2308,18 +2296,18 @@ index 0000000..7bd1d31
 +    const button = wrapper.vm as MacroBtn
 +    expect(Object.keys(button.params)).toEqual(fields.map(field => field.name))
 +    button.handleClick()
-+    expect(wrapper.emitted('click')?.[0]).toEqual(['ZORTRAX_BED_MESH'])
++    expect(wrapper.emitted('click')?.[0]).toEqual(['BED_MESH'])
 +    for (const [key, param] of Object.entries(params)) button.params[key].value = param.value
 +    await Vue.nextTick()
 +    await wrapper.find('form').trigger('submit')
 +    expect(wrapper.emitted('click')?.[1])
-+      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60'])
++      .toEqual(['BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=16 BED_TEMP=60'])
 +    button.params.EDGE_MARGIN.value = '0'
 +    button.params.TRAVEL_MARGIN.value = '0'
 +    button.params.FRONT_LEFT_BOUNDS.value = '0,0,43,51'
 +    await wrapper.find('form').trigger('submit')
 +    expect(wrapper.emitted('click')?.[2])
-+      .toEqual(['ZORTRAX_BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=0 TRAVEL_MARGIN=0 FRONT_LEFT_BOUNDS=0,0,43,51 BED_TEMP=60'])
++      .toEqual(['BED_MESH CORNER_PAD_WIDTH=50 CENTER_PAD_WIDTH=50 EDGE_MARGIN=0 TRAVEL_MARGIN=0 FRONT_LEFT_BOUNDS=0,0,43,51 BED_TEMP=60'])
 +    wrapper.destroy()
 +  })
 +
@@ -2457,6 +2445,95 @@ index 0000000..7bd1d31
 +    expect(m300PadMeshPreview(source)).toBeUndefined()
 +  })
 +
++  it('keeps the saved native color map and range available after SAVE_CONFIG clears the run token', () => {
++    const source = printer('COMPLETE')
++    source.m300_pad_mesh = {
++      ...status(),
++      state: 'IDLE',
++      phase: 'IDLE',
++      busy: false,
++      run_id: null,
++      points_measured: 0,
++      last_attempt: null,
++      result: null
++    }
++    const preview = m300PadMeshPreview(source)
++    expect(preview?.name).toBe('m300_pads')
++    expect(preview?.saved).toBe(true)
++    const meshState: MeshState = { range: 0, wireframe: false, scale: 0, boxScale: 0, flatSurface: false, matrix: 'mesh_matrix' }
++    const result = getters.getCurrentMeshData(meshState, {}, { printer: { printer: source } } as unknown as RootState)
++    expect(result.mesh_matrix.coordinates).toHaveLength(9)
++    expect(result.mesh_matrix.min).toBe(0)
++    expect(result.mesh_matrix.max).toBe(0.04)
++    expect(result.mesh_matrix.range).toBe(0.04)
++    expect(source.bed_mesh.profile_name).toBe('')
++    expect(source.bed_mesh.mesh_matrix).toEqual([])
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++  })
++
++  it('does not present a previous saved mesh as the result of a failed or unfinished calibration', () => {
++    for (const state of ['PROBING', 'FAILED']) {
++      expect(m300PadMeshPreview(printer(state))).toBeUndefined()
++    }
++    const source = printer()
++    Reflect.deleteProperty(source, 'm300_pad_mesh')
++    expect(m300PadMeshPreview(source)).toBeUndefined()
++  })
++
++  it('places the native colored chart first after saving and shows min/max/range without loading compensation', () => {
++    const source = printer('COMPLETE')
++    source.m300_pad_mesh = {
++      ...status(),
++      state: 'IDLE',
++      phase: 'IDLE',
++      busy: false,
++      run_id: null,
++      points_measured: 0,
++      last_attempt: null,
++      result: null
++    }
++    const meshState: MeshState = { range: 0, wireframe: false, scale: 0, boxScale: 0, flatSurface: false, matrix: 'mesh_matrix' }
++    const processed = getters.getCurrentMeshData(meshState, {}, { printer: { printer: source } } as unknown as RootState)
++    const slot = { template: '<section><slot /></section>' }
++    const mocks = {
++      $typedState: { printer: { printer: source }, mesh: meshState },
++      $typedGetters: {
++        'printer/getKlippyReady': true,
++        'printer/getPrinterState': 'idle',
++        'mesh/getSupportsBedMesh': true,
++        'printer/getSteppers': [],
++        'printer/getProbe': null,
++        'printer/getRunoutSensors': [],
++        'printer/getSupportsBeacon': false,
++        'mesh/getCurrentMeshData': processed
++      },
++      $vuetify: { breakpoint: { smAndDown: false } },
++      $t: (key: string) => key
++    }
++    const tune = shallowMount(Tune, {
++      mocks,
++      stubs: {
++        'v-row': slot,
++        'v-col': slot,
++        'bed-mesh-card': { template: '<div data-test="native-chart" />' },
++        'm300-pad-contact-map': { template: '<div data-test="contact-map" />' }
++      }
++    })
++    expect(tune.findAll('[data-test]').wrappers.map(node => node.attributes('data-test')))
++      .toEqual(['native-chart', 'contact-map'])
++    const chart = shallowMount(BedMeshCard, {
++      propsData: { fullscreen: true },
++      mocks,
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot }
++    })
++    expect(chart.text()).toContain('Saved profile: m300_pads (not active)')
++    expect(chart.find('[data-mesh-summary]').text()).toContain('Min 0.0000 mm · Max 0.0400 mm · Range 0.0400 mm')
++    expect(chart.findComponent({ name: 'BedMeshChart' }).props('data')[0].shading).toBe('color')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    tune.destroy()
++    chart.destroy()
++  })
++
 +  it('opens Tune once for preparation and respects navigation through heating and homing', async () => {
 +    const source = printer()
 +    source.m300_pad_mesh.phase = 'HEATING'
@@ -2535,10 +2612,10 @@ index 0000000..7bd1d31
 +})
 diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
 new file mode 100644
-index 0000000..3649c70
+index 0000000..adc1c92
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.ts
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,91 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +export interface M300PadAttempt {
 +  run_id: string;
@@ -2589,20 +2666,33 @@ index 0000000..3649c70
 +    /^[\w-]{1,32}$/.test(status.result.profile)
 +}
 +
-+export function m300PadMeshPreview (printer: Klipper.PrinterState): { name: string; mesh: Klipper.BedMeshState } | undefined {
++export interface M300PadSurface {
++  name: string;
++  saved: boolean;
++  mesh: Klipper.BedMeshState;
++}
++
++export function m300PadMeshSurface (printer: Klipper.PrinterState): M300PadSurface | undefined {
 +  const status = readM300PadMesh(printer.m300_pad_mesh)
++  const raw = printer.m300_pad_mesh as Record<string, unknown> | undefined
 +  const bed = printer.bed_mesh
-+  if (!isM300PadMeshAccepted(status) || !status?.result || !bed || bed.mesh_matrix?.length) return
-+  const name = status.result.profile
++  // SAVE_CONFIG restarts Klippy and clears the run token, not the native
++  // profile. Preview that saved data without enabling Z compensation.
++  const saved = !!raw && raw.state === 'IDLE' && raw.busy === false &&
++    raw.total_points === 25 && raw.points_measured === 0
++  const name = isM300PadMeshAccepted(status) ? status?.result?.profile : saved ? 'm300_pads' : undefined
++  if (!name || !bed || (bed.mesh_matrix?.length && bed.profile_name !== name)) return
 +  const profile = bed.profiles?.[name]
 +  const params = profile?.mesh_params
 +  if (!profile || !params || !Array.isArray(profile.points) || profile.points.length < 3 ||
 +      profile.points.length > 65 || profile.points.some(row => !Array.isArray(row) || row.length < 3 ||
 +        row.length !== profile.points[0].length || row.length > 65 || row.some(z => !Number.isFinite(z))) ||
 +      ![params.min_x, params.min_y, params.max_x, params.max_y].every(Number.isFinite) ||
-+      params.min_x >= params.max_x || params.min_y >= params.max_y) return
++      params.min_x >= params.max_x || params.min_y >= params.max_y || params.algo !== 'direct' ||
++      params.y_count !== profile.points.length || params.x_count !== profile.points[0].length) return
 +  return {
 +    name,
++    saved,
 +    mesh: {
 +      ...bed,
 +      mesh_min: [params.min_x, params.min_y],
@@ -2612,16 +2702,26 @@ index 0000000..3649c70
 +    }
 +  }
 +}
++
++export function m300PadMeshPreview (printer: Klipper.PrinterState): M300PadSurface | undefined {
++  if (printer.bed_mesh?.mesh_matrix?.length) return
++  return m300PadMeshSurface(printer)
++}
 diff --git a/src/views/Tune.vue b/src/views/Tune.vue
-index 7edad45..0144776 100644
+index 7edad45..448e7b4 100644
 --- a/src/views/Tune.vue
 +++ b/src/views/Tune.vue
-@@ -8,12 +8,14 @@
+@@ -8,12 +8,18 @@
        cols="12"
        md="8"
      >
-+      <m300-pad-contact-map />
-       <bed-mesh-card fullscreen />
+-      <bed-mesh-card fullscreen />
++      <m300-pad-contact-map v-if="!meshChartFirst" />
++      <bed-mesh-card
++        fullscreen
++        :class="{ 'mb-2 mb-md-4': meshChartFirst }"
++      />
++      <m300-pad-contact-map v-if="meshChartFirst" />
      </v-col>
      <v-col
        cols="12"
@@ -2631,7 +2731,11 @@ index 7edad45..0144776 100644
        <bed-mesh-controls
          v-if="supportsBedMesh"
          class="mb-2 mb-md-4"
-@@ -45,6 +47,8 @@ import StateMixin from '@/mixins/state'
+@@ -42,9 +48,12 @@
+ <script lang="ts">
+ import { Component, Mixins } from 'vue-property-decorator'
+ import StateMixin from '@/mixins/state'
++import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
  
  import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
  import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
@@ -2640,7 +2744,7 @@ index 7edad45..0144776 100644
  import EndStopsCard from '@/components/widgets/endstops/EndStopsCard.vue'
  import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
  import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
-@@ -53,6 +57,8 @@ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+@@ -53,12 +62,19 @@ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
    components: {
      BedMeshCard,
      BedMeshControls,
@@ -2649,3 +2753,14 @@ index 7edad45..0144776 100644
      EndStopsCard,
      RunoutSensorsCard,
      BeaconCard
+   }
+ })
+ export default class Tune extends Mixins(StateMixin) {
++  get meshChartFirst (): boolean {
++    const printer = this.$typedState.printer.printer
++    return !!(printer.bed_mesh?.mesh_matrix?.length || m300PadMeshPreview(printer))
++  }
++
+   get supportsBedMesh (): boolean {
+     return this.$typedGetters['mesh/getSupportsBedMesh']
+   }

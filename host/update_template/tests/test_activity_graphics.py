@@ -58,7 +58,7 @@ class ActivityGraphicsTests(unittest.TestCase):
     def test_menu_command_previews_match_operations_and_are_static(self):
         cases={'ZORTRAX_HEAT':'heat_nozzle','M109 S240':'heat_nozzle',
                'M190 S60':'heat_bed','TURN_OFF_HEATERS':'cooling',
-               'ZORTRAX_BED_MESH':'bed_mesh','ZORTRAX_FAN_LOWER':'fan_lower',
+               'BED_MESH':'bed_mesh','ZORTRAX_FAN_LOWER':'fan_lower',
                'ZORTRAX_FAN_TEST_START':'fan_upper','SAVE_CONFIG':'firmware_update'}
         for command, name in cases.items():
             choice=menu_symbol('klipper','m04',[('',('native_gcode',command))])
@@ -135,7 +135,7 @@ class ActivityGraphicsTests(unittest.TestCase):
             h.menu.page='klipper'
             self.assertIn(('Bed mesh (25 points)',('page','bed_mesh')),h.menu.rows(h.now)[1])
             h.menu.page='bed_mesh';_,rows=h.menu.rows(h.now)
-            self.assertIn(('Measure 25 pad points',('native_gcode','ZORTRAX_BED_MESH')),rows)
+            self.assertIn(('Measure 25 pad points',('native_gcode','BED_MESH')),rows)
             status.update(state='PROBING',busy=True)
             _,rows=h.menu.rows(h.now)
             self.assertFalse(any(action and action[0]=='native_gcode' for _,action in rows))

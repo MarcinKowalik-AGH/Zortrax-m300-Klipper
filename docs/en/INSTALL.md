@@ -69,7 +69,7 @@ restart. For a different nginx port, pass `--port`; for an atypical nginx
 configuration, pass `--fluidd-root /absolute/path/to/current/fluidd`.
 
 Pad mesh revision `0.13.16.18-PAD-OLED` updates the host and compiled Fluidd.
-One `ZORTRAX_BED_MESH` now prepares both heaters and required native homing
+One `BED_MESH` now prepares both heaters and required native homing
 before measurement. The nozzle uses 180 °C as a minimum and preserves a
 hotter working temperature. Tune displays preparation and point progress,
 acceptance or a detailed rejection. The OLED opens the animated five-pad page
@@ -100,7 +100,7 @@ movement, heating or MCU flashing.
 Pad revision `0.13.16.20-PAD-CONTACT-MAP` adds separate contact rectangles
 and a live top view in Tune. Add the five `*_bounds` options from
 [the measured layout](LEVELING.md#measured-contact-rectangles) to the existing
-`[m300_pad_mesh]` section, restart, then run `ZORTRAX_BED_MESH PREVIEW=1`.
+`[m300_pad_mesh]` section, restart, then run `BED_MESH PREVIEW=1`.
 The update preserves existing physical geometry instead of guessing new
 bounds. The prior shared 60 mm square estimate is superseded by these
 measured ranges. Re-read the preview before physical probing. MCU firmware
@@ -205,11 +205,11 @@ externally started procedure, including native Klipper status after Fluidd
 homing. Check `ZORTRAX_MENU_STATUS` for
 `menu_revision: 0.13.16.13-BRIGHTNESS-MESH-BOUNDS`. This update also synchronizes
 the OLED/Fluidd brightness bars, preserves Back after saving and reports pad
-geometry against the current XY limits in `ZORTRAX_BED_MESH PREVIEW=1`. It
+geometry against the current XY limits in `BED_MESH PREVIEW=1`. It
 does not require another MCU flash when R14.15 is already installed.
 
 The pad mesh adapter uses configured physical pad dimensions and fits their reachable
-corners to existing XY limits, including X300/Y305. `ZORTRAX_BED_MESH PREVIEW=1`
+corners to existing XY limits, including X300/Y305. `BED_MESH PREVIEW=1`
 reports the actual plan and every adjusted corner. The macro now inherits
 `[m300_pad_mesh]` settings. `ZORTRAX_PAD_MESH_STATUS` reports
 `revision: 0.13.16.15-PAD-TRAVEL`. This is a host-only update; MCU R14.16
