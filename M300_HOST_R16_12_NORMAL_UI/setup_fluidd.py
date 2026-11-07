@@ -26,7 +26,8 @@ def category(name):
     if name.startswith('PID_') or name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'ZORTRAX_PAD_MESH_STATUS',
                                           'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE',
                                           'PAUSE', 'RESUME', 'CANCEL_PRINT',
-                                          'START_PRINT', 'END_PRINT', 'COOLDOWN'):
+                                          'START_PRINT', 'END_PRINT', 'FILAMENT_READY', 'M600', 'M601',
+                                          'PRINT_CONTROL_STATUS', 'PAUSE_TEMP_STATUS', 'COOLDOWN'):
         return 'Klipper'
     if name.startswith('ZORTRAX_'):
         return 'ZORTRAX M300'

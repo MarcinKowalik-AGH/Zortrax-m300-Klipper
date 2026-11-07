@@ -467,6 +467,9 @@ class M300Filament:
                 raise self._error('legacy job owns resources')
             native_pause = dict(identity=self._pause_identity(),
                                 target=self.hotend.get_temp(self.reactor.monotonic())[1])
+            control=self.printer.lookup_object('m300_print_control',None)
+            if control is not None:
+                native_pause['target']=control.material_begin()
         if operation == 'CHANGE':
             if native_pause is None and state not in ('PRINTING', 'PAUSING', 'PAUSED'):
                 raise self._error('CHANGE requires a printing or paused M02 job')
@@ -718,6 +721,9 @@ class M300Filament:
         self._cleanup_pending = False
         self._expected_target = None
         if self.native_lease is not None:self.native_lease.release()
+        if self._native_pause is not None and not self._parent_cancelled:
+            control=self.printer.lookup_object('m300_print_control',None)
+            if control is not None:control.material_complete(success)
         self._native_pause = None
 
     def _watchdog(self, now):
@@ -858,6 +864,10 @@ class M300Filament:
             del parameters['M']
         if parameters:
             raise self._error('M600 accepts no parameters; use CHANGE_FILAMENT for explicit values')
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None:
+            control.request_change(gcmd)
+            return
         self.start('CHANGE', gcmd=gcmd)
 
     def cmd_confirm(self, gcmd):

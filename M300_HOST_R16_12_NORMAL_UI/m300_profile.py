@@ -12,7 +12,13 @@ MACRO_RENAMES = {'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
 RETIRED_LEVEL_MACROS = {'TEST_M300_LEVEL', 'TEST_ZORTRAX_LEVEL'}
 LEVEL_WRAPPER = re.compile(
     r'ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=\{params\.TEMP\|default\((180|260)\)\|float\}')
-IDLE_GCODE = 'gcode:\n    TURN_OFF_HEATERS\n    ZORTRAX_IDLE_RELEASE_XYE\n'
+IDLE_GCODE = ('gcode:\n'
+    '    {% if printer.m300_print_control is defined and (printer.m300_print_control.paused or printer.m300_print_control.busy) %}\n'
+    '        ZORTRAX_PAUSE_IDLE\n'
+    '    {% else %}\n'
+    '        TURN_OFF_HEATERS\n'
+    '        ZORTRAX_IDLE_RELEASE_XYE\n'
+    '    {% endif %}\n')
 CHOICE_MACROS = {
     'gcode_macro ZORTRAX_LIGHT': ('light_mode', 'MODE'),
     'gcode_macro ZORTRAX_BUZZER': ('buzzer', 'STATE'),
@@ -96,10 +102,16 @@ def migrate_idle(block):
     match, commands = gcode_body(block)
     if match is None:
         return block.rstrip() + '\n' + IDLE_GCODE + '\n'
+    if 'ZORTRAX_PAUSE_IDLE' in block:return block
+    body=block[match.end():]
+    if match[1].strip():body='    '+match[1].strip()+'\n'+body
     if commands in (['TURN_OFF_HEATERS', 'M84'], ['TURN_OFF_HEATERS', 'M18']):
-        return re.sub(r'(?m)^([ \t]+)M(?:84|18)([ \t]*(?:[#;].*)?)$',
-                      r'\1ZORTRAX_IDLE_RELEASE_XYE\2', block, count=1)
-    return block
+        body=re.sub(r'(?m)^([ \t]+)M(?:84|18)([ \t]*(?:[#;].*)?)$',
+                    r'\1ZORTRAX_IDLE_RELEASE_XYE\2',body,count=1)
+    # Preserve a custom idle body verbatim inside the unprotected branch.
+    return (block[:match.start()]+'gcode:\n'+IDLE_GCODE.split('gcode:\n',1)[1].split(
+        '        TURN_OFF_HEATERS',1)[0]+''.join('    '+line+'\n' for line in body.rstrip().splitlines())+
+        '    {% endif %}\n')
 
 
 def convert_text(text, stock_xy=None):
@@ -284,7 +296,7 @@ LAYOUT_MARKER = '# M300 organized configuration v1'
 SERVICE_SECTIONS = frozenset(('m300_pad_mesh', 'm300_job', 'm300_filament',
     'm300_nvm', 'm300_sd', 'm300_maintenance', 'm300_calibration', 'm300_motion',
     'm300_menu', 'm300_material_ui', 'm300_menu_ui', 'm300_browser',
-    'm300_zcode_policy', 'm300_settings', 'm300_models', 'm300_print_ui'))
+    'm300_zcode_policy', 'm300_settings', 'm300_models', 'm300_print_ui', 'm300_print_control'))
 PID_MACROS = frozenset('gcode_macro '+name for name in
     ('PID_HOTEND', 'PID_BED', 'PID_SAVE', 'PID_STATUS'))
 

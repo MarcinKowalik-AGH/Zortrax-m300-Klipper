@@ -111,10 +111,11 @@ class M300Job:
         self.printer.register_event_handler('gcode:request_restart', self._restart)
         self.printer.register_event_handler('stepper_enable:motor_off', self._motor_off)
         self.printer.register_event_handler('homing:home_rails_begin', self._homing_begin)
-        self.gcode.register_command('START_PRINT', self.cmd_start,
-                                    desc='M300 checked file start; never arms MCU')
-        self.gcode.register_command('END_PRINT', self.cmd_end,
-                                    desc='M300 final file marker; completion waits for EOF and motion')
+        if not self.board.native_control:
+            self.gcode.register_command('START_PRINT', self.cmd_start,
+                                        desc='M300 checked file start; never arms MCU')
+            self.gcode.register_command('END_PRINT', self.cmd_end,
+                                        desc='M300 final file marker; completion waits for EOF and motion')
         self.gcode.register_command('ZORTRAX_JOB_STATUS', self.cmd_status,
                                     when_not_ready=True)
         self.gcode.register_command('ZORTRAX_RESUME_CLEAN_CONFIRM',

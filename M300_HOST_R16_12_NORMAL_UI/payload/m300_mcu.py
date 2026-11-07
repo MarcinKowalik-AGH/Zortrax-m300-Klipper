@@ -725,6 +725,13 @@ class M300MCU:
         motion = self.printer.lookup_object('m300_motion', None)
         if getattr(motion, 'normal_control', False):
             result['owners']['G28:native_backend'] = owner(motion.native_G28)
+        control=self.printer.lookup_object('m300_print_control',None)
+        if control is not None and hasattr(control,'base_pause'):
+            for name,handler in control.command_backends.items():
+                result['owners'][name+':native_backend']=owner(handler)
+            result['owners']['PAUSE:native_backend']=owner(control.base_pause)
+            result['owners']['RESUME:native_backend']=owner(control.base_resume)
+            result['owners']['G28:m300_backend']=owner(control.original_home)
         mux = getattr(self.gcode, 'mux_commands', {}).get('PID_CALIBRATE')
         if mux is not None:
             for heater, callback in mux[1].items():
