@@ -12,7 +12,7 @@ import os
 from .m300_error_codes import (CATALOG, CODES, KINDS, NONE, SHUTDOWN, GUARD,
                                classify, clean, descriptor, identity)
 
-REVISION = '0.13.16.22-OEM-ERRORS'
+REVISION = '0.13.16.23-ONE-PRESENTATION'
 STATE_FORMAT = ('m300_error_state code=%hu kind=%c fatal=%c source=%c'
                 ' native_id=%hu revision=%u')
 
@@ -122,8 +122,13 @@ class M300Errors:
                 return old  # A lifecycle consequence cannot replace the root.
             if old_specific and (source != 'mcu_local' or not new_specific):
                 return old
+        pad = self.printer.lookup_object('m300_pad_mesh', None)
+        context = {}
+        if (not fatal and pad is not None and getattr(pad, 'run_id', None)
+                and (pad.busy or source == 'm300_pad_mesh')):
+            context = dict(surface='pad_mesh', run_id=pad.run_id)
         if old and (old['code'], old['kind'], old['reason'], old['fatal']) == (
-                code, kind, reason, bool(fatal)):
+                code, kind, reason, bool(fatal)) and all(old.get(k) == context.get(k) for k in ('surface','run_id')):
             return old
         self.sequence += 1
         meta = descriptor(code, kind, fatal=fatal)
@@ -133,6 +138,10 @@ class M300Errors:
                             title=meta['title'], action=meta['action'],
                             icon='activity:' + meta['icon'])
         self.current['label'] = identity(self.current)
+        if context:
+            # Keep the typed root cause and error identity. Fluidd owns one
+            # result panel for the whole mesh run, including nested homing.
+            self.current.update(context)
         self.history.append(dict(self.current))
         logging.error('M300_ERROR %s', json.dumps(self.current, sort_keys=True))
         if sync:
@@ -167,6 +176,8 @@ class M300Errors:
             return  # Owner changes and the queued observer publish one notice.
         meta = descriptor(record['code'], record['kind'], fatal=record['fatal'])
         label = identity(record)
+        if code is None and record.get('surface') == 'pad_mesh':
+            record['view_revision'] = record.get('view_revision', 0) + 1
         logging.info('M300_ERROR_VIEW %s', json.dumps(dict(code=record['code'],
             kind=record['kind'], label=label, title=meta['title'], action=meta['action'],
             catalogue=code is not None), sort_keys=True))
@@ -174,23 +185,24 @@ class M300Errors:
         try:
             emit = lambda text: self.gcode.respond_raw('// action:' + text)
             emit('prompt_end')
-            emit('prompt_begin ZORTRAX M300 - ' + label)
-            emit('prompt_text ' + meta['title'])
-            if record.get('reason'):
-                emit('prompt_text Cause: ' + clean(record['reason']))
-            emit('prompt_text ' + meta['action'])
-            if code is not None:
-                emit('prompt_text Catalogue entry; no fault has been triggered.')
-                emit('prompt_text Detection: ' + meta['detection'])
-            elif record['fatal']:
-                emit('prompt_text Safety latch remains active. Fix the cause before FIRMWARE_RESTART.')
-            else:
-                emit('prompt_footer_button Acknowledge|ZORTRAX_ERROR_ACK ID=%s|primary' % record['id'])
-            if (self.live and not record['fatal']
-                    and self.printer.lookup_object('m300_settings', None) is not None):
-                target = 'error_catalog' if code is not None else 'errors'
-                emit('prompt_footer_button Back|ZORTRAX_UI_SHOW PAGE=%s|info' % target)
-            emit('prompt_show')
+            if code is not None or record.get('surface') != 'pad_mesh':
+                emit('prompt_begin ZORTRAX M300 - ' + label)
+                emit('prompt_text ' + meta['title'])
+                if record.get('reason'):
+                    emit('prompt_text Cause: ' + clean(record['reason']))
+                emit('prompt_text ' + meta['action'])
+                if code is not None:
+                    emit('prompt_text Catalogue entry; no fault has been triggered.')
+                    emit('prompt_text Detection: ' + meta['detection'])
+                elif record['fatal']:
+                    emit('prompt_text Safety latch remains active. Fix the cause before FIRMWARE_RESTART.')
+                else:
+                    emit('prompt_footer_button Acknowledge|ZORTRAX_ERROR_ACK ID=%s|primary' % record['id'])
+                if (self.live and not record['fatal']
+                        and self.printer.lookup_object('m300_settings', None) is not None):
+                    target = 'error_catalog' if code is not None else 'errors'
+                    emit('prompt_footer_button Back|ZORTRAX_UI_SHOW PAGE=%s|info' % target)
+                emit('prompt_show')
             if code is None:
                 self._presented_id = record['id']
             oled = self.printer.lookup_object('m300_oled', None)

@@ -143,6 +143,12 @@ def convert_text(text, stock_xy=None):
             # The M300 native fan adapter supplies the 5 C hysteresis and
             # ignores heater target; retain native pin/PWM ownership.
             block = set_option(block, 'heater_temp', '50')
+        elif section == 'm300_pad_mesh':
+            # Replace the previous stock bed-span threshold. This is the
+            # complete 25-point surface range, not probe-repeat tolerance.
+            span = option(block, 'max_bed_span')
+            if span is not None and float(span) == .5:
+                block = set_option(block, 'max_bed_span', '0.8')
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
             indent = re.search(r'(?m)^([ \t]*)\{% set _m300_pad_args = \[\] %\}',block)
             if indent:

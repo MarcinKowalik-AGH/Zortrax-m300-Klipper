@@ -223,7 +223,10 @@ class M300PadMesh:
             raise config.error(str(exc))
         self.nominal_points = self.points
         self.max_pad_spread = config.getfloat('max_pad_spread', None, above=0., maxval=.75)
-        self.max_bed_span = config.getfloat('max_bed_span', .5, above=0., maxval=.75)
+        self.max_bed_span = config.getfloat('max_bed_span', .8, above=0., maxval=1.5)
+        if (not math.isfinite(self.max_bed_span)
+                or self.max_pad_spread is not None and not math.isfinite(self.max_pad_spread)):
+            raise config.error('pad spread and bed span limits must be finite')
         self.hotend_temperature = config.getfloat('hotend_temperature', 180., minval=180.)
         self.bed_temperature = config.getfloat('bed_temperature', 60., above=0.)
         self.heat_timeout = config.getfloat('heat_timeout', 1800., minval=60., maxval=3600.)
@@ -236,6 +239,7 @@ class M300PadMesh:
         self.report = None
         self.run_id = None
         self.points_measured = 0
+        self.measurements = []
         self.last_error = ''
         self.last_attempt = None
         for event in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
@@ -244,6 +248,15 @@ class M300PadMesh:
         owner = self
 
         class PadProbePoints(probe.ProbePointsHelper):
+            def _raise_tool(self, is_first=False):
+                if not is_first and owner.busy and owner.phase == 'PROBING':
+                    # Read the pinned native session's completed medians.
+                    # Never drain its result queue or count individual taps
+                    # (including samples discarded by native retry logic).
+                    session = self.printer.lookup_object('probe').probe_session
+                    owner._update_measurements(session.results)
+                super()._raise_tool(is_first)
+
             def _move_next(self, probe_num):
                 owner.points_measured = probe_num
                 owner._check_clear()
@@ -318,12 +331,10 @@ class M300PadMesh:
                     or target != current_target or abs(measured - target) > 3.):
                 raise self._error('temperature is no longer stable for ' + name)
 
-    def _capture(self, results):
-        self._check_clear()
-        self.points_measured = len(results)
-        if len(results) != len(self.points):
-            raise self._error('incomplete probe result')
-        readings = []
+    def _update_measurements(self, results):
+        if len(results) > len(self.points):
+            raise self._error('too many probe results')
+        measured = []
         for (x, y), result in zip(self.points, results):
             if (not math.isclose(result.bed_x, x, abs_tol=.01)
                     or not math.isclose(result.bed_y, y, abs_tol=.01)
@@ -332,7 +343,16 @@ class M300PadMesh:
             z = result.bed_z - self.shift
             if not -.75 <= z <= .75:
                 raise self._error('contact lies outside the usable Z search range')
-            readings.append(z)
+            measured.append([x, y, z])
+        self.measurements = measured
+        self.points_measured = len(measured)
+
+    def _capture(self, results):
+        self._check_clear()
+        if len(results) != len(self.points):
+            raise self._error('incomplete probe result')
+        self._update_measurements(results)
+        readings = [point[2] for point in self.measurements]
         summaries = []
         for index in range(5):
             start = index * len(PATTERN)
@@ -348,7 +368,7 @@ class M300PadMesh:
         for index,pad in enumerate(summaries):
             if self.max_pad_spread is not None and pad['spread'] > self.max_pad_spread:
                 raise self._error('pad %d is uneven or has inconsistent contact' % index)
-        if span > self.max_bed_span:
+        if span > self.max_bed_span and not math.isclose(span, self.max_bed_span, rel_tol=0., abs_tol=1e-9):
             raise self._error('bed span is too large: %.4f mm exceeds max_bed_span %.4f mm; '
                               'run Autocalibration first. No new mesh profile was created' %
                               (span,self.max_bed_span))
@@ -531,6 +551,7 @@ class M300PadMesh:
         self.run_id = os.urandom(12).hex()
         token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
+        self.measurements = []
         self.samples = None
         self._notify_view()
         shifted = completed = False
@@ -625,13 +646,14 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(revision='0.13.16.20-PAD-CONTACT-MAP', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.23-PAD-LIVE-HEIGHTS', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
                     plan_matches_run=getattr(self,'run_points',None) == self.points,
+                    measurements=[list(point) for point in getattr(self,'measurements',())],
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
-                    last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.5),
+                    last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.8),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
                     contact_regions=regions, probe_points=[list(point) for point in self.points],
                     fit_travel=getattr(self,'fit_travel',True),
