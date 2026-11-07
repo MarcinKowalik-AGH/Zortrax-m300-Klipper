@@ -89,6 +89,8 @@ def classify(reason, source='', fatal=False):
                                 'pc7', 'no release', 'contact remained', 'nozzle contact',
                                 'no trigger on stepper z', 'endstop stepper z still triggered',
                                 'native probe returned an invalid position',
+                                'contact lies outside the usable z search range',
+                                'outside native z search window',
                                 'probe did not', 'probe triggered', 'precision z reference failed')):
         return 42, NONE
     if 'calibration' in origin or any(s in text for s in

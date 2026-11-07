@@ -41,7 +41,7 @@ class PadLiveHeightsTests(unittest.TestCase):
             results = self.results(mesh,[.1,.2])
             if fault=='xy':results[-1].bed_x += 1.
             elif fault=='nonfinite':results[-1].bed_z = float('nan')
-            elif fault=='range':results[-1].bed_z = 2.
+            elif fault=='range':results[-1].bed_z = 7.
             else:results = self.results(mesh,[0.]*25)+[results[0]]
             with self.assertRaises(ValueError):mesh._update_measurements(results)
             self.assertEqual(mesh.measurements,original)

@@ -240,6 +240,7 @@ class M300PadMesh:
         self.run_id = None
         self.points_measured = 0
         self.measurements = []
+        self.rejected_contact = None
         self.last_error = ''
         self.last_attempt = None
         for event in ('klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'):
@@ -335,14 +336,24 @@ class M300PadMesh:
         if len(results) > len(self.points):
             raise self._error('too many probe results')
         measured = []
-        for (x, y), result in zip(self.points, results):
+        low, high = getattr(self, 'probe_bounds', (self.shift - SEARCH_MARGIN,
+                                                  self.shift + CLEARANCE))
+        minimum, maximum = low - self.shift, high - self.shift
+        for index, ((x, y), result) in enumerate(zip(self.points, results)):
             if (not math.isclose(result.bed_x, x, abs_tol=.01)
                     or not math.isclose(result.bed_y, y, abs_tol=.01)
                     or not math.isfinite(result.bed_z)):
                 raise self._error('probe result does not match the requested pad position')
             z = result.bed_z - self.shift
-            if not -.75 <= z <= .75:
-                raise self._error('contact lies outside the usable Z search range')
+            # A contact height is relative to the homing datum. Its absolute
+            # value is not the bed's max-minus-min span. Validate the same
+            # bounded native probe envelope, without extending any move.
+            if not minimum - 1e-9 <= z <= maximum + 1e-9:
+                self.rejected_contact = dict(run_id=getattr(self,'run_id',None),
+                    point=index+1, pad=PAD_NAMES[index//5], x=x, y=y, z=z,
+                    minimum_z=minimum, maximum_z=maximum)
+                raise self._error('contact X%.3f Y%.3f Z%.4f mm is outside native Z '
+                                  'search window [%.4f, %.4f] mm' % (x,y,z,minimum,maximum))
             measured.append([x, y, z])
         self.measurements = measured
         self.points_measured = len(measured)
@@ -405,6 +416,7 @@ class M300PadMesh:
             raise self._error('PC7 must own one native Z rail with its configured minimum')
         self.shift = low[2] + SEARCH_MARGIN
         self.horizontal_z = CLEARANCE + self.shift
+        self.probe_bounds = (native_probe.homing_helper.z_min_position, self.horizontal_z)
         if not low[2] <= self.horizontal_z <= high[2]:
             raise self._error('configured Z travel cannot provide probe clearance')
         self.motion = self.printer.lookup_object('m300_motion')
@@ -552,6 +564,7 @@ class M300PadMesh:
         token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
         self.measurements = []
+        self.rejected_contact = None
         self.samples = None
         self._notify_view()
         shifted = completed = False
@@ -646,12 +659,14 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(revision='0.13.16.24-PAD-TEMPERATURES', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.25-PAD-NATIVE-WINDOW', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
                     plan_matches_run=getattr(self,'run_points',None) == self.points,
                     measurements=[list(point) for point in getattr(self,'measurements',())],
+                    rejected_contact=getattr(self,'rejected_contact',None),
+                    native_contact_window=[-SEARCH_MARGIN,CLEARANCE],
                     total_points=len(self.points), last_error=getattr(self,'last_error',''),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.8),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),

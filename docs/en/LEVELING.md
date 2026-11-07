@@ -480,7 +480,27 @@ stock limit is now 0.8 mm: 0.735 mm passes, 0.8025 mm still fails. The installer
 migrates an explicit previous stock `max_bed_span: 0.5` to `0.8`; custom values
 remain unchanged. Configurations without that option use the new default.
 This limit does not change the 0.05 mm three-tap repeatability tolerance,
-native probing speeds, clearance, or the guarded ±0.75 mm contact search.
+native probing speeds, clearance, or the guarded native contact search.
+
+### Contact height versus surface span
+
+The former ±0.75 mm absolute-height post-check was independent of the mesh's
+0.8 mm full-surface span. It could reject a completed, valid native contact
+below -0.75 mm even when all surface heights shared a common homing offset
+and their max-minus-min range remained acceptable. It is replaced by a check
+against the actual native probing envelope: the configured native Z minimum
+through the existing clearance position, expressed in the unshifted frame.
+With the current 1 mm coordinate shift and 5 mm clearance this is -1..5 mm.
+This is result validation, not permission for a deeper or longer probe move:
+the native descent still ends at its existing minimum, 1 mm below the datum.
+An open probe, missing contact, closed PC7 before movement, wrong XY result,
+invalid reading or excessive final surface span still rejects the run.
+
+Out-of-envelope results report the exact XY, contact Z and permitted native
+window, retain `rejected_contact` in status, and use shared probe error #042.
+Partial accepted contacts remain available; an incomplete/rejected run never
+creates a new profile. The old screenshot alone does not reveal the height
+of the first rejected point.
 
 Tune shows each completed contact Z immediately, using the pinned native
 probe session's completed medians without draining its queue or counting
