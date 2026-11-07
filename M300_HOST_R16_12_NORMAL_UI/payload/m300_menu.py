@@ -638,6 +638,7 @@ class M300Menu:
                 ('Test hotend fan (5 s)', ('service', 'FAN_HOTEND')),
                 ('Stop service / heat off', ('service_stop',))])
         if self.page == 'bed_mesh' and native:
+            back = [('Back', ('page', 'klipper'))]
             mesh = self.printer.lookup_object('m300_pad_mesh', None)
             if mesh is None:
                 return 'Bed mesh', back+[('Native pad mesh is not configured', None)]
