@@ -11,6 +11,11 @@ import zlib
 
 Symbol = namedtuple('Symbol', 'key animated')
 PREFIX = 'activity:'
+HOMING_ICONS = {'HOME_X':'homing-xy', 'HOME_Y':'homing-xy', 'HOME_XY':'homing-xy',
+                'HOME_Z':'homing-z', 'HOME_ALL':'homing-all'}
+HOMING_ACTIONS = {'motion_home_x':'HOME_X', 'motion_home_y':'HOME_Y',
+                  'motion_home_xy':'HOME_XY', 'motion_home_z':'HOME_Z',
+                  'motion_home_xyz':'HOME_ALL'}
 TERMINAL = frozenset(('COMPLETE', 'CANCELLED', 'CANCELLING', 'FAULT', 'ERROR', 'FAILED', 'IDLE'))
 FAULT_STATES = frozenset(('FAULT', 'ERROR', 'FAILED', 'SHUTDOWN'))
 
@@ -99,6 +104,8 @@ def procedure_symbol(owner, status):
         return None
     if status.get('can_confirm_resume_clean') is True or state in ('WAIT_CLEAN', 'WAIT_CLEAN_NOZZLE'):
         return symbol('clean_nozzle', True)
+    if owner == 'm300_motion' and status.get('busy') is True and status.get('operation') in HOMING_ICONS:
+        return Symbol(HOMING_ICONS[status['operation']], True)
     if owner == 'm300_pad_mesh':
         return symbol('bed_mesh', status.get('busy') is True)
     if owner == 'm300_maintenance' and status.get('operation') in ('PLATFORM_UP', 'PLATFORM_DOWN'):
@@ -163,6 +170,8 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
     if isinstance(action, tuple) and action:
         kind = action[0]
         target = action[1] if len(action)>1 else None
+        if kind in HOMING_ACTIONS:
+            return Symbol(HOMING_ICONS[HOMING_ACTIONS[kind]], True)
         if kind == 'page' and target in PAGE_SYMBOLS:
             return Symbol(PAGE_SYMBOLS[target], False)
         if kind == 'browse' and target == 'sd':
@@ -178,6 +187,10 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if kind == 'native_gcode':
             command = str(target).strip().upper()
             name = command.split(maxsplit=1)[0] if command else ''
+            homing = {'ZORTRAX_HOME_XY':'HOME_XY', 'ZORTRAX_HOME_Z':'HOME_Z',
+                      'ZORTRAX_HOME_ALL':'HOME_ALL'}.get(name)
+            if homing:
+                return Symbol(HOMING_ICONS[homing], True)
             if name in ('ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
                 return symbol('bed_mesh')
             if name in ('ZORTRAX_HEAT', 'M104', 'M109'):

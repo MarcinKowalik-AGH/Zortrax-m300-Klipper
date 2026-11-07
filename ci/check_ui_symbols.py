@@ -51,7 +51,7 @@ class ArtworkContracts(unittest.TestCase):
     def test_project_menu_marks_have_native_frames_and_matching_animation_exports(self):
         folder=OUT.parent/'menu-symbols'
         spec=json.loads((HOST_FRAMES.parent/'m300_menu_sprites.json').read_text())
-        self.assertEqual(set(spec['symbols']),{'project-klipper','project-zortrax'})
+        self.assertEqual(set(spec['symbols']),{'project-klipper','project-zortrax','homing-xy','homing-z','homing-all'})
         for name,record in spec['symbols'].items():
             self.assertEqual((record['width'],record['height'],record['frame_ms']),(50,50,500))
             frames=[zlib.decompress(base64.b64decode(f['zlib_b64'])) for f in record['frames']]

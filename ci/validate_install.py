@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import tempfile
 
 from project import ROOT, fresh_directory, stage_host_update
 
@@ -15,7 +16,10 @@ def main():
     parser.add_argument('--baseline', choices=('current', 'r153'), default='current')
     parser.add_argument('--organize-config', action='store_true')
     args = parser.parse_args()
-    stage = stage_host_update(ROOT / '.ci/install-package')
+    # Each migration scenario owns its package snapshot; never reuse a
+    # mutable staging path left by another validator or an interrupted run.
+    stage_root = Path(tempfile.mkdtemp(prefix='install-package-', dir=ROOT / '.ci'))
+    stage = stage_host_update(stage_root / 'host')
     spec = importlib.util.spec_from_file_location('real_m300_installer', stage / 'install.py')
     installer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(installer)

@@ -13,12 +13,13 @@ import math
 from pathlib import Path
 import zlib
 
-from .m300_activity_graphics import ActivityGraphics, PREFIX
+from .m300_activity_graphics import ActivityGraphics, PREFIX, HOMING_ICONS
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
 HOMING_HOURGLASS = '0x0801c2b8'
 # Project marks share the activity decoder and its bounded lazy frame cache.
 PROJECT_MENU_ICONS = frozenset(('project-klipper', 'project-zortrax'))
+MENU_SYMBOLS = PROJECT_MENU_ICONS | frozenset(HOMING_ICONS.values())
 
 MAIN = {'klipper':'project-klipper','zortrax':'project-zortrax',
         'models':'0x0801c690','maintenance':'0x0801c958',
@@ -68,10 +69,10 @@ class OEMGraphics:
             if not hasattr(self, 'activity'):
                 self.activity = ActivityGraphics()
             return self.activity.get(addr, now)
-        if addr in PROJECT_MENU_ICONS:
+        if addr in MENU_SYMBOLS:
             if not hasattr(self, 'project'):
                 self.project = ActivityGraphics(
-                    Path(__file__).with_name('m300_menu_sprites.json'), expected_symbols=2)
+                    Path(__file__).with_name('m300_menu_sprites.json'), expected_symbols=5)
             return self.project.get(addr, now)
         desc=self.frames.get(addr)
         if desc is None:
@@ -166,8 +167,8 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
                 return '0x0801cb24' if action[1]<0 else '0x0801cc24'
             if action[0]=='native_gcode':
                 icon={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
-                      'ZORTRAX_HOME_XY':HOMING_HOURGLASS,'ZORTRAX_HOME_Z':HOMING_HOURGLASS,
-                      'ZORTRAX_HOME_ALL':HOMING_HOURGLASS,
+                      'ZORTRAX_HOME_XY':HOMING_ICONS['HOME_XY'],'ZORTRAX_HOME_Z':HOMING_ICONS['HOME_Z'],
+                      'ZORTRAX_HOME_ALL':HOMING_ICONS['HOME_ALL'],
                       'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}.get(action[1])
                 if icon:return icon
             if action[0]=='page' and len(action)>1:

@@ -630,7 +630,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                         oled._render(h.now)
                         before = oled._render_wire
                         oled._render(h.now + .5)
-                        self.assertEqual(ui.last_sprite, '0x0801c2b8')
+                        self.assertEqual(ui.last_sprite, {'xy':'homing-xy','z':'homing-z','xyz':'homing-all'}[axes])
                         self.assertNotEqual(before, oled._render_wire)
                     native_home(params)
 
@@ -642,7 +642,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 selected = next(i for i, row in enumerate(rows) if row[0] == label)
                 action = rows[selected][1]
                 self.assertEqual(action, ('native_gcode', command))
-                self.assertEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
+                self.assertNotEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
                                  ui.get_oem_sprite('m04', rows, selected, h.now + .5))
                 if axes in ('xy', 'z'):
                     menu.select(action, h.now)

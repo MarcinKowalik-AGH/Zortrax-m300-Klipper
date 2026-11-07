@@ -263,7 +263,7 @@ center_pad_width: 50.0
 edge_margin: 5.0
 fit_travel: True
 travel_margin: 1.0
-hotend_temperature: 180.0
+hotend_temperature: 260.0
 bed_temperature: 60.0
 heat_timeout: 1800.0
 ~~~
@@ -295,7 +295,7 @@ Its parameter fields allow individual corrections without editing Python:
 | `PREVIEW` | 0 | Set to 1 to show geometry without homing, heating or moving |
 | `FIT_TRAVEL` | 1 | Clip corners to the reachable part of their own pad |
 | `TRAVEL_MARGIN` | 1 | Margin inside XY travel when fitting, 0–5 mm; 0 retains native X0/Y0 |
-| `HOTEND_TEMP` | Minimum 180 | Minimum nozzle target; a hotter working temperature is retained |
+| `HOTEND_TEMP` | Default 260; minimum 180 | Requested mesh nozzle target; a hotter working temperature is retained |
 | `BED_TEMP` | Active bed target, otherwise 60 | Bed temperature for the measurement, °C |
 
 Clicking the **macro name** in Fluidd sends `ZORTRAX_BED_MESH` without arguments.
@@ -405,13 +405,18 @@ XY; starts both native heaters together; waits for stable temperatures; and
 performs missing native homing before probing. A persistent closed PC7 or
 insufficient logical Z travel aborts before a horizontal move.
 
-The nozzle setting is a **minimum**, normally 180 °C. An active 240 °C target
-is retained. An already-hot idle nozzle is held at its current temperature,
-including after G28 restores its former zero target. A nozzle significantly
-hotter than a lower target is held rather than cooled to 180 °C; ordinary PID
-overshoot within 3 °C retains its working target. The configured native homing
-minimum also applies. The existing bed target is retained unless `BED_TEMP`
-overrides it; an off bed uses `bed_temperature` (60 °C by default).
+The default mesh nozzle target is **260 °C**. `HOTEND_TEMP` explicitly selects
+another mesh target, with the independent native homing minimum of 180 °C
+still applying. A hotter working target and an already-hot idle nozzle are
+retained, including after G28 restores its former zero target. Before this
+default change, a 253.2 °C idle nozzle could therefore become a 253.2 °C target
+instead of being reheated to 260 °C. Ordinary PID overshoot within 3 °C retains
+the working target. The installer upgrades the previous stock mesh setting
+`hotend_temperature: 180` to `260`, preserving other custom settings and the
+ordinary G28 policy. The existing bed target is retained unless `BED_TEMP`
+overrides it; an off bed uses `bed_temperature` (60 °C by default). Tune shows
+actual nozzle/bed readings beside these targets through existing native
+Moonraker objects, without additional heater or MCU requests.
 
 Use the same temperatures for later comparisons. For example, the operator's
 conservative 25-point plan with a 60 °C bed:

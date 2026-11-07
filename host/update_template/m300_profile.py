@@ -149,6 +149,9 @@ def convert_text(text, stock_xy=None):
             span = option(block, 'max_bed_span')
             if span is not None and float(span) == .5:
                 block = set_option(block, 'max_bed_span', '0.8')
+            hotend = option(block, 'hotend_temperature')
+            if hotend is not None and float(hotend) == 180.:
+                block = set_option(block, 'hotend_temperature', '260')
         elif section == 'gcode_macro ZORTRAX_BED_MESH':
             indent = re.search(r'(?m)^([ \t]*)\{% set _m300_pad_args = \[\] %\}',block)
             if indent:

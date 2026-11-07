@@ -23,11 +23,11 @@ GEOMETRY_DEFAULTS.update((name + '_' + axis, value)
                          for axis, value in zip('xy', point))
 
 
-def preparation_targets(temperatures, overrides, minimum_hotend=180., default_bed=60.):
+def preparation_targets(temperatures, overrides, minimum_hotend=180., default_bed=60., default_hotend=None):
     """180 C is a floor; retain a hotter working target or an already-hot idle nozzle."""
     measured, current = temperatures['hotend']
     bed_current = temperatures['bed'][1]
-    requested = overrides.get('HOTEND_TEMP', minimum_hotend)
+    requested = overrides.get('HOTEND_TEMP', minimum_hotend if default_hotend is None else default_hotend)
     bed = overrides.get('BED_TEMP', bed_current if bed_current > 0. else default_bed)
     values = (measured, current, bed_current, requested, bed, minimum_hotend, default_bed)
     if (not all(math.isfinite(value) for value in values) or requested < 180. or bed <= 0.):
@@ -227,7 +227,7 @@ class M300PadMesh:
         if (not math.isfinite(self.max_bed_span)
                 or self.max_pad_spread is not None and not math.isfinite(self.max_pad_spread)):
             raise config.error('pad spread and bed span limits must be finite')
-        self.hotend_temperature = config.getfloat('hotend_temperature', 180., minval=180.)
+        self.hotend_temperature = config.getfloat('hotend_temperature', 260., minval=180.)
         self.bed_temperature = config.getfloat('bed_temperature', 60., above=0.)
         self.heat_timeout = config.getfloat('heat_timeout', 1800., minval=60., maxval=3600.)
         if not all(math.isfinite(value) for value in (
@@ -414,8 +414,8 @@ class M300PadMesh:
         self.previous_targets = {name:values[1] for name,values in temperatures.items()}
         try:
             self.targets = preparation_targets(temperatures, getattr(self,'temperature_params',{}),
-                max(getattr(self,'hotend_temperature',180.),self.motion.z_home_hotend_target),
-                getattr(self,'bed_temperature',60.))
+                max(180.,self.motion.z_home_hotend_target),
+                getattr(self,'bed_temperature',60.),getattr(self,'hotend_temperature',260.))
         except ValueError as exc:
             raise self._error(str(exc))
         for name in ('hotend','bed'):
@@ -646,7 +646,7 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(revision='0.13.16.23-PAD-LIVE-HEIGHTS', state=self.state, busy=self.busy, result=self.report,
+        return dict(revision='0.13.16.24-PAD-TEMPERATURES', state=self.state, busy=self.busy, result=self.report,
                     operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
                     phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
                     run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),

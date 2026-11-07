@@ -19,7 +19,8 @@ external homing from native Klipper status returns to that status screen.
 Fluidd's standard X, Y, XY,
 Z and All home buttons show the matching busy state and phase text as a
 tooltip, including starts from OLED and macros. Homing does not open a modal
-dialog. OLED keeps the original four-frame M300 hourglass.
+dialog. OLED uses distinct four-frame XY, Z and ALL homing symbols, both
+on the selected menu entry and during the matching native procedure.
 Print start and Autocalibration keep their own procedure screens.
 See [the symbol inventory and draft sheet](UI_SYMBOLS.md).
 
@@ -75,9 +76,18 @@ error view. Unrelated errors and native fatal/shutdown notices remain visible.
 Revision `0.13.16.17-PAD-PREPARE` includes the preparation in that live run:
 Tune shows simultaneous heating, native homing, temperature stabilization and
 then the 25-point progress. Nozzle/bed targets are displayed. The nozzle uses
-180 °C as a floor and retains a hotter working temperature; a previously off
+260 °C as the default mesh target and retains a hotter working temperature;
+an explicit `HOTEND_TEMP` remains supported with a 180 °C floor. Ordinary
+G28 keeps its independent 180 °C minimum. A previously off
 bed defaults to 60 °C. `HOTEND_TEMP` and `BED_TEMP` are editable macro fields.
-`PREVIEW=1` still never heats or homes. No firmware flash is required.
+`PREVIEW=1` still never heats or homes. The panel displays both native actual
+temperatures and the measurement targets for nozzle and bed, through the
+existing subscription. No firmware flash is required.
+
+Bed Mesh belongs to the Klipper OLED submenu and Fluidd macro group. The
+`ZORTRAX_BED_MESH` command spelling remains compatible with existing scripts;
+it does not add an OEM Zortrax menu procedure. Flat-frame K/Z marks use the
+same 50×50 geometry as the activity icons, without the former triangular roof.
 
 Revision `0.13.16.18-PAD-OLED` binds this same live run to the physical panel.
 Fluidd quick-button, parameter-form and console starts all open the Bed mesh

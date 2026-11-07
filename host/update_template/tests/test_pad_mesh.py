@@ -19,6 +19,8 @@ class PadMeshTests(unittest.TestCase):
         mesh.busy,mesh.state,mesh.report=False,'IDLE',None
         mesh.phase,mesh.cancelled='IDLE',False
         mesh.heat_timeout=60.
+        # Exercise the still-supported explicit 180 C preparation override.
+        mesh.hotend_temperature=180.
         mesh.max_bed_span,mesh.max_pad_spread=.5,None
         events,clock,freeze = [],[0.],[False]
         limits = dict(homed_axes=homed, axis_minimum=(0.,0.,0.), axis_maximum=(300.,305.,315.))
@@ -768,7 +770,7 @@ class PadMeshTests(unittest.TestCase):
         rendered=template.render(printer=NS(m300_pad_mesh=object()),params={})
         gcode.run_script_from_command(rendered)
         self.assertEqual(commands[-1],{})
-        self.assertEqual(category('ZORTRAX_BED_MESH'), 'ZORTRAX M300')
+        self.assertEqual(category('ZORTRAX_BED_MESH'), 'Klipper')
 
     def test_actual_preflight_rejects_a_300_mm_limit_before_315_mm_probing(self):
         mesh = M300PadMesh.__new__(M300PadMesh)

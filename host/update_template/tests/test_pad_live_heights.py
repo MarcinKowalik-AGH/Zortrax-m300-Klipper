@@ -62,6 +62,7 @@ class PadLiveHeightsTests(unittest.TestCase):
         with patch.dict(sys.modules,{'payload.probe':NS(ProbePointsHelper=Points)}):
             mesh = M300PadMesh(config)
         self.assertEqual(mesh.max_bed_span,.8)
+        self.assertEqual(mesh.hotend_temperature,260.)
         mesh.busy,mesh.phase,mesh.shift=True,'PROBING',1.
         session.results = self.results(mesh,[.1,.2])
         queue = session.results

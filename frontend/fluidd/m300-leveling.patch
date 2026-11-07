@@ -1,5 +1,5 @@
 diff --git a/components.d.ts b/components.d.ts
-index 61dc457..1b5f964 100644
+index 61dc457..97cbc50 100644
 --- a/components.d.ts
 +++ b/components.d.ts
 @@ -65,6 +65,8 @@ declare module 'vue' {
@@ -11,6 +11,90 @@ index 61dc457..1b5f964 100644
      ManualProbeDialog: typeof import('./src/components/common/ManualProbeDialog.vue')['default']
      PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
      PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
+@@ -80,83 +82,8 @@ declare module 'vue' {
+     SystemPrinters: typeof import('./src/components/common/SystemPrinters.vue')['default']
+     UpdatingDialog: typeof import('./src/components/common/UpdatingDialog.vue')['default']
+     VAlert: typeof import('vuetify/lib')['VAlert']
+-    VApp: typeof import('vuetify/lib')['VApp']
+-    VAppBar: typeof import('vuetify/lib')['VAppBar']
+-    VBadge: typeof import('vuetify/lib')['VBadge']
+-    VBreadcrumbs: typeof import('vuetify/lib')['VBreadcrumbs']
+-    VBreadcrumbsItem: typeof import('vuetify/lib')['VBreadcrumbsItem']
+-    VBtn: typeof import('vuetify/lib')['VBtn']
+-    VBtnToggle: typeof import('vuetify/lib')['VBtnToggle']
+-    VCard: typeof import('vuetify/lib')['VCard']
+-    VCardActions: typeof import('vuetify/lib')['VCardActions']
+-    VCardSubtitle: typeof import('vuetify/lib')['VCardSubtitle']
+     VCardText: typeof import('vuetify/lib')['VCardText']
+-    VCardTitle: typeof import('vuetify/lib')['VCardTitle']
+-    VCheckbox: typeof import('vuetify/lib')['VCheckbox']
+-    VChip: typeof import('vuetify/lib')['VChip']
+-    VCol: typeof import('vuetify/lib')['VCol']
+-    VColorPicker: typeof import('vuetify/lib')['VColorPicker']
+-    VCombobox: typeof import('vuetify/lib')['VCombobox']
+-    VContainer: typeof import('vuetify/lib')['VContainer']
+-    VDataTable: typeof import('vuetify/lib')['VDataTable']
+-    VDialog: typeof import('vuetify/lib')['VDialog']
+-    VDivider: typeof import('vuetify/lib')['VDivider']
+-    VExpandTransition: typeof import('vuetify/lib')['VExpandTransition']
+-    VExpansionPanel: typeof import('vuetify/lib')['VExpansionPanel']
+-    VExpansionPanelContent: typeof import('vuetify/lib')['VExpansionPanelContent']
+-    VExpansionPanelHeader: typeof import('vuetify/lib')['VExpansionPanelHeader']
+-    VExpansionPanels: typeof import('vuetify/lib')['VExpansionPanels']
+-    VFadeTransition: typeof import('vuetify/lib')['VFadeTransition']
+-    VFooter: typeof import('vuetify/lib')['VFooter']
+-    VForm: typeof import('vuetify/lib')['VForm']
+-    VIcon: typeof import('vuetify/lib')['VIcon']
+-    VImg: typeof import('vuetify/lib')['VImg']
+-    VItemGroup: typeof import('vuetify/lib')['VItemGroup']
+-    VLayout: typeof import('vuetify/lib')['VLayout']
+-    VList: typeof import('vuetify/lib')['VList']
+-    VListGroup: typeof import('vuetify/lib')['VListGroup']
+-    VListItem: typeof import('vuetify/lib')['VListItem']
+-    VListItemAction: typeof import('vuetify/lib')['VListItemAction']
+-    VListItemContent: typeof import('vuetify/lib')['VListItemContent']
+-    VListItemGroup: typeof import('vuetify/lib')['VListItemGroup']
+-    VListItemIcon: typeof import('vuetify/lib')['VListItemIcon']
+-    VListItemSubtitle: typeof import('vuetify/lib')['VListItemSubtitle']
+-    VListItemTitle: typeof import('vuetify/lib')['VListItemTitle']
+-    VMain: typeof import('vuetify/lib')['VMain']
+-    VMenu: typeof import('vuetify/lib')['VMenu']
+-    VNavigationDrawer: typeof import('vuetify/lib')['VNavigationDrawer']
+-    VOverlay: typeof import('vuetify/lib')['VOverlay']
+-    VProgressCircular: typeof import('vuetify/lib')['VProgressCircular']
+     VProgressLinear: typeof import('vuetify/lib')['VProgressLinear']
+-    VRadio: typeof import('vuetify/lib')['VRadio']
+-    VRadioGroup: typeof import('vuetify/lib')['VRadioGroup']
+-    VRow: typeof import('vuetify/lib')['VRow']
+-    VSelect: typeof import('vuetify/lib')['VSelect']
+-    VSheet: typeof import('vuetify/lib')['VSheet']
+-    VSimpleCheckbox: typeof import('vuetify/lib')['VSimpleCheckbox']
+     VSimpleTable: typeof import('vuetify/lib')['VSimpleTable']
+-    VSlider: typeof import('vuetify/lib')['VSlider']
+-    VSnackbar: typeof import('vuetify/lib')['VSnackbar']
+-    VSpacer: typeof import('vuetify/lib')['VSpacer']
+-    VStepper: typeof import('vuetify/lib')['VStepper']
+-    VStepperContent: typeof import('vuetify/lib')['VStepperContent']
+-    VStepperHeader: typeof import('vuetify/lib')['VStepperHeader']
+-    VStepperItems: typeof import('vuetify/lib')['VStepperItems']
+-    VStepperStep: typeof import('vuetify/lib')['VStepperStep']
+-    VSubheader: typeof import('vuetify/lib')['VSubheader']
+-    VSwitch: typeof import('vuetify/lib')['VSwitch']
+-    VTab: typeof import('vuetify/lib')['VTab']
+-    VTabItem: typeof import('vuetify/lib')['VTabItem']
+-    VTabs: typeof import('vuetify/lib')['VTabs']
+-    VTabsItems: typeof import('vuetify/lib')['VTabsItems']
+-    VTextarea: typeof import('vuetify/lib')['VTextarea']
+-    VTextField: typeof import('vuetify/lib')['VTextField']
+-    VTimeline: typeof import('vuetify/lib')['VTimeline']
+-    VTimelineItem: typeof import('vuetify/lib')['VTimelineItem']
+-    VToolbar: typeof import('vuetify/lib')['VToolbar']
+-    VToolbarItems: typeof import('vuetify/lib')['VToolbarItems']
+-    VToolbarTitle: typeof import('vuetify/lib')['VToolbarTitle']
+-    VTooltip: typeof import('vuetify/lib')['VTooltip']
+-    VVirtualScroll: typeof import('vuetify/lib')['VVirtualScroll']
+   }
+ }
 diff --git a/src/App.vue b/src/App.vue
 index de67b82..bfe5c31 100644
 --- a/src/App.vue
@@ -991,10 +1075,10 @@ index 0000000..da4f18f
 +</style>
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
-index 0000000..2bad4a4
+index 0000000..ce5e917
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,141 @@
 +<template>
 +  <collapsable-card
 +    v-if="status"
@@ -1029,8 +1113,8 @@ index 0000000..2bad4a4
 +            Measuring point {{ Math.min(status.points_measured + 1, 25) }} of 25.
 +          </template>
 +          <div v-if="status.targets">
-+            Nozzle target: {{ status.targets.hotend.toFixed(1) }} °C.
-+            Bed target: {{ status.targets.bed.toFixed(1) }} °C.
++            <div>Nozzle actual: {{ actualTemperature('extruder') }} °C. Nozzle target: {{ status.targets.hotend.toFixed(1) }} °C.</div>
++            <div>Bed actual: {{ actualTemperature('heater_bed') }} °C. Bed target: {{ status.targets.bed.toFixed(1) }} °C.</div>
 +          </div>
 +        </template>
 +        <template v-else-if="accepted">
@@ -1096,6 +1180,11 @@ index 0000000..2bad4a4
 +
 +  get accepted () {
 +    return isM300PadMeshAccepted(this.status)
++  }
++
++  actualTemperature (name: 'extruder' | 'heater_bed') {
++    const value = this.$typedState.printer.printer[name]?.temperature
++    return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(1) : '—'
 +  }
 +
 +  get error () {
@@ -2068,10 +2157,10 @@ index 0000000..4dc4659
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..c1e0b3e
+index 0000000..7bd1d31
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,346 @@
+@@ -0,0 +1,372 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -2408,6 +2497,32 @@ index 0000000..c1e0b3e
 +    source.m300_pad_mesh.phase = 'PROBING'
 +    await Vue.nextTick()
 +    expect(wrapper.text()).toContain('Measuring point 1 of 25')
++    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    wrapper.destroy()
++  })
++
++  it('shows live native actual and planned target temperatures without polling or changing heaters', async () => {
++    const source = printer()
++    source.m300_pad_mesh.phase = 'PROBING'
++    source.m300_pad_mesh.targets = { hotend: 260, bed: 60 }
++    source.extruder = { temperature: 253.2 } as Klipper.ExtruderState
++    source.heater_bed = { temperature: 59.7 } as Klipper.HeaterBedState
++    const ctx = context(source)
++    const slot = { template: '<div><slot /></div>' }
++    const wrapper = shallowMount(M300PadMeshStatus, {
++      mocks: ctx.mocks,
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot, 'v-simple-table': slot }
++    })
++    expect(wrapper.text()).toContain('Nozzle actual: 253.2 °C. Nozzle target: 260.0 °C.')
++    expect(wrapper.text()).toContain('Bed actual: 59.7 °C. Bed target: 60.0 °C.')
++    source.extruder.temperature = 259.8
++    source.heater_bed.temperature = 60.1
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Nozzle actual: 259.8 °C. Nozzle target: 260.0 °C.')
++    expect(wrapper.text()).toContain('Bed actual: 60.1 °C. Bed target: 60.0 °C.')
++    source.extruder.temperature = NaN
++    await Vue.nextTick()
++    expect(wrapper.text()).toContain('Nozzle actual: — °C.')
 +    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
 +    wrapper.destroy()
 +  })
