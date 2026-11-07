@@ -35,10 +35,18 @@ or additional MCU polling is needed.
 Revision `0.13.16.20-PAD-CONTACT-MAP` adds a top view above the native mesh
 chart. It shows the five configured contact areas, all 25 planned points,
 completed/current point colors and an animated live nozzle marker. Native
-X0/Y0 is at the upper left, with X increasing rightwards and Y downwards.
+X0/Y0 is at the bottom left, with X increasing rightwards and Y upwards.
 Measured fields can be rectangular and individually offset, including rear
 right Y262 versus rear left Y260. Geometry is supplied by `m300_pad_mesh`
 status; the UI does not substitute hardcoded pad coordinates.
+
+Each contact area shows its completed native contact heights: four values
+outside the corners and one at the interior sample. Heights are the native
+median of three taps, in the unshifted homing frame, not interpolated values
+or the five-point pad median. They appear as each location completes and
+remain available after an aborted run. A changed preview does not reuse
+old heights. Axis, head and height-label positions use the same display-only
+Y inversion; no physical coordinate or move is changed.
 
 The map is available during an idle geometry preview as well as a live run.
 It reads `motion_report.live_position` from the existing subscription and
@@ -57,7 +65,12 @@ The M300 pad adapter reports the current probing run through the existing
 Moonraker object subscription. A new live run opens **Tune** once, preserving
 the printer query parameter. It does not reopen Tune after manual navigation,
 on geometry-only previews, on preflight refusals or for an old completed run.
-No G-code or additional polling is sent to navigate.
+No G-code or additional polling is sent to navigate. A new owned nonfatal
+mesh error also opens this panel once, including after a browser reconnect.
+Its shared error code, cause, remedy and acknowledgement appear in that one
+panel, without an additional error dialog. Duplicate nonfatal error toasts
+are hidden only when their exact cause is already owned by a valid shared
+error view. Unrelated errors and native fatal/shutdown notices remain visible.
 
 Revision `0.13.16.17-PAD-PREPARE` includes the preparation in that live run:
 Tune shows simultaneous heating, native homing, temperature stabilization and

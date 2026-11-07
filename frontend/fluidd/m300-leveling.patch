@@ -12,9 +12,18 @@ index 61dc457..1b5f964 100644
      PeripheralsDialog: typeof import('./src/components/common/PeripheralsDialog.vue')['default']
      PromiseWrapper: typeof import('./src/components/common/PromiseWrapper.vue')['default']
 diff --git a/src/App.vue b/src/App.vue
-index de67b82..3208c72 100644
+index de67b82..bfe5c31 100644
 --- a/src/App.vue
 +++ b/src/App.vue
+@@ -18,7 +18,7 @@
+     />
+ 
+     <flash-message
+-      v-if="flashMessageState"
++      v-if="flashMessageState && !duplicateProcedureFlash"
+       v-model="flashMessageState.open"
+       :text="flashMessageState.text"
+       :type="flashMessageState.type"
 @@ -70,6 +70,7 @@
          <updating-dialog />
          <spool-selection-dialog />
@@ -23,15 +32,16 @@ index de67b82..3208c72 100644
          <keyboard-shortcuts-dialog />
          <manual-probe-dialog />
          <bed-screws-adjust-dialog />
-@@ -103,6 +104,7 @@ import type { FlashMessage } from '@/types'
+@@ -103,6 +104,8 @@ import type { FlashMessage } from '@/types'
  import { getFilesFromDataTransfer, hasFilesInDataTransfer } from '@/util/file-system-entry'
  import type { ThemeConfig } from '@/store/config/types'
  import ActionCommandPromptDialog from '@/components/common/ActionCommandPromptDialog.vue'
 +import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
++import { duplicateM300Feedback } from '@/util/m300-feedback'
  import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue'
  import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from '@/util/event-helpers'
  import MmuEditTtgMapDialog from './components/widgets/mmu/MmuEditTtgMapDialog.vue'
-@@ -121,6 +123,7 @@ import AfcPrintStartDialog from './components/widgets/afc/dialogs/AfcPrintStartD
+@@ -121,6 +124,7 @@ import AfcPrintStartDialog from './components/widgets/afc/dialogs/AfcPrintStartD
      FileSystemDownloadDialog,
      FileSystemUploadDialog,
      ActionCommandPromptDialog,
@@ -39,6 +49,32 @@ index de67b82..3208c72 100644
      KeyboardShortcutsDialog,
      MmuEditTtgMapDialog,
      AfcPrintStartDialog
+@@ -138,6 +142,16 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
+     type: undefined
+   }
+ 
++  get duplicateProcedureFlash () {
++    return this.flashMessageState.type === 'error' && duplicateM300Feedback(this.flashMessageState.text, this.$typedState.printer.printer,
++      this.$typedState.console.promptDialog)
++  }
++
++  @Watch('duplicateProcedureFlash')
++  closeDuplicateProcedureFlash (duplicate: boolean) {
++    if (duplicate) this.flashMessageState.open = false
++  }
++
+   get theme (): ThemeConfig {
+     return this.$typedState.config.uiSettings.theme
+   }
+@@ -346,6 +360,8 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
+ 
+     // this.onLoadLocale(this.$i18n.locale)
+     EventBus.bus.$on('flashMessage', (payload: FlashMessage) => {
++      if (payload?.type === 'error' && duplicateM300Feedback(payload.text, this.$typedState.printer.printer,
++        this.$typedState.console.promptDialog)) return
+       this.flashMessageState.text = (payload && payload.text) || undefined
+       this.flashMessageState.type = (payload && payload.type) || undefined
+       this.flashMessageState.timeout = (payload && payload.timeout !== undefined) ? payload.timeout : undefined
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
 index dbea2df..2a9916c 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
@@ -92,7 +128,7 @@ index dbea2df..2a9916c 100644
          <v-col v-else-if="item.type === 'button'">
 @@ -55,16 +89,71 @@
  </template>
-
+ 
  <script lang="ts">
 -import { Component, Mixins } from 'vue-property-decorator'
 +import { Component, Mixins, Watch } from 'vue-property-decorator'
@@ -101,7 +137,7 @@ index dbea2df..2a9916c 100644
 +import type { BrightnessControl } from './m300Leveling'
  import StateMixin from '@/mixins/state'
  import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
-
+ 
 -@Component({})
 +@Component({ components: { M300LevelingDiagram } })
  export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
@@ -110,7 +146,7 @@ index dbea2df..2a9916c 100644
    get dialog (): PromptDialog {
      return this.$typedState.console.promptDialog
    }
-
+ 
 +  get leveling () {
 +    return readM300Leveling(this.dialog)
 +  }
@@ -316,10 +352,10 @@ index 0000000..bf35ddf
 +</style>
 diff --git a/src/components/common/M300PadMeshObserver.vue b/src/components/common/M300PadMeshObserver.vue
 new file mode 100644
-index 0000000..64f2e68
+index 0000000..207d12a
 --- /dev/null
 +++ b/src/components/common/M300PadMeshObserver.vue
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,50 @@
 +<template>
 +  <span
 +    hidden
@@ -331,10 +367,25 @@ index 0000000..64f2e68
 +import { Component, Mixins, Watch } from 'vue-property-decorator'
 +import StateMixin from '@/mixins/state'
 +import { readM300PadMesh } from '@/util/m300-pad-mesh'
++import { padMeshError } from '@/util/m300-feedback'
 +
 +@Component
 +export default class M300PadMeshObserver extends Mixins(StateMixin) {
 +  seenRun: string | null = null
++  seenError: string | null = null
++
++  get errorId () {
++    const printer = this.$typedState.printer.printer
++    const error = this.klippyReady ? padMeshError(printer, readM300PadMesh(printer.m300_pad_mesh)) : undefined
++    return error ? `${error.id}:${error.view_revision ?? 1}` : undefined
++  }
++
++  @Watch('errorId', { immediate: true })
++  onError (id: string | undefined) {
++    if (!id || id === this.seenError) return
++    this.seenError = id
++    this.showPanel()
++  }
 +
 +  get running () {
 +    const status = readM300PadMesh(this.$typedState.printer.printer.m300_pad_mesh)
@@ -345,6 +396,10 @@ index 0000000..64f2e68
 +  onRunning (run: string | null) {
 +    if (!run || run === this.seenRun) return
 +    this.seenRun = run
++    this.showPanel()
++  }
++
++  showPanel () {
 +    if (this.$route.name !== 'tune') {
 +      this.$router.push({ name: 'tune', query: this.$route.query }).catch(() => {})
 +    }
@@ -619,7 +674,7 @@ index ba2423a..bf77454 100644
 +++ b/src/components/widgets/bedmesh/BedMeshCard.vue
 @@ -48,6 +48,12 @@
      </template>
-
+ 
      <v-card-text>
 +      <p
 +        v-if="m300Preview"
@@ -635,7 +690,7 @@ index ba2423a..bf77454 100644
  import BrowserMixin from '@/mixins/browser'
  import type { AppMeshes, MatrixType } from '@/store/mesh/types'
 +import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
-
+ 
  @Component({
    components: {
 @@ -76,6 +83,10 @@ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
@@ -648,13 +703,13 @@ index ba2423a..bf77454 100644
 +
    @Prop({ type: Boolean })
    readonly fullscreen?: boolean
-
+ 
 diff --git a/src/components/widgets/bedmesh/M300PadContactMap.vue b/src/components/widgets/bedmesh/M300PadContactMap.vue
 new file mode 100644
-index 0000000..336e8fe
+index 0000000..da4f18f
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadContactMap.vue
-@@ -0,0 +1,242 @@
+@@ -0,0 +1,279 @@
 +<template>
 +  <collapsable-card
 +    v-if="map"
@@ -691,8 +746,8 @@ index 0000000..336e8fe
 +            :key="`y${y}`"
 +            :x1="map.minX"
 +            :x2="map.maxX"
-+            :y1="y"
-+            :y2="y"
++            :y1="screenY(y)"
++            :y2="screenY(y)"
 +          />
 +        </g>
 +        <g class="map-axes">
@@ -700,23 +755,23 @@ index 0000000..336e8fe
 +            v-for="x in ticksX"
 +            :key="`x${x}`"
 +            :x="x"
-+            :y="map.minY - 8"
++            :y="map.maxY + 30"
 +            text-anchor="middle"
 +          >{{ x }}</text>
 +          <text
 +            v-for="y in ticksY"
 +            :key="`y${y}`"
-+            :x="map.minX - 7"
-+            :y="y + 3"
++            :x="map.minX - 50"
++            :y="screenY(y) + 3"
 +            text-anchor="end"
 +          >{{ y }}</text>
 +          <text
 +            :x="map.maxX + 12"
-+            :y="map.minY - 8"
++            :y="map.maxY + 30"
 +          >X</text>
 +          <text
-+            :x="map.minX - 14"
-+            :y="map.maxY + 15"
++            :x="map.minX - 50"
++            :y="map.minY - 17"
 +          >Y</text>
 +        </g>
 +        <g
@@ -727,14 +782,14 @@ index 0000000..336e8fe
 +          <rect
 +            class="map-metal"
 +            :x="region.x"
-+            :y="region.y"
++            :y="screenY(region.y + region.height)"
 +            :width="region.width"
 +            :height="region.height"
 +          />
 +          <text
 +            class="map-pad-name"
 +            :x="region.x + region.width - 6"
-+            :y="region.y + 11"
++            :y="screenY(region.y + region.height) + 11"
 +            text-anchor="end"
 +          >{{ shortNames[region.name] }}</text>
 +        </g>
@@ -748,7 +803,7 @@ index 0000000..336e8fe
 +            :class="{ measured: index < map.measured, current: map.probing && index === map.measured }"
 +            :data-point="index"
 +            :cx="point[0]"
-+            :cy="point[1]"
++            :cy="screenY(point[1])"
 +            r="2.1"
 +          >
 +            <title>Point {{ index + 1 }}: X{{ point[0] }} / Y{{ point[1] }}</title>
@@ -757,22 +812,34 @@ index 0000000..336e8fe
 +            v-if="inside(point) && map.probing && index === map.measured"
 +            class="map-target"
 +            :cx="point[0]"
-+            :cy="point[1]"
++            :cy="screenY(point[1])"
 +            r="5"
 +          />
 +        </g>
++        <text
++          v-for="label in heightLabels"
++          :key="`height${label.index}`"
++          class="map-height"
++          :data-height="label.index"
++          :x="label.x"
++          :y="label.y"
++          :text-anchor="label.anchor"
++        >
++          {{ label.value }}
++          <title>Point {{ label.index + 1 }} contact Z: {{ label.z.toFixed(4) }} mm</title>
++        </text>
 +        <template v-if="head && inside(head)">
 +          <circle
 +            class="map-head-ring"
 +            :cx="head[0]"
-+            :cy="head[1]"
++            :cy="screenY(head[1])"
 +            r="6"
 +          />
 +          <circle
 +            class="map-head"
 +            data-nozzle
 +            :cx="head[0]"
-+            :cy="head[1]"
++            :cy="screenY(head[1])"
 +            r="3.5"
 +          />
 +        </template>
@@ -787,7 +854,8 @@ index 0000000..336e8fe
 +        <div v-if="map.preview">
 +          Plan preview · 25 positions.
 +        </div>
-+        X increases to the right; Y increases downwards. Coordinates in mm.
++        X0/Y0 is at the bottom left. X increases to the right; Y increases upwards.
++        Contact Z in mm; each height is the native median of three taps.
 +        <div v-if="head">
 +          Nozzle X{{ head[0].toFixed(1) }} / Y{{ head[1].toFixed(1) }}.
 +        </div>
@@ -832,11 +900,34 @@ index 0000000..336e8fe
 +
 +  get viewBox () {
 +    const map = this.map
-+    return map ? `${map.minX - 28} ${map.minY - 22} ${map.maxX - map.minX + 50} ${map.maxY - map.minY + 45}` : ''
++    return map ? `${map.minX - 70} ${map.minY - 28} ${map.maxX - map.minX + 140} ${map.maxY - map.minY + 75}` : ''
 +  }
 +
 +  get ticksX () { return this.map ? contactAxisTicks(this.map.minX, this.map.maxX) : [] }
 +  get ticksY () { return this.map ? contactAxisTicks(this.map.minY, this.map.maxY) : [] }
++
++  screenY (y: number) {
++    return this.map ? this.map.minY + this.map.maxY - y : y
++  }
++
++  get heightLabels () {
++    const map = this.map
++    if (!map) return []
++    return map.points.flatMap((point, index) => {
++      const z = map.heights[index]
++      if (z === null || !this.inside(point)) return []
++      const corner = index % 5
++      const left = corner === 1 || corner === 4
++      return [{
++        index,
++        z,
++        x: point[0] + (corner ? left ? -4 : 4 : 0),
++        y: this.screenY(point[1]) + (corner === 3 || corner === 4 ? -5 : 12),
++        anchor: corner ? left ? 'end' : 'start' : 'middle',
++        value: `${z >= 0 ? '+' : ''}${z.toFixed(3)}`
++      }]
++    })
++  }
 +
 +  get visibleRegions () {
 +    const map = this.map
@@ -877,6 +968,7 @@ index 0000000..336e8fe
 +.map-axes text { fill: #c9d3df; font: 8px sans-serif; }
 +.map-metal { fill: #244e40; stroke: #70be95; stroke-width: 0.7; }
 +.map-pad-name { fill: #a8cab7; opacity: 0.65; font: bold 9px sans-serif; }
++.map-height { fill: #f0f6ff; font: 8px monospace; font-variant-numeric: tabular-nums; stroke: none; }
 +.map-point { fill: #a7b5c5; stroke: #141b23; stroke-width: 0.5; }
 +.map-point.measured { fill: #65e79b; }
 +.map-point.current { fill: #ffbd59; }
@@ -899,10 +991,10 @@ index 0000000..336e8fe
 +</style>
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
-index 0000000..838ccad
+index 0000000..2bad4a4
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,136 @@
 +<template>
 +  <collapsable-card
 +    v-if="status"
@@ -919,10 +1011,17 @@ index 0000000..838ccad
 +        class="mb-3"
 +      />
 +      <v-alert
-+        :type="status.state === 'FAILED' ? 'error' : accepted ? 'success' : 'info'"
++        :type="error || status.state === 'FAILED' ? 'error' : accepted ? 'success' : 'info'"
 +        text
 +      >
-+        <template v-if="status.busy">
++        <template v-if="error">
++          <strong>{{ error.label }} — {{ error.title }}</strong>
++          <div>{{ error.reason }}</div>
++          <div class="mt-2">
++            {{ error.action }}
++          </div>
++        </template>
++        <template v-else-if="status.busy">
 +          <template v-if="preparationMessage">
 +            {{ preparationMessage }}
 +          </template>
@@ -941,10 +1040,17 @@ index 0000000..838ccad
 +        <template v-else>
 +          No new mesh profile was created.
 +        </template>
-+        <div v-if="status.last_error">
++        <div v-if="!error && status.last_error">
 +          {{ status.last_error }}
 +        </div>
 +      </v-alert>
++      <app-btn
++        v-if="error"
++        class="mb-3"
++        @click="acknowledge"
++      >
++        Acknowledge
++      </app-btn>
 +      <template v-if="status.last_attempt">
 +        <p>
 +          Measured range: {{ status.last_attempt.span_mm.toFixed(4) }} mm.
@@ -978,6 +1084,7 @@ index 0000000..838ccad
 +import { Component, Mixins } from 'vue-property-decorator'
 +import StateMixin from '@/mixins/state'
 +import { isM300PadMeshAccepted, readM300PadMesh } from '@/util/m300-pad-mesh'
++import { padMeshError } from '@/util/m300-feedback'
 +
 +@Component
 +export default class M300PadMeshStatus extends Mixins(StateMixin) {
@@ -989,6 +1096,14 @@ index 0000000..838ccad
 +
 +  get accepted () {
 +    return isM300PadMeshAccepted(this.status)
++  }
++
++  get error () {
++    return padMeshError(this.$typedState.printer.printer, this.status)
++  }
++
++  acknowledge () {
++    if (this.error && this.klippyReady) this.sendGcode(`ZORTRAX_ERROR_ACK ID=${this.error.id}`)
 +  }
 +
 +  get preparationMessage () {
@@ -1126,7 +1241,7 @@ index ab57038..1ca05b3 100644
                  d="M8.5 283.781v48.724a5.995 5.995 0 0 0 5.995 5.995h48.724c5.851 0 8.259-7.555 3.454-10.892a188.5 188.5 0 0 1-47.28-47.28c-3.337-4.805-10.892-2.397-10.892 3.454Z"
                  class="cc-btn-container"
 @@ -619,6 +637,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
-
+ 
    get xHomeClasses () {
      return {
 +      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeX),
@@ -1134,7 +1249,7 @@ index ab57038..1ca05b3 100644
          !this.klippyReady ||
          this.printerPrinting ||
 @@ -630,6 +649,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
-
+ 
    get yHomeClasses () {
      return {
 +      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeY),
@@ -1142,7 +1257,7 @@ index ab57038..1ca05b3 100644
          !this.klippyReady ||
          this.printerPrinting ||
 @@ -641,6 +661,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
-
+ 
    get zHomeClasses () {
      return {
 +      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeZ),
@@ -1150,7 +1265,7 @@ index ab57038..1ca05b3 100644
          !this.klippyReady ||
          this.printerPrinting ||
 @@ -652,6 +673,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
-
+ 
    get xyHomeClasses () {
      return {
 +      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeXY),
@@ -1158,7 +1273,7 @@ index ab57038..1ca05b3 100644
          !this.klippyReady ||
          this.printerPrinting ||
 @@ -663,6 +685,7 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
-
+ 
    get xyzHomeClasses () {
      return {
 +      'm300-homing-active': this.m300HomeBusy(this.$waits.onHomeAll),
@@ -1167,7 +1282,7 @@ index ab57038..1ca05b3 100644
          this.printerPrinting ||
 @@ -786,6 +809,20 @@ export default class ToolheadControlCircle extends Mixins(StateMixin, ToolheadMi
  </script>
-
+ 
  <style lang="scss" scoped>
 +  .m300-homing-active .cc-btn-container {
 +    animation: m300-home-pulse 1s ease-in-out infinite;
@@ -1184,7 +1299,7 @@ index ab57038..1ca05b3 100644
 +  }
 +
    @import 'vuetify/src/styles/styles.sass';
-
+ 
    @include theme(app-circle-control) using ($material) {
 diff --git a/src/components/widgets/toolhead/ToolheadControlCross.vue b/src/components/widgets/toolhead/ToolheadControlCross.vue
 index 1027a75..6dab18d 100644
@@ -1245,7 +1360,7 @@ index 6a1732c..00e08a8 100644
  import type { Macro } from '@/store/macros/types'
  import type { PrinterStatus } from '@/store/printer/types'
 +import { readM300Homing } from '@/util/m300-homing'
-
+ 
  @Component
  export default class StateMixin extends Vue {
 @@ -92,7 +93,21 @@ export default class StateMixin extends Vue {
@@ -1269,7 +1384,7 @@ index 6a1732c..00e08a8 100644
 +    const homing = this.m300Homing
 +    return homing?.wait === wait ? homing.message : undefined
    }
-
+ 
    /**
 diff --git a/src/store/mesh/getters.ts b/src/store/mesh/getters.ts
 index 9f27a04..e1448aa 100644
@@ -1280,18 +1395,209 @@ index 9f27a04..e1448aa 100644
  import type { RootState } from '../types'
  import { transformMesh } from '@/util/transform-mesh'
 +import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
-
+ 
  export const getters = {
-
+ 
 @@ -101,7 +102,7 @@ export const getters = {
     * Returns the current mesh, in a usable format for echarts.
     */
    getCurrentMeshData: (state, getters, rootState): AppMeshes => {
 -    const bedMesh = rootState.printer.printer.bed_mesh
 +    const bedMesh = m300PadMeshPreview(rootState.printer.printer)?.mesh ?? rootState.printer.printer.bed_mesh
-
+ 
      if (bedMesh == null) {
        return {}
+diff --git a/src/util/m300-feedback.spec.ts b/src/util/m300-feedback.spec.ts
+new file mode 100644
+index 0000000..4fc4078
+--- /dev/null
++++ b/src/util/m300-feedback.spec.ts
+@@ -0,0 +1,134 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// @vitest-environment jsdom
++import Vue from 'vue'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++import { shallowMount } from '@vue/test-utils'
++import type { PromptDialog } from '@/store/console/types'
++import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'
++import M300PadMeshObserver from '@/components/common/M300PadMeshObserver.vue'
++import AppBtn from '@/components/ui/AppBtn.vue'
++import { SocketActions } from '@/api/socketActions'
++import { duplicateM300Feedback, padMeshError, readM300Error } from './m300-feedback'
++import { readM300PadMesh } from './m300-pad-mesh'
++
++vi.mock('@/api/socketActions', () => ({ SocketActions: { printerGcodeScript: vi.fn() } }))
++
++function fixture () {
++  return {
++    webhooks: { state: 'ready' },
++    m300_pad_mesh: {
++      run_id: 'a'.repeat(24),
++      state: 'FAILED',
++      phase: 'FAILED',
++      busy: false,
++      points_measured: 25,
++      total_points: 25,
++      last_error: 'M300 pad mesh: bed span exceeds 0.8000 mm',
++      last_attempt: null
++    },
++    m300_errors: {
++      current: {
++        id: 'c43e7a1b06ed64c8-1',
++        view_revision: 1,
++        surface: 'pad_mesh',
++        run_id: 'a'.repeat(24),
++        title: 'Calibration failed',
++        label: 'Error #041',
++        action: 'Check the measurement results.',
++        reason: 'M300 pad mesh: bed span exceeds 0.8000 mm',
++        fatal: false
++      }
++    }
++  }
++}
++
++describe('one M300 procedure feedback surface', () => {
++  beforeEach(() => vi.clearAllMocks())
++
++  it('suppresses only an exact duplicate of an actual typed nonfatal error', () => {
++    const source = fixture() as unknown as Klipper.PrinterState
++    const reason = readM300Error(source)!.reason
++    expect(duplicateM300Feedback('!! ' + reason, source)).toBe(true)
++    for (const message of ['MCU shutdown: Timer too close', 'Probe samples exceed tolerance', reason + ' changed', null]) {
++      expect(duplicateM300Feedback(message, source)).toBe(false)
++    }
++    source.m300_pad_mesh!.run_id = 'b'.repeat(24)
++    expect(duplicateM300Feedback(reason, source)).toBe(false)
++    delete source.m300_errors
++    expect(duplicateM300Feedback(reason, source)).toBe(false)
++  })
++
++  it('uses an actual acknowledgement prompt before object-status delivery and preserves fatal notices', () => {
++    const source = fixture() as unknown as Klipper.PrinterState
++    const reason = readM300Error(source)!.reason
++    source.m300_errors!.current.fatal = true
++    expect(duplicateM300Feedback(reason, source)).toBe(false)
++    const dialog: PromptDialog = {
++      open: true,
++      title: 'ZORTRAX M300 - Error #041',
++      pendingItems: null,
++      items: [{ id: 1, type: 'text', text: 'Cause: ' + reason }],
++      footerButtons: [{ id: 2, text: 'Acknowledge', command: 'ZORTRAX_ERROR_ACK ID=c43e7a1b06ed64c8-1' }]
++    }
++    delete source.m300_errors
++    expect(duplicateM300Feedback(reason, source, dialog)).toBe(true)
++    dialog.footerButtons = []
++    expect(duplicateM300Feedback(reason, source, dialog)).toBe(false)
++  })
++
++  it('does not attach another run or a fatal shutdown to the measurement panel', () => {
++    const source = fixture() as unknown as Klipper.PrinterState
++    const status = readM300PadMesh(source.m300_pad_mesh)
++    expect(padMeshError(source, status)?.id).toBe('c43e7a1b06ed64c8-1')
++    source.m300_errors!.current.run_id = 'b'.repeat(24)
++    expect(padMeshError(source, status)).toBeUndefined()
++    source.m300_errors!.current.run_id = 'a'.repeat(24)
++    source.m300_errors!.current.fatal = true
++    expect(padMeshError(source, status)).toBeUndefined()
++  })
++
++  it('shows one cause with the shared code and acknowledgement in the Tune panel', async () => {
++    const source = fixture()
++    const state = Vue.observable({ printer: { printer: source } })
++    const slot = { template: '<section><slot /></section>' }
++    const wrapper = shallowMount(M300PadMeshStatus, {
++      mocks: {
++        $typedState: state,
++        $typedDispatch: vi.fn(),
++        $typedGetters: { 'printer/getKlippyReady': true, 'printer/getPrinterState': 'idle' }
++      },
++      stubs: { 'collapsable-card': slot, 'v-card-text': slot, 'v-alert': slot }
++    })
++    expect(wrapper.text().split(source.m300_errors.current.reason)).toHaveLength(2)
++    expect(wrapper.text()).toContain('Error #041 — Calibration failed')
++    expect(wrapper.text()).not.toContain('No new mesh profile was created.')
++    wrapper.findComponent(AppBtn).vm.$emit('click')
++    expect(SocketActions.printerGcodeScript).toHaveBeenCalledWith('ZORTRAX_ERROR_ACK ID=c43e7a1b06ed64c8-1', { wait: undefined })
++    wrapper.destroy()
++  })
++
++  it('opens the canonical panel once for a new failure, including a reconnected client', async () => {
++    const source = fixture()
++    const state = Vue.observable({ printer: { printer: source } })
++    const push = vi.fn().mockResolvedValue(undefined)
++    const wrapper = shallowMount(M300PadMeshObserver, {
++      mocks: {
++        $typedState: state,
++        $route: { name: 'home', query: { printer: 'm300' } },
++        $router: { push },
++        $typedGetters: { 'printer/getKlippyReady': true }
++      }
++    })
++    expect(push).toHaveBeenCalledTimes(1)
++    source.m300_errors.current.reason += ' details'
++    await Vue.nextTick()
++    expect(push).toHaveBeenCalledTimes(1)
++    source.m300_errors.current.id = 'c43e7a1b06ed64c8-2'
++    await Vue.nextTick()
++    expect(push).toHaveBeenCalledTimes(2)
++    source.m300_errors.current.view_revision = 2
++    await Vue.nextTick()
++    expect(push).toHaveBeenCalledTimes(3)
++    wrapper.destroy()
++  })
++})
+diff --git a/src/util/m300-feedback.ts b/src/util/m300-feedback.ts
+new file mode 100644
+index 0000000..ec913b0
+--- /dev/null
++++ b/src/util/m300-feedback.ts
+@@ -0,0 +1,45 @@
++// SPDX-License-Identifier: GPL-3.0-only
++import type { PromptDialog } from '@/store/console/types'
++import { readM300PadMesh, type M300PadMesh } from './m300-pad-mesh'
++
++export interface M300Error {
++  id: string;
++  reason: string;
++  title: string;
++  label: string;
++  action: string;
++  fatal: boolean;
++  surface?: string;
++  run_id?: string;
++  view_revision?: number;
++}
++
++export function readM300Error (printer: Klipper.PrinterState): M300Error | undefined {
++  const error = printer.m300_errors?.current as M300Error | undefined
++  if (!error || !/^[a-f0-9]{16}-[1-9]\d*$/.test(error.id) ||
++      typeof error.fatal !== 'boolean' ||
++      (error.view_revision !== undefined && (!Number.isSafeInteger(error.view_revision) || error.view_revision < 1)) ||
++      ![error.reason, error.title, error.label, error.action].every(value => typeof value === 'string' && value.trim())) return
++  return error
++}
++
++export function padMeshError (printer: Klipper.PrinterState, status?: M300PadMesh): M300Error | undefined {
++  const error = readM300Error(printer)
++  return status && error?.surface === 'pad_mesh' && error.run_id === status.run_id && !error.fatal ? error : undefined
++}
++
++const normalize = (text: string) => text.replace(/^!!\s*/, '').replace(/\s+/g, ' ').trim().slice(0, 600)
++
++export function duplicateM300Feedback (text: unknown, printer: Klipper.PrinterState, dialog?: PromptDialog): boolean {
++  if (typeof text !== 'string' || !text.trim()) return false
++  const error = readM300Error(printer)
++  if (error && !error.fatal && normalize(text) === normalize(error.reason) &&
++      (error.surface !== 'pad_mesh' || padMeshError(printer, readM300PadMesh(printer.m300_pad_mesh)))) return true
++  // Prompt messages may arrive before the next object-status subscription.
++  // Match the actual error acknowledgement and exact cause, never all errors
++  // from an active procedure or a generic substring such as "probe".
++  return !!dialog?.open && dialog.title?.startsWith('ZORTRAX M300 - ') === true &&
++    dialog.footerButtons.some(button => /^ZORTRAX_ERROR_ACK ID=[a-f0-9]{16}-[1-9]\d*$/.test(button.command ?? '')) &&
++    dialog.items.some(item => item.type === 'text' && item.text.startsWith('Cause: ') &&
++      normalize(item.text.slice(7)) === normalize(text))
++}
 diff --git a/src/util/m300-homing.spec.ts b/src/util/m300-homing.spec.ts
 new file mode 100644
 index 0000000..99e47b4
@@ -1454,10 +1760,10 @@ index 0000000..76ce2ad
 +}
 diff --git a/src/util/m300-pad-contact-map.spec.ts b/src/util/m300-pad-contact-map.spec.ts
 new file mode 100644
-index 0000000..4233885
+index 0000000..66e9d12
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.spec.ts
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,219 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +/// <reference types="node" />
 +// @vitest-environment jsdom
@@ -1488,6 +1794,8 @@ index 0000000..4233885
 +      contact_regions: regions,
 +      probe_points: points,
 +      points_measured: 0,
++      run_id: 'a'.repeat(24),
++      measurements: [] as number[][],
 +      phase: 'IDLE',
 +      busy: false,
 +      state: 'IDLE',
@@ -1526,17 +1834,21 @@ index 0000000..4233885
 +    expect(readM300ContactMap(source.m300_pad_mesh)).toBeUndefined()
 +  })
 +
-+  it('draws all five measured rectangles and 25 points in native X-right Y-down coordinates', () => {
++  it('draws X0/Y0 at bottom left, with X to the right and Y upwards for every pad and corner', () => {
 +    const { wrapper } = mountMap()
 +    expect(wrapper.findAll('[data-pad]')).toHaveLength(5)
 +    expect(wrapper.findAll('[data-point]')).toHaveLength(25)
 +    const home = wrapper.find('[data-pad="front_left"] rect')
 +    expect([home.attributes('x'), home.attributes('y'), home.attributes('width'), home.attributes('height')])
-+      .toEqual(['0', '0', '43', '51'])
++      .toEqual(['0', '254', '43', '51'])
 +    const rear = wrapper.find('[data-pad="rear_right"] rect')
 +    expect([rear.attributes('x'), rear.attributes('y'), rear.attributes('width'), rear.attributes('height')])
-+      .toEqual(['260', '262', '40', '43'])
-+    expect(wrapper.text()).toContain('Y increases downwards')
++      .toEqual(['260', '0', '40', '43'])
++    for (const [index, x, y] of [[6, '0', '305'], [2, '300', '305'], [18, '300', '0'], [24, '0', '0']]) {
++      const point = wrapper.find(`[data-point="${index}"]`)
++      expect([point.attributes('cx'), point.attributes('cy')]).toEqual([x, y])
++    }
++    expect(wrapper.text()).toContain('Y increases upwards')
 +    expect(wrapper.find('.map-target').exists()).toBe(false)
 +    wrapper.destroy()
 +  })
@@ -1544,7 +1856,7 @@ index 0000000..4233885
 +  it('animates the live nozzle independently of the queued endpoint and follows current point progress', async () => {
 +    const { source, wrapper, dispatch } = mountMap()
 +    expect(wrapper.find('[data-nozzle]').attributes('cx')).toBe('15')
-+    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('15')
++    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('290')
 +    source.toolhead.position = [300, 305, 5]
 +    source.motion_report.live_position = [260, 262, 5]
 +    source.m300_pad_mesh.phase = 'PROBING'
@@ -1553,10 +1865,10 @@ index 0000000..4233885
 +    source.m300_pad_mesh.points_measured = 16
 +    await Vue.nextTick()
 +    expect(wrapper.find('[data-nozzle]').attributes('cx')).toBe('260')
-+    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('262')
++    expect(wrapper.find('[data-nozzle]').attributes('cy')).toBe('43')
 +    expect(wrapper.findAll('.map-point.measured')).toHaveLength(16)
 +    expect(wrapper.find('.map-point.current').attributes('data-point')).toBe('16')
-+    expect(wrapper.find('.map-target').attributes('cy')).toBe('262')
++    expect(wrapper.find('.map-target').attributes('cy')).toBe('43')
 +    await wrapper.find('svg').trigger('click')
 +    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
 +    expect(dispatch).not.toHaveBeenCalled()
@@ -1614,19 +1926,69 @@ index 0000000..4233885
 +    source.m300_pad_mesh.probe_points[16] = [260, 264]
 +    source.m300_pad_mesh.plan_matches_run = false
 +    await Vue.nextTick()
-+    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('y')).toBe('264')
++    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('y')).toBe('0')
++    expect(wrapper.find('[data-pad="rear_right"] rect').attributes('height')).toBe('41')
 +    expect(wrapper.findAll('.map-point.measured')).toHaveLength(0)
 +    expect(wrapper.text()).toContain('Plan preview')
 +    expect(wrapper.find('.map-target').exists()).toBe(false)
 +    wrapper.destroy()
 +  })
++
++  it('adds the completed native heights live, with four corner labels outside each metal rectangle', async () => {
++    const { source, wrapper } = mountMap()
++    expect(wrapper.findAll('[data-height]')).toHaveLength(0)
++    for (let count = 1; count <= 25; count++) {
++      source.m300_pad_mesh.points_measured = count
++      source.m300_pad_mesh.measurements = source.m300_pad_mesh.probe_points.slice(0, count)
++        .map((point, index) => [...point, index / 100])
++      await Vue.nextTick()
++      expect(wrapper.findAll('[data-height]')).toHaveLength(count)
++    }
++    for (let start = 0; start < 25; start += 5) {
++      const point = source.m300_pad_mesh.probe_points[start]
++      expect(wrapper.find(`[data-height="${start}"]`).attributes('x')).toBe(String(point[0]))
++      for (const corner of [1, 2, 3, 4]) {
++        const label = wrapper.find(`[data-height="${start + corner}"]`)
++        const left = corner === 1 || corner === 4
++        expect(label.attributes('text-anchor')).toBe(left ? 'end' : 'start')
++        expect(Number(label.attributes('x')) - source.m300_pad_mesh.probe_points[start + corner][0]).toBe(left ? -4 : 4)
++      }
++    }
++    source.m300_pad_mesh.state = 'FAILED'
++    source.m300_pad_mesh.phase = 'FAILED'
++    await Vue.nextTick()
++    expect(wrapper.findAll('[data-height]')).toHaveLength(25)
++    const dir = process.env.M300_MAP_PREVIEW_DIR
++    if (dir) {
++      mkdirSync(dir, { recursive: true })
++      const css = readFileSync('src/components/widgets/bedmesh/M300PadContactMap.vue', 'utf8')
++        .match(/<style scoped>([\s\S]+)<\/style>/)?.[1] ?? ''
++      const svg = wrapper.find('svg').html()
++        .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="800" style="width:900px;height:800px;max-height:none"')
++        .replace('</svg>', `<style>${css}</style></svg>`)
++      writeFileSync(`${dir}/contact-map-heights.svg`, svg)
++    }
++    source.m300_pad_mesh.plan_matches_run = false
++    await Vue.nextTick()
++    expect(wrapper.findAll('[data-height]')).toHaveLength(0)
++    wrapper.destroy()
++  })
++
++  it('does not label mismatched, nonfinite or incomplete measurements as a contact height', () => {
++    const source = printer()
++    source.m300_pad_mesh.points_measured = 1
++    for (const values of [[[285, 15, NaN]], [[100, 100, 0.1]], [[285, 15]], []]) {
++      source.m300_pad_mesh.measurements = values
++      expect(readM300ContactMap(source.m300_pad_mesh)?.heights.every(z => z === null)).toBe(true)
++    }
++  })
 +})
 diff --git a/src/util/m300-pad-contact-map.ts b/src/util/m300-pad-contact-map.ts
 new file mode 100644
-index 0000000..cf0d5fc
+index 0000000..4dc4659
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.ts
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,77 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +export interface M300ContactRegion {
 +  name: string;
@@ -1646,6 +2008,7 @@ index 0000000..cf0d5fc
 +  preview: boolean;
 +  probing: boolean;
 +  fits: boolean;
++  heights: (number | null)[];
 +}
 +
 +const names = ['front_right', 'front_left', 'center', 'rear_right', 'rear_left']
@@ -1669,9 +2032,21 @@ index 0000000..cf0d5fc
 +      region.bounds[0] >= region.bounds[2] || region.bounds[1] >= region.bounds[3] ||
 +      region.center[0] <= region.bounds[0] || region.center[0] >= region.bounds[2] ||
 +      region.center[1] <= region.bounds[1] || region.center[1] >= region.bounds[3])) return
++  const points = raw.probe_points as [number, number][]
++  const heights: (number | null)[] = Array(25).fill(null)
++  if (raw.plan_matches_run === true && typeof raw.run_id === 'string' && /^[a-f0-9]{24}$/.test(raw.run_id)) {
++    const attempt = raw.last_attempt as { run_id?: string; points?: unknown } | undefined
++    const measured = raw.measurements ?? (attempt?.run_id === raw.run_id ? attempt.points : undefined)
++    if (Array.isArray(measured) && measured.length === raw.points_measured && measured.length <= 25 &&
++        measured.every((point, index) => vector(point, 3) &&
++          Math.abs(point[0] - points[index][0]) < 0.000001 && Math.abs(point[1] - points[index][1]) < 0.000001)) {
++      measured.forEach((point, index) => { heights[index] = point[2] })
++    }
++  }
 +  return {
 +    regions,
-+    points: raw.probe_points as [number, number][],
++    points,
++    heights,
 +    minX: travel.configured_x[0],
 +    maxX: travel.configured_x[1],
 +    minY: travel.configured_y[0],
@@ -1693,10 +2068,10 @@ index 0000000..cf0d5fc
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..40129c5
+index 0000000..c1e0b3e
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,335 @@
+@@ -0,0 +1,346 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -1794,6 +2169,17 @@ index 0000000..40129c5
 +
 +describe('M300 pad measurement in Tune', () => {
 +  beforeEach(() => vi.clearAllMocks())
++
++  it('accepts 0.735 and numerical roundoff at the 0.8 mm limit, but not a 0.8025 mm span', () => {
++    const source = status('COMPLETE')
++    source.last_attempt!.limit_mm = 0.8
++    for (const span of [0.735, 0.8, 0.8 + Number.EPSILON]) {
++      source.last_attempt!.span_mm = span
++      expect(isM300PadMeshAccepted(source)).toBe(true)
++    }
++    source.last_attempt!.span_mm = 0.8025
++    expect(isM300PadMeshAccepted(source)).toBe(false)
++  })
 +
 +  it('discovers pad fields and distinguishes the quick button from the parameter form submission', async () => {
 +    const gcode = `{% set _m300_pad_args = [] %}
@@ -2034,7 +2420,7 @@ index 0000000..40129c5
 +})
 diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
 new file mode 100644
-index 0000000..7ad4652
+index 0000000..3649c70
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.ts
 @@ -0,0 +1,73 @@
@@ -2083,7 +2469,7 @@ index 0000000..7ad4652
 +
 +export function isM300PadMeshAccepted (status: M300PadMesh | undefined): boolean {
 +  return !!status && status.state === 'COMPLETE' && !status.busy && !!status.last_attempt?.accepted &&
-+    status.points_measured === status.total_points && status.last_attempt.span_mm <= status.last_attempt.limit_mm &&
++    status.points_measured === status.total_points && status.last_attempt.span_mm <= status.last_attempt.limit_mm + 1e-9 &&
 +    status.result?.run_id === status.run_id && typeof status.result.profile === 'string' &&
 +    /^[\w-]{1,32}$/.test(status.result.profile)
 +}
@@ -2131,7 +2517,7 @@ index 7edad45..0144776 100644
          v-if="supportsBedMesh"
          class="mb-2 mb-md-4"
 @@ -45,6 +47,8 @@ import StateMixin from '@/mixins/state'
-
+ 
  import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
  import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
 +import M300PadMeshStatus from '@/components/widgets/bedmesh/M300PadMeshStatus.vue'

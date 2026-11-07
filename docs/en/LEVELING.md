@@ -456,7 +456,7 @@ only for a successfully generated profile from the current attempt while idle.
 Shutdown/Disconnect at that point is the expected restart.
 
 The status command reports all 25 heights, each pad's median and its spread.
-All 25 heights contribute to the compensation. A difference over 0.50 mm
+All 25 heights contribute to the compensation. A difference over 0.80 mm
 between any two positions rejects the mesh by default. A sloped 60 mm pad can
 have a real spread above 0.05 mm, so pad spread is reported separately from
 repeatability. An optional `max_pad_spread` can impose an additional limit.
@@ -468,9 +468,20 @@ create the rejected profile. Run OEM `ZORTRAX_LEVEL` to adjust the screws,
 then repeat the mesh at the same stabilized temperatures. A span rejection
 alone does not establish whether the remaining difference is tilt or curvature.
 The reported 75-contact case is covered by regression data: median heights span
-0.8025 mm against the 0.5000 mm limit, although the largest three-repeat spread
+0.8025 mm against the previous 0.5000 mm limit, although the largest three-repeat spread
 at one location is only 0.0175 mm. These are different checks; the limit is not
-automatically increased to accept the measurement.
+automatically increased to accept the measurement. The operator-requested
+stock limit is now 0.8 mm: 0.735 mm passes, 0.8025 mm still fails. The installer
+migrates an explicit previous stock `max_bed_span: 0.5` to `0.8`; custom values
+remain unchanged. Configurations without that option use the new default.
+This limit does not change the 0.05 mm three-tap repeatability tolerance,
+native probing speeds, clearance, or the guarded ±0.75 mm contact search.
+
+Tune shows each completed contact Z immediately, using the pinned native
+probe session's completed medians without draining its queue or counting
+discarded samples. Four height labels are outside each contact rectangle's
+corners and one is at its interior sample. X0/Y0 is bottom left, X300/Y0
+bottom right. All 25 measured coordinates remain unchanged.
 
 The interpolation joins the 25 measured positions into 36 triangles with
 continuous piecewise-linear heights. This preserves a plane, uses each
