@@ -191,7 +191,7 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
                       'ZORTRAX_HOME_ALL':'HOME_ALL'}.get(name)
             if homing:
                 return Symbol(HOMING_ICONS[homing], True)
-            if name in ('ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
+            if name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
                 return symbol('bed_mesh')
             if name in ('ZORTRAX_HEAT', 'M104', 'M109'):
                 return symbol('heat_nozzle')

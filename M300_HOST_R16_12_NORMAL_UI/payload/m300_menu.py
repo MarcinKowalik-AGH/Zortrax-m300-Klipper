@@ -661,7 +661,7 @@ class M300Menu:
                 rows.extend((line,None) for line in textwrap.wrap(
                     self.clean(status['last_error']),width=23,max_lines=4,placeholder='...'))
             if not status.get('busy'):
-                rows.append(('Measure 25 pad points', ('native_gcode', 'ZORTRAX_BED_MESH')))
+                rows.append(('Measure 25 pad points', ('native_gcode', 'BED_MESH')))
             result = status.get('result') or {}
             if result:
                 rows.append(('Profile: '+self.clean(result.get('profile', '')), None))
@@ -908,7 +908,7 @@ class M300Menu:
         return {'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
                 'ZORTRAX_HOME_Z':('m300_motion','HOME_Z'),
                 'ZORTRAX_HOME_ALL':('m300_motion','HOME_ALL'),
-                'ZORTRAX_BED_MESH':('m300_pad_mesh','BED_MESH'),
+                'BED_MESH':('m300_pad_mesh','BED_MESH'),
                 'BED_MESH_CALIBRATE':('m300_pad_mesh','BED_MESH'),
                 'ZORTRAX_LEVEL':('m300_calibration',None),
                 'ZORTRAX_HEAT':('m300_maintenance','HOTEND'),

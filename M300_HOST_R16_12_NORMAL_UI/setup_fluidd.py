@@ -23,7 +23,7 @@ def category(name):
     name = name.upper()
     if name in TEST_NAMES or name.startswith(('TEST_M300_', 'TEST_ZORTRAX_', 'ZORTRAX_TEST_')):
         return 'TEST M300'
-    if name.startswith('PID_') or name in ('ZORTRAX_BED_MESH', 'ZORTRAX_PAD_MESH_STATUS',
+    if name.startswith('PID_') or name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'ZORTRAX_PAD_MESH_STATUS',
                                           'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE',
                                           'PAUSE', 'RESUME', 'CANCEL_PRINT',
                                           'START_PRINT', 'END_PRINT', 'COOLDOWN'):
