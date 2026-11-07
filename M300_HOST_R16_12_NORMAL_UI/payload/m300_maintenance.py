@@ -418,7 +418,9 @@ class M300Maintenance:
         if self.state == 'FAULT':
             return 'ERROR'
         errors = self.printer.lookup_object('m300_errors', None)
-        if getattr(errors, 'current', None) is not None:
+        current = getattr(errors, 'current', None)
+        if current is not None and (not isinstance(current, dict) or current.get('fatal')
+                                    or current.get('severity', 'error') != 'info'):
             return 'ERROR'
         busy = self.is_busy()
         paused = False

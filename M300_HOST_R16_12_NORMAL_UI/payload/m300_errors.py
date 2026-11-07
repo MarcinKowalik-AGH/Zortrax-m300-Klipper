@@ -12,7 +12,7 @@ import os
 from .m300_error_codes import (CATALOG, CODES, KINDS, NONE, SHUTDOWN, GUARD,
                                classify, clean, descriptor, identity)
 
-REVISION = '0.13.16.23-ONE-PRESENTATION'
+REVISION = '0.13.16.27-SD-NOTICE'
 STATE_FORMAT = ('m300_error_state code=%hu kind=%c fatal=%c source=%c'
                 ' native_id=%hu revision=%u')
 
@@ -112,7 +112,10 @@ class M300Errors:
             code, kind = found
         if type(code) is not int or code not in CODES and code != 0 or kind not in KINDS:
             raise ValueError('Unknown M300 error identity')
+        informational = code == 101 and not fatal
         old = self.current
+        if informational and old and old.get('severity', 'error') != 'info':
+            return old  # An empty catalogue must never replace an actual fault.
         if old and old['fatal']:
             if not fatal:
                 return old
@@ -134,7 +137,8 @@ class M300Errors:
         meta = descriptor(code, kind, fatal=fatal)
         self.current = dict(code=code, kind=kind, fatal=bool(fatal), source=source,
                             reason=reason, id='%s-%d' % (self.epoch, self.sequence),
-                            timestamp=self.reactor.monotonic(), state='FAULT',
+                            timestamp=self.reactor.monotonic(), state='NOTICE' if informational else 'FAULT',
+                            severity='info' if informational else 'error',
                             title=meta['title'], action=meta['action'],
                             icon='activity:' + meta['icon'])
         self.current['label'] = identity(self.current)
@@ -143,7 +147,8 @@ class M300Errors:
             # result panel for the whole mesh run, including nested homing.
             self.current.update(context)
         self.history.append(dict(self.current))
-        logging.error('M300_ERROR %s', json.dumps(self.current, sort_keys=True))
+        log = logging.info if informational else logging.error
+        log('M300_%s %s', 'NOTICE' if informational else 'ERROR', json.dumps(self.current, sort_keys=True))
         if sync:
             self._sync(code, kind, fatal)
         if not self._publish_pending:
@@ -255,7 +260,7 @@ class M300Errors:
         return 'Errors', rows
 
     def get_status(self, now):
-        return dict(revision=REVISION, state='FAULT' if self.current else 'IDLE', busy=False,
+        return dict(revision=REVISION, state=self.current.get('state', 'FAULT') if self.current else 'IDLE', busy=False,
                     current=dict(self.current) if self.current else None,
                     history=list(self.history), mcu=dict(self.mcu_state), mcu_abi=self.abi,
                     mcu_upgrade_required=self.abi != 1, catalogue_size=len(CODES),
