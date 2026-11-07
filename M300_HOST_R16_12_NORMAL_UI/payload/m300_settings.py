@@ -30,7 +30,7 @@ CHOICES = {key:values for key,_,values in SETTINGS}
 TITLES = {key:title for key,title,_ in SETTINGS}
 PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
            'info_firmware':'information','info_printer':'information',
-           'errors':'information','error_catalog':'errors'}
+           'errors':'help','error_catalog':'errors'}
 PARENTS.update({'setting_'+key:'settings' for key in CHOICES})
 PAGES = frozenset(PARENTS)
 WEB_MENU_ROWS = {
@@ -176,7 +176,7 @@ class M300Settings:
         if page=='information':
             return 'Information',back+[(title,('page',target)) for title,target in (
                 ('Firmware version','info_firmware'),('Printer information','info_printer'),
-                ('Errors','errors'),('Help','help'))]
+                ('Help','help'))]
         if page in ('errors', 'error_catalog'):
             errors = self.printer.lookup_object('m300_errors', None)
             return errors.rows(page) if errors is not None else ('Errors', back + [('Error service unavailable', None)])
@@ -194,6 +194,7 @@ class M300Settings:
                      'Total printing time: ' + info['total_printing_time']]
         else:
             title='Help';lines=['github.com/','MarcinKowalik-AGH/','Zortrax-m300-Klipper','Project documentation and issues']
+            back += [('Errors', ('page', 'errors'))]
         return title,back+[(line,None) for line in lines]
 
     def active_rows(self,page):
