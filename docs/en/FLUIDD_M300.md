@@ -10,6 +10,12 @@ original shared procedure actions.
 Printer information in the M300 build uses compact text rows for the model,
 hardware version, serial number and printing time.
 
+The OLED's native Klipper status keeps the original three upper rows. Its
+bottom status strip uses a 5x7 font, with up to two 42-character lines for
+the complete native message (for example, a Bed Mesh phase). This changes
+only the existing bottom 16 pixels. Longer messages end with an ellipsis;
+no scrolling timer, new display transport or encoder polling is added.
+
 **Homing XY**, **Homing Z** and **Homing ALL** are available in OLED
 Maintenance directly below Autocalibration, and as Fluidd macros
 `ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL`. They call

@@ -10,6 +10,21 @@ class PadMeshFixture:
             raise gcmd.error('Pad mesh fixture requires FILEOUTPUT')
         adapter = self.printer.lookup_object('m300_pad_mesh')
         check = gcmd.get_int('CHECK', 0)
+        if check == 8:
+            from .m300_klipper_status import _BIT_PLANES
+            from .m300_status_footer import klipper_footer
+            status = self.printer.lookup_object('m300_klipper_status')
+            for text in ('Bed mesh: Measuring point 11 of 25', 'Bed mesh: Measuring point 12 of 25'):
+                self.printer.lookup_object('gcode').run_script_from_command('M117 '+text)
+                wire = status.render(self.printer.get_reactor().monotonic())
+                native = b''.join(bytes(page).translate(table)
+                    for page in status.lcd_chip.vram for table in _BIT_PLANES)
+                assert status.footer_text == text
+                assert wire[:48*128] == native[:48*128]
+                assert wire[48*128:] == klipper_footer(text)
+                assert status.changed
+            gcmd.respond_info('M300_CI_FOOTER native upper rows and full message passed')
+            return
         if check == 5:
             expected=(
                 (285.,15.),(260.,0.),(300.,0.),(300.,51.),(260.,51.),

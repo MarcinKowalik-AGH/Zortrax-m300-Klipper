@@ -117,7 +117,10 @@ def classify(reason, source='', fatal=False):
 
 
 def identity(record):
-    return 'Error #%03d' % record['code'] if record.get('code') else 'Klipper error'
+    if record.get('code'):
+        prefix = 'Notice' if record.get('severity') == 'info' and not record.get('fatal') else 'Error'
+        return '%s #%03d' % (prefix, record['code'])
+    return 'Klipper error'
 
 
 def report(printer, reason, *, source, code=None, kind=NONE, fatal=False):

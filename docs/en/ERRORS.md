@@ -1,6 +1,6 @@
 # Classic M300 error handling
 
-Host error revision `0.13.16.22-OEM-ERRORS` pairs with MCU
+Host error revision `0.13.16.27-SD-NOTICE` pairs with MCU
 `0.13.14.18-OEM-ERRORS-UART8`. This is the Classic M300 1.3.1 catalogue,
 not the Plus, Dual or Inventure error numbering.
 
@@ -18,6 +18,19 @@ Fluidd Help dialog. It includes the current error and the code
 catalogue. Inspecting a catalogue entry does not raise a fault, change LEDs,
 operate hardware or send an error to the MCU.
 Back from a live catalogue entry restores the catalogue in Fluidd and OLED.
+
+An empty physical SD root is informational notice #101, not a failed printer
+operation. It stays available in Help/history and may be acknowledged, but
+does not start the red/green/blue five-second alarm cycle. An empty subfolder
+is simply an empty directory. A real SD read failure, probing failure or
+thermal/MCU fault retains its alarm and cannot be overwritten by this notice.
+
+During a planned native restart (including `SAVE_CONFIG`), the host sends one
+final heartbeat only if the board session is fresh and healthy. It then
+revokes the old ARM session and stops periodic heartbeats before Klipper's
+native 0.5-second drain. No heartbeat is sent from a stopped, stale, faulted
+or shutdown session. The MCU watchdog deadline, ADC guards and fault latches
+are unchanged; this does not clear a hardware fault or authorize motion.
 
 ```gcode
 ZORTRAX_ERROR_STATUS

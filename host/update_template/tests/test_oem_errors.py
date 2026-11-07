@@ -30,6 +30,29 @@ def errors_session(abi=1):
 
 
 class OEMErrorsTests(unittest.TestCase):
+    def test_empty_sd_catalogue_is_an_informational_notice_without_rgb_alarm(self):
+        with errors_session() as h:
+            record=h.errors.record('No models on SD card',source='m300_browser',code=101)
+            h.flush_errors()
+            self.assertEqual(record['severity'],'info')
+            self.assertEqual(record['label'],'Notice #101')
+            self.assertEqual(h.errors.get_status(h.now)['state'],'NOTICE')
+            self.assertEqual(h.m.status_led_rgb(h.now),(0.,1.,0.))
+            h.now += 5.
+            self.assertEqual(h.m.status_led_rgb(h.now),(0.,1.,0.))
+            h.errors.acknowledge(record['id'])
+            self.assertIsNone(h.errors.current)
+
+    def test_empty_catalogue_cannot_overwrite_or_silence_a_real_probe_or_shutdown_fault(self):
+        for fatal in (False,True):
+            with self.subTest(fatal=fatal),errors_session() as h:
+                fault=h.errors.record('Probe triggered prior to movement',source='m300_motion',fatal=fatal)
+                h.errors.record('No models on SD card',source='m300_browser',code=101)
+                self.assertEqual(h.errors.current,fault)
+                self.assertEqual(h.m.status_led_rgb(h.now),(1.,0.,0.))
+                h.now += 5.
+                self.assertEqual(h.m.status_led_rgb(h.now),(0.,1.,0.))
+
     def test_complete_catalogue_has_21_codes_and_readable_oled_text(self):
         self.assertEqual(set(CODES), {2,3,4,10,11,12,13,14,15,30,31,32,33,34,35,40,41,42,75,76,101})
         for record in (*CODES.values(), *KINDS.values()):

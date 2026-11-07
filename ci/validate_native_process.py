@@ -114,6 +114,7 @@ def main():
     shutil.copy2(Path(__file__).with_name('m300_ci_pad_mesh_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_pad_mesh_fixture.py')
     pad_mesh_script = (
+        'ZORTRAX_CI_PAD_MESH CHECK=8\n'
         'BED_MESH PREVIEW=1\n'
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
         'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\n'
@@ -254,6 +255,7 @@ def main():
             assert 'Traceback' not in text and 'Error on' not in text,(name,text[-2000:])
         assert 'Unknown command:' not in text, (name, 'undispatched G-code command', text[-4000:])
         if name == 'native_pad_mesh':
+            assert 'M300_CI_FOOTER native upper rows and full message passed' in text
             status = next(json.loads(line.split('M300_PAD_MESH ', 1)[1])
                           for line in text.splitlines() if 'M300_PAD_MESH ' in line)
             assert len(status['probe_points']) == 25 and status['result'] is None

@@ -504,9 +504,18 @@ class M300MCU:
                 logging.exception('M300 could not read latched guard after shutdown')
 
     def _handle_restart(self, *args):
-        # Stop authorizing commands immediately. A real MCU retains its latch or
-        # watchdog state; FIRMWARE_RESTART is required after disarm/fault.
-        self._handle_stop()
+        # Native request_restart drains moves and dwells for 0.5 seconds.
+        # Start that drain with one fresh heartbeat while still healthy; do
+        # not leave it depending on the phase of the previous 0.25 s tick.
+        # No periodic heartbeat, ARM or fault clear survives this callback.
+        try:
+            if (not self.printer.is_shutdown()
+                    and self._healthy(self.reactor.monotonic(), armed=bool(self.state.get('armed')))):
+                self._heartbeat_cmd.send()
+        except Exception:
+            logging.exception('M300 final heartbeat before native restart failed')
+        finally:
+            self._handle_stop()
 
     def _tick(self, eventtime):
         if not self.ready or self.local_stop:

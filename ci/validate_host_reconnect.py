@@ -75,6 +75,32 @@ def main():
     config._finalize_config.assert_not_called()
     restart.check_restart_on_crc_mismatch.assert_not_called()
     rows.append({'case': 'failed_reset_stops_before_configuration', 'PASS': True})
+    # Exercise the real native G-code restart's event/dwell/exit ordering.
+    # The last healthy heartbeat precedes revocation; none survives the drain.
+    from gcode import GCodeDispatch
+    from test_restart_heartbeat import board
+    current = board()
+    clock, order = [100.], []
+    current.reactor.monotonic = lambda: clock[0]
+    def final_heartbeat():
+        assert current.ready and not current.local_stop
+        order.append('heartbeat')
+    current._heartbeat_cmd.send.side_effect = final_heartbeat
+    def dwell(delay):
+        assert delay == .5 and current.local_stop and not current.arm_session_confirmed
+        clock[0] += delay
+        assert current._tick(clock[0]) == current.reactor.NEVER
+        order.append('drain')
+    toolhead = NS(get_last_move_time=lambda:0., dwell=dwell, wait_moves=lambda:None)
+    native = GCodeDispatch.__new__(GCodeDispatch)
+    native.is_printer_ready = True
+    native.printer = NS(lookup_object=lambda name:toolhead,
+        send_event=lambda name,*args:current._handle_restart(*args),
+        request_exit=lambda result:order.append(result))
+    native.request_restart('restart')
+    assert order == ['heartbeat', 'drain', 'restart'], order
+    current._heartbeat_cmd.send.assert_called_once_with()
+    rows.append({'case': 'native_restart_final_healthy_heartbeat', 'PASS': True})
     print(json.dumps({'status': 'PASS_NATIVE_HOST_RECONNECT_POLICY', 'cases': rows,
                       'actual_pinned_native_restart_helper': True,
                       'actual_pinned_native_config_helper': True,
