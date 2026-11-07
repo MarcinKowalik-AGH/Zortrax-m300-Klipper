@@ -2,7 +2,7 @@
 
 Native print controller `0.13.16.28`: shared Start/End, X300 Y305 pause park,
 bed hold, 600 s nozzle standby / 1800 s nozzle OFF and confirmed M600.
-See [workflow and audit](docs/pl/PRINT_CONTROL.md). MCU flashing is not required.
+See [workflow and audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md). MCU flashing is not required.
 
 English test update for an installed native M300 Classic host with MCU R14.5 or R14.6.
 R16.10 adds contextual OLED printing, pause and completion screens.
