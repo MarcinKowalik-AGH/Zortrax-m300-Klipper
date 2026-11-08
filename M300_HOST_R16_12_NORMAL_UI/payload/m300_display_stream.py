@@ -165,7 +165,7 @@ class DisplayStream:
                     'mode': s['mode'], 'desired': s['desired'],
                     'sent': b.sent, 'acked': b.acked,
                     'ignored_acks': b.ignored_acks}
-                self.stop('Display command ACK timeout; MCU reset required',
+                self.stop('Display command ACK timeout; display resync required',
                           'reset_required')
                 raise TimeoutError(self.failure)
             return None

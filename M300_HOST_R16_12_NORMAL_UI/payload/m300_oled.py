@@ -62,7 +62,11 @@ class M300OLED:
             optimize_windows=config.getboolean('optimize_windows', True))
         self.fast = False
         self.mcu_oled_stats = None
+        self.mcu_oled_stats_time = None
         self.last_transport_failure = None
+        self.ack_recoveries = 0
+        self.ack_recovery_active = False
+        self.ack_recovery_after = 0.
         self.stats_at = self.work_at = 0.
         self.render_last_ms = self.render_max_ms = 0.
         self.render_count = self.tick_count = 0
@@ -173,6 +177,8 @@ class M300OLED:
         self.render_at = self.query_at = now
         self.stats_at = self.work_at = now
         self.mcu_oled_stats = None
+        self.mcu_oled_stats_time = None
+        self.ack_recovery_active = False
         self._user_refresh_pending = False
         self._render_key = self._render_wire = None
         self._render(now)
@@ -185,6 +191,7 @@ class M300OLED:
     def _stop(self, state, reason):
         self.generation += 1
         self.connected = False
+        self.ack_recovery_active = False
         self.stream.stop(reason, state)
         self._user_refresh_pending = False
         self._render_key = self._render_wire = None
@@ -221,6 +228,7 @@ class M300OLED:
 
     def _stats(self, params):
         generation = self.generation
+        received = params.get('#receive_time')
         snapshot = {k: params[k] for k in
                     ('blocks', 'wire', 'queued', 'peak', 'fault', 'spi_hz', 'max_busy_ticks')}
         def deliver(now):
@@ -229,7 +237,11 @@ class M300OLED:
                     from .m300_error_codes import report
                     report(self.printer, 'OLED DMA fault; MCU reset required', source='m300_oled')
                 self.mcu_oled_stats = snapshot
+                self.mcu_oled_stats_time = (received if isinstance(received, (int, float))
+                    and math.isfinite(received)
+                    and 0. <= self.reactor.monotonic()-received <= 4. else None)
                 if snapshot['fault']:
+                    self.ack_recovery_active = False
                     self.stream.stop('OLED DMA fault; MCU reset required', 'reset_required')
                     link = self._link()
                     if link is not None:
@@ -450,7 +462,47 @@ class M300OLED:
         if link is not None:
             link.service(now)
         self._send_one(now)
+        if getattr(self,'ack_recovery_active',False) and self.stream.ready and self.stream.enabled:
+            self.ack_recovery_active = False
+            logging.info('M300 OLED ACK recovery completed: count=%d',self.ack_recoveries)
         return self._deadline(now) if self.fast else now+self.interval
+
+    def _healthy_display_link(self, now):
+        now = max(now,self.reactor.monotonic())
+        lifecycle = self.printer.lookup_object('m300_lifecycle', None)
+        stats = getattr(self, 'mcu_oled_stats', None)
+        received = getattr(self, 'mcu_oled_stats_time', None)
+        return (self.fast and self.connected
+                and not getattr(self.printer,'is_shutdown',lambda:True)()
+                and stats is not None and stats.get('fault') == 0
+                and received is not None and 0. <= now-received <= 4.
+                and lifecycle is not None and lifecycle.connected and lifecycle.claimed
+                and not lifecycle.resyncing and lifecycle.error is None
+                and lifecycle.state.get('fault') == 0)
+
+    def _recover_lost_ack(self, now):
+        # Isolated loss of the last ACK has no later FIFO token to confirm it.
+        # At most one full display re-claim is permitted per 30 seconds, and
+        # another failure during initialization stops recovery. Native MCU
+        # display faults, stale status and printer shutdown are never cleared.
+        if (getattr(self,'ack_recovery_active',False)
+                or now < getattr(self,'ack_recovery_after',0.)
+                or not self._healthy_display_link(now)):
+            return False
+        self.ack_recovery_active = True
+        self.ack_recovery_after = now+30.
+        self.ack_recoveries = getattr(self,'ack_recoveries',0)+1
+        logging.warning('M300 OLED lost ACK: display-only recovery count=%d',
+                        self.ack_recoveries)
+        try:
+            self._reinitialize(now,lifecycle_recovery=True)
+        except Exception:
+            logging.exception('M300 optional OLED ACK recovery failed')
+            self.ack_recovery_active = False
+            self.stream.stop('OLED ACK recovery failed','reset_required')
+            return False
+        self.reactor.update_timer(self.timer,self.reactor.NOW)
+        return True
 
     def _send_one(self, now):
         # Firmware bounds the DMA FIFO to four slots. Delays/reset are barriers;
@@ -479,6 +531,9 @@ class M300OLED:
                 'display_mode': getattr(self.stream, 'display_mode', None)}
             logging.error('M300_OLED_TIMEOUT %s',
                           json.dumps(self.last_transport_failure, sort_keys=True))
+            if self.fast and self._recover_lost_ack(now):
+                return
+            self.ack_recovery_active = False
             from .m300_error_codes import report
             report(self.printer, 'OLED transport: ' + str(exc), source='m300_oled')
             if link is not None:
@@ -1069,8 +1124,12 @@ class M300OLED:
     def _reinitialize(self, now, lifecycle_recovery=False):
         if not self.connected:
             raise self.printer.command_error('M300 MCU is not ready; restart/reconnect first')
-        if self.fast and self.stream.state == 'reset_required' and not lifecycle_recovery:
+        if (self.fast and self.stream.state == 'reset_required' and not lifecycle_recovery
+                and not self._healthy_display_link(now)):
             raise self.printer.command_error('OLED transaction uncertain; use FIRMWARE_RESTART')
+        if not lifecycle_recovery:
+            self.ack_recovery_active = False
+            self.ack_recovery_after = now+30.
         lifecycle = self.printer.lookup_object('m300_lifecycle', None)
         if lifecycle is not None:
             logging.info('M300_OLED_RECLAIM reason=%s state=%s pending=%s',
@@ -1132,7 +1191,7 @@ class M300OLED:
     def get_status(self, now):
         age = None if self.encoder.last_time is None else now - self.encoder.last_time
         return {'model': 'M300_CLASSIC', 'abi': 1,
-                'host_revision': '0.13.16.31-OLED-QUEUE-SYNC',
+                'host_revision': '0.13.16.32-OLED-ACK-RECOVERY',
                 'ui_revision': 'KLIPPER_DEFAULT_16X4_EN',
                 'connected': self.connected, 'state': self.stream.state,
                 'ready': self.stream.ready and self.stream.enabled and self.connected,
@@ -1140,6 +1199,9 @@ class M300OLED:
                 'last_transport_failure': getattr(self, 'last_transport_failure', None),
                 'frames': self.stream.completed_frames, 'sent': self.stream.sent,
                 'acked': self.stream.acked, 'ignored_acks': self.stream.ignored_acks,
+                'recovered_acks': self.stream.recovered_acks if self.fast else 0,
+                'ack_recoveries': getattr(self,'ack_recoveries',0),
+                'ack_recovery_active': getattr(self,'ack_recovery_active',False),
                 'last_frame_ms': self.stream.last_frame_ms,
                 'transport': 'DMA_RLE_WINDOW4' if self.fast else 'LEGACY_ACK32',
                 'optimize_windows': self.fast and self.stream.optimize_windows,

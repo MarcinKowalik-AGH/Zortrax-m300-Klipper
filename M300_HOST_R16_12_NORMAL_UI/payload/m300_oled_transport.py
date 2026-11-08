@@ -470,6 +470,7 @@ class FastOledStream(OledStream):
         self._initializing = True
         self.next_interactive = 0.
         self.max_pending = self.coalesced_requests = self.payload_bytes = 0
+        self.recovered_acks = 0
         self.wire_bytes = self.last_payload_bytes = self.last_wire_bytes = 0
         self.frame_samples = deque(maxlen=128)
         self._frame_payload = self._frame_wire = 0
@@ -505,14 +506,22 @@ class FastOledStream(OledStream):
         self._held = None
 
     def ack(self, token, now):
-        if not self.enabled or not self.inflight or self.inflight[0][0] != token:
+        tokens = [p[0] for p in self.inflight]
+        if not self.enabled or token not in tokens:
             self.ignored_acks += 1
             return False
-        _, _, delay = self.inflight.popleft()
+        # The MCU completes its DMA FIFO in order and emits ACK only after
+        # SPI TXE=1/BSY=0. A later token IN THIS WINDOW therefore also proves
+        # completion of its predecessors if their return packets were lost.
+        # Never retransmit display data: that would repeat SSD1322 RAM writes.
+        count = tokens.index(token)+1
+        for _ in range(count):
+            _, _, delay = self.inflight.popleft()
         if delay:
             self.ready_after = now + delay
         self.pending = self.inflight[0] if self.inflight else None
-        self.acked += 1
+        self.acked += count
+        self.recovered_acks += count-1
         return True
 
     def _commit(self, now):
@@ -543,7 +552,7 @@ class FastOledStream(OledStream):
                 'sent': self.sent, 'acked': self.acked,
                 'ignored_acks': self.ignored_acks,
                 'restart_requested': self.restart_requested}
-            self.stop('OLED ACK timeout; MCU reset required', 'reset_required')
+            self.stop('OLED ACK timeout; display resync required', 'reset_required')
             raise TimeoutError(self.failure)
         if self.restart_requested:
             if self.inflight:

@@ -4,4 +4,4 @@ This checkout contains the tested host, prebuilt Fluidd and MCU image.
 Run `python3 install-orange-pi.py` as the Klipper user while idle.
 The MCU image is for separate SD flashing.
 
-Source commit: `9159da1a97b2f6a37805a565f1988f1d8ff9d4e8`
+Source commit: `4cb23fea8ec89a131c8ca9f3c866d2564af3a52b`
