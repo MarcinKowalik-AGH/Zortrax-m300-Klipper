@@ -5,6 +5,7 @@ Only the respective job or filament owner executes its requested actions. The
 panel does not arm the board, start work, choose a material temperature, clear
 faults or issue motion/heater G-code itself.
 """
+import json
 import logging
 import math
 import textwrap
@@ -61,6 +62,7 @@ class M300OLED:
             optimize_windows=config.getboolean('optimize_windows', True))
         self.fast = False
         self.mcu_oled_stats = None
+        self.last_transport_failure = None
         self.stats_at = self.work_at = 0.
         self.render_last_ms = self.render_max_ms = 0.
         self.render_count = self.tick_count = 0
@@ -468,6 +470,15 @@ class M300OLED:
                     self.commands[kind].send([token, *args])
         except TimeoutError as exc:
             logging.error('M300 optional OLED stopped: %s', exc)
+            lifecycle = self.printer.lookup_object('m300_lifecycle', None)
+            self.last_transport_failure = {
+                'host': self.stream.timeout_context,
+                'mcu_oled': getattr(self, 'mcu_oled_stats', None),
+                'lease': dict(lifecycle.state) if lifecycle is not None else None,
+                'generation': self.generation, 'page': self.page,
+                'display_mode': getattr(self.stream, 'display_mode', None)}
+            logging.error('M300_OLED_TIMEOUT %s',
+                          json.dumps(self.last_transport_failure, sort_keys=True))
             from .m300_error_codes import report
             report(self.printer, 'OLED transport: ' + str(exc), source='m300_oled')
             if link is not None:
@@ -1062,8 +1073,17 @@ class M300OLED:
             raise self.printer.command_error('OLED transaction uncertain; use FIRMWARE_RESTART')
         lifecycle = self.printer.lookup_object('m300_lifecycle', None)
         if lifecycle is not None:
-            lifecycle.claim()
-        if lifecycle_recovery:
+            logging.info('M300_OLED_RECLAIM reason=%s state=%s pending=%s',
+                         'lease_recovery' if lifecycle_recovery else 'operator',
+                         self.stream.state,
+                         [p[0] for p in getattr(self.stream, 'inflight', ())])
+            # Claim cancels MCU operations, so the old host window cannot be
+            # drained afterwards: those ACKs will never exist. Discard only
+            # display state and serialize claim on the SAME native queue as
+            # the remaining old writes and new init. Tokens remain monotonic.
+            self.stream.stop(state='reinitializing')
+            lifecycle.claim(command_queue=self.cq)
+        if lifecycle is not None or lifecycle_recovery:
             self.generation += 1
             self._input_epoch += 1
             self._presented_context = self._presented_actions = None
@@ -1112,11 +1132,12 @@ class M300OLED:
     def get_status(self, now):
         age = None if self.encoder.last_time is None else now - self.encoder.last_time
         return {'model': 'M300_CLASSIC', 'abi': 1,
-                'host_revision': '0.13.9-OLED-R9-LIFECYCLE',
+                'host_revision': '0.13.16.31-OLED-QUEUE-SYNC',
                 'ui_revision': 'KLIPPER_DEFAULT_16X4_EN',
                 'connected': self.connected, 'state': self.stream.state,
                 'ready': self.stream.ready and self.stream.enabled and self.connected,
                 'enabled': self.stream.enabled, 'error': self.stream.failure,
+                'last_transport_failure': getattr(self, 'last_transport_failure', None),
                 'frames': self.stream.completed_frames, 'sent': self.stream.sent,
                 'acked': self.stream.acked, 'ignored_acks': self.stream.ignored_acks,
                 'last_frame_ms': self.stream.last_frame_ms,

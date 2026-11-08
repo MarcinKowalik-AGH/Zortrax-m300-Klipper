@@ -384,9 +384,10 @@ class M300NativeMotion:
                         self._phase('Z_FIVE_CONTACT_REFERENCES')
                         try:
                             reference = self.precision.run(token)
-                        except Exception:
+                        except Exception as exc:
                             if not self.printer.is_shutdown():
-                                self.printer.invoke_shutdown('M300 precision Z reference failed')
+                                self.printer.invoke_shutdown(
+                                    'M300 precision Z reference failed: '+str(exc))
                             raise
                 # Native homing has just established contact Z. Never add a
                 # blind 5 mm retreat to an old Z299 coordinate before homing.

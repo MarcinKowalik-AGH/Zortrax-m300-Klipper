@@ -5,9 +5,14 @@ OEM 0x0800ab90/0x0800ac10 supplies the iteration and last-reference policy.
 Unlike its unbounded release loop, every native search/release has a finite
 endpoint. A full 1 mm retreat verifies stable opening; no mean is substituted.
 """
+import logging
 import math
 
 from .m300_native_probe import BoundedProbeToolhead, boundary_z
+
+
+class _EarlyRelease(Exception):
+    """The contact opened before the first release step; no reference exists."""
 
 
 class M300ZRefinement:
@@ -17,6 +22,7 @@ class M300ZRefinement:
     margin = 1.
     speed = .5
     timeout = 45.
+    release_retries = 2
 
     def __init__(self, owner, probe):
         self.owner, self.printer = owner, owner.printer
@@ -27,6 +33,7 @@ class M300ZRefinement:
             raise owner.config.error('M300 precision Z requires the existing PC7 endstop')
         self.drip, self.set_native = self.toolhead.drip_move, self.toolhead.set_position
         self.references = []
+        self.retry_events = []
 
     def error(self, message):
         return self.printer.command_error('M300 precision Z: '+message)
@@ -81,8 +88,18 @@ class M300ZRefinement:
                                   triggered=triggered,check_triggered=True)
         self.check()
         if move.check_no_movement() is not None:
+            if not triggered:
+                raise _EarlyRelease()
             raise self.error('PC7 transition occurred without movement')
         return self.normalized(result[2])
+
+    def retreat_open(self, z):
+        self.move(z,self.speed)
+        self.toolhead.dwell(1.)
+        self.toolhead.wait_moves()
+        self.check()
+        if self.query():
+            raise self.error('NO_RELEASE: PC7 reclosed after full retreat')
 
     def run(self, token):
         self.token = token
@@ -92,6 +109,7 @@ class M300ZRefinement:
         self.bounds = self.toolhead.get_kinematics().rails[2].get_range()
         lo,hi = self.bounds
         self.references = []
+        self.retry_events = []
         self.deadline = self.owner.reactor.monotonic()+self.timeout
         origin = self.probe.get_offsets()[2]
         # The native coarse home is genuine. This temporary translated frame
@@ -109,29 +127,40 @@ class M300ZRefinement:
         last = None
         for index in range(self.contacts):
             self.deadline = self.owner.reactor.monotonic()+self.timeout
-            if self.query():
-                raise self.error('INITIAL_ACTIVE: contact must be open before approach')
-            start = self.toolhead.get_position()[2]
-            target = max(lo,start-self.search)
-            if target >= start:
-                raise self.error('no bounded approach remains')
-            contact = self.transition(target,True)
-            if not self.query():
-                raise self.error('PC7 contact was not stable after approach')
-            release_target = contact+self.release
-            if release_target > hi:
-                raise self.error('release endpoint outside native Z range')
-            last = self.transition(release_target,False)
-            if last <= contact:
-                raise self.error('NO_RELEASE: invalid PC7 release edge')
-            # The source adds 100 counts after each release. Retain at least
-            # that distance and complete a full stable 1 mm opening as in M07.
-            self.move(last+max(100./scale,self.release),self.speed)
-            self.toolhead.dwell(1.)
-            self.toolhead.wait_moves()
-            self.check()
-            if self.query():
-                raise self.error('NO_RELEASE: PC7 reclosed after full retreat')
+            for attempt in range(self.release_retries+1):
+                if self.query():
+                    raise self.error('INITIAL_ACTIVE: contact must be open before approach')
+                start = self.toolhead.get_position()[2]
+                target = max(lo,start-self.search)
+                if target >= start:
+                    raise self.error('no bounded approach remains')
+                contact = self.transition(target,True)
+                if not self.query():
+                    raise self.error('PC7 contact was not stable after approach')
+                release_target = contact+self.release
+                if release_target > hi:
+                    raise self.error('release endpoint outside native Z range')
+                try:
+                    last = self.transition(release_target,False)
+                except _EarlyRelease:
+                    # PC7 may open between the closed query and native release
+                    # arming. Discard that entire pair; a zero-step edge must
+                    # never become a Z reference. Move only away from the bed,
+                    # verify opening, then retry within this SAME deadline.
+                    self.retry_events.append(dict(iteration=index+1,attempt=attempt+1))
+                    logging.warning('M300 precision Z discarded early release: '
+                                    'iteration=%d attempt=%d',index+1,attempt+1)
+                    self.retreat_open(self.toolhead.get_position()[2]+self.release)
+                    if attempt == self.release_retries:
+                        raise self.error('NO_RELEASE: PC7 opened before movement '
+                                         'in %d attempts' % (attempt+1))
+                    continue
+                if last <= contact:
+                    raise self.error('NO_RELEASE: invalid PC7 release edge')
+                # The source adds 100 counts after each release. Retain at
+                # least that distance and verify a full stable 1 mm opening.
+                self.retreat_open(last+max(100./scale,self.release))
+                break
             self.references.append(dict(iteration=index+1,
                 contact_mm=contact-self.margin,release_mm=last-self.margin))
         # Use the fifth release reference. Keep physical clearance; do not
@@ -143,4 +172,5 @@ class M300ZRefinement:
         self.printer.send_event('toolhead:manual_move')
         return dict(method='FIVE_SUCCESSIVE_RELEASE_REFERENCES',contacts=len(self.references),
                     averaging=False,references=list(self.references),
-                    final_reference_mm=last-self.margin,stable_release_mm=self.release)
+                    final_reference_mm=last-self.margin,stable_release_mm=self.release,
+                    release_retries=list(self.retry_events))
