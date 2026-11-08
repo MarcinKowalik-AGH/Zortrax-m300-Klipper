@@ -1,11 +1,20 @@
-# Zortrax M300 Classic — Klipper R16.12
+# Zortrax M300 Classic — Klipper v1.0.0-beta.1
+
+[Download v1.0.0-beta.1](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.1) ·
+[First installation (EN)](docs/en/FIRST_INSTALL.md) ·
+[Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
+
+For a blank Raspberry Pi / Orange Pi, use the versioned beta bundle and its
+first-install helper after KIAUH has prepared the services. The bundle contains
+the complete pinned M300 host, precompiled MCU and precompiled Fluidd. The
+normal updater below is for an already installed M300.
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
 Protected native pause/resume, rear-right park X300 Y305, long-pause bed hold,
 M600 and shared Start/End: [workflow, parameters and audit (PL)](docs/pl/PRINT_CONTROL.md).
 
-## Project overview — November 3, 2026
+## Project overview — November 8, 2026
 
 Klipper integration for the **original Zortrax M300 Classic** (STM32F103 MCU, Orange Pi host, original monochrome OLED and rotary encoder). The main Orange Pi build combines **MCU R14.18 with Host R16.12**.
 
@@ -94,7 +103,7 @@ in both geometry regression tests and the actual Klippy profile integration.
 Pad mesh revision `0.13.16.16-PAD-TUNE` opens Fluidd Tune once probing starts,
 shows progress and rejected-attempt diagnostics, and previews an accepted
 native profile before compensation is activated. Saving is offered only for
-the current accepted run. The default 0.50 mm span limit is preserved.
+the current accepted run. Current releases use a default 0.80 mm span limit.
 Revision `0.13.16.17-PAD-PREPARE` makes the measurement a single command:
 simultaneous native bed/nozzle heating, stable-temperature wait and required
 native homing precede probing. Nozzle temperature uses 180 °C as a minimum
@@ -128,8 +137,9 @@ edits and preserves PID, E and deliberate geometry.
 
 Canonical runtime: host/klippy/extras. Configuration: host/config. Installer
 and self-contained tests: host/update_template. MCU: mcu/SOURCE_MCU. Current
-documentation is English under docs/en. Legacy localized URLs redirect to
-English; immutable multilingual firmware evidence remains audit data.
+reference documentation is under docs/en, with the first-install guide and
+print-control audit also available in Polish under docs/pl. Immutable
+multilingual firmware evidence remains audit data.
 No private factory application dump or bootloader is distributed.
 
 OLED frame transport, sleep/wake, local MCU cooling and bounded host startup

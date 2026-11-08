@@ -59,6 +59,7 @@ def main():
     run('ui_activity_artwork', [sys.executable, ROOT/'ci/check_ui_symbols.py', '-v'],
         expected_tests=4)
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
+    run('first_install', [sys.executable, ROOT / 'ci/test_install_fresh.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
         '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])
     run('menu_performance', [sys.executable, ROOT/'ci/benchmark_menu.py',
@@ -110,6 +111,9 @@ def main():
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/fileoutput'])
+        run('actual_first_install_fileoutput', [sys.executable, ROOT/'ci/validate_fresh_install.py',
+            '--root',host_tree,'--dictionary',args.dictionary.resolve(),
+            '--output',ROOT/'.ci/first-install-fileoutput'])
     summary = {'status': 'PASS_M300_PUBLIC_SOFTWARE_CHECKS', 'checks': rows,
                'source_sha256': source_digest(),
                'compiled_dictionary_sha256': digest(args.dictionary) if args.dictionary else None,

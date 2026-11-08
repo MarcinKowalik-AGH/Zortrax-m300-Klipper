@@ -1,0 +1,10 @@
+# Pinned host dependencies; native extensions are built for the target SBC.
+# Python 3.10-3.12. Klippy/Jinja compatibility is exercised by public CI.
+greenlet==3.3.2
+cffi==2.1.1
+Jinja2==2.11.3
+markupsafe==1.1.1
+pyserial==3.4
+python-can==3.3.4
+setuptools==78.1.1
+msgspec==0.19.0

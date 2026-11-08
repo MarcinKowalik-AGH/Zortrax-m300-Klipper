@@ -76,8 +76,27 @@ def main():
         'filament_temperature': 240, 'release_stage': 'VERIFIED'}
     provenance.update(hotend_cooling_on_temperature=META['hotend_cooling_on_temperature'],
                       hotend_cooling_off_temperature=META['hotend_cooling_off_temperature'])
+    provenance['distribution_version'] = META['distribution_version']
     (release / 'BUILD_PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
     (release / 'INSTALL_EN.md').write_text((ROOT / 'docs/en/INSTALL.md').read_text())
+    for language in ('en', 'pl'):
+        shutil.copy2(ROOT/'docs'/language/'FIRST_INSTALL.md',
+                     release/('FIRST_INSTALL_'+language.upper()+'.md'))
+    # Ship portable, fully patched host source, not x86 native binaries from CI.
+    # Copy pristine + canonical overlay rather than the mutated FILEOUTPUT tree,
+    # which contains explicitly gated CI-only helper modules.
+    runtime = release/'KLIPPER_HOST'
+    shutil.copytree(ROOT/'.ci/pristine', runtime, ignore=shutil.ignore_patterns(
+        '.git', '__pycache__', '*.pyc', '*.so', '*.o', 'out', OWNER))
+    shutil.copytree(ROOT/'host/klippy',runtime/'klippy',dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    if list((runtime/'klippy/extras').glob('m300_ci_*')):
+        raise ValueError('CI-only helpers must never ship in the runtime')
+    first=release/'FIRST_INSTALL';first.mkdir()
+    for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
+        shutil.copy2(ROOT/'host/config'/name,first/name)
+    shutil.copy2(ROOT/'host/requirements-m300.txt',first/'requirements-m300.txt')
+    shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
