@@ -64,7 +64,7 @@ if [[ -n "$previous" ]]; then
     gh release view "$previous" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$work/previous-notes.md"
     {
         printf '> Superseded by [%s](https://github.com/%s/releases/tag/%s).\n' "$tag" "$GITHUB_REPOSITORY" "$tag"
-        printf '> This older beta has an early-Moonraker startup regression. Use the corrected release and its recovery instructions.\n\n'
+        printf '> See the newer release for corrections and update instructions.\n\n'
         cat "$work/previous-notes.md"
     } > "$work/superseded.md"
     gh release edit "$previous" --repo "$GITHUB_REPOSITORY" --notes-file "$work/superseded.md"

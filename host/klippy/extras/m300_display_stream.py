@@ -159,6 +159,12 @@ class DisplayStream:
             return None
         if s['pending']:
             if now >= s['pending'][1]:
+                b.timeout_context = {
+                    'owner': 'display_power', 'time': now,
+                    'pending': [dict(token=s['pending'][0],deadline=s['pending'][1])],
+                    'mode': s['mode'], 'desired': s['desired'],
+                    'sent': b.sent, 'acked': b.acked,
+                    'ignored_acks': b.ignored_acks}
                 self.stop('Display command ACK timeout; MCU reset required',
                           'reset_required')
                 raise TimeoutError(self.failure)

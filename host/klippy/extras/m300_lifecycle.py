@@ -121,13 +121,20 @@ class M300Lifecycle:
         self.command = self.mcu.lookup_command('m300_oled_host state=%c')
         self.mcu.register_serial_response(self._response, RESPONSE)
 
-    def claim(self):
+    def claim(self, command_queue=None):
         if self.command is None:
             raise self.printer.command_error('M300 OLED host-lease command is not configured')
         self.recovery_failed = False
         self.error = None
         self.claim_at = self.reactor.monotonic()
-        self.command.send([1])
+        command = self.command
+        if command_queue is not None:
+            # An OLED re-claim cancels the MCU DMA FIFO. Keep it behind all
+            # older display writes and before the new reset/init sequence.
+            # A separate high-priority queue could overtake background data.
+            command = self.mcu.lookup_command('m300_oled_host state=%c',
+                                              cq=command_queue)
+        command.send([1])
         self.sent += 1
         self.claimed = False  # Only the current MCU reply confirms ownership.
         self.resyncing = True
@@ -218,7 +225,7 @@ class M300Lifecycle:
         self.reactor.update_timer(self.timer, self.reactor.NEVER)
 
     def get_status(self, now):
-        return {'revision': '0.13.16.2-LIFECYCLE-RECONNECT', 'connected': self.connected,
+        return {'revision': '0.13.16.31-OLED-QUEUE-SYNC', 'connected': self.connected,
                 'claimed': self.claimed, 'resyncing': self.resyncing, 'error': self.error,
                 'recovery_failed': self.recovery_failed,
                 'mcu': dict(self.state), 'generation': self.generation,

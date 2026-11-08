@@ -262,7 +262,7 @@ class FirmwareLevelingContractTests(unittest.TestCase):
             self.assertEqual(h.c.machine.state=='WAIT_WARNING',ready)
 
 
-def precision_harness(profile):
+def precision_harness(profile, early_releases=()):
     h=ContactHarness(profile['steps_per_mm']);scale=profile['steps_per_mm']
     h.position=[150.,158.,0.,17.];h.stepper.actual=0;h.stepper.offset=0.
     h.level=True;index=[-1]
@@ -284,8 +284,16 @@ def precision_harness(profile):
         if index[0]>=0 and h.no_contact:return False
         return h.stepper.actual<=contact_raw[max(0,index[0])]
     h.endstop.query_endstop=query
+    releases=[0]
     def drip(target,speed,completion):
         before=h.position[2]
+        if not h.triggered:
+            releases[0]+=1
+            if releases[0] in early_releases:
+                h.trigger_time=h.now
+                h.level=False
+                h.events.append(('contact',False,target[2],before))
+                return
         level=(contact_raw[index[0]]+(0 if h.triggered else 1))/scale+h.stepper.offset
         success=(not h.no_contact and target[2]<=level<before if h.triggered else
                  not h.no_release and before<level<=target[2])
@@ -309,6 +317,84 @@ def precision_harness(profile):
 
 
 class NativeFiveContactTests(unittest.TestCase):
+    def test_early_release_discards_the_pair_and_retries_at_both_factory_scales(self):
+        for profile in REFERENCE['z_references']:
+            for retries in (1,2):
+                with self.subTest(scale=profile['steps_per_mm'],retries=retries):
+                    expanded=copy.deepcopy(profile)
+                    expanded['events']=([profile['events'][0]]*retries+expanded['events'])
+                    h,ref=precision_harness(expanded,range(1,retries+1))
+                    with patch.dict('sys.modules',{'payload.homing':homing}):
+                        result=ref.run(1)
+                    self.assertEqual(result['contacts'],5)
+                    self.assertEqual(result['release_retries'],[
+                        dict(iteration=1,attempt=i+1) for i in range(retries)])
+                    self.assertAlmostEqual(result['final_reference_mm'],
+                        (profile['result_raw']-1500)/profile['steps_per_mm'])
+                    self.assertEqual([r['iteration'] for r in result['references']],list(range(1,6)))
+                    self.assertTrue(all(r['release_mm']>r['contact_mm'] for r in result['references']))
+                    self.assertEqual(len([e for e in h.events if e[0]=='contact']),2*(5+retries))
+                    self.assertEqual(h.position[:2],[150.,158.])
+                    self.assertEqual(h.position[3],17.)
+
+    def test_repeated_early_release_has_three_attempts_and_no_accepted_reference(self):
+        h,ref=precision_harness(REFERENCE['z_references'][1],(1,2,3))
+        with patch.dict('sys.modules',{'payload.homing':homing}),self.assertRaisesRegex(
+                RuntimeError,'PC7 opened before movement in 3 attempts'):
+            ref.run(1)
+        self.assertEqual(ref.references,[])
+        self.assertEqual(len(ref.retry_events),3)
+        self.assertEqual(len([e for e in h.events if e[0]=='contact']),6)
+        self.assertFalse(h.endstop.query_endstop(h.now))
+
+    def test_early_release_cannot_retry_with_contact_still_closed_after_retreat(self):
+        h,ref=precision_harness(REFERENCE['z_references'][1],(1,))
+        query=h.endstop.query_endstop
+        h.endstop.query_endstop=lambda now: (True if ref.retry_events else query(now))
+        with patch.dict('sys.modules',{'payload.homing':homing}),self.assertRaisesRegex(
+                RuntimeError,'PC7 reclosed after full retreat'):
+            ref.run(1)
+        self.assertEqual(ref.references,[])
+        self.assertEqual(len([e for e in h.events if e[0]=='contact']),2)
+
+    def test_approach_without_movement_remains_a_failure_and_never_retries(self):
+        h,ref=precision_harness(REFERENCE['z_references'][1])
+        def early_contact(target,speed,completion):
+            h.trigger_time=h.now
+            h.events.append(('contact',h.triggered,target[2],h.position[2]))
+        h.toolhead.drip_move=ref.drip=early_contact
+        with patch.dict('sys.modules',{'payload.homing':homing}),self.assertRaisesRegex(
+                RuntimeError,'PC7 transition occurred without movement'):
+            ref.run(1)
+        self.assertEqual(ref.references,[])
+        self.assertEqual(ref.retry_events,[])
+        self.assertEqual(len([e for e in h.events if e[0]=='contact']),1)
+
+    def test_retry_keeps_the_original_iteration_deadline(self):
+        h,ref=precision_harness(REFERENCE['z_references'][1],(1,2))
+        ref.timeout=2.5
+        def dwell(delay):
+            h.now+=delay
+        h.toolhead.dwell=dwell
+        with patch.dict('sys.modules',{'payload.homing':homing}),self.assertRaisesRegex(
+                RuntimeError,'deadline'):
+            ref.run(1)
+        self.assertEqual(ref.references,[])
+        self.assertEqual(len(ref.retry_events),2)
+
+    def test_restart_during_retry_retreat_prevents_another_approach(self):
+        h,ref=precision_harness(REFERENCE['z_references'][1],(1,))
+        wait=h.toolhead.wait_moves
+        def cancelled_wait():
+            wait()
+            if ref.retry_events:h.shutdown=True
+        h.toolhead.wait_moves=cancelled_wait
+        with patch.dict('sys.modules',{'payload.homing':homing}),self.assertRaisesRegex(
+                RuntimeError,'session invalidated'):
+            ref.run(1)
+        self.assertEqual(ref.references,[])
+        self.assertEqual(len([e for e in h.events if e[0]=='contact']),2)
+
     def test_five_contacts_accept_a_shortfall_to_the_configured_lower_limit(self):
         for measured, target in ((176., 180.), (175., 180.), (181., 240.), (175., 240.)):
             with self.subTest(measured=measured, target=target):
@@ -392,7 +478,7 @@ class NativeFiveContactTests(unittest.TestCase):
         m=motion_fixture();m.precision.run=Mock(side_effect=RuntimeError('NO_RELEASE'))
         m.printer.invoke_shutdown=Mock()
         with self.assertRaisesRegex(RuntimeError,'NO_RELEASE'):m.home(axes='z')
-        m.printer.invoke_shutdown.assert_called_once()
+        m.printer.invoke_shutdown.assert_called_once_with('M300 precision Z reference failed: NO_RELEASE')
         self.assertEqual(m.state,'FAULT');self.assertEqual(m.hotend.target,0.)
 
 

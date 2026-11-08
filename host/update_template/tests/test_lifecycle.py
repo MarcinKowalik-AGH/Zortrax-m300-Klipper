@@ -44,6 +44,19 @@ def fixture(fault=0, armed=0, configured=0, inputs=62, enabled=True,
 
 
 class StartupReconnectTests(unittest.TestCase):
+    def test_display_claim_uses_the_existing_display_command_queue_when_given(self):
+        f=fixture()
+        default,queued=Mock(),Mock()
+        queue=object()
+        f.life.command=default
+        f.mcu.lookup_command=Mock(return_value=queued)
+        f.life.claim(command_queue=queue)
+        f.mcu.lookup_command.assert_called_once_with('m300_oled_host state=%c',cq=queue)
+        default.send.assert_not_called()
+        queued.send.assert_called_once_with([1])
+        self.assertTrue(f.life.resyncing)
+        self.assertFalse(f.life.claimed)
+
     def test_cold_start_reads_once_without_reset(self):
         f = fixture()
         f.life._startup_identify()

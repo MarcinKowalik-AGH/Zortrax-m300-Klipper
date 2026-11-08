@@ -85,6 +85,14 @@ class RepositoryContracts(unittest.TestCase):
             module = ast.parse((folder / 'm300_oled_transport.py').read_text())
             result = {}
             for cls in (node for node in module.body if isinstance(node, ast.ClassDef)):
+                if folder == runtime and cls.name == 'OledStream':
+                    diagnostic = ast.parse('self.timeout_context = None').body[0]
+                    for method in (n for n in cls.body if isinstance(n, ast.FunctionDef)
+                                   and n.name in ('__init__', '_begin')):
+                        matching = [n for n in method.body
+                                    if ast.dump(n) == ast.dump(diagnostic)]
+                        self.assertEqual(len(matching), 1)
+                        method.body.remove(matching[0])
                 if cls.name == 'FastOledStream':
                     cls.body = [node for node in cls.body
                                 if not isinstance(node, ast.FunctionDef)
@@ -94,7 +102,7 @@ class RepositoryContracts(unittest.TestCase):
 
         self.assertEqual(classes(runtime), classes(reference))
 
-    def test_oled_spi_lifecycle_and_background_scheduler_are_unchanged(self):
+    def test_oled_spi_and_background_scheduler_are_unchanged(self):
         def methods(path, allow_benchmark=False):
             tree=ast.parse(path.read_text())
             node=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='M300OLED')
@@ -106,6 +114,10 @@ class RepositoryContracts(unittest.TestCase):
                 matching = [n for n in constructor.body if ast.dump(n) == ast.dump(registration)]
                 self.assertEqual(len(matching), 1)
                 constructor.body.remove(matching[0])
+                diagnostic = ast.parse('self.last_transport_failure = None').body[0]
+                matching = [n for n in constructor.body if ast.dump(n) == ast.dump(diagnostic)]
+                self.assertEqual(len(matching), 1)
+                constructor.body.remove(matching[0])
                 for item in ast.walk(constructor):
                     if isinstance(item, ast.Call):
                         item.keywords = [kw for kw in item.keywords if kw.arg != 'optimize_windows']
@@ -115,9 +127,14 @@ class RepositoryContracts(unittest.TestCase):
                     if isinstance(item, ast.Dict):
                         fields = [(key, value) for key, value in zip(item.keys, item.values)
                                   if not isinstance(key, ast.Constant)
-                                  or key.value not in ('optimize_windows', 'optimized_frames')]
+                                  or key.value not in ('optimize_windows', 'optimized_frames',
+                                                      'last_transport_failure')]
                         item.keys = [key for key, _ in fields]
                         item.values = [value for _, value in fields]
+                        for key, value in fields:
+                            if isinstance(key, ast.Constant) and key.value == 'host_revision':
+                                self.assertEqual(value.value, '0.13.16.31-OLED-QUEUE-SYNC')
+                                value.value = '0.13.9-OLED-R9-LIFECYCLE'
                 # Remove only the exact fault-observer additions, then still
                 # require equality of transport, scheduling and SPI lifecycle.
                 observer = ast.parse("from .m300_error_codes import report\n"
@@ -125,7 +142,17 @@ class RepositoryContracts(unittest.TestCase):
                     "if snapshot['fault'] and not (self.mcu_oled_stats or {}).get('fault', 0):\n"
                     "    from .m300_error_codes import report\n"
                     "    report(self.printer, 'OLED DMA fault; MCU reset required', source='m300_oled')\n").body
-                for method_name, additions in (('_send_one', observer[:2]), ('_stats', observer[2:])):
+                diagnostic = ast.parse("lifecycle = self.printer.lookup_object('m300_lifecycle', None)\n"
+                    "self.last_transport_failure = {\n"
+                    " 'host': self.stream.timeout_context,\n"
+                    " 'mcu_oled': getattr(self, 'mcu_oled_stats', None),\n"
+                    " 'lease': dict(lifecycle.state) if lifecycle is not None else None,\n"
+                    " 'generation': self.generation, 'page': self.page,\n"
+                    " 'display_mode': getattr(self.stream, 'display_mode', None)}\n"
+                    "logging.error('M300_OLED_TIMEOUT %s',\n"
+                    " json.dumps(self.last_transport_failure, sort_keys=True))\n").body
+                for method_name, additions in (('_send_one', observer[:2]+diagnostic),
+                                               ('_stats', observer[2:])):
                     method = next(n for n in node.body if isinstance(n, ast.FunctionDef)
                                   and n.name == method_name)
                     expected = {ast.dump(n): 0 for n in additions}
@@ -144,7 +171,9 @@ class RepositoryContracts(unittest.TestCase):
         new=methods(ROOT/'host/klippy/extras/m300_oled.py', allow_benchmark=True)
         self.assertEqual(set(new), set(old) | {'cmd_rle_bench'})
         # _select additionally preserves the interactive OEM fan-menu cursor.
-        for name in old.keys()-{'_render','_panel','_select'}:
+        # _reinitialize deliberately fixes cancelled-ACK/native-queue ordering;
+        # test_oled_reclaim reproduces the old failure and checks the boundary.
+        for name in old.keys()-{'_render','_panel','_select','_reinitialize'}:
             self.assertEqual(old[name],new[name],name)
 
     def test_published_host_and_mcu_sources_exclude_factory_dump_images(self):

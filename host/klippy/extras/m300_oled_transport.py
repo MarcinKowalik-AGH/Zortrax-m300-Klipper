@@ -177,6 +177,7 @@ class OledStream:
         self.enabled = self.ready = False
         self.state = 'stopped'
         self.failure = None
+        self.timeout_context = None
         self.previous = self.target = self.operations = self.pending = None
         self.ready_after = self.next_frame = 0.
         self.restart_requested = False
@@ -196,6 +197,7 @@ class OledStream:
         self.ready = False
         self.state = 'initializing'
         self.failure = None
+        self.timeout_context = None
         self.previous = None
         self.target = self.latest
         self.operations = iter(init_operations(self.target))
@@ -535,6 +537,12 @@ class FastOledStream(OledStream):
         if not self.enabled:
             return None
         if self.inflight and now >= self.inflight[0][1]:
+            self.timeout_context = {
+                'owner': 'frame', 'time': now, 'state': self.state,
+                'pending': [dict(token=p[0],deadline=p[1]) for p in self.inflight],
+                'sent': self.sent, 'acked': self.acked,
+                'ignored_acks': self.ignored_acks,
+                'restart_requested': self.restart_requested}
             self.stop('OLED ACK timeout; MCU reset required', 'reset_required')
             raise TimeoutError(self.failure)
         if self.restart_requested:
