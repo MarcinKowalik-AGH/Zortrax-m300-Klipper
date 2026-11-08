@@ -37,12 +37,12 @@ The MCU reader is idle once the local copy is ready.
 | File | Preparation | Execution |
 |---|---|---|
 | `.gcode`, `.gco`, `.g` | Size, UTF-8 and line checks, then a read-only local snapshot | Native Klipper G-code, with the printer's configured slicer start/end commands and macros |
-| `.zcode` | Check the M300 header, model family, every record and CRC, motion limits and temperatures before converting | Native G-code with heat, M300 XYZ homing, the converted moves and heat/fan shutdown at completion |
+| `.zcode` | Check the M300 header, model family, every record and CRC, motion limits and temperatures before converting | Shared native START_PRINT / END_PRINT, AUTO saved mesh, optional platform soak and bounded final park |
 
 For Z-code, the decoded coordinates use the file's X/Y/E scales of
 640/640/960 and Z scale of 400 or 800. The native motion configuration
 determines the actual steps. Startup requires zero XYZ G-code offsets and
-uses the existing native G28 procedure. A file pause requires explicit Resume.
+uses the existing native G28 procedure through the shared START_PRINT owner. A file pause requires explicit Resume.
 
 The binary support covers the recovered Classic M300 1.3.1 subset, model IDs
 20–29. The Inventure converter smoke file in the project has model ID 10,
@@ -88,3 +88,5 @@ physical print remain acceptance checks. Start those checks with a small,
 known M300 job.
 
 [Klipper virtual SD and pause/resume](https://www.klipper3d.org/Config_Reference.html#virtual_sdcard)
+
+From print controller 0.13.16.29, converted Z-code uses `START_PRINT ... MESH=AUTO` and `END_PRINT`, like slicer G-code. AUTO loads an existing `m300_pads` profile after homing or explicitly clears compensation if none exists; an explicit missing profile is refused. Full platform preheating is captured from persistent settings. The read-only `check-zcode.py --limits actual-limits.json file.zcode` utility in the host package validates files without sending printer commands. This does not widen the supported opcode subset or qualify a physical Z-Suite corpus.

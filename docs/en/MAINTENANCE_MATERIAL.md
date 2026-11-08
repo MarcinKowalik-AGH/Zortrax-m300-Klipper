@@ -27,6 +27,7 @@ Material, Settings, Information. Back follows the menu history.
 | Maintenance | Homing Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed |
 | Maintenance | Homing ALL | `ZORTRAX_HOME_ALL` | Native `G28`, OLED hourglass and Fluidd home-button status |
 | Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
+| Maintenance | Heat the platform | `ZORTRAX_HEAT_PLATFORM TEMP=60` | Native bed only, no homing required, ±2°C readiness, confirmation or Cancel turns bed off |
 | Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
 | Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
 | Maintenance | Fan test | `ZORTRAX_FAN_TEST_START` | Open the original interactive submenu |
@@ -186,3 +187,5 @@ dialog. Finite Fluidd macros open their own motion prompt and select the
 corresponding OLED row. At either Z limit the hold stops at the last whole
 step within native travel. The host preserves the existing logical X, Y and
 extruder coordinates when reconciling the halted Z step count.
+
+The platform heat service preserves the pre-existing nozzle target and shares the procedure token/phase, OLED bed animation, Fluidd dialog and return history. Settings → Full platform preheating enables an additional continuous stabilization period before the shared native print start. It is independent of the standalone Heat the platform action.

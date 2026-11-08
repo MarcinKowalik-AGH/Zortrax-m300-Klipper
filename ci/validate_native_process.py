@@ -96,6 +96,8 @@ def main():
         'ZORTRAX_SLEEP_MODE STATE=DISABLED\nZORTRAX_MODELS_SORT MODE=NAME_CASE\n'
         'ZORTRAX_UI_SETTING NAME=oled_brightness VALUE=8\n'
         'ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5\n'
+        'ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED\n'
+        'ZORTRAX_FULL_PLATFORM_PREHEAT STATE=DISABLED\n'
         'ZORTRAX_CONFIG_STATUS\n'
         'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
         'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
@@ -107,6 +109,8 @@ def main():
             b'G90\nG28\nG1 X155 Y158 Z5 F600\nM400\nTURN_OFF_HEATERS', 'G-code'),
         'native_models_reprint': ('Repeat.gcode', b'M105\nZORTRAX_CI_REPLAY_MARK VALUE=ORIGINAL\n', 'G-code'),
         'native_models_zcode': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
+        'native_models_zcode_mesh': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
+        'native_models_zcode_soak': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
     }
     shutil.copy2(Path(__file__).with_name('m300_ci_models_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_models_fixture.py')
@@ -147,6 +151,8 @@ def main():
          'ZORTRAX_CI_PAD_MESH CHECK=7\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
          False,'requires an idle native M300 with a physical MCU'),
         ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
+        ('native_bed_heat_guard','ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_PREPARE\nZORTRAX_HEAT_PLATFORM TEMP=60\n',False,
+         'FILEOUTPUT cannot actuate a physical maintenance service'),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
         # Coordinates below are deliberately synthetic FILEOUTPUT fixture data.
@@ -160,7 +166,7 @@ def main():
     ]
     cases.extend((name, model_script, False, None) for name in model_fixtures)
     cases.extend((name,'ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_RUN\n',False,None)
-                 for name in ('native_print_lifecycle','native_print_cancel'))
+                 for name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'))
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
         'factory_hw04_800': (0xe4, 0xaabb0103, 'factory', 800),
@@ -218,14 +224,26 @@ def main():
             cp.add_section('m300_ci_models_fixture')
             if name == 'native_models_reprint':
                 cp.set('m300_ci_models_fixture', 'replay', 'True')
+            if model_fixtures[name][2]=='Z-code':
+                cp.set('stepper_y','position_max','305')
+            if name=='native_models_zcode_mesh':
+                cp.set('m300_ci_models_fixture','mesh','True')
+                cp.read_dict({'bed_mesh':{'mesh_min':'0,0','mesh_max':'300,305',
+                                        'probe_count':'3,3','algorithm':'lagrange'}})
+            if name=='native_models_zcode_soak':
+                cp.set('m300_ci_models_fixture','soak','True')
+                cp.set('m300_print_control','platform_soak_seconds','2')
             assert not cp.getboolean('m300_job', 'workflow_qualified')
-        if name in ('native_print_lifecycle','native_print_cancel'):
+        if name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'):
             cp.add_section('m300_ci_print_fixture')
-            cp.set('m300_ci_print_fixture','mode','cancel' if name.endswith('cancel') else 'lifecycle')
+            cp.set('m300_ci_print_fixture','mode',
+                   'cancel_soak' if name.endswith('cancel_soak') else 'cancel' if name.endswith('cancel') else 'lifecycle')
+            if name.endswith('cancel_soak'):cp.set('m300_print_control','platform_soak_seconds','2')
             cp.set('stepper_y','position_max','305')
             if not cp.has_section('bed_mesh'):
                 cp.read_dict({'bed_mesh':{'mesh_min':'0,0','mesh_max':'300,305',
                               'probe_count':'3,3','algorithm':'lagrange'}})
+        if name=='native_bed_heat_guard':cp.add_section('m300_ci_print_fixture')
         if synthetic:
             if not cp.has_section('force_move'):cp.add_section('force_move')
             cp.set('force_move','enable_force_move','True')
@@ -312,7 +330,7 @@ def main():
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
                         if 'M300_SETTINGS ' in line]
             view = views[-3]
-            assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',
+            assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',full_platform_preheat=False,
                                             sort_mode='NAME_CASE', language='EN',
                                             oled_brightness=8, led_brightness=5), view
             resources = next(json.loads(line.split('M300_CONFIG ', 1)[1])
@@ -338,18 +356,30 @@ def main():
             assert result['explicit_reprint'] == (name == 'native_models_reprint'), result
             if name == 'native_models_reprint':
                 assert result['replay_marks'] == ['ORIGINAL', 'ORIGINAL'], result
+            elif kind=='G-code':
+                assert result['position'][:3] == [155.,158.,5.],result
             else:
-                assert result['position'][:3] == ([155., 158., 5.] if kind == 'G-code'
-                                                   else [110., 110., 10.]), result
-        if name in ('native_print_lifecycle','native_print_cancel'):
+                assert result['position'][:2] == [300.,305.] and 14.<result['position'][2]<16.,result
+                phases=result['control_phases']
+                start=next(p['start'] for p in phases if p['phase']=='HEATING')
+                assert start['mesh']==('m300_pads' if name.endswith('_mesh') else 'NONE'),result
+                assert start['requested_mesh']=='AUTO',result
+                names=[p['phase'] for p in phases]
+                assert names.index('HEATING')<names.index('HOMING')<names.index('END_PARK'),result
+                assert ('PLATFORM_SOAK' in names)==name.endswith('_soak'),result
+        if name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'):
             result=next(json.loads(line.split('M300_CI_PRINT ',1)[1])
                         for line in text.splitlines() if 'M300_CI_PRINT ' in line)
             assert result['targets']==[0.,0.] and result['file_consumed'],result
             assert result['control']['state']=='IDLE' and not result['control']['paused'],result
-            assert result['position'][:2]==[300.,305.],result
-            if name.endswith('cancel'):
+            if name.endswith('cancel_soak'):
+                assert result['state']=='cancelled' and result['marks']==[],result
+                assert result['position'][:3]==[0.,0.,0.],result
+            elif name.endswith('cancel'):
                 assert result['state']=='cancelled' and result['marks']==['STARTED'],result
+                assert result['position'][:2]==[300.,305.],result
             else:
+                assert result['position'][:2]==[300.,305.],result
                 assert result['state']=='complete',result
                 assert result['marks']==['STARTED','RESUMED','CHANGED','ENDED'],result
                 assert 'FILAMENT_READY' in result['actions'] and result['actions'].count('RESUME')==2,result

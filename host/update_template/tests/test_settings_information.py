@@ -114,12 +114,13 @@ class SettingsTreeTests(unittest.TestCase):
     def test_exact_requested_tree_and_english_only_language(self):
         with session() as h:
             expected={'settings':['Back','Light','Buzzer','Sleep mode','Language','Models sorting',
-                                  'OLED brightness','LED brightness'],
+                                  'Full platform preheating','OLED brightness','LED brightness'],
                 'setting_light_mode':['Back','Dynamic','White','Disabled'],
                 'setting_sound':['Back','Enabled','Disabled'],
                 'setting_sleep_mode':['Back','Enabled','Disabled'],
                 'setting_language':['Back','English'],
                 'setting_sort_mode':['Back','Date','Name','Case-sensitive name','File size'],
+                'setting_full_platform_preheat':['Back','Enabled','Disabled'],
                 'setting_oled_brightness':['Back'] + list(map(str, range(1, 17))),
                 'setting_led_brightness':['Back'] + list(map(str, range(1, 17))),
                 'information':['Back','Firmware version','Printer information','Help']}
@@ -165,6 +166,7 @@ class SettingsTreeTests(unittest.TestCase):
                     ('Sleep mode', ('Disabled', 'Enabled')),
                     ('Language', ('English',)),
                     ('Models sorting', ('Date', 'Case-sensitive name', 'File size', 'Name')),
+                    ('Full platform preheating', ('Enabled','Disabled')),
                     ('OLED brightness', ('1', '16')),
                     ('LED brightness', ('8', '16'))):
                 press(page)

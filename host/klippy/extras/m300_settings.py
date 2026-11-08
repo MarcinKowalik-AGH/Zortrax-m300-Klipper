@@ -24,6 +24,7 @@ SETTINGS = (
     ('language','Language',(('EN','English'),)),
     ('sort_mode','Models sorting',(('DATE','Date'),('NAME','Name'),
                                   ('NAME_CASE','Case-sensitive name'),('SIZE','File size'))),
+    ('full_platform_preheat','Full platform preheating',((True,'Enabled'),(False,'Disabled'))),
     ('oled_brightness', 'OLED brightness', tuple((n, str(n)) for n in BRIGHTNESS_LEVELS)),
     ('led_brightness', 'LED brightness', tuple((n, str(n)) for n in BRIGHTNESS_LEVELS)))
 CHOICES = {key:values for key,_,values in SETTINGS}
@@ -388,7 +389,7 @@ class M300Settings:
             self.show('setting_' + key)
             return
         raw=raw.upper()
-        if key=='sound':
+        if key in ('sound','full_platform_preheat'):
             if raw not in ('ENABLED','DISABLED'):raise gcmd.error('Use Enabled or Disabled')
             value=raw=='ENABLED'
         elif key=='sleep_mode':

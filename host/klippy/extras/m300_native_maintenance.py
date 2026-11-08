@@ -82,6 +82,7 @@ class M300NativeMaintenance(M300Maintenance):
         self.phase_id = 0
         self.target = 0.
         self._bed_target = None
+        self._hotend_target = None
         self._hold_context = self._hold_received = None
         self._hold_direction = None
         self._hold_validate = None
@@ -123,7 +124,7 @@ class M300NativeMaintenance(M300Maintenance):
         if self.board.mcu.is_fileoutput():
             raise self._error('FILEOUTPUT cannot actuate a physical maintenance service')
         require_idle_print(self.printer,self.reactor.monotonic())
-        if not native_service_frame(self.printer, self.gcode_move, self.toolhead):
+        if position and not native_service_frame(self.printer, self.gcode_move, self.toolhead):
             raise self._error('native maintenance requires untransformed Cartesian motion')
         owner=other_service(self.printer,('m300_filament','m300_calibration',
             'm300_sd','m300_nvm','m300_motion','m300_fans','m300_thermal'),
@@ -146,7 +147,7 @@ class M300NativeMaintenance(M300Maintenance):
 
     def _begin(self,operation,state):
         self._idle()
-        self._authority(operation!='HOTEND')
+        self._authority(operation not in ('HOTEND','BED'))
         self.token+=1
         self.phase_id+=1
         self.operation,self.state,self.reason=operation,state,''
@@ -180,17 +181,19 @@ class M300NativeMaintenance(M300Maintenance):
     def start(self,operation,value=None):
         if operation=='JOG_Z':
             return self.platform(value)
-        if operation!='HOTEND':
+        if operation not in ('HOTEND','BED'):
             raise self._error('use native heater/fan controls for this operation')
-        value=260. if value is None else value
+        heater=self.hotend if operation=='HOTEND' else self.bed
+        value=(260. if operation=='HOTEND' else 60.) if value is None else value
         if (type(value) not in (float,int) or not math.isfinite(value)
-                or not self.hotend.min_temp<=value<=self.hotend.max_temp or value<=0.):
+                or not heater.min_temp<=value<=heater.max_temp or value<=0.):
             raise self._error('temperature outside native heater limits')
-        self._begin('HOTEND','HEATING')
+        self._begin(operation,'HEATING')
         self.target=float(value)
         self._bed_target=self.bed.get_temp(self.reactor.monotonic())[1]
+        self._hotend_target=self.hotend.get_temp(self.reactor.monotonic())[1]
         try:
-            self.lease.heat(self.hotend,self.target)
+            self.lease.heat(heater,self.target)
         except Exception as exc:
             self._fault(str(exc))
             raise
@@ -310,8 +313,8 @@ class M300NativeMaintenance(M300Maintenance):
         # A pending short native move must drain before ownership is restored.
         self._pending_z=None
         self._hold_context=self._hold_received=self._hold_validate=None
-        if self.operation=='HOTEND':
-            self.lease.heat(self.hotend,0.)
+        if self.operation in ('HOTEND','BED'):
+            self.lease.heat(self.hotend if self.operation=='HOTEND' else self.bed,0.)
             self.target=0.
         if self._idle_saved is not None:
             self.job._set_idle(self._idle_saved)
@@ -334,8 +337,8 @@ class M300NativeMaintenance(M300Maintenance):
             return
         if self.state == 'PLATFORM_HOLD' and self._executing:
             self.panel_release.stop()
-        if self.operation=='HOTEND':
-            self.lease.heat(self.hotend,0.)
+        if self.operation in ('HOTEND','BED'):
+            self.lease.heat(self.hotend if self.operation=='HOTEND' else self.bed,0.)
             self.target=0.
         self._pending_z=None
         self._hold_context=self._hold_received=self._hold_validate=None
@@ -353,7 +356,8 @@ class M300NativeMaintenance(M300Maintenance):
         self.phase_id+=1
         self._pending_z=None
         try:
-            self.lease.heat(self.hotend,0.)
+            # A failed heating service may not leave its selected heater on.
+            self.lease.heat(self.bed if self.operation=='BED' else self.hotend,0.)
         finally:
             self.target=0.
             if not self.printer.is_shutdown():
@@ -391,11 +395,15 @@ class M300NativeMaintenance(M300Maintenance):
                             self._finish('CANCELLED',self.reason)
                     elif self.state in ('HEATING','WAIT_CONFIRM'):
                         temperatures=self._authority()
-                        measured,target=temperatures['hotend']
-                        if target!=self.target or temperatures['bed'][1]!=self._bed_target:
+                        channel,peer=('hotend','bed') if self.operation=='HOTEND' else ('bed','hotend')
+                        measured,target=temperatures[channel]
+                        expected_peer=self._bed_target if self.operation=='HOTEND' else self._hotend_target
+                        if target!=self.target or temperatures[peer][1]!=expected_peer:
                             raise self._error('heater target changed outside maintenance')
                         # OEM hotend branch is 260 C / ready at 258 C.
-                        if self.state=='HEATING' and measured>=self.target-2.:
+                        ready=(measured>=self.target-2. if self.operation=='HOTEND'
+                               else abs(measured-self.target)<=2.)
+                        if self.state=='HEATING' and ready:
                             self.state='WAIT_CONFIRM'
                             self.phase_id+=1
                     elif self.state == 'PLATFORM_HOLD':
@@ -438,12 +446,14 @@ class M300NativeMaintenance(M300Maintenance):
         live=self.ready and not self.printer.is_shutdown()
         return dict(super().get_status(now),phase_id=self.phase_id,
             installed=True,native_control=True,target=self.target,
+            target_hotend=self.target if self.operation=='HOTEND' else self.hotend.get_temp(now)[1] if self.hotend is not None else 0.,
+            target_bed=self.target if self.operation=='BED' else self.bed.get_temp(now)[1] if self.bed is not None else 0.,
             can_confirm=live and self.state=='WAIT_CONFIRM',
             can_cancel=live and self.is_busy() and self.state not in ('FAULT','CANCELLING'),
             platform_held=self.state=='PLATFORM_HOLD',
             platform_panel_local=self._platform_panel_local,
             platform_speed_mm_s=self.platform_speed,
-            revision='0.13.16.12-NATIVE-MAINTENANCE-PLATFORM3')
+            revision='0.13.16.29-NATIVE-PLATFORM-HEAT')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()

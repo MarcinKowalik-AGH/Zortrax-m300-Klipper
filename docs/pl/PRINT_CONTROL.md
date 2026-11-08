@@ -1,6 +1,6 @@
 # Druk M300: Start, pauza, wymiana filamentu, wznowienie i End
 
-Zmiana hosta `0.13.16.28-NATIVE-PRINT-CONTROL`. Obowiązuje natywny Klipper
+Zmiana hosta `0.13.16.29-UNIFIED-NATIVE-START`. Obowiązuje natywny Klipper
 przypięty w projekcie do `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
 MCU pozostaje `0.13.14.18-OEM-ERRORS-UART8`; ta aktualizacja nie wymaga
 ponownego wgrywania firmware do drukarki.
@@ -14,7 +14,7 @@ git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py" --organize-config
 ```
 
-Instalator dodaje `[m300_print_control]` i brakujące makra. Istniejące własne
+Instalator dodaje `[m300_print_control]` i brakujące makra. Instalator aktualizuje rozpoznane, standardowe makro Start do `MESH=AUTO`. Istniejące własne
 makra `START_PRINT`/`END_PRINT` pozostają zachowane; wtedy trzeba świadomie
 włączyć do nich `ZORTRAX_PRINT_START`/`ZORTRAX_PRINT_END` zamiast powielać ruchy.
 Dotychczasowe pliki G-code z własnym startem nadal wykonują swoje polecenia.
@@ -60,12 +60,14 @@ END_PRINT
 
 Start nagrzewa oba elementy jednocześnie, wykonuje dotychczasowy natywny
 homing M300 (minimum 180°C, zachowanie wyższego celu), ładuje **zapisaną**
-siatkę `m300_pads` po homingu, a następnie wykonuje linię 40 mm z 3 mm
+siatkę `m300_pads` po homingu, jeśli istnieje (`MESH=AUTO`), a następnie wykonuje linię 40 mm z 3 mm
 filamentu na wysokości 0,3 mm. Ruchy linii przechodzą przez natywny Bed Mesh.
 M220/M221 dla tej linii wynoszą 100%, po niej przywracany jest poprzedni stan.
 Nie wykonuje się 25 pomiarów przed każdym wydrukiem.
 
-Brak profilu jest zgłaszany przed startem; nie tworzy się fikcyjnej siatki.
+Domyślne `MESH=AUTO` ładuje istniejący profil `m300_pads`; bez niego jawnie
+wyłącza kompensację. Nie tworzy fikcyjnej siatki. Jawne `MESH=m300_pads`
+lub inna nazwa wymaga istnienia wybranego profilu i zgłasza brak przed startem.
 Świadome pominięcie kompensacji:
 
 ```gcode
@@ -75,6 +77,59 @@ START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60 MESH=NONE
 Geometria linii jest sprawdzana względem natywnych granic. Profil Orca może
 mieć dodatkowe własne ruchy; usuń z jego startu/końca powielone bazowanie,
 grzanie, parkowanie i linię rozruchową, jeżeli zastępujesz je tymi makrami.
+
+## Grzanie platformy i pełne wygrzewanie
+
+W Maintenance, pod Heat the extruder, dostępne jest **Heat the platform**.
+`ZORTRAX_HEAT_PLATFORM TEMP=60` uruchamia tę samą procedurę z Fluidd.
+Grzeje tylko stół, nie wymaga bazowania i zachowuje poprzedni cel dyszy.
+Po osiągnięciu celu ±2°C czeka na potwierdzenie. Potwierdzenie albo anulowanie
+wyłącza stół; token i faza chronią przed powtórzonym kliknięciem. OLED pokazuje
+animację grzania stołu, a Fluidd tę samą procedurę.
+
+W Settings dostępne jest **Full platform preheating → Enabled / Disabled**:
+
+```gcode
+ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED
+ZORTRAX_FULL_PLATFORM_PREHEAT STATE=DISABLED
+```
+
+Zapisany wybór jest pobierany raz na początku nowej sesji. Enabled dodaje
+`platform_soak_seconds` (domyślnie 60 s) ciągłej stabilizacji obu temperatur
+przed homingiem. Wyjście poza pasmo ±2°C rozpoczyna stabilizację od nowa.
+Oryginalny limit oczekiwania na grzanie nadal obowiązuje; anulowanie odwołuje
+wszystkie dalsze ruchy i grzanie. Dla celu stołu 0°C dodatkowe czekanie jest
+pomijane. To zachowana polityka portu oparta na wygrzewaniu: jeden czujnik
+stołu nie mierzy rozkładu temperatur na całej powierzchni.
+
+## Z-code i kontrola plików
+
+Konwerter używa teraz tego samego `START_PRINT ... MESH=AUTO` i `END_PRINT`
+co G-code. Grzanie, homing, zapisana siatka, wygrzewanie oraz parkowanie
+X300 Y305 należą do jednego właściciela. Plik jest w całości sprawdzany
+przed udostępnieniem przycisku druku. Nieznany opcode nawet w ostatnim
+rekordzie odrzuca cały model przed grzaniem i ruchem.
+
+Do paczki dodano narzędzie, które wyłącznie czyta i sprawdza pliki:
+
+```bash
+python3 "$HOME/m300-orange-pi/M300_HOST_R16_12_NORMAL_UI/check-zcode.py" --limits printer_limits.json model.zcode
+```
+
+Przykładowa struktura `printer_limits.json` poniżej wymaga wpisania
+**rzeczywistych granic z własnej konfiguracji**. Narzędzie nie zmienia limitów
+drukarki i nie wysyła G-code ani komend do MCU.
+
+```json
+{"heater_limits":{"hotend":[0,300],"bed":[0,130]},"axis_limits":{"X":[0,300],"Y":[0,305],"Z":[0,315]}}
+```
+
+Sprawdzane są rodzina M300 20–29, wersja profilu, skale, CRC nagłówka i każdego
+rekordu, długości/liczby rekordów, wszystkie obsługiwane polecenia, temperatury,
+zakres osi i limity rozmiaru. Z=400/800 w pliku nie nadpisuje ustawień mechaniki.
+Podzbiór formatu pozostaje jawny: pliki obcego modelu, dual/support i nieznane
+polecenia są odrzucane. Testy referencyjne są syntetyczne; poprawna walidacja
+nie jest potwierdzeniem fizycznego wydruku ani zgodności każdego eksportu Z-Suite.
 
 ## Parametry i odczyt
 
@@ -98,6 +153,7 @@ move_timeout: 120
 purge_length: 40
 purge_filament: 3
 purge_height: 0.3
+platform_soak_seconds: 60
 ```
 
 `PRINT_CONTROL_STATUS` lub `PAUSE_TEMP_STATUS` pokazują fazę, pierwotne cele,

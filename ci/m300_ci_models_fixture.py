@@ -18,6 +18,9 @@ class ModelsFixture:
         self.gcode.register_command('ZORTRAX_CI_REPLAY_MARK', self.mark)
         self.started = False
         self.resumed = False
+        self.mesh=config.getboolean('mesh',False)
+        self.soak=config.getboolean('soak',False)
+        self.control_phases=[]
 
     def mark(self, gcmd):
         self.marks.append(gcmd.get('VALUE'))
@@ -44,8 +47,16 @@ class ModelsFixture:
             raise gcmd.error('model preparation failed: ' + str(view))
         assert self.sd.current_file is None and self.sd.work_timer is None
         if view['format']=='Z-code' and self.printer.lookup_object('m300_print_control',None) is not None:
-            from .m300_ci_print_fixture import prepare
+            from .m300_ci_print_fixture import prepare, saved_mesh
             prepare(self.printer)
+            if self.mesh:saved_mesh(self.printer)
+            if self.soak:self.printer.lookup_object('m300_nvm').set_setting('full_platform_preheat',True)
+            control=self.printer.lookup_object('m300_print_control')
+            previous=control._phase
+            def phase(name,seconds=None):
+                previous(name,seconds)
+                self.control_phases.append(dict(phase=name,start=control.get_status(self.reactor.monotonic())['start']))
+            control._phase=phase
         self.gcode.run_script_from_command('ZORTRAX_MODELS_START TOKEN=' + view['token'])
         assert self.sd.current_file is not None and self.sd.work_timer is not None
         self.started = True
@@ -106,6 +117,7 @@ class ModelsFixture:
                 state=stats['state'], filename=stats['filename'], format=self.format,
                 file_consumed=self.sd.current_file is None, targets=targets,
                 explicit_resume=self.resumed, explicit_reprint=self.replayed,
+                control_phases=self.control_phases,
                 replay_marks=self.marks,
                 position=list(toolhead.get_position()))))
         return True

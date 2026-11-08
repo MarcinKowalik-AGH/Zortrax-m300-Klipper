@@ -383,5 +383,59 @@ class PrintControlTests(unittest.TestCase):
         self.assertEqual(h.position[:3],[100.,110.,10.])
         self.assertFalse(any(e[0]=='move' for e in h.events))
 
+    def test_auto_mesh_without_a_profile_explicitly_clears_previous_compensation(self):
+        h=self.h;h.objects['bed_mesh'].pmgr.get_profiles=lambda:{}
+        h.mesh=NS(mesh_offsets=[0.,0.])
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        self.assertEqual(h.c.operation['mesh'],'NONE')
+        h.stop_worker();h.control_until('IDLE');self.assertIsNone(h.mesh)
+
+    def test_full_platform_preheat_holds_both_targets_before_any_homing(self):
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
+        h.control_until('STARTING','PLATFORM_SOAK')
+        start=h.now
+        for _ in range(4):h.step_control(10.)
+        self.assertFalse(any(e[0]=='home' for e in h.events))
+        self.assertEqual((h.hotend.target,h.bed.target),(240.,60.))
+        h.control_until('IDLE');self.assertGreaterEqual(h.now-start,60.)
+
+    def test_platform_soak_restarts_continuous_stability_after_temperature_excursion(self):
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
+        h.control_until('STARTING','PLATFORM_SOAK');h.step_control(30.)
+        h.bed.temperature=55.;h.step_control();self.assertIsNone(h.c.stable_since)
+        h.bed.temperature=60.;h.step_control();h.step_control(40.)
+        self.assertFalse(any(e[0]=='home' for e in h.events))
+        h.control_until('IDLE')
+
+    def test_cancel_during_soak_never_homes_or_reheats(self):
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
+        h.control_until('STARTING','PLATFORM_SOAK');h.run('CANCEL_PRINT');h.control_until('IDLE')
+        h.step_control(600.)
+        self.assertFalse(any(e[0]=='home' for e in h.events))
+        self.assertEqual((h.hotend.target,h.bed.target),(0.,0.));self.assertEqual(h.print_state,'cancelled')
+
+    def test_full_preheat_choice_is_captured_once_for_the_new_session(self):
+        h=self.h;choice=[True]
+        h.objects['m300_nvm']=NS(get_setting=lambda name,default:choice[0])
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');choice[0]=False
+        h.stop_worker();h.control_until('STARTING','PLATFORM_SOAK')
+        self.assertEqual(h.c.operation['soak_seconds'],60.)
+
+    def test_no_bed_target_does_not_request_a_pointless_soak(self):
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=0');h.stop_worker();h.control_until('IDLE')
+        self.assertEqual(h.bed.target,0.)
+
+    def test_soak_uses_the_existing_finite_heat_deadline(self):
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker();h.step_control()
+        deadline=h.c.deadline;h.control_until('STARTING','PLATFORM_SOAK')
+        self.assertEqual(h.c.deadline,deadline)
+        h.bed.temperature=55.;h.step_control(h.c.heat_timeout+1.)
+        self.assertEqual(h.c.state,'FAILED');self.assertEqual(h.bed.target,0.)
+
 
 if __name__=='__main__':unittest.main()

@@ -38,6 +38,7 @@ qualified hardware detector. Acknowledgement never clears a safety latch.
 | Sleep mode | Enabled, Disabled | `ZORTRAX_SLEEP_MODE STATE=ENABLED` or `DISABLED` |
 | Language | English | `ZORTRAX_LANGUAGE` |
 | Models sorting | Date, Name, Case-sensitive name, File size | `ZORTRAX_MODELS_SORT MODE=DATE`, `NAME`, `NAME_CASE` or `SIZE` |
+| Full platform preheating | Enabled, Disabled | `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` or `DISABLED` |
 | OLED brightness | 1–16 | `ZORTRAX_SETTINGS` → OLED brightness |
 | LED brightness | 1–16 | `ZORTRAX_SETTINGS` → LED brightness |
 
@@ -125,3 +126,5 @@ Earlier native prints from before host counter collection are not backfilled.
 
 OLED Help shows the project address across three rows. Fluidd Help shows the
 complete address. [Project GitHub](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper)
+
+Full platform preheating is a persistent next-start choice. The shared G-code/Z-code start captures it once; enabling it adds `platform_soak_seconds` (60 seconds by default) of continuous temperature stability before homing. It never heats by itself, changes an active session or lifts the existing heater/motion limits.

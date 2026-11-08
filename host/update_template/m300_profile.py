@@ -122,6 +122,10 @@ def convert_text(text, stock_xy=None):
             continue
         if section.startswith('gcode_macro '):
             old = section[12:]
+            if old=='START_PRINT':
+                _,commands=gcode_body(block)
+                if hashlib.sha256('\n'.join(commands).encode()).hexdigest()=='755b166889401782cf97ab47c0aada89853f9ea7dc2bdf0078b139fa4744a00c':
+                    block=block.replace("params.MESH|default('m300_pads')", "params.MESH|default('AUTO')")
             if old in RETIRED_LEVEL_MACROS:
                 header_options = re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M)
                 _, commands = gcode_body(block)

@@ -33,6 +33,13 @@ def prepare(printer):
     printer.lookup_object('m300_job')._temperature=lambda name,heater,now:heater.get_temp(now)
 
 
+def saved_mesh(printer):
+    mesh=printer.lookup_object('bed_mesh')
+    mesh.pmgr.profiles['m300_pads']=dict(points=[[.10,.12,.14],[.12,.14,.16],[.14,.16,.18]],
+        mesh_params=dict(min_x=0.,max_x=300.,min_y=0.,max_y=305.,x_count=3,y_count=3,
+            mesh_x_pps=2,mesh_y_pps=2,algo='lagrange',tension=.2))
+
+
 class PrintFixture:
     def __init__(self,config):
         self.printer=config.get_printer();self.reactor=self.printer.get_reactor()
@@ -41,6 +48,7 @@ class PrintFixture:
         self.running=False;self.marks=[];self.actions=[];self.flow=False
         self.timer=self.reactor.register_timer(self.tick)
         self.gcode.register_command('ZORTRAX_CI_PRINT_RUN',self.run)
+        self.gcode.register_command('ZORTRAX_CI_PRINT_PREPARE',lambda gcmd:prepare(self.printer))
         self.gcode.register_command('ZORTRAX_CI_PRINT_MARK',self.mark)
         self.printer.register_event_handler('gcode:debuginput_exit',self.report)
 
@@ -52,10 +60,9 @@ class PrintFixture:
         self.sd=self.printer.lookup_object('virtual_sdcard')
         self.filament=self.printer.lookup_object('m300_filament')
         # An actual native saved profile, with nonzero compensation at purge.
-        mesh=self.printer.lookup_object('bed_mesh')
-        mesh.pmgr.profiles['m300_pads']=dict(points=[[.10,.12,.14],[.12,.14,.16],[.14,.16,.18]],
-            mesh_params=dict(min_x=0.,max_x=300.,min_y=0.,max_y=305.,x_count=3,y_count=3,
-                mesh_x_pps=2,mesh_y_pps=2,algo='lagrange',tension=.2))
+        saved_mesh(self.printer)
+        if self.mode=='cancel_soak':
+            self.printer.lookup_object('m300_nvm').set_setting('full_platform_preheat',True)
         path=Path(self.sd.sdcard_dirname)/'Print lifecycle.gcode'
         script=('START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60\n'
                 'G90\nG1 X100 Y100 Z10 F6000\n'
@@ -85,7 +92,9 @@ class PrintFixture:
         if key!=getattr(self,'last_phase',None):
             self.last_phase=key
             self.gcode.respond_info('M300_CI_PRINT_PHASE '+str(key))
-        if self.mode=='cancel' and c.state=='PAUSED':
+        if self.mode=='cancel_soak' and c.phase=='PLATFORM_SOAK':
+            self._submit('CANCEL_PRINT')
+        elif self.mode=='cancel' and c.state=='PAUSED':
             self._submit('CANCEL_PRINT')
         elif c.state=='PAUSED' and not self.filament.is_busy():
             ctx=c.context

@@ -11,8 +11,16 @@ def describe(owner,status,language='EN'):
     operation=status.get('operation')
     if owner=='m300_filament' and operation not in ('LOAD','UNLOAD','CHANGE'):
         return None
-    if owner=='m300_maintenance' and operation!='HOTEND':
+    if owner=='m300_maintenance' and operation not in ('HOTEND','BED'):
         return None
+    if owner=='m300_maintenance' and operation=='BED' and state in ('HEATING','WAIT_CONFIRM'):
+        message=('Heating the platform\nPlease wait' if state=='HEATING' else
+                 'Platform heated\nPress the button to finish')
+        return dict(text=message,body=message,support=None,diagram=None,language=language,
+                    descriptor=None,text_id=None,sprite='activity:heat_bed',state=state,
+                    reason=str(status.get('reason') or ''),
+                    can_confirm=status.get('can_confirm') is True,
+                    can_cancel=status.get('can_cancel') is True)
     descriptor=({'WAIT_CONFIRM':'0x8021d38'} if owner=='m300_maintenance' else
         {'WAIT_INSERT':'0x8021eb8','LOADING':'0x8021ea0',
          'UNLOADING':'0x8021eac','WAIT_UNLOAD':'0x8021ec4'}).get(state)

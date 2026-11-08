@@ -130,7 +130,7 @@ class Harness:
         self.p=M300Procedures(self.config)
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
-            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
+            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HEAT_PLATFORM','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
                         'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_CHANGE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
@@ -462,7 +462,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             ['Back','Models','Maintenance','Material','Settings','Information'])
         menu.page='maintenance';rows=menu.rows(1.)[1]
         self.assertEqual([name for name,_ in rows],['Back','Autocalibration',
-            'Homing XY','Homing Z','Homing ALL','Heat the extruder',
+            'Homing XY','Homing Z','Homing ALL','Heat the extruder','Heat the platform',
             'Move the platform up','Move the platform down','Fan test'])
         self.assertTrue(require_rows(rows))
         menu.page='material';rows=menu.rows(1.)[1]

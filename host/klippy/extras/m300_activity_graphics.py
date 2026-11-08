@@ -127,6 +127,7 @@ PAGE_SYMBOLS = {
     'setting_led_brightness': PREFIX+'led_brightness',
     'setting_light_mode': '0x0801d55c', 'setting_sound': '0x0801d72c',
     'setting_sleep_mode': '0x0801d908', 'setting_language': '0x0801dab4',
+    'setting_full_platform_preheat': PREFIX+'heat_bed',
     'setting_sort_mode': '0x0801c4f4', 'native_pid': PREFIX+'heat_nozzle',
     'native_moves': '0x0801cb24', 'native_move_x': '0x0801cb24',
     'native_move_y': '0x0801cb24', 'native_move_z': '0x0801cb24',
@@ -195,7 +196,7 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
                 return symbol('bed_mesh')
             if name in ('ZORTRAX_HEAT', 'M104', 'M109'):
                 return symbol('heat_nozzle')
-            if name in ('M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
+            if name in ('ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
                 return symbol('heat_bed')
             if name == 'PID_CALIBRATE':
                 return symbol('heat_nozzle')
