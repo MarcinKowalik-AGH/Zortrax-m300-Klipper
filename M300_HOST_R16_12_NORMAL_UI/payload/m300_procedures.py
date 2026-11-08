@@ -236,7 +236,8 @@ class M300Procedures:
                   else describe_service(owner,status,language))
         if screen:
             titles={'m300_calibration':'Platform leveling',
-                    'm300_maintenance':'Heat the extruder','LOAD':'Load the material',
+                    'm300_maintenance':('Heat the platform' if status.get('operation')=='BED' else 'Heat the extruder'),
+                    'LOAD':'Load the material',
                     'UNLOAD':'Unload the material','CHANGE':'Change the material'}
             title = titles.get(owner,titles.get(status.get('operation'),'Zortrax M300'))
             message = screen['text']
@@ -503,7 +504,7 @@ class M300Procedures:
 
     def cmd_start(self, gcmd):
         operation = gcmd.get('OP')
-        if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT',
+        if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT','HEAT_BED',
                              'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK', *HOMING_TITLES):
             raise self.printer.command_error('M300: unknown procedure')
         temp = gcmd.get_float('TEMP', None)
@@ -527,8 +528,8 @@ class M300Procedures:
                         owner.toggle(operation[4:],owner.token,owner.phase)
             elif operation == 'LEVEL':
                 self.printer.lookup_object('m300_calibration').start(temp)
-            elif operation=='HEAT':
-                self.printer.lookup_object('m300_maintenance').start('HOTEND',temp)
+            elif operation in ('HEAT','HEAT_BED'):
+                self.printer.lookup_object('m300_maintenance').start('HOTEND' if operation=='HEAT' else 'BED',temp)
             elif operation=='CHANGE' and self.printer.lookup_object('m300_print_control',None) is not None:
                 self.printer.lookup_object('m300_print_control').request_change(gcmd,temperature=temp)
             else:

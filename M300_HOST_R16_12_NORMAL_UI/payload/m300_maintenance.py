@@ -458,7 +458,7 @@ class M300Maintenance:
                 phase = str(status.get('phase', '')).upper()
                 heating = heating or (status['busy'] and (
                     state in ('HEATING', 'CHECK_HEATING', 'PID_RUNNING')
-                    or phase in ('HEATING', 'Z_PREHEAT', 'PREHEAT')))
+                    or phase in ('HEATING', 'Z_PREHEAT', 'PREHEAT', 'PLATFORM_SOAK')))
                 busy = busy or status['busy'] or state in ('SLEEP', 'SLEEPING')
             except Exception:
                 return 'ERROR'

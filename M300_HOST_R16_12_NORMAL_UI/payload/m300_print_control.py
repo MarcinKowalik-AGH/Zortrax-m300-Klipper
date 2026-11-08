@@ -14,7 +14,7 @@ import os
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.28-NATIVE-PRINT-CONTROL'
+REVISION = '0.13.16.29-UNIFIED-NATIVE-START'
 PERIOD = .25
 
 
@@ -47,6 +47,7 @@ class M300PrintControl:
         self.purge_length = number('purge_length',40.,1.,100.)
         self.purge_filament = number('purge_filament',3.,0.,10.)
         self.purge_height = number('purge_height',.3,.2,1.)
+        self.platform_soak_seconds = number('platform_soak_seconds',60.,0.,600.)
         if self.standby_after > self.off_after or self.clearance > self.z_hop:
             raise config.error('M300 print control: invalid pause deadlines/clearance')
         self.generation = 0
@@ -549,12 +550,20 @@ class M300PrintControl:
             self.hotend.get_temp(self.reactor.monotonic())[1],self.hotend.min_extrude_temp)
         bed=self._temperature_target(gcmd,'BED_TEMP',self.bed,
             self.bed.get_temp(self.reactor.monotonic())[1])
-        mesh=gcmd.get('MESH','m300_pads')
+        mesh=gcmd.get('MESH','AUTO')
         bedmesh=self.printer.lookup_object('bed_mesh',None)
+        requested_mesh=mesh
+        if mesh.upper()=='AUTO':
+            mesh=('m300_pads' if bedmesh is not None and 'm300_pads' in bedmesh.pmgr.get_profiles()
+                  else 'NONE')
         if mesh.upper()!='NONE' and (bedmesh is None or mesh not in bedmesh.pmgr.get_profiles()):
             raise self._error('saved mesh '+mesh+' is unavailable; measure/save it or use MESH=NONE')
+        nvm=self.printer.lookup_object('m300_nvm',None)
+        full_preheat=bool(nvm is not None and nvm.get_setting('full_platform_preheat',False))
         self._begin_operation('STARTING')
-        self.operation.update(targets=dict(hotend=target,bed=bed),mesh=mesh)
+        self.operation.update(targets=dict(hotend=target,bed=bed),mesh=mesh,
+                              requested_mesh=requested_mesh,
+                              soak_seconds=self.platform_soak_seconds if full_preheat and bed>0. else 0.)
 
     def cmd_end(self,gcmd):
         self._begin_operation('ENDING')
@@ -675,8 +684,14 @@ class M300PrintControl:
                     elif self.phase in ('WAIT_START','WAIT_END'):
                         if self.sd.work_timer is not None or not self._drained(now):return now+PERIOD
                         self._operation_drained()
-                    elif self.state=='STARTING' and self.phase=='HEATING':
-                        if self._temperatures_ready(self.operation['targets'],now):self._start_home()
+                    elif self.state=='STARTING' and self.phase in ('HEATING','PLATFORM_SOAK'):
+                        if self._temperatures_ready(self.operation['targets'],now):
+                            if now-self.stable_since >= 2.+self.operation['soak_seconds']:
+                                self._start_home()
+                            elif self.phase=='HEATING':
+                                # Keep the original bounded heating deadline. A
+                                # temperature excursion resets continuous soak.
+                                self._phase('PLATFORM_SOAK',max(.001,self.deadline-now))
                     elif self.steps:self._step()
         except Exception as exc:
             logging.exception('M300 print control failed')
@@ -689,6 +704,10 @@ class M300PrintControl:
         return dict(revision=REVISION,state=self.state,phase=self.phase,busy=self.busy,
             session_token=self.generation,park_xy=list(self.park_xy),last_error=self.last_error,
             notice=self.notice,paused=bool(ctx),targets=copy.deepcopy(ctx['targets']) if ctx else None,
+            start=copy.deepcopy({key:self.operation.get(key) for key in
+                                ('targets','mesh','requested_mesh','soak_seconds')}) if self.operation else None,
+            soak_remaining=(max(0.,2.+self.operation['soak_seconds']-(now-self.stable_since))
+                            if self.operation and self.phase=='PLATFORM_SOAK' and self.stable_since is not None else None),
             pause_seconds=max(0.,now-ctx['started']) if ctx else 0.,
             material_change_complete=bool(ctx and ctx['material_success']),
             can_confirm_filament=bool(ctx and ctx['material_success'] and target>0.

@@ -383,6 +383,7 @@ class M300Menu:
                 ('Homing Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
                 ('Homing ALL', ('native_gcode', 'ZORTRAX_HOME_ALL')),
                 (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
+                (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
                 (self.t('Move the platform down'), ('platform_hold',1)),
                 (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START'))])
@@ -912,6 +913,7 @@ class M300Menu:
                 'BED_MESH_CALIBRATE':('m300_pad_mesh','BED_MESH'),
                 'ZORTRAX_LEVEL':('m300_calibration',None),
                 'ZORTRAX_HEAT':('m300_maintenance','HOTEND'),
+                'ZORTRAX_HEAT_PLATFORM':('m300_maintenance','BED'),
                 'ZORTRAX_LOAD':('m300_filament','LOAD'),
                 'ZORTRAX_UNLOAD':('m300_filament','UNLOAD'),
                 'ZORTRAX_CHANGE':('m300_filament','CHANGE'),
