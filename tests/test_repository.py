@@ -75,7 +75,7 @@ class RepositoryContracts(unittest.TestCase):
         with self.assertRaises(ValueError):
             tool.pack(struct.pack('<II', 0x20020000, 0x08010009) + bytes(56))
 
-    def test_existing_oled_transport_and_generic_renderer_are_unchanged(self):
+    def test_unmodified_oled_transport_parts_and_generic_renderer_match_reference(self):
         runtime = ROOT / 'host/klippy/extras'
         reference = ROOT / 'host/update_template/tests/reference'
         self.assertEqual(digest(runtime / 'm300_oled_render.py'),
@@ -94,9 +94,11 @@ class RepositoryContracts(unittest.TestCase):
                         self.assertEqual(len(matching), 1)
                         method.body.remove(matching[0])
                 if cls.name == 'FastOledStream':
+                    # Window planning/diagnostics and cumulative ACK handling
+                    # have dedicated behavior tests; the rest stays identical.
                     cls.body = [node for node in cls.body
                                 if not isinstance(node, ast.FunctionDef)
-                                or node.name not in ('__init__', 'step')]
+                                or node.name not in ('__init__', 'step', 'ack')]
                 result[cls.name] = ast.dump(cls)
             return result
 
@@ -114,6 +116,14 @@ class RepositoryContracts(unittest.TestCase):
                 matching = [n for n in constructor.body if ast.dump(n) == ast.dump(registration)]
                 self.assertEqual(len(matching), 1)
                 constructor.body.remove(matching[0])
+                for source in ('self.mcu_oled_stats_time = None',
+                               'self.ack_recoveries = 0',
+                               'self.ack_recovery_active = False',
+                               'self.ack_recovery_after = 0.'):
+                    addition = ast.parse(source).body[0]
+                    matching = [n for n in constructor.body if ast.dump(n) == ast.dump(addition)]
+                    self.assertEqual(len(matching), 1)
+                    constructor.body.remove(matching[0])
                 diagnostic = ast.parse('self.last_transport_failure = None').body[0]
                 matching = [n for n in constructor.body if ast.dump(n) == ast.dump(diagnostic)]
                 self.assertEqual(len(matching), 1)
@@ -128,12 +138,13 @@ class RepositoryContracts(unittest.TestCase):
                         fields = [(key, value) for key, value in zip(item.keys, item.values)
                                   if not isinstance(key, ast.Constant)
                                   or key.value not in ('optimize_windows', 'optimized_frames',
-                                                      'last_transport_failure')]
+                                                      'last_transport_failure','recovered_acks',
+                                                      'ack_recoveries','ack_recovery_active')]
                         item.keys = [key for key, _ in fields]
                         item.values = [value for _, value in fields]
                         for key, value in fields:
                             if isinstance(key, ast.Constant) and key.value == 'host_revision':
-                                self.assertEqual(value.value, '0.13.16.31-OLED-QUEUE-SYNC')
+                                self.assertEqual(value.value, '0.13.16.32-OLED-ACK-RECOVERY')
                                 value.value = '0.13.9-OLED-R9-LIFECYCLE'
                 # Remove only the exact fault-observer additions, then still
                 # require equality of transport, scheduling and SPI lifecycle.
@@ -151,8 +162,22 @@ class RepositoryContracts(unittest.TestCase):
                     " 'display_mode': getattr(self.stream, 'display_mode', None)}\n"
                     "logging.error('M300_OLED_TIMEOUT %s',\n"
                     " json.dumps(self.last_transport_failure, sort_keys=True))\n").body
-                for method_name, additions in (('_send_one', observer[:2]+diagnostic),
-                                               ('_stats', observer[2:])):
+                recovery = ast.parse("if self.fast and self._recover_lost_ack(now):\n"
+                                     "    return\n"
+                                     "self.ack_recovery_active = False\n").body
+                received = ast.parse("received = params.get('#receive_time')\n"
+                    "self.mcu_oled_stats_time = (received if isinstance(received, (int, float))\n"
+                    " and math.isfinite(received)\n"
+                    " and 0. <= self.reactor.monotonic()-received <= 4. else None)\n").body
+                completed = ast.parse("if getattr(self,'ack_recovery_active',False) and self.stream.ready and self.stream.enabled:\n"
+                    "    self.ack_recovery_active = False\n"
+                    "    logging.info('M300 OLED ACK recovery completed: count=%d',self.ack_recoveries)\n").body
+                ready = ast.parse("self.mcu_oled_stats_time = None\n"
+                                  "self.ack_recovery_active = False\n").body
+                for method_name, additions in (('_send_one', observer[:2]+diagnostic+recovery),
+                                               ('_stats', observer[2:]+received+ready[-1:]),
+                                               ('_tick',completed),('_ready',ready),
+                                               ('_stop',ready[-1:])):
                     method = next(n for n in node.body if isinstance(n, ast.FunctionDef)
                                   and n.name == method_name)
                     expected = {ast.dump(n): 0 for n in additions}
@@ -169,7 +194,8 @@ class RepositoryContracts(unittest.TestCase):
                     if isinstance(n,ast.FunctionDef)}
         old=methods(ROOT/'host/update_template/tests/reference/m300_oled.py')
         new=methods(ROOT/'host/klippy/extras/m300_oled.py', allow_benchmark=True)
-        self.assertEqual(set(new), set(old) | {'cmd_rle_bench'})
+        self.assertEqual(set(new), set(old) | {'cmd_rle_bench','_healthy_display_link',
+                                             '_recover_lost_ack'})
         # _select additionally preserves the interactive OEM fan-menu cursor.
         # _reinitialize deliberately fixes cancelled-ACK/native-queue ordering;
         # test_oled_reclaim reproduces the old failure and checks the boundary.

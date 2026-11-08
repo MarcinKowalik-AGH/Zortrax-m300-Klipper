@@ -82,6 +82,7 @@ static uint32_t timer_from_us(uint32_t us) { return us*M300_TIMER_SCALE; }
 static uint8_t timer_is_before(uint32_t a,uint32_t b) { return (int32_t)(a-b)<0; }
 
 static unsigned cs_low, cs_high, ack_count, last_token, snapshot_count;
+static unsigned ack_history[128];
 static unsigned snapshot_v2;
 static uint32_t snapshot_position, snapshot_nav_position, snapshot_invalid;
 static unsigned byte_count;
@@ -111,7 +112,11 @@ static void writew(void *addr, uint16_t value) {
 static void *command_decode_ptr(uint32_t token) { (void)token; return payload; }
 static void sendf(const char *format, ...) {
     va_list a; va_start(a,format);
-    if (strstr(format,"m300_oled_ack")) { last_token=va_arg(a,unsigned); ack_count++; }
+    if (strstr(format,"m300_oled_ack")) {
+        last_token=va_arg(a,unsigned);
+        assert(ack_count < sizeof(ack_history)/sizeof(ack_history[0]));
+        ack_history[ack_count++]=last_token;
+    }
     else if(strstr(format,"m300_oled_host_state")) {
         host_reply_count++;
         host_reply_state=va_arg(a,unsigned);host_reply_local=va_arg(a,unsigned);
@@ -352,6 +357,35 @@ int main(void) {
     m300_oled_dma_irq();
     m300_oled_dma_task();
     assert(!oled_count && ack_count == 3 && last_token == 3);
+
+    // Host cumulative ACK is valid only because the ACTUAL MCU overlay
+    // completes this four-slot DMA FIFO in order, including token wrap.
+    unsigned ack_start=ack_count;
+    const uint16_t fifo_tokens[]={65534,65535,0,1};
+    payload[0]=0x5a;
+    for(unsigned i=0;i<4;i++) {
+        uint32_t raw[]={fifo_tokens[i],1,0,1,1,0};
+        command_m300_oled_burst(raw);
+    }
+    assert(oled_count==4 && ack_count==ack_start);
+    m300_oled_dma_task();
+    for(unsigned i=0;i<4;i++) {
+        assert(ack_count==ack_start+i && mock_dma5.CNDTR==1);
+        mock_dma.ISR=1u<<17;
+        m300_oled_dma_irq();
+        assert(ack_count==ack_start+i); // DMA IRQ alone is not completion
+        if(!i) {
+            SPI2->SR=(1u<<1)|(1u<<7); // last byte still shifting
+            m300_oled_dma_task();
+            assert(ack_count==ack_start);
+            SPI2->SR=1u<<1;
+            sched_wake_task(&oled_dma_wake);
+        }
+        m300_oled_dma_task();
+        assert(ack_count==ack_start+i+1);
+        assert(ack_history[ack_start+i]==fifo_tokens[i]);
+    }
+    assert(!oled_count && !oled_active);
 
     reset_encoder(0);
     REJECT(command_m300_panel_config(NULL));
