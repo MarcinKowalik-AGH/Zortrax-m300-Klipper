@@ -78,5 +78,5 @@
   "payload/m300_ui_labels.py": "797a89f11a50e0e7508772d8f264f3135df0e426aa181e80936cbcbd5d5dc225",
   "payload/m300_ui_m11_state.py": "bdd46782e2794ca36dd69cc77472cd625cee63e1cdc0458c11e5c3670c469510",
   "payload/m300_zcode.py": "f4ca47e80452ba38ee7798c751611b0b554d1099b10b750f9251b830c8eedf4f",
-  "setup_fluidd.py": "58360efec2968c5c7548de1467f73866e411fe39c22c83d66407a73d9e2ba3b0"
+  "setup_fluidd.py": "d0bc97b16258bc898a45b4c95093482a9baeb24ba3411c690e5456eacb2be0ba"
 }
