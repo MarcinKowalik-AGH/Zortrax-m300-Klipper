@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.1
+# Zortrax M300 Classic — Klipper v1.0.0-beta.2
 
-[Download v1.0.0-beta.1](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.1) ·
+[Download v1.0.0-beta.2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.2) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -8,6 +8,9 @@ For a blank Raspberry Pi / Orange Pi, use the versioned beta bundle and its
 first-install helper after KIAUH has prepared the services. The bundle contains
 the complete pinned M300 host, precompiled MCU and precompiled Fluidd. The
 normal updater below is for an already installed M300.
+
+**R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
+[Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 

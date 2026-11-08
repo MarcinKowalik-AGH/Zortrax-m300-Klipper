@@ -12,6 +12,38 @@ import m300_profile
 class PlatformHeatTests(unittest.TestCase):
     def setUp(self):self.h=oem.Harness()
 
+    def test_status_is_safe_before_connect_and_does_not_bind_or_heat(self):
+        h=oem.Harness(connect=False)
+        for _ in range(3):
+            status=h.m.get_status(h.now)
+            self.assertFalse(status['ready']);self.assertFalse(status['can_confirm'])
+            self.assertFalse(status['can_cancel'])
+            self.assertEqual((status['target_hotend'],status['target_bed']),(0.,0.))
+        self.assertIsNone(h.m.hotend);self.assertIsNone(h.m.bed)
+        self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
+        self.assertFalse(any(e[0]=='move' for e in h.events))
+
+    def test_status_survives_connect_then_ready_and_reports_native_targets(self):
+        h=oem.Harness(connect=False);h.hotend.target=210.;h.bed.target=60.
+        self.assertEqual(h.m.get_status(h.now)['target_hotend'],0.)
+        h.emit('klippy:connect')
+        status=h.m.get_status(h.now)
+        self.assertFalse(status['ready'])
+        self.assertEqual((status['target_hotend'],status['target_bed']),(210.,60.))
+        h.emit('klippy:ready');self.assertTrue(h.m.get_status(h.now)['ready'])
+
+    def test_status_survives_shutdown_before_heaters_connect(self):
+        h=oem.Harness(connect=False);h.stop('startup connection failure')
+        h.emit('klippy:shutdown')
+        status=h.m.get_status(h.now)
+        self.assertFalse(status['ready']);self.assertFalse(status['can_cancel'])
+        self.assertEqual((status['target_hotend'],status['target_bed']),(0.,0.))
+
+    def test_service_is_rejected_before_connect(self):
+        h=oem.Harness(connect=False)
+        with self.assertRaises(h.printer.command_error):h.m.start('BED',60.)
+        self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
+
     def test_macro_heats_only_the_platform_without_requiring_homing(self):
         h=self.h;h.hotend.target=210.;h.run('ZORTRAX_HEAT_PLATFORM TEMP=65')
         self.assertEqual((h.hotend.target,h.bed.target),(210.,65.));self.assertEqual(h.homed,'')

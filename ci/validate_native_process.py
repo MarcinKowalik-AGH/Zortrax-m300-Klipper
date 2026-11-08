@@ -81,6 +81,7 @@ def main():
     parser.add_argument('--config',type=Path,required=True)
     parser.add_argument('--dictionary',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--case',help='Run one named FILEOUTPUT scenario for regression diagnosis')
     args=parser.parse_args()
     args.output.mkdir(parents=True,exist_ok=True)
     base=native_config.convert_text(flat_config(args.config))
@@ -127,6 +128,7 @@ def main():
         'BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
         'BED_MESH_CALIBRATE\n')
     cases=[
+        ('native_early_moonraker_status','ZORTRAX_NATIVE_STATUS\nZORTRAX_MAINTENANCE_STATUS\n',False,None),
         ('native_oem_error_catalog',
          'ZORTRAX_NATIVE_STATUS\nZORTRAX_UI_SHOW PAGE=errors\n'
          'ZORTRAX_UI_SHOW PAGE=error_catalog\n' + ''.join(
@@ -182,12 +184,18 @@ def main():
                   'ZORTRAX_CI_SCALE_CHECK MODE=END\nZORTRAX_HARDWARE_STATUS\n')
         cases.append((name, script, True, 'missing/corrupt factory ID3' if not scale else None))
     results=[]
+    if args.case:
+        cases=[case for case in cases if case[0]==args.case]
+        if not cases:raise ValueError('Unknown FILEOUTPUT case: '+args.case)
+    shutil.copy2(Path(__file__).with_name('m300_ci_early_status.py'),
+                 args.root/'klippy/extras/m300_ci_early_status.py')
     for name,script,synthetic,error in cases:
         dest=args.output/name
         dest.mkdir(exist_ok=True)
         (dest/'gcodes').mkdir(exist_ok=True)
         cp=configparser.RawConfigParser()
         cp.read_string(base)
+        if name=='native_early_moonraker_status':cp.add_section('m300_ci_early_status')
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
             assert cp.getfloat(section, 'step_pulse_duration') == .000002
         assert cp.getfloat('m300_motion', 'z_home_hotend_target') == 180
@@ -269,6 +277,11 @@ def main():
                             'synthetic_factory_record': True, 'physical_hardware': False})
             continue
         assert 'M300_DISPLAY ' in text, (name, process.returncode, text[-4000:])
+        if name=='native_early_moonraker_status':
+            snapshots=[json.loads(line.split('M300_CI_EARLY_STATUS ',1)[1])
+                       for line in text.splitlines() if 'M300_CI_EARLY_STATUS ' in line]
+            assert [s['phase'] for s in snapshots]==['before_connect','ready'],text[-4000:]
+            assert all(s['objects']>=40 for s in snapshots)
         display_line=next(line.split('M300_DISPLAY ',1)[1] for line in text.splitlines() if 'M300_DISPLAY ' in line)
         # M112 deliberately revokes the host display lease; the MCU local
         # screen owns the panel after shutdown. Other cases remain connected.

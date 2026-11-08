@@ -1,6 +1,6 @@
 {
   "model": "M300_CLASSIC",
-  "distribution_version": "v1.0.0-beta.1",
+  "distribution_version": "v1.0.0-beta.2",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "upstream_archive_sha256": "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0",
   "upstream_archive_url": "https://codeload.github.com/Klipper3d/klipper/zip/ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
@@ -77,7 +77,7 @@
     "m300_print_control.py",
     "m300_job_state.py"
   ],
-  "self_contained_host_tests": 637,
+  "self_contained_host_tests": 641,
   "factory_identity_abi": 1,
   "normal_motion": true,
   "xy_velocity_profile": 300,
@@ -100,5 +100,6 @@
   "z_initial_clearance_mm": 5,
   "error_revision": "0.13.16.27-SD-NOTICE",
   "oem_error_count": 21,
-  "print_control_revision": "0.13.16.29-UNIFIED-NATIVE-START"
+  "print_control_revision": "0.13.16.29-UNIFIED-NATIVE-START",
+  "supersedes_version": "v1.0.0-beta.1"
 }

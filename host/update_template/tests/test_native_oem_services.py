@@ -44,7 +44,7 @@ class Heater:
 
 
 class Harness:
-    def __init__(self):
+    def __init__(self,connect=True):
         self.now,self.shutdown=1.,False
         self.events,self.callbacks,self.lines=[],[],[]
         self.handlers=defaultdict(list)
@@ -135,10 +135,11 @@ class Harness:
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))
-        self.emit('klippy:connect');self.emit('klippy:ready')
-        self.m.panel_release = NS(arm_cmd=True,
-            get_steppers=lambda:[self.rails[2]],
-            stop=lambda:self.hold_actions.append('stop'), move=self.model_hold_move)
+        if connect:
+            self.emit('klippy:connect');self.emit('klippy:ready')
+            self.m.panel_release = NS(arm_cmd=True,
+                get_steppers=lambda:[self.rails[2]],
+                stop=lambda:self.hold_actions.append('stop'), move=self.model_hold_move)
         self.native_move=self.toolhead.move
         self.native_heat=self.hotend.set_temp
         self.native_commands=dict(self.gcode.ready_gcode_handlers)

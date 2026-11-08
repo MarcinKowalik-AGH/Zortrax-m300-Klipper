@@ -78,6 +78,9 @@ class PanelRelease:
 class M300NativeMaintenance(M300Maintenance):
     def __init__(self, config):
         super().__init__(config)
+        # Moonraker may subscribe while MCU identification yields, before
+        # klippy:connect has bound the native heaters.
+        self.hotend = self.bed = None
         self.platform_speed = self._number('platform_speed', PLATFORM_SPEED, .1, 25.)
         self.phase_id = 0
         self.target = 0.
@@ -183,6 +186,7 @@ class M300NativeMaintenance(M300Maintenance):
             return self.platform(value)
         if operation not in ('HOTEND','BED'):
             raise self._error('use native heater/fan controls for this operation')
+        self._idle()
         heater=self.hotend if operation=='HOTEND' else self.bed
         value=(260. if operation=='HOTEND' else 60.) if value is None else value
         if (type(value) not in (float,int) or not math.isfinite(value)
@@ -453,7 +457,7 @@ class M300NativeMaintenance(M300Maintenance):
             platform_held=self.state=='PLATFORM_HOLD',
             platform_panel_local=self._platform_panel_local,
             platform_speed_mm_s=self.platform_speed,
-            revision='0.13.16.29-NATIVE-PLATFORM-HEAT')
+            revision='0.13.16.30-SERVICE-STARTUP')
 
     def cmd_platform(self,gcmd):
         direction=gcmd.get('DIRECTION').upper()
