@@ -124,6 +124,7 @@ def main():
         'ZORTRAX_CI_PAD_MESH CHECK=8\n'
         'BED_MESH PREVIEW=1\n'
         'ZORTRAX_NATIVE_STATUS\nZORTRAX_PAD_MESH_STATUS\nZORTRAX_CI_PAD_MESH\n'
+        'ZORTRAX_CI_PAD_MESH CHECK=9\n'
         'BED_MESH_PROFILE LOAD=m300_pads\nZORTRAX_CI_PAD_MESH CHECK=1\n'
         'BED_MESH PREVIEW=1 FRONT_LEFT_X=31\nZORTRAX_CI_PAD_MESH CHECK=2\nBED_MESH_CLEAR\n'
         'BED_MESH_CALIBRATE\n')
@@ -315,6 +316,10 @@ def main():
             assert 'M300_CI_PAD_MESH profile load passed' in text
             assert 'M300_CI_PAD_MESH macro preview passed' in text
             assert 'Traceback' not in text
+            snapshot=next(json.loads(line.split('M300_NATIVE_MESH_SNAPSHOT ',1)[1])
+                          for line in text.splitlines() if 'M300_NATIVE_MESH_SNAPSHOT ' in line)
+            assert snapshot['bed_mesh']['mesh_matrix']==[[]]
+            (dest/'native_mesh_status.json').write_text(json.dumps(snapshot))
         if name.startswith('native_oem_error_'):
             view = next(json.loads(line.split('M300_ERRORS ',1)[1]) for line in text.splitlines()
                         if 'M300_ERRORS ' in line)

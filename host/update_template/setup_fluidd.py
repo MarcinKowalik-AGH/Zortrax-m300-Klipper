@@ -104,6 +104,19 @@ def read_macros(base):
         return {}
 
 
+def configured_macro_names(configfile):
+    # settings contains accessed options; config is the complete effective
+    # configuration. Use both when new macros precede their settings snapshot.
+    names = set()
+    for source in ('config', 'settings'):
+        sections = configfile.get(source, {})
+        if not isinstance(sections, dict):
+            raise ValueError('Unsupported Klipper configfile status: ' + source)
+        names.update(name[12:].strip().upper() for name in sections
+                     if isinstance(name, str) and name.lower().startswith('gcode_macro '))
+    return sorted(names)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true')
@@ -121,8 +134,8 @@ def main():
             raise ValueError('Fluidd settings changed since this backup')
         after, assignments = backup['before'], {}
     else:
-        settings = request(args.moonraker, '/printer/objects/query?configfile')['status']['configfile']['settings']
-        names = sorted(name[12:].upper() for name in settings if name.lower().startswith('gcode_macro '))
+        configfile = request(args.moonraker, '/printer/objects/query?configfile')['status']['configfile']
+        names = configured_macro_names(configfile)
         after, assignments = merge_groups(before, names)
     result = {'status': 'PLAN_FLUIDD_GROUPS' if before != after else 'ALREADY_FLUIDD_GROUPS',
               'groups': {group: sorted(name for name, g in assignments.items() if g == group) for group in GROUPS}}

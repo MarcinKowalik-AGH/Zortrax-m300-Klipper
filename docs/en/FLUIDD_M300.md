@@ -49,6 +49,9 @@ profile in the native colored 3D chart, with minimum, maximum and range in mm.
 The native chart appears first once a mesh is available; the contact-area
 drawing remains below it. During probing the contact-area drawing is first.
 This preview does not load compensation or send a motion/heater command.
+The native inactive-mesh placeholder `[[]]` is treated as empty, just like
+`[]`. A valid saved profile therefore remains visible after calibration and
+after `SAVE_CONFIG`, with its original colored native surface and range.
 `BED_MESH_PROFILE LOAD=m300_pads` or the native profile's Load button enables
 the saved compensation and displays the active native chart.
 
@@ -62,6 +65,21 @@ printing or Bed Mesh. Status macros read diagnostics; XY test macros perform
 deliberate test movements. Other diagnostic entries exercise OLED transport
 or shared service procedures. They never run automatically and can be hidden
 in Fluidd's macro settings without disabling ordinary printer functions.
+
+## Platform heating macros
+
+| Macro | Effect | Fluidd category |
+| --- | --- | --- |
+| `ZORTRAX_HEAT_PLATFORM TEMP=60` | Starts bed heating now, with shared OLED/Fluidd progress; confirm after heating to switch the bed heater off. | ZORTRAX M300 |
+| `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` | Saves a setting for print start; adds the configured stabilization interval after temperatures settle. The default extra interval is 60 seconds. It does not start heating by itself. | ZORTRAX M300 |
+| `START_PRINT`, `END_PRINT` | Native print preparation and completion. | Klipper |
+
+The grouping migration uses both raw configuration and accessed settings.
+For an M300, the UI also supplies these defaults when a new macro has no
+valid category in older preferences. Explicit valid custom categories,
+visibility, aliases and colors are preserved by this UI fallback. Reload
+Fluidd after installing its new build so an existing browser session reads
+the updated preferences and code.
 
 Revision `0.13.16.20-PAD-CONTACT-MAP` adds a top view above the native mesh
 chart. It shows the five configured contact areas, all 25 planned points,

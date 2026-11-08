@@ -998,7 +998,7 @@ index 0000000..810b9a5
 +</style>
 diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 new file mode 100644
-index 0000000..ce5e917
+index 0000000..c6716c3
 --- /dev/null
 +++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
 @@ -0,0 +1,141 @@
@@ -1090,7 +1090,7 @@ index 0000000..ce5e917
 +<script lang="ts">
 +import { Component, Mixins } from 'vue-property-decorator'
 +import StateMixin from '@/mixins/state'
-+import { isM300PadMeshAccepted, readM300PadMesh } from '@/util/m300-pad-mesh'
++import { hasBedMeshMatrix, isM300PadMeshAccepted, readM300PadMesh } from '@/util/m300-pad-mesh'
 +import { padMeshError } from '@/util/m300-feedback'
 +
 +@Component
@@ -1135,7 +1135,7 @@ index 0000000..ce5e917
 +
 +  get active () {
 +    const bed = this.$typedState.printer.printer.bed_mesh
-+    return bed?.profile_name === this.profileName && !!bed?.mesh_matrix?.length
++    return bed?.profile_name === this.profileName && hasBedMeshMatrix(bed?.mesh_matrix)
 +  }
 +
 +  save () {
@@ -1398,6 +1398,35 @@ index 6a1732c..00e08a8 100644
    }
  
    /**
+diff --git a/src/store/macros/getters.ts b/src/store/macros/getters.ts
+index 337c205..c599487 100644
+--- a/src/store/macros/getters.ts
++++ b/src/store/macros/getters.ts
+@@ -1,6 +1,7 @@
+ import type { GetterTree } from 'vuex'
+ import type { Macro, MacroCategory, MacrosState } from './types'
+ import type { RootState } from '../types'
++import { m300MacroDefaultCategory } from '@/util/m300-macro-category'
+
+ export const MACRO_DEFAULTS = {
+   alias: '',
+@@ -51,6 +52,16 @@ export const getters = {
+           }
+         }
+
++        if (macro.categoryId === '0') {
++          const model = rootState.printer.printer.m300_mcu?.model
++          const group = m300MacroDefaultCategory(name, model)
++          const category = group ? state.categories.find(category => category.name === group) : undefined
++          if (category) {
++            macro.categoryId = category.id
++            macro.category = category
++          }
++        }
++
+         return macro
+       })
+
 diff --git a/src/store/mesh/getters.ts b/src/store/mesh/getters.ts
 index 9f27a04..e1448aa 100644
 --- a/src/store/mesh/getters.ts
@@ -1770,9 +1799,87 @@ index 0000000..76ce2ad
 +    : 'Homing ' + axis.toUpperCase()
 +  return { wait: 'onHome' + axis, message }
 +}
+diff --git a/src/util/m300-macro-category.spec.ts b/src/util/m300-macro-category.spec.ts
+new file mode 100644
+index 0000000..02bc72f
+--- /dev/null
++++ b/src/util/m300-macro-category.spec.ts
+@@ -0,0 +1,51 @@
++// SPDX-License-Identifier: GPL-3.0-only
++import { describe, expect, it } from 'vitest'
++import { getters } from '@/store/macros/getters'
++import type { MacrosState } from '@/store/macros/types'
++import type { RootState } from '@/store/types'
++
++const names = ['ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'START_PRINT', 'END_PRINT']
++
++function macros (stored: MacrosState['stored'] = [], model = 'M300_CLASSIC') {
++  const state: MacrosState = {
++    stored,
++    expanded: [],
++    categories: [{ id: 'z', name: 'ZORTRAX M300' }, { id: 'k', name: 'Klipper' }, { id: 'c', name: 'Custom' }]
++  }
++  const printer = {
++    m300_mcu: { model },
++    configfile: { settings: {} },
++    ...Object.fromEntries(names.map(name => ['gcode_macro ' + name, {}]))
++  }
++  const root = { printer: { printer } } as unknown as RootState
++  return { state, root, get: () => getters.getMacros(state, {}, root) }
++}
++
++describe('M300 defaults for newly introduced macros', () => {
++  it('groups the two platform macros under Zortrax and Start/End under Klipper without stored rows', () => {
++    const ctx = macros()
++    expect(ctx.get().map(macro => [macro.name, macro.categoryId]))
++      .toEqual(names.map(name => [name, name.startsWith('ZORTRAX_') ? 'z' : 'k']))
++    expect(ctx.state.stored).toEqual([])
++  })
++
++  it('repairs uncategorized and orphaned preferences while preserving visibility and color', () => {
++    const stored = names.map((name, i) => ({ name, categoryId: i % 2 ? 'removed' : '0', visible: false, color: 'purple' }))
++    const ctx = macros(stored)
++    const before = JSON.stringify(ctx.state)
++    expect(ctx.get().every(macro => macro.categoryId !== '0' && !macro.visible && macro.color === 'purple')).toBe(true)
++    expect(JSON.stringify(ctx.state)).toBe(before)
++  })
++
++  it('preserves an explicit valid custom category and alias', () => {
++    const ctx = macros([{ name: names[0], categoryId: 'c', visible: true, alias: 'My bed' }])
++    expect(ctx.get()[0]).toMatchObject({ categoryId: 'c', category: { name: 'Custom' }, alias: 'My bed' })
++  })
++
++  it('does not change another printer or invent a missing category', () => {
++    expect(macros([], 'OTHER').get().every(macro => macro.categoryId === '0')).toBe(true)
++    const ctx = macros()
++    ctx.state.categories = []
++    expect(ctx.get().every(macro => macro.categoryId === '0')).toBe(true)
++  })
++})
+diff --git a/src/util/m300-macro-category.ts b/src/util/m300-macro-category.ts
+new file mode 100644
+index 0000000..5e9d4c1
+--- /dev/null
++++ b/src/util/m300-macro-category.ts
+@@ -0,0 +1,15 @@
++// SPDX-License-Identifier: GPL-3.0-only
++
++// Defaults for macros introduced after an existing Fluidd preferences record.
++// An explicit valid user category is preserved by the caller.
++export function m300MacroDefaultCategory (name: string, model: unknown): string | undefined {
++  if (model !== 'M300_CLASSIC') return
++  switch (name.toUpperCase()) {
++    case 'ZORTRAX_HEAT_PLATFORM':
++    case 'ZORTRAX_FULL_PLATFORM_PREHEAT':
++      return 'ZORTRAX M300'
++    case 'START_PRINT':
++    case 'END_PRINT':
++      return 'Klipper'
++  }
++}
 diff --git a/src/util/m300-pad-contact-map.spec.ts b/src/util/m300-pad-contact-map.spec.ts
 new file mode 100644
-index 0000000..187e76b
+index 0000000..5bcb426
 --- /dev/null
 +++ b/src/util/m300-pad-contact-map.spec.ts
 @@ -0,0 +1,257 @@
@@ -2002,8 +2109,8 @@ index 0000000..187e76b
 +      m300_pad_mesh: { ...source.m300_pad_mesh, total_points: 25, run_id: null, plan_matches_run: false },
 +      bed_mesh: {
 +        profile_name: '',
-+        mesh_matrix: [],
-+        probed_matrix: [],
++        mesh_matrix: [[]],
++        probed_matrix: [[]],
 +        mesh_min: [0, 0],
 +        mesh_max: [0, 0],
 +        profiles: {
@@ -2143,10 +2250,10 @@ index 0000000..34d9947
 +}
 diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
 new file mode 100644
-index 0000000..1e0141d
+index 0000000..41a16ae
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.spec.ts
-@@ -0,0 +1,463 @@
+@@ -0,0 +1,487 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +// @vitest-environment jsdom
 +import Vue from 'vue'
@@ -2164,7 +2271,7 @@ index 0000000..1e0141d
 +import { getters } from '@/store/mesh/getters'
 +import type { RootState } from '@/store/types'
 +import type { MeshState } from '@/store/mesh/types'
-+import { isM300PadMeshAccepted, m300PadMeshPreview, readM300PadMesh } from './m300-pad-mesh'
++import { hasBedMeshMatrix, isM300PadMeshAccepted, m300PadMeshPreview, readM300PadMesh } from './m300-pad-mesh'
 +import type { M300PadMesh } from './m300-pad-mesh'
 +
 +vi.mock('@/api/socketActions', () => ({ SocketActions: { printerGcodeScript: vi.fn() } }))
@@ -2199,8 +2306,8 @@ index 0000000..1e0141d
 +    m300_pad_mesh: status(state),
 +    bed_mesh: {
 +      profile_name: '',
-+      mesh_matrix: [],
-+      probed_matrix: [],
++      mesh_matrix: [[]],
++      probed_matrix: [[]],
 +      mesh_min: [0, 0],
 +      mesh_max: [0, 0],
 +      profiles: {
@@ -2246,6 +2353,30 @@ index 0000000..1e0141d
 +
 +describe('M300 pad measurement in Tune', () => {
 +  beforeEach(() => vi.clearAllMocks())
++
++  it('recognizes native inactive placeholders and retains a real flat zero-valued active matrix', () => {
++    for (const empty of [undefined, [], [[]], [[], []]]) expect(hasBedMeshMatrix(empty)).toBe(false)
++    expect(hasBedMeshMatrix([[0, 0], [0, 0]])).toBe(true)
++    expect(hasBedMeshMatrix([[0, 0], [0]])).toBe(false)
++    expect(hasBedMeshMatrix([[0, 0], [0, Number.NaN]])).toBe(false)
++  })
++
++  it('renders the native [[]] placeholder as a saved-profile preview before and after SAVE_CONFIG', () => {
++    for (const saved of [false, true]) {
++      const source = printer('COMPLETE')
++      if (saved) Object.assign(source.m300_pad_mesh, { state: 'IDLE', busy: false, run_id: null, points_measured: 0, last_attempt: null, result: null })
++      const original = JSON.stringify(source.bed_mesh)
++      const preview = m300PadMeshPreview(source)
++      expect(preview?.saved).toBe(saved)
++      expect(preview?.mesh.mesh_matrix).toHaveLength(3)
++      const meshState: MeshState = { range: 0, wireframe: false, scale: 0, boxScale: 0, flatSurface: false, matrix: 'mesh_matrix' }
++      const result = getters.getCurrentMeshData(meshState, {}, { printer: { printer: source } } as unknown as RootState)
++      expect(result.mesh_matrix.coordinates).toHaveLength(9)
++      expect(result.mesh_matrix.range).toBe(0.04)
++      expect(JSON.stringify(source.bed_mesh)).toBe(original)
++      expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
++    }
++  })
 +
 +  it('accepts 0.735 and numerical roundoff at the 0.8 mm limit, but not a 0.8025 mm span', () => {
 +    const source = status('COMPLETE')
@@ -2425,7 +2556,7 @@ index 0000000..1e0141d
 +    expect(result.mesh_matrix.coordinates).toHaveLength(9)
 +    expect(result.mesh_matrix.coordinates[8].value).toEqual([299, 299, 0.04])
 +    expect(result.mesh_matrix.range).toBe(0.04)
-+    expect(bed.mesh_matrix).toEqual([])
++    expect(bed.mesh_matrix).toEqual([[]])
 +    expect(bed.profile_name).toBe('')
 +    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
 +  })
@@ -2467,7 +2598,7 @@ index 0000000..1e0141d
 +    expect(result.mesh_matrix.max).toBe(0.04)
 +    expect(result.mesh_matrix.range).toBe(0.04)
 +    expect(source.bed_mesh.profile_name).toBe('')
-+    expect(source.bed_mesh.mesh_matrix).toEqual([])
++    expect(source.bed_mesh.mesh_matrix).toEqual([[]])
 +    expect(SocketActions.printerGcodeScript).not.toHaveBeenCalled()
 +  })
 +
@@ -2612,10 +2743,10 @@ index 0000000..1e0141d
 +})
 diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
 new file mode 100644
-index 0000000..adc1c92
+index 0000000..3bc55e7
 --- /dev/null
 +++ b/src/util/m300-pad-mesh.ts
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,99 @@
 +// SPDX-License-Identifier: GPL-3.0-only
 +export interface M300PadAttempt {
 +  run_id: string;
@@ -2672,6 +2803,14 @@ index 0000000..adc1c92
 +  mesh: Klipper.BedMeshState;
 +}
 +
++// Native Klipper reports an inactive matrix as [[]], not necessarily [].
++// Only a rectangular numeric surface constitutes an active mesh.
++export function hasBedMeshMatrix (value: unknown): value is number[][] {
++  if (!Array.isArray(value) || value.length < 2 || !Array.isArray(value[0]) || value[0].length < 2) return false
++  const width = value[0].length
++  return value.every(row => Array.isArray(row) && row.length === width && row.every(Number.isFinite))
++}
++
 +export function m300PadMeshSurface (printer: Klipper.PrinterState): M300PadSurface | undefined {
 +  const status = readM300PadMesh(printer.m300_pad_mesh)
 +  const raw = printer.m300_pad_mesh as Record<string, unknown> | undefined
@@ -2681,7 +2820,7 @@ index 0000000..adc1c92
 +  const saved = !!raw && raw.state === 'IDLE' && raw.busy === false &&
 +    raw.total_points === 25 && raw.points_measured === 0
 +  const name = isM300PadMeshAccepted(status) ? status?.result?.profile : saved ? 'm300_pads' : undefined
-+  if (!name || !bed || (bed.mesh_matrix?.length && bed.profile_name !== name)) return
++  if (!name || !bed || (hasBedMeshMatrix(bed.mesh_matrix) && bed.profile_name !== name)) return
 +  const profile = bed.profiles?.[name]
 +  const params = profile?.mesh_params
 +  if (!profile || !params || !Array.isArray(profile.points) || profile.points.length < 3 ||
@@ -2704,11 +2843,11 @@ index 0000000..adc1c92
 +}
 +
 +export function m300PadMeshPreview (printer: Klipper.PrinterState): M300PadSurface | undefined {
-+  if (printer.bed_mesh?.mesh_matrix?.length) return
++  if (hasBedMeshMatrix(printer.bed_mesh?.mesh_matrix)) return
 +  return m300PadMeshSurface(printer)
 +}
 diff --git a/src/views/Tune.vue b/src/views/Tune.vue
-index 7edad45..448e7b4 100644
+index 7edad45..02f01dc 100644
 --- a/src/views/Tune.vue
 +++ b/src/views/Tune.vue
 @@ -8,12 +8,18 @@
@@ -2735,7 +2874,7 @@ index 7edad45..448e7b4 100644
  <script lang="ts">
  import { Component, Mixins } from 'vue-property-decorator'
  import StateMixin from '@/mixins/state'
-+import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
++import { hasBedMeshMatrix, m300PadMeshPreview } from '@/util/m300-pad-mesh'
  
  import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
  import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
@@ -2758,7 +2897,7 @@ index 7edad45..448e7b4 100644
  export default class Tune extends Mixins(StateMixin) {
 +  get meshChartFirst (): boolean {
 +    const printer = this.$typedState.printer.printer
-+    return !!(printer.bed_mesh?.mesh_matrix?.length || m300PadMeshPreview(printer))
++    return hasBedMeshMatrix(printer.bed_mesh?.mesh_matrix) || !!m300PadMeshPreview(printer)
 +  }
 +
    get supportsBedMesh (): boolean {

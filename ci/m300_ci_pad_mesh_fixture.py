@@ -10,6 +10,17 @@ class PadMeshFixture:
             raise gcmd.error('Pad mesh fixture requires FILEOUTPUT')
         adapter = self.printer.lookup_object('m300_pad_mesh')
         check = gcmd.get_int('CHECK', 0)
+        if check == 9:
+            import json
+            now=self.printer.get_reactor().monotonic()
+            status=adapter.bedmesh.get_status(now)
+            assert adapter.bedmesh.get_mesh() is None
+            assert status['profile_name']==''
+            assert status['mesh_matrix']==status['probed_matrix']==[[]]
+            assert 'm300_pads' in status['profiles']
+            gcmd.respond_info('M300_NATIVE_MESH_SNAPSHOT '+json.dumps(dict(
+                bed_mesh=status,m300_pad_mesh=adapter.get_status(now))))
+            return
         if check == 8:
             from .m300_klipper_status import _BIT_PLANES
             from .m300_status_footer import klipper_footer

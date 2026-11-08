@@ -2,7 +2,7 @@
 import unittest
 
 import m300_profile
-from setup_fluidd import category, merge_groups
+from setup_fluidd import category, configured_macro_names, merge_groups
 import test_pad_mesh
 from test_pad_mesh_oled import pad
 from test_procedure_return import motion
@@ -10,6 +10,21 @@ from test_settings_information import session
 
 
 class MeshTemperatureMenuTests(unittest.TestCase):
+    def test_new_platform_and_print_macros_are_grouped_even_before_settings_contains_them(self):
+        configfile = dict(settings={'gcode_macro ZORTRAX_STATUS':{}}, config={
+            'gcode_macro ZORTRAX_HEAT_PLATFORM':{},
+            'gcode_macro ZORTRAX_FULL_PLATFORM_PREHEAT':{},
+            'gcode_macro START_PRINT':{},'gcode_macro END_PRINT':{},
+            'gcode_macro zortrax_status':{}})
+        names = configured_macro_names(configfile)
+        self.assertEqual(len(names),5)
+        after,assigned = merge_groups({},names)
+        self.assertEqual(assigned['ZORTRAX_HEAT_PLATFORM'],'ZORTRAX M300')
+        self.assertEqual(assigned['ZORTRAX_FULL_PLATFORM_PREHEAT'],'ZORTRAX M300')
+        self.assertEqual(assigned['START_PRINT'],'Klipper')
+        self.assertEqual(assigned['END_PRINT'],'Klipper')
+        self.assertEqual(merge_groups(after,names)[0],after)
+
     def test_2532_degree_idle_nozzle_uses_the_260_mesh_default_without_changing_g28_policy(self):
         mesh, case = test_pad_mesh.PadMeshTests().preflight_case('xyz')
         mesh.hotend_temperature = 260.

@@ -14,8 +14,8 @@ git apply --check "$root/frontend/fluidd/m300-leveling.patch"
 git apply "$root/frontend/fluidd/m300-leveling.patch"
 
 pnpm install --frozen-lockfile --ignore-scripts
-pnpm exec vitest run src/components/common/m300Leveling.spec.ts src/util/m300-homing.spec.ts src/util/m300-pad-mesh.spec.ts src/util/m300-pad-contact-map.spec.ts src/util/m300-feedback.spec.ts
-pnpm exec eslint --max-warnings 0 src/App.vue src/views/Tune.vue src/store/mesh/getters.ts src/components/common/{ActionCommandPromptDialog.vue,M300LevelingDiagram.vue,m300Leveling.ts,m300Leveling.spec.ts,M300PadMeshObserver.vue} src/mixins/state.ts src/util/m300-{homing,pad-mesh,pad-contact-map,feedback}{,.spec}.ts src/components/widgets/toolhead/ToolheadControl{Bars,BarsAxis,Circle,Cross}.vue src/components/widgets/bedmesh/{BedMeshCard,M300PadMeshStatus,M300PadContactMap}.vue
+pnpm exec vitest run src/components/common/m300Leveling.spec.ts src/util/m300-homing.spec.ts src/util/m300-pad-mesh.spec.ts src/util/m300-pad-contact-map.spec.ts src/util/m300-feedback.spec.ts src/util/m300-macro-category.spec.ts
+pnpm exec eslint --max-warnings 0 src/App.vue src/views/Tune.vue src/store/{mesh,macros}/getters.ts src/components/common/{ActionCommandPromptDialog.vue,M300LevelingDiagram.vue,m300Leveling.ts,m300Leveling.spec.ts,M300PadMeshObserver.vue} src/mixins/state.ts src/util/m300-{homing,pad-mesh,pad-contact-map,feedback,macro-category}{,.spec}.ts src/components/widgets/toolhead/ToolheadControl{Bars,BarsAxis,Circle,Cross}.vue src/components/widgets/bedmesh/{BedMeshCard,M300PadMeshStatus,M300PadContactMap}.vue
 pnpm run type-check
 pnpm run build
 

@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.4
+# Zortrax M300 Classic — Klipper v1.0.0-beta.5
 
-[Download v1.0.0-beta.4](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.4) ·
+[Download v1.0.0-beta.5](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.5) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -12,8 +12,10 @@ normal updater below is for an already installed M300.
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
 
-Beta.4 handles lost OLED ACKs and bounded display-only recovery:
-[changes, existing-printer update and diagnostics](docs/en/RELEASE_v1.0.0-beta.4.md).
+Beta.5 restores the native colored mesh chart for saved M300 profiles and
+groups the platform and print macros:
+[changes and existing-printer update](docs/en/RELEASE_v1.0.0-beta.5.md).
+The [beta.4 OLED ACK recovery](docs/en/RELEASE_v1.0.0-beta.4.md) remains included.
 
 [Installation](docs/en/INSTALL.md) · [Features & acceptance](docs/en/FEATURES.md) · [Build](docs/en/BUILD.md) · [M07 leveling](docs/en/LEVELING.md) · [Procedure validation](docs/en/PRINT_CONTEXT.md)
 
