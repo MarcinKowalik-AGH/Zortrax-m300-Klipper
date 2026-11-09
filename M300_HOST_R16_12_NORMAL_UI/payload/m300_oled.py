@@ -28,6 +28,16 @@ BACKGROUND_PRIORITY_CLOCK = 0x7fffffff00000000
 _DIRECT_SELECT = object()
 
 
+def menu_beep_kind(rows, selected, presented_actions):
+    """Classify only an actually presented Back/Up row, never a stale token."""
+    if (presented_actions is None or type(selected) is not int
+            or not 0 <= selected < len(rows) or selected >= len(presented_actions)):
+        return 'short'
+    label, action = rows[selected]
+    if action is None or presented_actions[selected] != action:
+        return 'short'
+    return 'back' if str(label).strip().casefold() in ('back', 'up') else 'short'
+
 
 class M300OLED:
     def __init__(self, config):
@@ -378,7 +388,14 @@ class M300OLED:
                 if any(events[key] for key in ('longs', 'shorts', 'delta')):
                     menu.maintenance.activity()
                 if events['shorts']:
-                    menu.maintenance.click()
+                    kind = 'short'
+                    if current_view and presented_actions is not None:
+                        try:
+                            kind = menu_beep_kind(menu.rows(now)[1],
+                                                  self.selection, presented_actions)
+                        except Exception:
+                            pass  # Audio feedback cannot interrupt UI ownership.
+                    menu.maintenance.click(kind)
             leveling_panel = getattr(received_ui, 'leveling_panel', None)
             if leveling_panel is not None and leveling_panel(events, received_leveling, now):
                 return

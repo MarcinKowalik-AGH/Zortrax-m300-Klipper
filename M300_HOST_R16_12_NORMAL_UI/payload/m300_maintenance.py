@@ -13,6 +13,8 @@ from .m300_nvm import MAX_BRIGHTNESS
 IDLE_JOB = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
 LED_ERROR_COLORS = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 LED_ERROR_SECONDS = 5.
+MENU_BEEP_SECONDS = .035
+BACK_BEEP_SECONDS = .140
 LED_COLORS = {'READY': (0, 1, 0), 'HEATING': (1, 0, 0),
               'PAUSE': (1, 0, 1), 'WORKING': (1, 1, 1)}
 
@@ -65,6 +67,8 @@ class M300Maintenance:
         self._beep_until = 0.
         self._last_activity = self.reactor.monotonic()
         self._timer = self.reactor.register_timer(self._tick)
+        # Buzzer timeout is independent of the 0.5 s native status/LED tick.
+        self._beep_timer = self.reactor.register_timer(self._beep_timeout)
         self.printer.register_event_handler('m300:setting_changed', self._setting_changed)
         for event, callback in (('klippy:connect', self._connect),
                                 ('klippy:ready', self._ready),
@@ -171,6 +175,8 @@ class M300Maintenance:
         self._move_permit = None
         self.state, self.reason = 'FAULT', 'host lifecycle invalidated the service'
         self.reactor.update_timer(self._timer, self.reactor.NEVER)
+        self._beep_until = 0.
+        self.reactor.update_timer(self._beep_timer, self.reactor.NEVER)
         # Native MCU shutdown owns final electrical levels.
 
     def activity(self):
@@ -397,6 +403,7 @@ class M300Maintenance:
         if name == 'sound' and not value:
             self._pin('m300_buzzer', 0)
             self._beep_until = 0.
+            self.reactor.update_timer(self._beep_timer, self.reactor.NEVER)
         if name in ('light_mode', 'led_brightness'):
             self._indicators(self.reactor.monotonic())
 
@@ -407,11 +414,25 @@ class M300Maintenance:
                 value = bool(value)
             output.gcrq.send_async_request(float(value))
 
-    def click(self):
+    def _beep_timeout(self, now):
+        if not self.ready or self.printer.is_shutdown():
+            self._beep_until = 0.
+            return self.reactor.NEVER
+        if self._beep_until and now < self._beep_until:
+            return self._beep_until
+        if self._beep_until:
+            self._pin('m300_buzzer', 0)
+            self._beep_until = 0.
+        return self.reactor.NEVER
+
+    def click(self, kind='short'):
         self.activity()
-        if self.ready and self._setting('sound', True):
-            self._pin('m300_buzzer', 1)
-            self._beep_until = self.reactor.monotonic() + .05
+        if not self.ready or self.printer.is_shutdown() or not self._setting('sound', True):
+            return
+        duration = BACK_BEEP_SECONDS if kind == 'back' else MENU_BEEP_SECONDS
+        self._pin('m300_buzzer', 1)
+        self._beep_until = self.reactor.monotonic() + duration
+        self.reactor.update_timer(self._beep_timer, self._beep_until)
 
     def _indicator_state(self, now):
         """One printer-state policy, independent of the open OLED/Fluidd page."""

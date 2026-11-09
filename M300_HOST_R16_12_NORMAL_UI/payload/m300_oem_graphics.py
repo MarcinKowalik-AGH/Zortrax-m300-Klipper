@@ -15,6 +15,7 @@ import zlib
 
 from .m300_activity_graphics import ActivityGraphics, PREFIX, HOMING_ICONS
 from .m300_cartesian_graphics import CartesianGraphics
+from .m300_klipper_logo import klipper_frame
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
 HOMING_HOURGLASS = '0x0801c2b8'
@@ -78,7 +79,8 @@ class OEMGraphics:
             if not hasattr(self, 'project'):
                 self.project = ActivityGraphics(
                     Path(__file__).with_name('m300_menu_sprites.json'), expected_symbols=5)
-            return self.project.get(addr, now)
+            frame = self.project.get(addr, now)
+            return klipper_frame(frame) if addr == 'project-klipper' else frame
         desc=self.frames.get(addr)
         if desc is None:
             return None
