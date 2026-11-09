@@ -1235,13 +1235,14 @@ class M300OLED:
 
     def get_status(self, now):
         age = None if self.encoder.last_time is None else now - self.encoder.last_time
-        # Every 250 ms Moonraker polls Klipper status. Only changed,
-        # acknowledged OLED frames are encoded, at most twice per second.
-        # This observer never renders another frame or issues any MCU I/O.
+        # Read-only host-rendered preview avoids waiting for a whole
+        # ACK-confirmed DMA frame and an extra 500ms publication throttle.
+        # Moonraker's existing status subscription delivers the latest frame.
+        # No new OLED render, MCU command, UART bytes or G-code actions.
         mirror = getattr(self, '_oled_preview', None)
         oled_preview = (mirror.get_status(
             now, self.connected and self.stream.ready and self.stream.enabled,
-            getattr(self.stream, 'previous', None))
+            getattr(self, '_render_wire', None))
             if mirror is not None else None)
         return {'model': 'M300_CLASSIC', 'abi': 1,
                 'oled_preview': oled_preview,

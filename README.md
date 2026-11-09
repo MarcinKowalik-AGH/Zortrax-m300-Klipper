@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.11
+# Zortrax M300 Classic — Klipper v1.0.0-beta.12
 
-[Download v1.0.0-beta.11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.11) ·
+[Download v1.0.0-beta.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.12) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,19 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.12 faster, half-width OLED preview in Fluidd:** The full-screen
+OLED mirror under the Temperature graph now occupies **50% of the graph
+width**, centered in the same card. Its source changes from
+the last entire ACK-confirmed frame to the **most recently host-rendered**
+256×64 4bpp frame to remove whole-frame transport lag. The status bridge
+coalesces rapid knob rotations without a queue and can publish up to 8 Hz
+when a client requests updates that often (typical Moonraker subscription
+cadence is approximately 4 Hz). PNG compression is reduced to fast level 1.
+The physical OLED's RLE, DMA, UART, SPI and ACK transport remain
+unchanged. Note the preview may lead the actual display until the latter
+finishes a hardware transfer; it is not an optical screen readback.
+[Release notes](docs/en/RELEASE_v1.0.0-beta.12.md).
 
 **Beta.11 exact OLED preview in Fluidd:** Adds a read-only 256×64,
 16-luminance OLED preview **within the Temperature card, immediately

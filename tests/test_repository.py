@@ -156,14 +156,15 @@ class RepositoryContracts(unittest.TestCase):
                             if isinstance(key, ast.Constant) and key.value == 'host_revision':
                                 self.assertEqual(value.value, '0.13.16.32-OLED-ACK-RECOVERY')
                                 value.value = '0.13.9-OLED-R9-LIFECYCLE'
-                # The status mirror must use only last ACKed stream.previous.
+                # The status mirror may observe only the latest rendered
+                # host frame (never a new render, MCU read or transport op).
                 # Strip the two exact pure observer assignments and compare
                 # every other field of get_status with the pinned baseline.
                 status_mirror = ast.parse(
                     "mirror = getattr(self, '_oled_preview', None)\n"
                     "oled_preview = (mirror.get_status(\n"
                     " now, self.connected and self.stream.ready and self.stream.enabled,\n"
-                    " getattr(self.stream, 'previous', None))\n"
+                    " getattr(self, '_render_wire', None))\n"
                     " if mirror is not None else None)\n").body
                 for addition in status_mirror:
                     matching = [n for n in status.body if ast.dump(n) == ast.dump(addition)]

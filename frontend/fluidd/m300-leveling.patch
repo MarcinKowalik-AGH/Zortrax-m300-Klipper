@@ -3429,7 +3429,7 @@ diff --git a/src/components/widgets/thermals/M300OledPreview.vue b/src/component
 new file mode 100644
 --- /dev/null
 +++ b/src/components/widgets/thermals/M300OledPreview.vue
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,73 @@
 +<template>
 +  <section
 +    v-if="preview"
@@ -3459,7 +3459,7 @@ new file mode 100644
 +        width="256"
 +        height="64"
 +        draggable="false"
-+        alt="Last acknowledged 256 by 64 Zortrax M300 OLED frame"
++        alt="Latest host-rendered 256 by 64 Zortrax M300 OLED frame"
 +      >
 +      <div
 +        v-else
@@ -3489,14 +3489,17 @@ new file mode 100644
 +<style scoped lang="scss">
 +.m300-oled-frame {
 +  display: block;
-+  width: 100%;
++  width: 50%;
++  max-width: 50%;
++  margin: 0 auto;
 +  height: auto;
 +  aspect-ratio: 4 / 1;
 +  image-rendering: pixelated;
 +  background: #020610;
 +}
 +.m300-oled-unavailable {
-+  width: 100%;
++  width: 50%;
++  margin: 0 auto;
 +  background: #020610;
 +}
 +</style>
@@ -3525,7 +3528,7 @@ new file mode 100644
 +    : 0
 +  const valid = item.online === true &&
 +    item.width === 256 && item.height === 64 &&
-+    item.format === 'indexed4-png' &&
++    item.format === 'indexed4-png' && item.source === 'host-rendered' &&
 +    typeof item.image_base64 === 'string' &&
 +    item.image_base64.length > 0 && item.image_base64.length <= 32768 &&
 +    /^[a-z0-9+/]+={0,2}$/i.test(item.image_base64)
@@ -3539,7 +3542,7 @@ diff --git a/src/util/m300-oled-preview.spec.ts b/src/util/m300-oled-preview.spe
 new file mode 100644
 --- /dev/null
 +++ b/src/util/m300-oled-preview.spec.ts
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,48 @@
 +import { describe, expect, it } from 'vitest'
 +import { readM300OledPreview } from './m300-oled-preview'
 +
@@ -3549,6 +3552,7 @@ new file mode 100644
 +  width: 256,
 +  height: 64,
 +  format: 'indexed4-png',
++  source: 'host-rendered',
 +  image_base64: 'iVBORw0KGgo='
 +}
 +
@@ -3575,6 +3579,7 @@ new file mode 100644
 +
 +  it('refuses oversized, malformed, wrong-dimension or wrong-format frames', () => {
 +    const invalid = [
++      { ...frame, source: 'unsupported' },
 +      { ...frame, image_base64: 'data:image/svg+xml;base64,AAAA' },
 +      { ...frame, image_base64: 'a'.repeat(32769) },
 +      { ...frame, width: 128 },

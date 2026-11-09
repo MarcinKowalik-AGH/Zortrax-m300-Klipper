@@ -1,8 +1,17 @@
 # Zortrax M300 Classic — pierwsza instalacja
 
-[Wydanie v1.0.0-beta.11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.11) ·
+[Wydanie v1.0.0-beta.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.12) ·
 [Instalacja od pustego Raspberry Pi / Orange Pi](docs/pl/FIRST_INSTALL.md) ·
 [Pełny opis projektu po angielsku](README.md)
+
+**Beta.12:** Podgląd OLED w karcie temperatur zmniejszono do **50% jej
+szerokości** i wyśrodkowano. Zlikwidowano dodatkowe oczekiwanie na ACK
+całej klatki: Fluidd otrzymuje ostatni obraz wyrenderowany na Orange Pi.
+Obrazy są scalane bez kolejki, publikowane z interwałem co najmniej 125 ms;
+wykorzystywana jest szybka, bezstratna kompresja PNG. Fizyczny OLED nadal
+korzysta z niezmienionej kompresji RLE/DMA i potwierdzeń ACK. Podgląd hosta
+może nieznacznie wyprzedzać fizyczny OLED.
+[Opis i aktualizacja](docs/pl/RELEASE_v1.0.0-beta.12.md).
 
 **Beta.11:** Fluidd ma podgląd ostatniej potwierdzonej przez ACK klatki OLED
 (256×64, 16 poziomów jasności) bezpośrednio pod wykresem temperatur,

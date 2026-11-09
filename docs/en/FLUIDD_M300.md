@@ -1,5 +1,28 @@
 # Five-point M300 results in Fluidd
 
+## Faster half-width host-rendered OLED preview (beta.12)
+
+The OLED M300 section remains directly beneath the Temperature chart, but
+the preview image and its offline placeholder now use **50% of the graph
+width**, centered, at 4:1 proportions.
+
+To reduce the visible delay during fast knob rotations, Fluidd displays
+the **latest host-rendered `m300_oled._render_wire`** instead of waiting
+for `stream.previous` (a complete OLED ACK). The existing Moonraker
+status subscription publishes the latest image without a backlog; a
+125 ms minimum interval allows faster updates, and PNG uses zlib level 1.
+With the existing Moonraker status cadence this typically means up to
+about 4 frames/s rather than the previous ACK-limited 2 frames/s.
+There is no extra UI thread, request to the MCU, frame render or
+hardware communication. The physical panel keeps all original RLE,
+DMA/SPI/UART and ACK behavior.
+
+**Important distinction:** this is a preview of the image Klipper is
+presently requesting, not a verified copy of the pixels already shown on
+the physical OLED. It may be slightly ahead during DMA transfer; on
+disconnect the cached image is suppressed. The image is read-only and
+cannot acknowledge menu choices.
+
 ## Live, read-only mirror of the OLED beneath the Temperature chart (beta.11)
 
 The existing **Temperature** card in the right dashboard column now includes

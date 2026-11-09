@@ -1,4 +1,4 @@
-"""Read-only OLED mirroring: ACK source, 4-bit PNG fidelity and 2 Hz bound."""
+"""Read-only low-latency host-rendered OLED preview, 4bpp PNG fidelity and bounds."""
 import base64
 import struct
 import unittest
@@ -48,7 +48,7 @@ class OLEDPreviewTests(unittest.TestCase):
         row = zlib.decompress(parts[b'IDAT'])[7*129:8*129]
         self.assertEqual(row[4:6], b'\x7b\xf0')
 
-    def test_only_acknowledged_frame_is_exposed(self):
+    def test_latest_host_rendered_frame_is_exposed_without_ack_wait(self):
         preview = M300OLEDPreview()
         missing = preview.get_status(10., True, None)
         self.assertFalse(missing['online'])
@@ -57,26 +57,47 @@ class OLEDPreviewTests(unittest.TestCase):
         latest = preview.get_status(10., True, raw)
         self.assertTrue(latest['online'])
         self.assertEqual(latest['format'], 'indexed4-png')
+        self.assertEqual(latest['source'], 'host-rendered')
         self.assertEqual(latest['sequence'], 1)
         png = base64.b64decode(latest['image_base64'], validate=True)
         self.assertEqual(decode_png(png)[b'IHDR'][:8],
                          struct.pack('>II', WIDTH, HEIGHT))
 
-    def test_changed_frames_are_throttled_to_two_hz_without_timer_or_mcu_io(self):
+    def test_changed_frames_coalesce_and_publish_without_old_500ms_lag(self):
         preview = M300OLEDPreview()
         frame1 = bytes(WIRE_BYTES)
         frame2 = bytes([0xf0]) * WIRE_BYTES
         first = preview.get_status(20., True, frame1)
-        duplicate = preview.get_status(20.25, True, frame2)
+        # A 125ms upstream status cadence sees changes without a 500ms wait.
+        # It still coalesces bursts faster than that rate.
+        duplicate = preview.get_status(20.05, True, frame2)
         self.assertEqual(duplicate['sequence'], first['sequence'])
         self.assertEqual(duplicate['image_base64'], first['image_base64'])
-        changed = preview.get_status(20.50, True, frame2)
+        changed = preview.get_status(20.125, True, frame2)
         self.assertEqual(changed['sequence'], first['sequence']+1)
         self.assertNotEqual(changed['image_base64'], first['image_base64'])
-        self.assertEqual(preview.get_status(21., True, frame2)['sequence'],
+        self.assertEqual(preview.get_status(20.2, True, frame2)['sequence'],
                          changed['sequence'])
 
-    def test_disconnect_suppresses_old_acked_image_and_reset_invalidates(self):
+    def test_rapid_knob_frames_are_coalesced_into_latest_snapshot(self):
+        from unittest.mock import patch
+        preview = M300OLEDPreview()
+        def frame(n):
+            return bytes([n]) * WIRE_BYTES
+        with patch('payload.m300_oled_preview.encoded_png',
+                   wraps=encoded_png) as encoder:
+            first = preview.get_status(4., True, frame(1))
+            for i in range(2, 22):
+                new = preview.get_status(4.+i*.003, True, frame(i))
+                self.assertEqual(new['sequence'], first['sequence'])
+            result = preview.get_status(4.13, True, frame(31))
+            self.assertEqual(result['sequence'], first['sequence']+1)
+            self.assertEqual(encoder.call_count, 2)
+            png = base64.b64decode(result['image_base64'], validate=True)
+            rows = zlib.decompress(decode_png(png)[b'IDAT'])
+            self.assertEqual(rows[1:129], bytes([31]) * 128)
+
+    def test_disconnect_suppresses_old_rendered_image_and_reset_invalidates(self):
         preview = M300OLEDPreview()
         raw = bytes(WIRE_BYTES)
         before = preview.get_status(1., True, raw)
