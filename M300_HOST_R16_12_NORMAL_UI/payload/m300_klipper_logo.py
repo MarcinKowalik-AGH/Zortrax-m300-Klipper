@@ -78,12 +78,21 @@ def _replace_k(packed):
         else:
             data[offset] = (data[offset] & 0x0f) | (tone << 4)
 
-    # Remove the old K but keep the external original firmware printer
-    # frame, its gantry/toolhead (four 500 ms frames), bottom platform and
-    # every other icon unchanged.
+    # Keep the OEM-scale 2px printer surround, the four-frame toolhead and
+    # the 50x50 display footprint. Erase the old K and the obsolete moving
+    # 3px marker under the bed (the former animated x=12/19/26/33, y=44).
+    # Redraw the platform stroke at fixed coordinates: no bottom animation.
     for y in range(15, 42):
         for x in range(10, 41):
             set_pixel(x, y, 0)
+    for y in (43, 44, 45):
+        for x in range(10, 41):
+            set_pixel(x, y, 0)
+    # Platform: two fixed high-luminance scanlines, matching the original
+    # 1.6px stroked perimeter rasterized to approximately two OLED pixels.
+    for x in range(8, 43):
+        for y in (42, 43):
+            set_pixel(x, y, 15)
     for x, y, tone in LOGO_PIXELS:
         set_pixel(x, y, tone)
     return bytes(data)
