@@ -8,6 +8,7 @@ import unittest
 
 from payload.m300_activity_graphics import ActivityGraphics, fault_symbol, menu_symbol, procedure_symbol
 from payload.m300_cartesian_graphics import CartesianGraphics
+from payload.m300_klipper_logo import LOGO_PIXELS, _replace_k
 from payload.m300_oem_graphics import OEMGraphics
 from payload.m300_settings_ui import brightness_frame
 from payload.m300_settings import PAGES
@@ -38,6 +39,31 @@ class ActivityGraphicsTests(unittest.TestCase):
                 self.assertLessEqual(set(b''.join(raw for _,_,raw in frames)),{0,15,240,255})
                 self.assertEqual(h.ui.get_oem_sprite('m04',rows,index,2.),frames[0])
             self.assertFalse(any(event[0] in ('heat','move','fan') for event in h.events))
+
+    def test_official_klipper_logo_replaces_k_only_in_its_selected_menu_icon(self):
+        with session() as h:
+            h.menu.page='main'
+            _,rows=h.menu.rows(h.now)
+            actual=h.ui.get_oem_sprite('m04',rows,0,0.)
+            stock=h.ui.oem_sprites.project.get('project-klipper',0.)
+            self.assertEqual((actual[0],actual[1],len(actual[2])),(50,50,1250))
+            self.assertNotEqual(actual[2],stock[2])
+            mask=set(LOGO_PIXELS)
+            self.assertGreater(len(mask),200)
+            self.assertLess(len(mask),450)
+            for y in range(14,42):
+                for x in range(10,42):
+                    value=(actual[2][y*25+x//2] >> (0 if x%2 else 4)) & 15
+                    self.assertEqual(value,15 if (x,y) in mask else 0,
+                                     'unexpected legacy K at %d,%d' % (x,y))
+            for y in range(0,13):
+                self.assertEqual(actual[2][y*25:(y+1)*25],stock[2][y*25:(y+1)*25])
+            self.assertEqual(_replace_k.cache_info().maxsize,4)
+            svg=(Path(__file__).resolve().parents[1] / 'docs/assets/menu-symbols'
+                 / 'klipper-official-mark-50.svg').read_text()
+            self.assertIn('Klipper firmware official',svg)
+            self.assertIn('Klipper3d/klipper',svg)
+            self.assertFalse(any(e[0] in ('move','heat','fan') for e in h.events))
 
     def test_cartesian_axes_blink_only_selected_axes(self):
         graphics = CartesianGraphics()

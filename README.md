@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.7
+# Zortrax M300 Classic — Klipper v1.0.0-beta.8
 
-[Download v1.0.0-beta.7](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.7) ·
+[Download v1.0.0-beta.8](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.8) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,14 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.8 OLED logo and sound:** The main Klipper menu icon now displays
+the official V/nozzle Klipper mark instead of a plain K. OLED navigation
+uses 35 ms short beeps and a distinct 140 ms Back/Up confirmation, with a
+dedicated beep timer independent of the slow RGB/status timer. Buzzer Disabled
+immediately silences the output. The original project icon sprite is retained
+as evidence, with its visible K replaced in the monochrome rendered frame.
+[Source and update notes](docs/en/RELEASE_v1.0.0-beta.8.md).
 
 **Beta.7 update repair:** The verified beta.4/beta.5 Orange Pi deployment
 files were missing from five module-hash allowlists in the beta.6 host

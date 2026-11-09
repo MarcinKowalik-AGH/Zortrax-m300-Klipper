@@ -1,5 +1,15 @@
 # Settings and Information
 
+OLED menu button audio has two fixed pulse lengths: normal entry and other
+selection/exit clicks are 35 ms, while an explicitly visible **Back** or
+**Up** row produces a 140 ms pulse. A dedicated, bounded buzzer-off timer
+controls the ending of each pulse independently of the 500 ms native
+status/LED refresh; no motor, heater or encoder polling is added.
+The saved Buzzer Disabled option immediately silences an active pulse and
+prevents future menu clicks from sounding. Stale/unrecognized Back action
+receipts are not allowed to produce the long confirmation.
+
+
 Open **Zortrax M300 → Settings** on the OLED or run `ZORTRAX_SETTINGS` in
 Fluidd. Both surfaces use the same English labels, saved choices and action
 handlers. The `<` mark identifies the current choice on list pages.

@@ -1,5 +1,18 @@
 # Printer activity symbols
 
+## Official Klipper mark on the original M300 OLED
+
+The main menu's **Klipper** item replaces the plain letter K with the official
+V/nozzle mark from [Klipper3d's SVG](https://github.com/Klipper3d/klipper/blob/master/docs/img/klipper.svg)
+(GPL-3.0). Its two original colors collapse into one OLED bright layer.
+The artwork remains 50×50 pixels; the header/toolhead animation stays.
+At render time `m300_klipper_logo.py` replaces only the interior K pixels,
+and reuses the legacy project sprite's four 500 ms frames. Nothing is loaded
+from the network or parsed as SVG on the printer. The prior bitmap remains
+in the repository for historical reproducibility, not as the displayed icon.
+[Monochrome SVG outline](../assets/menu-symbols/klipper-official-mark-50.svg).
+
+
 ## Cartesian OLED axis controls (post-beta.5)
 
 The OLED Klipper and Maintenance lists show `Home X`, `Home Y`,

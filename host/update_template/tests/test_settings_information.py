@@ -15,6 +15,7 @@ from test_native_maintenance_contract import FanHarness
 from test_native_oem_services import physical_panel
 from test_macro_dispatch import templates, ENV
 from payload.m300_oem_graphics import OEMGraphics, STOCK_SHA256, choose_icon
+from payload.m300_oled import menu_beep_kind
 from payload.m300_leveling_oem import width
 from payload.m300_nvm import M300NVM, HostNVM
 from payload.m300_settings import M300Settings, PAGES, PROJECT_URL, history_totals
@@ -476,6 +477,45 @@ class IndicatorAndSleepTests(unittest.TestCase):
             settings = store.snapshot()['settings']
             self.assertEqual((settings['oled_brightness'], settings['led_brightness']), (4, 8))
             self.assertEqual(h.settings.active_rows('setting_led_brightness'), (8,))
+
+    def test_buzzer_short_back_and_exact_timer_deadlines(self):
+        with session() as h:
+            start=h.now
+            h.m.click('short')
+            self.assertAlmostEqual(h.m._beep_until,start+.035)
+            self.assertEqual(h.pins['m300_buzzer'],1.)
+            self.assertAlmostEqual(h.m._beep_timeout(start+.02),start+.035)
+            self.assertEqual(h.pins['m300_buzzer'],1.)
+            self.assertEqual(h.m._beep_timeout(start+.035),h.reactor.NEVER)
+            self.assertEqual(h.pins['m300_buzzer'],0.)
+            h.m.click('back')
+            self.assertAlmostEqual(h.m._beep_until,start+.140)
+            self.assertEqual(h.pins['m300_buzzer'],1.)
+            self.assertEqual(h.m._beep_timeout(start+.140),h.reactor.NEVER)
+            self.assertEqual(h.pins['m300_buzzer'],0.)
+            h.m.click('back')
+            h.run('ZORTRAX_BUZZER STATE=DISABLED')
+            self.assertEqual(h.m._beep_until,0.)
+            self.assertEqual(h.m._beep_timeout(start+.2),h.reactor.NEVER)
+            self.assertEqual(h.pins['m300_buzzer'],0.)
+            h.m.click('back')
+            self.assertEqual(h.pins['m300_buzzer'],0.)
+
+    def test_oled_click_feedback_only_marks_presented_back_as_long(self):
+        with session() as h:
+            for page in ('klipper','zortrax','maintenance'):
+                h.menu.page=page
+                rows=h.menu.rows(h.now)[1]
+                actions=tuple(action for _,action in rows)
+                back=next(i for i,(label,action) in enumerate(rows) if label=='Back')
+                self.assertEqual(menu_beep_kind(rows,back,actions),'back')
+                self.assertEqual(menu_beep_kind(rows,back,None),'short')
+                corrupt=list(actions)
+                corrupt[back]=('page','not-current')
+                self.assertEqual(menu_beep_kind(rows,back,corrupt),'short')
+                ordinary=next(i for i,(label,action) in enumerate(rows)
+                              if label not in ('Back','Up') and action is not None)
+                self.assertEqual(menu_beep_kind(rows,ordinary,actions),'short')
 
     def test_buzzer_disable_stops_active_pulse_and_suppresses_future_clicks(self):
         with session() as h:
