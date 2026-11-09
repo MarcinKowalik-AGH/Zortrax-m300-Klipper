@@ -1,68 +1,91 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Display-only monochrome adaptation of the official Klipper logo.
+"""Three-tone complete Klipper V/nozzle symbol and lowercase 'klipper' wordmark.
 
-Source: Klipper3d/klipper docs/img/klipper.svg (paths 2 and 35), GPL-3.0.
-This overlays the old project-klipper K in the menu, preserving the existing
-top toolhead animation, source sprite bank and 500ms refresh. No hardware I/O.
+Display-only native 4bpp overlay inside the original 50x50 M300 printer
+frame. A tiny pixel font redraws the lowercase wordmark from the official
+Klipper3d/klipper/docs/img/klipper.svg (GPL-3.0) at OLED resolution.
+No external fonts, SVG parsing, motion, heating, timers or network access.
 """
 from functools import lru_cache
 
 WIDTH = HEIGHT = 50
-# Silhouettes of the two official paths, after reducing the tiny curved tip
-# to vertices at the 50x50 display resolution. Both colors become OLED white.
-_OUTER = ((30,34), (30,174), (290,429), (405,424), (485,424),
-          (730,174), (730,34), (720,34), (385,374), (40,34))
-_NOZZLE = ((259,424), (360,424), (360,359), (30,34), (90,34),
-           (385,324), (670,34), (730,34), (410,359), (410,444),
-           (400,454), (259,454), (245,439))
+SLATE = 7      # dark grey original wing: lower OLED luminance
+ACCENT = 11    # red original inner V: medium OLED luminance
+BRIGHT = 15    # lowercase 'klipper' text: original firmware white
+
+_GLYPHS = {
+    'k': ('1001', '1010', '1100', '1010', '1001'),
+    'l': ('10', '10', '10', '10', '11'),
+    'i': ('1', '0', '1', '1', '1'),
+    'p': ('110', '101', '110', '100', '100'),
+    'e': ('011', '100', '111', '100', '011'),
+    'r': ('110', '101', '100', '100', '100'),
+}
 
 
 def _inside(x, y, polygon):
     inside = False
-    last_x, last_y = polygon[-1]
+    previous_x, previous_y = polygon[-1]
     for next_x, next_y in polygon:
-        if (next_y > y) != (last_y > y):
-            crossing = (last_x - next_x) * (y - next_y) / (last_y - next_y) + next_x
-            if x < crossing:
-                inside = not inside
-        last_x, last_y = next_x, next_y
+        if ((next_y > y) != (previous_y > y)
+                and x < (previous_x-next_x)*(y-next_y)/(previous_y-next_y)+next_x):
+            inside = not inside
+        previous_x, previous_y = next_x, next_y
     return inside
 
 
-def _logo_pixels():
-    # Position: x10..40 / y14..40. Keep the printer frame and header intact.
-    positions = []
-    for y in range(14, 41):
-        for x in range(10, 41):
-            source_x = 30 + (x + .5 - 10) / .042
-            source_y = 34 + (y + .5 - 14) / .060
-            if _inside(source_x, source_y, _OUTER) or _inside(source_x, source_y, _NOZZLE):
-                positions.append((x, y))
-    return tuple(positions)
+def _logo():
+    pixels = {}
+    # Two angular V wings and smaller inner accent strips, source-matched
+    # to the official Klipper mark but simplified for the 50-pixel display.
+    shapes = (
+        (SLATE, ((11,17),(15,17),(27,29),(27,32),(23,32),(11,21))),
+        (SLATE, ((35,17),(39,17),(27,30),(27,32),(23,32),(23,29))),
+        (ACCENT, ((11,17),(13,17),(26,30),(26,32),(24,32),(11,19))),
+        (ACCENT, ((37,17),(39,17),(26,32),(24,32),(24,30))),
+    )
+    for level, polygon in shapes:
+        for y in range(16, 33):
+            for x in range(10, 41):
+                if _inside(x+.5, y+.5, polygon):
+                    pixels[x, y] = level
+
+    word = 'klipper'
+    glyph_widths = [len(_GLYPHS[letter][0]) for letter in word]
+    current_x = (WIDTH-sum(glyph_widths)-len(word)+1)//2
+    for letter, width in zip(word, glyph_widths):
+        for dy, row in enumerate(_GLYPHS[letter]):
+            for dx, mark in enumerate(row):
+                if mark == '1':
+                    pixels[current_x+dx, 34+dy] = BRIGHT
+        current_x += width+1
+    return tuple(sorted((x, y, value) for (x, y), value in pixels.items()))
 
 
-LOGO_PIXELS = _logo_pixels()
+LOGO_PIXELS = _logo()
 
 
 @lru_cache(maxsize=4)
 def _replace_k(packed):
-    if len(packed) != 1250:
+    if len(packed) != WIDTH*HEIGHT//2:
         raise ValueError('M300 Klipper icon requires 50x50 4bpp pixels')
     data = bytearray(packed)
 
-    def set_pixel(x, y, value):
-        offset = y * 25 + x // 2
+    def set_pixel(x, y, tone):
+        offset = y * (WIDTH//2) + x//2
         if x & 1:
-            data[offset] = (data[offset] & 0xf0) | value
+            data[offset] = (data[offset] & 0xf0) | tone
         else:
-            data[offset] = (data[offset] & 0x0f) | (value << 4)
+            data[offset] = (data[offset] & 0x0f) | (tone << 4)
 
-    # Remove the obsolete letter, not the surrounding printer outline.
-    for y in range(14, 42):
-        for x in range(10, 42):
+    # Remove the old K but keep the external original firmware printer
+    # frame, its gantry/toolhead (four 500 ms frames), bottom platform and
+    # every other icon unchanged.
+    for y in range(15, 42):
+        for x in range(10, 41):
             set_pixel(x, y, 0)
-    for x, y in LOGO_PIXELS:
-        set_pixel(x, y, 15)
+    for x, y, tone in LOGO_PIXELS:
+        set_pixel(x, y, tone)
     return bytes(data)
 
 

@@ -59,7 +59,7 @@ class ProcedureReturnTests(unittest.TestCase):
             h.oled.selection=selected
             before=len(h.callbacks)
             h.oled._select(h.now)
-            self.assertEqual(h.oled.selection,0)
+            self.assertEqual(h.oled.selection,selected)
             h.callbacks.pop(before)(h.now)
             self.assertEqual(h.menu.page,'procedure')
             update('COMPLETE')

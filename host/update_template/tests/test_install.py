@@ -180,7 +180,8 @@ class InstallerTests(unittest.TestCase):
         baselines = json.loads((ROOT / 'SUPPORTED_BASELINES.json').read_text())
         self.assertEqual(
             {entry['tag'] for entry in evidence['releases']},
-            {'v1.0.0-beta.4', 'v1.0.0-beta.5', 'v1.0.0-beta.6', 'v1.0.0-beta.7'})
+            {'v1.0.0-beta.4', 'v1.0.0-beta.5', 'v1.0.0-beta.6', 'v1.0.0-beta.7',
+             'v1.0.0-beta.8'})
         checked, migrated = 0, 0
         for release in evidence['releases']:
             self.assertEqual(release['stage'], 'VERIFIED')

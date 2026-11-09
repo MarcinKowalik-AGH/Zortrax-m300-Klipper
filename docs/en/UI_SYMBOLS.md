@@ -1,16 +1,24 @@
 # Printer activity symbols
 
-## Official Klipper mark on the original M300 OLED
+## Complete Klipper logo and wordmark on the original M300 OLED
 
-The main menu's **Klipper** item replaces the plain letter K with the official
-V/nozzle mark from [Klipper3d's SVG](https://github.com/Klipper3d/klipper/blob/master/docs/img/klipper.svg)
-(GPL-3.0). Its two original colors collapse into one OLED bright layer.
-The artwork remains 50×50 pixels; the header/toolhead animation stays.
-At render time `m300_klipper_logo.py` replaces only the interior K pixels,
-and reuses the legacy project sprite's four 500 ms frames. Nothing is loaded
-from the network or parsed as SVG on the printer. The prior bitmap remains
-in the repository for historical reproducibility, not as the displayed icon.
-[Monochrome SVG outline](../assets/menu-symbols/klipper-official-mark-50.svg).
+The **Klipper** item contains the official angular V/nozzle emblem **with
+the lowercase word "klipper" below it**, entirely inside the original 50×50
+firmware printer outline. The user's approved image is recreated in native
+4bpp with three nonzero tonal levels: 7 (dark slate), 11 (red accent
+adapted to OLED luminance), and 15 (wordmark and OEM cyan/white outlines).
+This is a single-color OLED: the three original RGB colors are represented by
+brightness levels, not actual red/grey/white pixels.
+
+The old letter K is removed from the interior only; original border stroke,
+outer size, gantry/head animation (four frames per 500 ms), bottom rail and
+other OEM icons are preserved. `m300_klipper_logo.py` uses bounded cached
+bitmap calculations, no downloaded fonts, PIL, SVG parser or MCU change.
+The source-derived [native 50x50 SVG preview](../assets/menu-symbols/klipper-full-logo-50x50.svg)
+matches all 209 logo/wordmark pixels. The original extracted symbol atlas
+remains unmodified for provenance. Source: [Klipper3d/klipper
+`docs/img/klipper.svg`](https://github.com/Klipper3d/klipper/blob/master/docs/img/klipper.svg)
+(GPL-3.0).
 
 
 ## Cartesian OLED axis controls (post-beta.5)

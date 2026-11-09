@@ -75,6 +75,22 @@ class NativeMenuTests(unittest.TestCase):
             self.assertFalse(any('(180C)' in name or name=='Homing ALL'
                                  for name,_ in m.rows(100.)[1]))
 
+    def test_maintenance_single_axes_use_the_same_macros_as_fluidd(self):
+        m, _ = fixture()
+        m.page = 'maintenance'
+        rows=dict(m.rows(100.)[1])
+        for label,command in (('Home X','ZORTRAX_HOME_X'),
+                              ('Home Y','ZORTRAX_HOME_Y'),
+                              ('Home Z','ZORTRAX_HOME_Z'),
+                              ('Home XY','ZORTRAX_HOME_XY'),
+                              ('Home XYZ','ZORTRAX_HOME_ALL')):
+            with self.subTest(label=label):
+                self.assertEqual(rows[label],('native_gcode',command))
+                self.assertEqual(m._script_procedure(command)[1],
+                                 {'Home X':'HOME_X','Home Y':'HOME_Y',
+                                  'Home Z':'HOME_Z','Home XY':'HOME_XY',
+                                  'Home XYZ':'HOME_ALL'}[label])
+
     def test_old_presentation_negative_control_rejects_split_homing_rows(self):
         m, _ = fixture()
         with self.assertRaises(ValueError):

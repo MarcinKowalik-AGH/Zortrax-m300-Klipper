@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.35-LOGO-BEEP"
+    MENU_REVISION = "0.13.16.36-SPLIT-HOME-UI"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -379,8 +379,8 @@ class M300Menu:
         if native and self.page == 'maintenance':
             return self.t('Maintenance'), self._notice([(self.t('Back'), ('page', 'zortrax')),
                 (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
-                ('Home X', ('motion_home_x',)),
-                ('Home Y', ('motion_home_y',)),
+                ('Home X', ('native_gcode', 'ZORTRAX_HOME_X')),
+                ('Home Y', ('native_gcode', 'ZORTRAX_HOME_Y')),
                 ('Home Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
                 ('Home XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
                 ('Home XYZ', ('native_gcode', 'ZORTRAX_HOME_ALL')),
@@ -908,7 +908,9 @@ class M300Menu:
             operation = {'X':'HOME_X','Y':'HOME_Y','Z':'HOME_Z',
                          'XY':'HOME_XY','XYZ':'HOME_ALL'}.get(axes)
             return ('m300_motion',operation) if operation else None
-        return {'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
+        return {'ZORTRAX_HOME_X':('m300_motion','HOME_X'),
+                'ZORTRAX_HOME_Y':('m300_motion','HOME_Y'),
+                'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
                 'ZORTRAX_HOME_Z':('m300_motion','HOME_Z'),
                 'ZORTRAX_HOME_ALL':('m300_motion','HOME_ALL'),
                 'BED_MESH':('m300_pad_mesh','BED_MESH'),
@@ -1150,15 +1152,21 @@ class M300Menu:
                 origin = self._panel_origin()
                 axes={'motion_home_x':'x','motion_home_y':'y',
                       'motion_home_xy':'xy','motion_home_z':'z','motion_home_xyz':'xyz'}[kind]
-                self._navigate('motion_status')
-                oled = self.printer.lookup_object('m300_oled', None)
-                if oled is not None:
-                    oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
                 motion = self._service('m300_motion')
                 if getattr(motion, 'normal_control', False):
-                    self._native_script('G28 ' + ' '.join(axes.upper()), origin=origin)
-                    self.reason = 'Homing %s requested.' % axes.upper()
+                    # All five OLED choices use exactly the same guarded
+                    # procedure owner as their Fluidd macros. Keep the
+                    # original selected row until a real procedure borrows
+                    # the OLED; completion restores that captured cursor.
+                    command = {'x':'ZORTRAX_HOME_X', 'y':'ZORTRAX_HOME_Y',
+                               'z':'ZORTRAX_HOME_Z', 'xy':'ZORTRAX_HOME_XY',
+                               'xyz':'ZORTRAX_HOME_ALL'}[axes]
+                    self._native_script(command, origin=origin)
                 else:
+                    self._navigate('motion_status')
+                    oled = self.printer.lookup_object('m300_oled', None)
+                    if oled is not None:
+                        oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
                     motion.home(axes=axes)
                     self.reason = 'Homing %s ended. Check PC7, axis reference and status.' % axes.upper()
             elif kind == 'motion_home':

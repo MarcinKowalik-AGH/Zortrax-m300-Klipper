@@ -172,6 +172,47 @@ class NormalHomingTests(unittest.TestCase):
         self.assertEqual(m.events, [('move',(None,None,304.),5.),('home','Y'),('home','X')])
         self.assertEqual(m.toolhead.get_position()[2:], [304., 17.])
 
+    def test_home_x_then_y_allows_subsequent_z_without_rehoming_xy(self):
+        m = motion_fixture()
+        m.homed.clear()
+        m.home(axes='x')
+        self.assertEqual(m.homed, {'x'})
+        self.assertEqual([event for event in m.events if event[0]=='home'], [('home','X')])
+        self.assertFalse(any(event[0]=='heat' for event in m.events))
+        m.events.clear()
+        m.home(axes='y')
+        self.assertEqual(m.homed, {'x', 'y'})
+        self.assertEqual([event for event in m.events if event[0]=='home'], [('home','Y')])
+        self.assertFalse(any(event[0]=='heat' for event in m.events))
+        m.events.clear()
+        m.home(axes='z')
+        self.assertEqual([event for event in m.events if event[0]=='home'], [('home','Z')])
+        self.assertEqual(m.homed, {'x', 'y', 'z'})
+        self.assertEqual(m.events[-1], ('heat',0.,False))
+        self.assertEqual(m.toolhead.get_position()[3],17.)
+
+    def test_home_y_then_x_preserves_independent_axis_states_and_e(self):
+        m = motion_fixture()
+        m.homed.clear()
+        for axis, expected in (('y',{'y'}),('x',{'x','y'})):
+            m.events.clear()
+            m.home(axes=axis)
+            self.assertEqual(m.homed, expected)
+            self.assertEqual([event for event in m.events if event[0]=='home'],
+                             [('home',axis.upper())])
+            self.assertEqual(m.toolhead.get_position()[3],17.)
+            self.assertFalse(any(event[0]=='heat' for event in m.events))
+
+    def test_home_z_requires_both_individual_axes_and_does_not_move_if_incomplete(self):
+        for previous in ({'x'}, {'y'}, set()):
+            with self.subTest(previous=previous):
+                m = motion_fixture()
+                m.homed = set(previous)
+                with self.assertRaisesRegex(RuntimeError, 'Home X then Home Y'):
+                    m.home(axes='z')
+                self.assertEqual(m.events, [])
+                self.assertEqual(m.hotend.target,0.)
+
     def test_xyz_preheats_180_then_native_xy_native_z_and_five_mm_clearance(self):
         m = motion_fixture()
         m.homed.clear()
@@ -482,6 +523,23 @@ class NormalMenuTests(unittest.TestCase):
         self.assertEqual(rows[0][0], 'Back')
         self.assertIn(('Home XYZ', ('motion_home_xyz',)), rows)
         self.assertFalse(any('TEST' in label or 'CONFIRM' in label or 'SPLIT' in label for label, _ in rows))
+
+    def test_klipper_home_buttons_keep_cursor_and_queue_matching_fluidd_macros(self):
+        for suffix,macro in (('x','ZORTRAX_HOME_X'),('y','ZORTRAX_HOME_Y'),
+                             ('xy','ZORTRAX_HOME_XY'),('z','ZORTRAX_HOME_Z'),
+                             ('xyz','ZORTRAX_HOME_ALL')):
+            with self.subTest(axis=suffix):
+                menu,objects=menu_fixture()
+                objects['m300_motion'].normal_control=True
+                menu.page='klipper'
+                action=('motion_home_'+suffix,)
+                menu.select(action,1.)
+                self.assertEqual(menu.page,'klipper')
+                self.assertEqual(menu.reason,'')
+                self.assertEqual(menu.commands,[])
+                menu.scheduled.pop()(1.)
+                self.assertEqual(menu.commands,[macro])
+                objects['m300_motion'].home.assert_not_called()
 
     def test_normal_homing_click_queues_native_command_and_can_expire(self):
         menu, objects = menu_fixture()

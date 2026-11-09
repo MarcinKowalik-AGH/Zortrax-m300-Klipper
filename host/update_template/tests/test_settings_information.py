@@ -213,6 +213,28 @@ class SettingsTreeTests(unittest.TestCase):
             h.ui.invalidate()
             self.assertIsNone(h.ui.cursor_for('native_moves'))
 
+    def test_homing_selection_does_not_jump_to_back_in_both_native_menus(self):
+        with session() as h:
+            h.objects['m300_motion']=NS(normal_control=True)
+            h.oled.page='m04'
+            for page in ('klipper','maintenance'):
+                for label in ('Home X','Home Y','Home XY','Home Z','Home XYZ'):
+                    with self.subTest(page=page,label=label):
+                        h.menu.page=page
+                        _,rows=h.menu.rows(h.now)
+                        selected=next(i for i,(name,_) in enumerate(rows) if name==label)
+                        h.oled.selection=selected
+                        h.oled.message=None
+                        h.oled._render(h.now)
+                        h.oled._select(h.now,tuple(a for _,a in rows))
+                        self.assertEqual(h.menu.page,page)
+                        self.assertEqual(h.oled.selection,selected)
+                        self.assertIsNone(h.oled.message)
+                        self.assertFalse(h.menu.reason)
+                        # Remove the deliberate asynchronous command from
+                        # this navigation test, without ever moving hardware.
+                        h.callbacks.pop()
+
     def test_saved_settings_survive_restart_and_leave_identity_counters_and_observation_untouched(self):
         with session() as h:
             before=h.nvm.snapshot()

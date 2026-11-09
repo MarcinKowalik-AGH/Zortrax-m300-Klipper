@@ -23,8 +23,8 @@ Material, Settings, Information. Back follows the menu history.
 |---|---|---|---|
 | Maintenance | Back | Navigation | Return to parent |
 | Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
-| Maintenance | Home X | native `G28 X` | Homing of X only; blinking X axis in the OLED Cartesian icon |
-| Maintenance | Home Y | native `G28 Y` | Homing of Y only; blinking Y axis |
+| Maintenance | Home X | `ZORTRAX_HOME_X` → native `G28 X` | X only, blinking X; available independently of Y |
+| Maintenance | Home Y | `ZORTRAX_HOME_Y` → native `G28 Y` | Y only, blinking Y; available independently of X |
 | Maintenance | Home Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed, 180°C minimum unchanged |
 | Maintenance | Home XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`; blinking X and Y |
 | Maintenance | Home XYZ | `ZORTRAX_HOME_ALL` | Native `G28`; blinking X, Y and Z |
@@ -42,13 +42,18 @@ Material, Settings, Information. Back follows the menu history.
 | Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Retract 110 mm → insert and confirm → feed 150 mm; remain paused |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
-the paused-print context, not the idle Material submenu. Homing XY, Homing Z
-and Homing ALL are directly below Autocalibration in Maintenance. They return
-to Maintenance on completion. OLED retains its original animated hourglass;
-Fluidd shows status on the corresponding home button without a homing dialog,
-including starts from macros and OLED. The phase text is shared. The procedure
-macros are assigned to Fluidd's ZORTRAX M300 group by `setup_fluidd.py --apply`.
-Existing macro visibility, colors and unrelated Fluidd preferences are preserved.
+the paused-print context, not the idle Material submenu. Maintenance lists
+Home X, Home Y, Home Z, Home XY and Home XYZ in that order. Each OLED
+selection and matching Fluidd macro goes through the same native G28
+procedure and read-only phase display. Home X and Home Y can be run
+separately, in either order. A following Home Z requires both references,
+while Home XYZ homes everything automatically (Y then X then Z).
+The 5 mm Z separation before XY and the 180 C Z contact preheat are
+unchanged. OLED retains its own selected row when the operation completes;
+a busy procedure may borrow its display and then restore that row. The shared
+Cartesian icon flashes only the relevant axes. The homing macros belong to
+Fluidd's ZORTRAX M300 group; existing visibility, colors and unrelated
+preferences are preserved.
 
 ## Operation
 

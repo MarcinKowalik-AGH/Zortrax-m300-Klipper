@@ -17,8 +17,8 @@ from .m300_native_service import require_idle_print
 
 OWNERS = ('m300_pad_mesh', 'm300_filament', 'm300_calibration', 'm300_maintenance',
           'm300_thermal', 'm300_fans', 'm300_job', 'm300_motion')
-HOMING_TITLES = {'HOME_X': 'Homing X', 'HOME_Y': 'Homing Y', 'HOME_XY': 'Homing XY',
-                 'HOME_Z': 'Homing Z', 'HOME_ALL': 'Homing ALL'}
+HOMING_TITLES = {'HOME_X': 'Home X', 'HOME_Y': 'Home Y', 'HOME_XY': 'Home XY',
+                 'HOME_Z': 'Home Z', 'HOME_ALL': 'Home XYZ'}
 HOMING_COMMANDS = {'HOME_X': 'G28 X', 'HOME_Y': 'G28 Y', 'HOME_XY': 'G28 X Y',
                    'HOME_Z': 'G28 Z', 'HOME_ALL': 'G28'}
 HOMING_PHASES = {

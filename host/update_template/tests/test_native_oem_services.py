@@ -130,7 +130,7 @@ class Harness:
         self.p=M300Procedures(self.config)
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
-            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HEAT_PLATFORM','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
+            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HEAT_PLATFORM','ZORTRAX_HOME_X','ZORTRAX_HOME_Y','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
                         'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_CHANGE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
@@ -505,7 +505,8 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             self.assertEqual(ui.last_sprite, icon)
             width, height, pixels = ui.oem_sprites.get(icon)
             self.assertEqual((width, height, len(pixels)), (expected_width, 50, expected_width * 25))
-            self.assertLessEqual(set(pixels), {0x00, 0x0F, 0xF0, 0xFF})
+            tones={(value>>4) for value in pixels} | {(value & 15) for value in pixels}
+            self.assertLessEqual(tones, {0,7,11,15} if icon=='project-klipper' else {0,15})
             # Thin outlined marks retain a small common native pixel margin.
             self.assertTrue(any(pixels[:width * 3]))
             self.assertTrue(any(pixels[-width * 3:]))
@@ -517,7 +518,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
 
     def test_fluidd_groups_procedure_macros_without_unhiding_user_choices(self):
         names = ['ZORTRAX_' + name for name in (
-            'LEVEL', 'HEAT', 'HOME_XY', 'HOME_Z', 'HOME_ALL', 'PLATFORM_UP', 'PLATFORM_DOWN', 'LOAD', 'UNLOAD')]
+            'LEVEL', 'HEAT', 'HOME_X', 'HOME_Y', 'HOME_XY', 'HOME_Z', 'HOME_ALL', 'PLATFORM_UP', 'PLATFORM_DOWN', 'LOAD', 'UNLOAD')]
         before=dict(categories=[dict(id='tests',name='TEST M300')],
                     stored=[dict(name='ZORTRAX_LOAD',categoryId='tests',visible=False)])
         after,assigned=merge_groups(before,names)
@@ -602,6 +603,8 @@ def physical_panel(h):
 class PhysicalPanelDispatchTests(unittest.TestCase):
     def test_homing_macros_and_oled_rows_share_native_progress(self):
         for axes, label, command, g28 in (
+                ('x', 'Home X', 'ZORTRAX_HOME_X', 'G28 X'),
+                ('y', 'Home Y', 'ZORTRAX_HOME_Y', 'G28 Y'),
                 ('xy', 'Home XY', 'ZORTRAX_HOME_XY', 'G28 X Y'),
                 ('z', 'Home Z', 'ZORTRAX_HOME_Z', 'G28 Z'),
                 ('xyz', 'Home XYZ', 'ZORTRAX_HOME_ALL', 'G28')):
@@ -621,8 +624,9 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                     motion.home(axes=axes)
 
                 def observe(params):
-                    if list(params) == (['Z'] if axes == 'z' else ['Y']):
-                        message = 'Homing Z' if axes == 'z' else 'Homing Y'
+                    focused = 'X' if axes == 'x' else 'Z' if axes == 'z' else 'Y'
+                    if list(params) == [focused]:
+                        message = 'Homing ' + focused
                         h.p._tick(h.now)
                         self.assertEqual((menu.page, oled.page), ('procedure', 'm04'))
                         self.assertEqual(h.p.view(h.now)['message'], message)
@@ -632,7 +636,10 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                         oled._render(h.now)
                         before = oled._render_wire
                         oled._render(h.now + .5)
-                        self.assertEqual(ui.last_sprite, {'xy':'cartesian:home_xy','z':'cartesian:home_z','xyz':'cartesian:home_xyz'}[axes])
+                        self.assertEqual(ui.last_sprite, {
+                            'x':'cartesian:home_x', 'y':'cartesian:home_y',
+                            'xy':'cartesian:home_xy','z':'cartesian:home_z',
+                            'xyz':'cartesian:home_xyz'}[axes])
                         self.assertNotEqual(before, oled._render_wire)
                     native_home(params)
 
@@ -646,7 +653,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                 self.assertEqual(action, ('native_gcode', command))
                 self.assertNotEqual(ui.get_oem_sprite('m04', rows, selected, h.now),
                                  ui.get_oem_sprite('m04', rows, selected, h.now + .5))
-                if axes in ('xy', 'z'):
+                if axes in ('x','y','xy','z'):
                     menu.select(action, h.now)
                     h.callbacks.pop()(h.now)
                 else:

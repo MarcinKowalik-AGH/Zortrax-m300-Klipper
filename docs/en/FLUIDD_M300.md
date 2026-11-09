@@ -1,5 +1,22 @@
 # Five-point M300 results in Fluidd
 
+## Homing macros shared with the native OLED
+
+`ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`,
+`ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` are grouped under
+**ZORTRAX M300** by the existing Moonraker/Fluidd macro manager.
+Each calls `ZORTRAX_PROCEDURE_START` with `HOME_X/Y/XY/Z/ALL` and
+therefore invokes the **same** protected native G28 implementation and
+session status displayed by OLED Home X/Y/XY/Z/XYZ.
+
+Individual X/Y reference is supported before the other axis has been
+homed. Doing X and then Y, or Y and then X, establishes both homed axes;
+only then is Home Z permitted. Full Home XYZ homes Y, X and Z in order.
+X/Y clearance and the Z thermal/contact guard have not been relaxed.
+After an OLED click finishes, the cursor returns to the previous Home row,
+not to Back. A rejected operation does not create a false success status.
+
+
 **ZORTRAX_LEVEL** is the single standard Autocalibration macro. It opens the
 same review as the physical OLED. Stock Fluidd shows the five readings as
 text. The M300 build renders those readings in the same prompt as a platform

@@ -52,6 +52,23 @@ class MacroDispatchTests(unittest.TestCase):
                     g.run_script_from_command(name)
                     self.assertEqual(called,[name]);self.assertEqual(output,[])
 
+    def test_single_axis_fluidd_macro_buttons_dispatch_shared_procedure_start(self):
+        for axis in ('X','Y'):
+            with self.subTest(axis=axis):
+                name='ZORTRAX_HOME_'+axis
+                text=templates()[name]
+                self.assertIn('ZORTRAX_PROCEDURE_START OP=HOME_'+axis,text)
+                g,printer,output=dispatcher()
+                received=[]
+                g.register_command('ZORTRAX_PROCEDURE_START',
+                    lambda cmd:received.append(cmd.get('OP')))
+                macro=ENV.from_string(text)
+                g.register_command(name,lambda cmd:g.run_script_from_command(
+                    macro.render(params=cmd.get_command_parameters())))
+                g.run_script_from_command(name)
+                self.assertEqual(received,['HOME_'+axis])
+                self.assertEqual(output,[])
+
     def test_level_button_renders_and_reaches_shared_procedure_owner(self):
         g,printer,output=dispatcher();calls=[]
         p=M300Procedures.__new__(M300Procedures)

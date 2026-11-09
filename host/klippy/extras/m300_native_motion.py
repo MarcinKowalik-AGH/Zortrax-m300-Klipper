@@ -322,7 +322,9 @@ class M300NativeMotion:
         kin = self.toolhead.get_kinematics()
         homed = kin.get_status(self.reactor.monotonic())['homed_axes']
         if 'z' in axes and any(a not in axes and a not in homed for a in 'xy'):
-            raise self.printer.command_error('Home XY first, or use G28 for XYZ')
+            raise self.printer.command_error(
+                'Home Z requires homed X and Y. Use Home X then Home Y '
+                '(either order), Home XY, or Home XYZ.')
         self.operator_homing = None
         if owner_job is None and not oem_leveling:
             operation = {'x': 'HOME_X', 'y': 'HOME_Y', 'xy': 'HOME_XY',

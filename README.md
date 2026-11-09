@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.8
+# Zortrax M300 Classic — Klipper v1.0.0-beta.9
 
-[Download v1.0.0-beta.8](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.8) ·
+[Download v1.0.0-beta.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.9) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,16 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.9 independent X and Y homing, one OLED/Fluidd owner and full logo:**
+`Home X` and `Home Y` now run through the same guarded procedures as Fluidd
+macros `ZORTRAX_HOME_X` and `ZORTRAX_HOME_Y`. The OLED keeps the original
+selected row rather than jumping to Back. Home Z accepts the separately
+established X and Y references; safe 5 mm pre-XY clearance, 180 C Z preheat,
+and contact checks are unchanged. The main Klipper icon contains the complete
+V/nozzle graphic **and lowercase 'klipper' wordmark**, with three native
+4bpp brightness shades matching the original OLED icon proportions.
+[Beta.9 notes](docs/en/RELEASE_v1.0.0-beta.9.md).
 
 **Beta.8 OLED logo and sound:** The main Klipper menu icon now displays
 the official V/nozzle Klipper mark instead of a plain K. OLED navigation
