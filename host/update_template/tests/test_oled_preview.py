@@ -128,7 +128,7 @@ class OLEDPreviewTests(unittest.TestCase):
                     wire[(7 + y) * 128 + 100:(7 + y) * 128 + 125]
                     for y in range(50))
                 ink = sum(int(pixel >> 4 != 0) + int(pixel & 15 != 0)
-                          for row in right for pixel in row)
+                          for pixel in right)
                 self.assertGreater(ink, 60)
                 icons.append(right)
             self.assertGreaterEqual(len(set(icons)), 3)
