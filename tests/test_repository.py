@@ -61,7 +61,7 @@ class RepositoryContracts(unittest.TestCase):
         start = patch.index('diff --git a/src/components/widgets/thermals/M300OledPreview.vue')
         end = patch.index('diff --git a/src/util/m300-oled-preview.ts', start)
         preview = patch[start:end]
-        for required in ('+    class="m300-oled-viewport pb-3"',
+        for required in ('+      class="m300-oled-viewport pb-3"',
                          '+  overflow-x: auto;', '+  width: 344px;',
                          '+  min-width: 344px;', '+  height: 86px;',
                          '+  min-height: 86px;', '+  max-height: 86px;',
