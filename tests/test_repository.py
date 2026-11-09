@@ -124,6 +124,15 @@ class RepositoryContracts(unittest.TestCase):
                     matching = [n for n in constructor.body if ast.dump(n) == ast.dump(addition)]
                     self.assertEqual(len(matching), 1)
                     constructor.body.remove(matching[0])
+                # The OLED preview is a passive observer. Remove only
+                # this exact constructor assignment before comparing
+                # baseline OLED scheduling and SPI ownership.
+                mirror_constructor = ast.parse(
+                    'self._oled_preview = M300OLEDPreview()').body[0]
+                matching = [n for n in constructor.body
+                            if ast.dump(n) == ast.dump(mirror_constructor)]
+                self.assertEqual(len(matching), 1)
+                constructor.body.remove(matching[0])
                 diagnostic = ast.parse('self.last_transport_failure = None').body[0]
                 matching = [n for n in constructor.body if ast.dump(n) == ast.dump(diagnostic)]
                 self.assertEqual(len(matching), 1)
@@ -139,13 +148,27 @@ class RepositoryContracts(unittest.TestCase):
                                   if not isinstance(key, ast.Constant)
                                   or key.value not in ('optimize_windows', 'optimized_frames',
                                                       'last_transport_failure','recovered_acks',
-                                                      'ack_recoveries','ack_recovery_active')]
+                                                      'ack_recoveries','ack_recovery_active',
+                                                      'oled_preview')]
                         item.keys = [key for key, _ in fields]
                         item.values = [value for _, value in fields]
                         for key, value in fields:
                             if isinstance(key, ast.Constant) and key.value == 'host_revision':
                                 self.assertEqual(value.value, '0.13.16.32-OLED-ACK-RECOVERY')
                                 value.value = '0.13.9-OLED-R9-LIFECYCLE'
+                # The status mirror must use only last ACKed stream.previous.
+                # Strip the two exact pure observer assignments and compare
+                # every other field of get_status with the pinned baseline.
+                status_mirror = ast.parse(
+                    "mirror = getattr(self, '_oled_preview', None)\n"
+                    "oled_preview = (mirror.get_status(\n"
+                    " now, self.connected and self.stream.ready and self.stream.enabled,\n"
+                    " getattr(self.stream, 'previous', None))\n"
+                    " if mirror is not None else None)\n").body
+                for addition in status_mirror:
+                    matching = [n for n in status.body if ast.dump(n) == ast.dump(addition)]
+                    self.assertEqual(len(matching), 1)
+                    status.body.remove(matching[0])
                 # Remove only the exact fault-observer additions, then still
                 # require equality of transport, scheduling and SPI lifecycle.
                 observer = ast.parse("from .m300_error_codes import report\n"
@@ -174,10 +197,14 @@ class RepositoryContracts(unittest.TestCase):
                     "    logging.info('M300 OLED ACK recovery completed: count=%d',self.ack_recoveries)\n").body
                 ready = ast.parse("self.mcu_oled_stats_time = None\n"
                                   "self.ack_recovery_active = False\n").body
+                stop_mirror = ast.parse(
+                    "mirror = getattr(self, '_oled_preview', None)\n"
+                    "if mirror is not None:\n"
+                    "    mirror.reset()\n").body
                 for method_name, additions in (('_send_one', observer[:2]+diagnostic+recovery),
                                                ('_stats', observer[2:]+received+ready[-1:]),
                                                ('_tick',completed),('_ready',ready),
-                                               ('_stop',ready[-1:])):
+                                               ('_stop',ready[-1:]+stop_mirror)):
                     method = next(n for n in node.body if isinstance(n, ast.FunctionDef)
                                   and n.name == method_name)
                     expected = {ast.dump(n): 0 for n in additions}
