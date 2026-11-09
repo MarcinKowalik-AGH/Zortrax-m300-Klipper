@@ -4,6 +4,8 @@ import struct
 import unittest
 import zlib
 
+from test_settings_information import session
+
 from payload.m300_oled_preview import (M300OLEDPreview, WIDTH, HEIGHT,
                                        WIRE_BYTES, PNG_HEADER, PALETTE,
                                        encoded_png)
@@ -109,6 +111,47 @@ class OLEDPreviewTests(unittest.TestCase):
         fresh = preview.get_status(1.3, True, raw)
         self.assertGreater(fresh['sequence'], before['sequence'])
         self.assertTrue(fresh['online'])
+
+    def test_host_menu_logo_animation_renders_complete_sprite_each_phase(self):
+        # The full host-rendered frame is the same source used by physical OLED
+        # and the browser. No animated bitmap may disappear in one phase.
+        with session() as h:
+            h.menu.page = 'main'
+            h.oled.page = 'm04'
+            h.oled.selection = 0
+            icons = []
+            for phase in range(4):
+                h.oled._render(h.now + phase * .5)
+                wire = h.oled._render_wire
+                self.assertEqual(len(wire), WIRE_BYTES)
+                right = b''.join(
+                    wire[(7 + y) * 128 + 100:(7 + y) * 128 + 125]
+                    for y in range(50))
+                ink = sum(int(pixel >> 4 != 0) + int(pixel & 15 != 0)
+                          for row in right for pixel in row)
+                self.assertGreater(ink, 60)
+                icons.append(right)
+            self.assertGreaterEqual(len(set(icons)), 3)
+
+    def test_host_cartesian_homing_animation_is_never_an_empty_region(self):
+        with session() as h:
+            h.menu.page = 'maintenance'
+            h.oled.page = 'm04'
+            labels = [label for label, _ in h.oled._rows(h.now)[1]]
+            h.oled.selection = labels.index('Home X')
+            frames = []
+            for phase in range(4):
+                h.oled._render(h.now + phase * .5)
+                wire = h.oled._render_wire
+                self.assertEqual(len(wire), WIRE_BYTES)
+                right = b''.join(
+                    wire[(7 + y) * 128 + 100:(7 + y) * 128 + 125]
+                    for y in range(50))
+                ink = sum(int(pixel >> 4 != 0) + int(pixel & 15 != 0)
+                          for pixel in right)
+                self.assertGreater(ink, 60)
+                frames.append(right)
+            self.assertGreaterEqual(len(set(frames)), 2)
 
     def test_invalid_frame_or_time_never_exposes_untrusted_image(self):
         preview = M300OLEDPreview()

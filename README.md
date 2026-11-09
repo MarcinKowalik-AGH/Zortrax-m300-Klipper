@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.12
+# Zortrax M300 Classic — Klipper v1.0.0-beta.13
 
-[Download v1.0.0-beta.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.12) ·
+[Download v1.0.0-beta.13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.13) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,20 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.13 responsive OLED mirror:** Fixes the slow/browser-blank OLED mirror
+seen after beta.12 without changing physical OLED transport. Fluidd now uses
+a **sequential, read-only Moonraker WebSocket query** for the most recent
+host-rendered frame, independently of Moonraker's ~250ms global status
+subscription. There is never more than one preview query in flight; the
+polling loop pauses when the preview is collapsed, disconnected or the
+browser tab is hidden. The viewer now uses a 256×64 **double-buffered
+canvas**: the last good frame remains visible while the next PNG decodes,
+so animation regions do not flash blank during image replacement. The
+full-width Temperature chart and centered **50%-width** preview remain as
+in beta.12. Added tests for complete animated source frames, stale status
+selection, offline suppression and safe WebSocket query responses.
+[Release notes](docs/en/RELEASE_v1.0.0-beta.13.md).
 
 **Beta.12 faster, half-width OLED preview in Fluidd:** The full-screen
 OLED mirror under the Temperature graph now occupies **50% of the graph

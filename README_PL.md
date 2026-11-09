@@ -1,8 +1,18 @@
 # Zortrax M300 Classic — pierwsza instalacja
 
-[Wydanie v1.0.0-beta.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.12) ·
+[Wydanie v1.0.0-beta.13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.13) ·
 [Instalacja od pustego Raspberry Pi / Orange Pi](docs/pl/FIRST_INSTALL.md) ·
 [Pełny opis projektu po angielsku](README.md)
+
+**Beta.13:** Podgląd OLED odświeża się szybciej przez osobny,
+wyłącznie odczytowy odczyt statusu Moonraker WebSocket, niezależny
+od subskrypcji aktualizowanej co około 250 ms. Nie wysyła równoległych
+zapytań, a po zwinięciu lub ukryciu przeglądarki przerywa odświeżanie.
+Obraz jest teraz rysowany na canvas 256×64 i pozostaje widoczny do
+czasu dekodowania następnej klatki, bez pustych miejsc w trakcie
+animacji. Szerokość podglądu 50% nie zmienia się. Bez zmian w transmisji
+RLE/DMA/UART/SPI i MCU.
+[Dokumentacja beta.13](docs/pl/RELEASE_v1.0.0-beta.13.md).
 
 **Beta.12:** Podgląd OLED w karcie temperatur zmniejszono do **50% jej
 szerokości** i wyśrodkowano. Zlikwidowano dodatkowe oczekiwanie na ACK

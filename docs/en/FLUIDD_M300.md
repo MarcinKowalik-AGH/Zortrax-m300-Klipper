@@ -1,5 +1,38 @@
 # Five-point M300 results in Fluidd
 
+## Responsive OLED preview with preserved animation (beta.13)
+
+The browser's normal Klipper object subscription is delivered by Moonraker
+roughly every 250 ms. Beta.12 still depended on that subscription for
+the preview, even though host rendering and the SPI transport were faster
+under encoder activity. Beta.13 provides a separate **read-only**
+`printer.objects.query` over the existing authenticated Fluidd WebSocket:
+`objects: { m300_oled: ['oled_preview'] }`. It never opens another
+connection, introduces an unauthenticated route or issues printer commands.
+
+Only **one request can be in flight**; the next request follows the prior
+response plus a short bounded delay, so it cannot accumulate requests
+when the host is busy. Polling is paused while the preview is collapsed,
+Fluidd is disconnected or the browser tab is hidden. The regular
+subscription remains available as a safe fallback.
+
+The view now paints complete 256×64 PNG frames to a Canvas instead of
+replacing a live `img.src`. The previous successfully decoded frame stays
+visible until the next image is fully decoded and drawn. This prevents
+temporary black gaps in the animated region during rapid knob changes.
+A sequence check rejects older subscription frames when a newer direct
+query has already arrived. Host regression tests validate that
+animated OEM and Cartesian icons remain present in every rendered frame
+before encoding.
+
+The 50%-width centered layout and 16-level image quality are unchanged.
+The effective frame rate depends on Klipper render updates and network
+latency; periodic 500ms sprite animations are not artificially accelerated.
+This is still a read-only host-rendered preview, not an OLED pixel readback
+or a confirmation that a physical menu choice is visible/acknowledged.
+The original RLE/PackBits, DMA, UART, SPI, encoder receipts, buzzer,
+homing and error policies are unchanged.
+
 ## Faster half-width host-rendered OLED preview (beta.12)
 
 The OLED M300 section remains directly beneath the Temperature chart, but
