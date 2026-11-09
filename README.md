@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.6
+# Zortrax M300 Classic — Klipper v1.0.0-beta.7
 
-[Download v1.0.0-beta.6](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.6) ·
+[Download v1.0.0-beta.7](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.7) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,15 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.7 update repair:** The verified beta.4/beta.5 Orange Pi deployment
+files were missing from five module-hash allowlists in the beta.6 host
+installer. Existing official files triggered `Existing unknown M300 runtime
+module` even though they came from published builds. Beta.7 adds precisely
+those five SHA-256 digests, tests migration against immutable verified
+beta.4/beta.5/beta.6 deployment manifests, and prints the unknown on-disk
+SHA-256 when local edits remain. It retains the Ready/idle guard and
+transactional backup. [Fix and update guide](docs/en/RELEASE_v1.0.0-beta.7.md).
 
 **Beta.6 OLED menu changes:** Home X/Y/Z/XY/XYZ use one
 order and vocabulary, the selected Cartesian arrows blink independently for

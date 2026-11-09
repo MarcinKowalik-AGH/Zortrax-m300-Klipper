@@ -2,7 +2,7 @@
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.6 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.6).
+[v1.0.0-beta.7 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.7).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
@@ -15,7 +15,11 @@ Factory serial and OEM print time require R14.6 or later.
 OLED hold-to-move with local button release stop requires R14.7.
 It accepts recognized baselines from R15.3 through the initial R16.12 build,
 including the browser modules from the M300 TEST01 v0.13.2 R2 install archive.
-The installer checks the existing module hashes before it writes anything.
+Beta.7 adds the omitted exact file hashes for the public verified beta.4/beta.5
+host payloads, including `m300_menu.py`, so their upgrade to the current
+menu works without disabling safeguards. The installer checks the existing
+module hashes before it writes anything; unknown local edits still stop
+installation and now report their SHA-256. [Migration fix](RELEASE_v1.0.0-beta.7.md).
 
 ## Install directly from Git on Orange Pi
 

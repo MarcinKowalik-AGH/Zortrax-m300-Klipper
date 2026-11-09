@@ -1,3 +1,5 @@
+import hashlib
+import json
 import pathlib
 import sys
 import tempfile
@@ -171,6 +173,42 @@ class InstallerTests(unittest.TestCase):
             install.rollback(receipt, self.root, self.config)
         self.assertIn('# later user change', self.config.read_text())
         self.assertTrue((self.root / 'klippy/extras/m300_display.py').exists())
+
+    def test_all_verified_prior_release_payloads_are_upgradeable(self):
+        evidence = json.loads((ROOT / 'tests/reference'
+            / 'verified_beta4_beta5_beta6_deploys.json').read_text())
+        baselines = json.loads((ROOT / 'SUPPORTED_BASELINES.json').read_text())
+        self.assertEqual(
+            {entry['tag'] for entry in evidence['releases']},
+            {'v1.0.0-beta.4', 'v1.0.0-beta.5', 'v1.0.0-beta.6'})
+        checked, migrated = 0, 0
+        for release in evidence['releases']:
+            self.assertEqual(release['stage'], 'VERIFIED')
+            self.assertEqual(len(release['source_commit']), 40)
+            for name, previous_sha in release['payload_sha256'].items():
+                if name not in install.NAMES:
+                    continue
+                current_sha = hashlib.sha256(
+                    (ROOT / 'payload' / name).read_bytes()).hexdigest()
+                checked += 1
+                if current_sha == previous_sha:
+                    continue
+                migrated += 1
+                with self.subTest(tag=release['tag'], name=name):
+                    self.assertIn(previous_sha, baselines.get(name, []))
+        self.assertGreater(checked, 200)
+        self.assertGreater(migrated, 0)
+
+    def test_unknown_menu_hash_is_reported_without_overwriting_local_changes(self):
+        path = self.root / 'klippy/extras/m300_menu.py'
+        user_bytes = b'# unverified local firmware menu modification\n'
+        path.write_bytes(user_bytes)
+        expected = hashlib.sha256(user_bytes).hexdigest()
+        with self.assertRaisesRegex(
+                ValueError, 'Existing unknown M300 runtime module.*' + expected):
+            install.plan(self.root, self.config)
+        self.assertEqual(path.read_bytes(), user_bytes)
+        self.assertEqual(self.config.read_bytes(), self.original)
 
     def test_unknown_existing_module_refused_without_any_write(self):
         p = self.root / 'klippy/extras/m300_display.py'
