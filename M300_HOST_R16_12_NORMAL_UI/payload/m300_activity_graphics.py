@@ -190,7 +190,8 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if kind == 'native_gcode':
             command = str(target).strip().upper()
             name = command.split(maxsplit=1)[0] if command else ''
-            homing = {'ZORTRAX_HOME_XY':'HOME_XY', 'ZORTRAX_HOME_Z':'HOME_Z',
+            homing = {'ZORTRAX_HOME_X':'HOME_X', 'ZORTRAX_HOME_Y':'HOME_Y',
+                      'ZORTRAX_HOME_XY':'HOME_XY', 'ZORTRAX_HOME_Z':'HOME_Z',
                       'ZORTRAX_HOME_ALL':'HOME_ALL'}.get(name)
             if homing:
                 return Symbol(HOMING_ICONS[homing], True)

@@ -1074,8 +1074,15 @@ class M300OLED:
             if page == '_procedure_view_restored':
                 return
             # OEM fan and Settings choices redraw in place with the same cursor.
+            homing_choice = (isinstance(action, tuple) and bool(action) and (
+                action[0] in ('motion_home_x','motion_home_y','motion_home_z',
+                              'motion_home_xy','motion_home_xyz') or
+                (action[0] == 'native_gcode' and len(action) > 1
+                 and action[1] in ('ZORTRAX_HOME_X','ZORTRAX_HOME_Y',
+                                  'ZORTRAX_HOME_Z','ZORTRAX_HOME_XY',
+                                  'ZORTRAX_HOME_ALL'))))
             in_place = previous_page == menu.page and not menu.reason and (
-                menu.page == 'fan_test' or
+                menu.page == 'fan_test' or homing_choice or
                 (menu.page.startswith('setting_') and action and action[0] == 'set'))
             self.page, self.selection = 'm04', previous_selection if in_place else 0
             if previous_page != menu.page:

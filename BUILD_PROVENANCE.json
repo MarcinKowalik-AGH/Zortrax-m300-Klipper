@@ -3,8 +3,8 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "mcu_release": "0.13.14.18-OEM-ERRORS-UART8",
   "host_update": "R16.12",
-  "github_commit": "368997ebb5de03fb7beae64e3be98322def4e11b",
-  "github_run_id": "42637077452",
+  "github_commit": "7aa607c2dbea2e253045fcf70f4de6c9c1913b7e",
+  "github_run_id": "42645287968",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -17,5 +17,5 @@
   "release_stage": "VERIFIED",
   "hotend_cooling_on_temperature": 50,
   "hotend_cooling_off_temperature": 45,
-  "distribution_version": "v1.0.0-beta.8"
+  "distribution_version": "v1.0.0-beta.9"
 }
