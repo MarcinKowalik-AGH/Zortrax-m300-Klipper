@@ -1,0 +1,49 @@
+name: Publish M300 Dual PCB photo ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hardware/M300_Dual/photos/_archive_parts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Reconstruct and validate photo archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="hardware/M300_Dual/photos"
+          PARTS="$BASE/_archive_parts"
+          DEST="$BASE/M300_Dual_Photos_21_PNG_GitHub_compact.zip"
+          if ! compgen -G "$PARTS/part-*.b64" > /dev/null; then
+            echo "No staged archive parts; nothing to do."
+            exit 0
+          fi
+          cat "$PARTS"/part-*.b64 | base64 --decode > "$DEST"
+          echo "cd41cecc17b8090a58867699e0c3630d6a5c30da71d25021bb52941721da4103  $DEST" | sha256sum -c -
+          unzip -tqq "$DEST"
+          COUNT=$(unzip -Z -1 "$DEST" | grep -c '^IMG_.*\.png$')
+          test "$COUNT" -eq 21
+          echo "Verified $COUNT PNG photos."
+      - name: Commit ZIP and remove transfer parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="hardware/M300_Dual/photos"
+          DEST="$BASE/M300_Dual_Photos_21_PNG_GitHub_compact.zip"
+          if [[ ! -f "$DEST" ]]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DEST"
+          git rm -r "$BASE/_archive_parts"
+          git commit -m "docs: add verified M300 Dual PNG photo ZIP (21 images)"
+          git push
