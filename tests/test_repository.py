@@ -67,6 +67,12 @@ class RepositoryContracts(unittest.TestCase):
                          '+  min-height: 86px;', '+  max-height: 86px;',
                          '+  image-rendering: pixelated;'):
             self.assertIn(required, preview)
+        # Canvas backing pixels and CSS pixels must both remain 4:1;
+        # the scroll wrapper must not trigger a resize of the canvas.
+        for native in ('+        width="256"', '+        height="64"',
+                       '+  box-sizing: border-box;', '+  max-width: none;'):
+            self.assertIn(native, preview)
+        self.assertEqual(256 * 86, 64 * 344)
         self.assertNotIn('+  width: 50%;', preview)
         self.assertNotIn('+  height: auto;', preview)
 
