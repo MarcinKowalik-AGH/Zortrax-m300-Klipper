@@ -1,0 +1,25 @@
+name: Prepare reviewed OLED navigation source
+on:
+  push:
+    branches: [work/oled-navigation-beta16]
+    paths: ['ci/prepare_oled_navigation.py', 'ci/prepare-oled-navigation.patch', '.github/workflows/prepare-oled-navigation.yml']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Apply the exact reviewed source delta on the work branch only
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/work/oled-navigation-beta16
+          python3 ci/prepare_oled_navigation.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- host/klippy/extras/m300_oled.py PORT.json ci/build_fluidd.sh .github/workflows/build-m300.yml README.md README_PL.md docs/en/FIRST_INSTALL.md docs/pl/FIRST_INSTALL.md docs/en/INSTALL.md ci/prepare-oled-navigation.patch ci/prepare_oled_navigation.py .github/workflows/prepare-oled-navigation.yml
+          git commit -m 'Wire menu-navigation events into the canonical OLED renderer and verified beta.16 build'
+          git push origin HEAD:refs/heads/work/oled-navigation-beta16

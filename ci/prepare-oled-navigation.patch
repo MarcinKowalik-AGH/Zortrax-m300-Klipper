@@ -1,0 +1,23 @@
+diff --git a/host/klippy/extras/m300_oled.py b/host/klippy/extras/m300_oled.py
+--- a/host/klippy/extras/m300_oled.py
++++ b/host/klippy/extras/m300_oled.py
+@@ -1042,6 +1042,11 @@
+             self._presented_actions = (tuple(row[1] for row in rows)
+                                        if key[0] in ('menu','oem_menu') else None)
+         self._presented_context = context
++        # Navigation is published from the same completed host frame, without
++        # waiting for objects/query, display ACKs, or an animation deadline.
++        mirror = getattr(self, '_oled_preview', None)
++        if mirror is not None:
++            mirror.observe_navigation(self, now, (context, self.selection))
+         self._user_refresh_pending = False
+ 
+     def _select(self, now, presented_actions=_DIRECT_SELECT):
+@@ -1299,4 +1304,6 @@
+ 
+ 
+ def load_config(config):
+-    return M300OLED(config)
++    oled = M300OLED(config)
++    oled._oled_preview.bind(oled)
++    return oled
