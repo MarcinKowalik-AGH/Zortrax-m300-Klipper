@@ -27,3 +27,10 @@ If you need **additional photographs, detailed board data, pinout tracing, elect
 For discussion and contact, see [this GitHub issue](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/issues/1), mentioning [@zharijs](https://github.com/zharijs).
 
 No proprietary firmware dumps or encryption keys are distributed here.
+
+
+## Completing the 48-photo archive
+
+The 27 additional originals need to be added under [`additional/`](additional/). The GitHub Actions workflow [`m300-dual-photos.yml`](../../../.github/workflows/m300-dual-photos.yml) then runs [`build_archive.py`](build_archive.py) automatically. The builder preserves the existing 21 photographs, converts each new original to PNG with camera metadata excluded, verifies **exactly 48 unique PNG images**, and publishes `M300_Dual_Photos_48_PNG.zip` in this directory. It will refuse to publish a partial archive.
+
+The underlying images were already shared in the research conversation. Upload to GitHub is only required because the chat's current file-export environment does not expose their binary bytes to the repository uploader.
