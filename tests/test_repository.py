@@ -67,6 +67,8 @@ class RepositoryContracts(unittest.TestCase):
                          '+  min-height: 86px;', '+  max-height: 86px;',
                          '+  image-rendering: pixelated;'):
             self.assertIn(required, preview)
+        self.assertIn('+      tabindex="0"', preview)
+        self.assertIn('+      aria-label="Fixed-size OLED preview.', preview)
         # Canvas backing pixels and CSS pixels must both remain 4:1;
         # the scroll wrapper must not trigger a resize of the canvas.
         for native in ('+        width="256"', '+        height="64"',

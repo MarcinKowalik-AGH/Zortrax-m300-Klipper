@@ -3429,7 +3429,7 @@ diff --git a/src/components/widgets/thermals/M300OledPreview.vue b/src/component
 new file mode 100644
 --- /dev/null
 +++ b/src/components/widgets/thermals/M300OledPreview.vue
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,199 @@
 +<template>
 +  <section
 +    v-if="preview"
@@ -3451,6 +3451,8 @@ new file mode 100644
 +    <div
 +      v-if="!collapsed"
 +      class="m300-oled-viewport pb-3"
++      tabindex="0"
++      aria-label="Fixed-size OLED preview. Scroll horizontally in narrow windows."
 +    >
 +      <canvas
 +        v-if="preview.image"
