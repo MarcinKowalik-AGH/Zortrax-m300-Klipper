@@ -118,7 +118,11 @@ class OLEDPreviewTests(unittest.TestCase):
         with session() as h:
             h.menu.page = 'main'
             h.oled.page = 'm04'
-            h.oled.selection = 0
+            rows = h.oled._rows(h.now)[1]
+            labels = [label for label, _ in rows]
+            self.assertEqual(labels[0], 'Back')
+            self.assertIn('Klipper', labels)
+            h.oled.selection = labels.index('Klipper')
             icons = []
             for phase in range(4):
                 h.oled._render(h.now + phase * .5)
