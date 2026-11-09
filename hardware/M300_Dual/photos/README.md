@@ -12,7 +12,7 @@ Photos of the **M300 Dual STM32 controller board** and the **Allwinner A33 / A33
 
 ## Photo files
 
-The contact sheet above is available in this repository. A separate **21-photo PNG ZIP** (EXIF stripped) has been prepared but is **not yet uploaded to GitHub**. Additional photo sets have also been supplied and remain to be included. Contact [@MarcinKowalik-AGH](https://github.com/MarcinKowalik-AGH) for the original files.
+The [21-photo compact PNG ZIP](M300_Dual_Photos_21_PNG_GitHub_compact.zip) (7.2 MB) is published in this repository and has been verified by SHA-256. These are reduced-resolution PNGs (maximum dimension 950 px), converted without EXIF metadata. Two later batches of additional photos are **not included yet**; contact [@MarcinKowalik-AGH](https://github.com/MarcinKowalik-AGH) for the high-resolution originals.
 
 ## Research question
 
