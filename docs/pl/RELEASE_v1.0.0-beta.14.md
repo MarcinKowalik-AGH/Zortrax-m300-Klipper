@@ -6,7 +6,8 @@ połowy szerokości wykresu w normalnym widoku komputerowym.
 
 Zmniejszenie okna Fluidd nie zmienia już wysokości wyświetlacza.
 Jeżeli karta jest węższa niż 344 px, podgląd można przesunąć
-poziomo zamiast go zmniejszać. Wymiary pozostają identyczne
+poziomo zamiast go zmniejszać (również klawiaturą, po ustawieniu
+fokusu na obszarze podglądu). Wymiary pozostają identyczne
 także dla komunikatu o braku połączenia.
 
 **Bez zmian**: szybkie odświeżanie z beta.13, wszystkie animacje,
