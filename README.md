@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.14
+# Zortrax M300 Classic — Klipper v1.0.0-beta.16
 
-[Download v1.0.0-beta.14](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.14) ·
+[Download v1.0.0-beta.16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.16) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,11 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.16: immediate menu navigation in the Fluidd OLED preview.** Selection changes complete a dedicated read-only event wait on the existing authorized WebSocket, without the periodic object-status timer or Fluidd cache. Animations, 344x86 layout, physical OLED transport and all beta.15 print fixes remain unchanged.
+[Beta.16 release notes](docs/en/RELEASE_v1.0.0-beta.16.md).
+
+**Correction to the beta.13 description below:** `objects/query` did not bypass the pinned Klipper 250 ms refresh. Beta.16 uses a separate event endpoint.
 
 **Beta.14 fixed-height OLED preview:** The canvas is displayed at a fixed
 **344×86 CSS pixels** (native 4:1 aspect ratio) irrespective of Fluidd

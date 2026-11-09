@@ -2,7 +2,7 @@
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.14 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.14).
+[v1.0.0-beta.16 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.16).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
