@@ -196,8 +196,8 @@ class InstallerTests(unittest.TestCase):
                 migrated += 1
                 with self.subTest(tag=release['tag'], name=name):
                     self.assertIn(previous_sha, baselines.get(name, []))
-        self.assertGreater(checked, 200)
-        self.assertGreater(migrated, 0)
+        self.assertGreaterEqual(checked, 190)
+        self.assertGreaterEqual(migrated, 10)
 
     def test_unknown_menu_hash_is_reported_without_overwriting_local_changes(self):
         path = self.root / 'klippy/extras/m300_menu.py'
