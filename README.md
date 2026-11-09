@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper main (v1.0.0-beta.6-dev)
+# Zortrax M300 Classic — Klipper v1.0.0-beta.6
 
-[Latest fixed release v1.0.0-beta.5](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.5) ·
+[Download v1.0.0-beta.6](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.6) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -12,7 +12,7 @@ normal updater below is for an already installed M300.
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
 
-**Post-beta.5 OLED source changes on main:** Home X/Y/Z/XY/XYZ use one
+**Beta.6 OLED menu changes:** Home X/Y/Z/XY/XYZ use one
 order and vocabulary, the selected Cartesian arrows blink independently for
 Home/Move, and Back returns to the parent menu's selected row. Removing
 "(180C)" from Home Z does not change the 180 C contact-homing requirement.
