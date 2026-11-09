@@ -66,6 +66,15 @@ class NativeMenuTests(unittest.TestCase):
             self.assertIn(kind, kinds)
         self.assertNotIn('motion_home', kinds)
 
+    def test_homing_names_and_order_are_consistent_in_both_menus(self):
+        m, _ = fixture()
+        for page in ('klipper', 'maintenance'):
+            m.page=page
+            labels=[name for name,_ in m.rows(100.)[1] if name.startswith('Home ')]
+            self.assertEqual(labels,['Home X','Home Y','Home Z','Home XY','Home XYZ'])
+            self.assertFalse(any('(180C)' in name or name=='Homing ALL'
+                                 for name,_ in m.rows(100.)[1]))
+
     def test_old_presentation_negative_control_rejects_split_homing_rows(self):
         m, _ = fixture()
         with self.assertRaises(ValueError):

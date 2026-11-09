@@ -23,9 +23,11 @@ Material, Settings, Information. Back follows the menu history.
 |---|---|---|---|
 | Maintenance | Back | Navigation | Return to parent |
 | Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
-| Maintenance | Homing XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`, OLED hourglass and Fluidd home-button status |
-| Maintenance | Homing Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed |
-| Maintenance | Homing ALL | `ZORTRAX_HOME_ALL` | Native `G28`, OLED hourglass and Fluidd home-button status |
+| Maintenance | Home X | native `G28 X` | Homing of X only; blinking X axis in the OLED Cartesian icon |
+| Maintenance | Home Y | native `G28 Y` | Homing of Y only; blinking Y axis |
+| Maintenance | Home Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed, 180°C minimum unchanged |
+| Maintenance | Home XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`; blinking X and Y |
+| Maintenance | Home XYZ | `ZORTRAX_HOME_ALL` | Native `G28`; blinking X, Y and Z |
 | Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
 | Maintenance | Heat the platform | `ZORTRAX_HEAT_PLATFORM TEMP=60` | Native bed only, no homing required, ±2°C readiness, confirmation or Cancel turns bed off |
 | Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |

@@ -14,6 +14,7 @@ from pathlib import Path
 import zlib
 
 from .m300_activity_graphics import ActivityGraphics, PREFIX, HOMING_ICONS
+from .m300_cartesian_graphics import CartesianGraphics
 
 STOCK_SHA256 = '11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75'
 HOMING_HOURGLASS = '0x0801c2b8'
@@ -69,6 +70,10 @@ class OEMGraphics:
             if not hasattr(self, 'activity'):
                 self.activity = ActivityGraphics()
             return self.activity.get(addr, now)
+        if addr.startswith('cartesian:'):
+            if not hasattr(self, 'cartesian'):
+                self.cartesian = CartesianGraphics()
+            return self.cartesian.get(addr, now)
         if addr in MENU_SYMBOLS:
             if not hasattr(self, 'project'):
                 self.project = ActivityGraphics(

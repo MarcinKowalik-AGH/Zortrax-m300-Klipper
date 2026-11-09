@@ -190,6 +190,28 @@ class SettingsTreeTests(unittest.TestCase):
             self.assertEqual(h.menu.page, 'zortrax')
             self.assertEqual(h.hotend.target, 0.)
 
+    def test_oled_back_restores_klipper_and_move_submenu_cursor(self):
+        with session() as h:
+            h.oled.page='m04'
+            h.menu.page='klipper'
+            def choose(label):
+                rows=h.menu.rows(h.now)[1]
+                selected=next(i for i,row in enumerate(rows) if row[0]==label)
+                h.oled.selection=selected
+                h.oled._render(h.now)
+                h.oled._select(h.now,tuple(action for _,action in rows))
+                return selected
+            klipper_position=choose('Move axes')
+            self.assertEqual((h.menu.page,h.oled.selection),('native_moves',0))
+            move_position=choose('Move Y')
+            self.assertEqual((h.menu.page,h.oled.selection),('native_move_y',0))
+            choose('Back')
+            self.assertEqual((h.menu.page,h.oled.selection),('native_moves',move_position))
+            choose('Back')
+            self.assertEqual((h.menu.page,h.oled.selection),('klipper',klipper_position))
+            h.ui.invalidate()
+            self.assertIsNone(h.ui.cursor_for('native_moves'))
+
     def test_saved_settings_survive_restart_and_leave_identity_counters_and_observation_untouched(self):
         with session() as h:
             before=h.nvm.snapshot()

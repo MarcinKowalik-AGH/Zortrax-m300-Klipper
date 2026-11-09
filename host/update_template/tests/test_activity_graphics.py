@@ -7,6 +7,7 @@ from types import SimpleNamespace as NS
 import unittest
 
 from payload.m300_activity_graphics import ActivityGraphics, fault_symbol, menu_symbol, procedure_symbol
+from payload.m300_cartesian_graphics import CartesianGraphics
 from payload.m300_oem_graphics import OEMGraphics
 from payload.m300_settings_ui import brightness_frame
 from payload.m300_settings import PAGES
@@ -37,6 +38,26 @@ class ActivityGraphicsTests(unittest.TestCase):
                 self.assertLessEqual(set(b''.join(raw for _,_,raw in frames)),{0,15,240,255})
                 self.assertEqual(h.ui.get_oem_sprite('m04',rows,index,2.),frames[0])
             self.assertFalse(any(event[0] in ('heat','move','fan') for event in h.events))
+
+    def test_cartesian_axes_blink_only_selected_axes(self):
+        graphics = CartesianGraphics()
+        samples = {'X': (35,31), 'Y': (18,36), 'Z': (25,23)}
+        for name, selected in (('home_x','X'), ('home_y','Y'), ('home_z','Z'),
+                               ('home_xy','XY'), ('home_xyz','XYZ'),
+                               ('move_x','X'), ('move_y','Y'), ('move_z','Z')):
+            with self.subTest(name=name):
+                frames=[graphics.get('cartesian:'+name, i*.5) for i in range(4)]
+                self.assertEqual({(w,h,len(raw)) for w,h,raw in frames}, {(50,50,1250)})
+                self.assertEqual(len(set(raw for _,_,raw in frames)),4)
+                for axis,(x,y) in samples.items():
+                    def value(raw):
+                        return (raw[y*25+x//2] >> (0 if x%2 else 4)) & 15
+                    self.assertEqual(value(frames[0][2]),15 if axis in selected else 7)
+                    self.assertEqual(value(frames[1][2]),3 if axis in selected else 7)
+                self.assertTrue(all(((frames[0][2][y*25+x//2] >>
+                    (0 if x%2 else 4)) & 15)==0 for y in (47,48,49) for x in range(50)))
+        self.assertIsNone(graphics.get('cartesian:invalid'))
+        self.assertLessEqual(CartesianGraphics.frame.cache_info().currsize,36)
 
     def test_all_native_frames_decode_and_cache_stays_bounded(self):
         graphics=ActivityGraphics()

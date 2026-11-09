@@ -16,10 +16,12 @@ the complete native message (for example, a Bed Mesh phase). This changes
 only the existing bottom 16 pixels. Longer messages end with an ellipsis;
 no scrolling timer, new display transport or encoder polling is added.
 
-**Homing XY**, **Homing Z** and **Homing ALL** are available in OLED
-Maintenance directly below Autocalibration, and as Fluidd macros
-`ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL`. They call
-`G28 X Y`, `G28 Z` and `G28` respectively. Z requires XY to be homed first.
+**Home X**, **Home Y**, **Home Z**, **Home XY** and **Home XYZ** appear in that
+order in both the Klipper and Maintenance OLED menus. Independent X/Y actions
+call native `G28 X` / `G28 Y`. The existing Fluidd macros
+`ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` continue to
+call `G28 X Y`, `G28 Z` and `G28`. The `Home Z` label no longer includes
+`(180C)`; the actual 180°C minimum and XY prerequisite are unchanged.
 On completion the OLED returns to its invoking screen, cursor and history;
 external homing from native Klipper status returns to that status screen.
 Fluidd's standard X, Y, XY,

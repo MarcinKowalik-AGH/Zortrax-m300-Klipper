@@ -89,7 +89,7 @@ class MeshTemperatureMenuTests(unittest.TestCase):
             self.assertEqual(h.menu.rows(h.now)[1][0],('Back',('page','klipper')))
 
     def test_xy_z_all_animate_in_both_menu_previews_and_active_native_procedures(self):
-        for operation,key in (('HOME_XY','homing-xy'),('HOME_Z','homing-z'),('HOME_ALL','homing-all')):
+        for operation,key in (('HOME_XY','cartesian:home_xy'),('HOME_Z','cartesian:home_z'),('HOME_ALL','cartesian:home_xyz')):
             with self.subTest(operation=operation),session() as h:
                 h.menu.page='maintenance'
                 _,rows=h.menu.rows(h.now)

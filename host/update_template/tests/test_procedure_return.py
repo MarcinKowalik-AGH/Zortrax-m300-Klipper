@@ -55,7 +55,7 @@ class ProcedureReturnTests(unittest.TestCase):
             h.gcode.register_command('ZORTRAX_HOME_XY',lambda cmd:update())
             h.menu.page='maintenance'
             rows=h.menu.rows(h.now)[1]
-            selected=next(i for i,row in enumerate(rows) if row[0]=='Homing XY')
+            selected=next(i for i,row in enumerate(rows) if row[0]=='Home XY')
             h.oled.selection=selected
             before=len(h.callbacks)
             h.oled._select(h.now)

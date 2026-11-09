@@ -1,5 +1,29 @@
 # Printer activity symbols
 
+## Cartesian OLED axis controls (post-beta.5)
+
+The OLED Klipper and Maintenance lists show `Home X`, `Home Y`,
+`Home Z`, `Home XY`, `Home XYZ` in that order. The label `Home Z` does not
+show `(180C)`, but the native 180°C thermal prerequisite remains enforced.
+`Move X`, `Move Y`, `Move Z` have the same three-axis Cartesian diagram.
+Only the selected axis arrows and letters blink at the existing 500 ms frame
+cadence: X, Y, Z, X+Y or X+Y+Z. The toolhead at the top continues its animation;
+the useless blinking square below the platform is gone. The new renderer is
+`m300_cartesian_graphics.py` (50×50, 4bpp, four cached frames per icon).
+The older homing sprite atlas remains unchanged as archived evidence.
+
+Back from a control subpage, or choosing a manual heater temperature, now
+restores the selected parent OLED menu row. Startup/shutdown still invalidate
+the selection cache, and no action token or G-code command is stored by it.
+The OEM `Print status` selection used the first static frame of original
+multi-frame sprite `0x08020fb8`, which appears as a fragment of a circle.
+It was not a native print-progress gauge and controls no hardware.
+
+[Editable SVG design preview](../assets/menu-symbols/m300-cartesian-preview.svg)
+shows all requested axis combinations. This is a vector reference; actual
+OLED pixels are generated from the code at runtime. 
+
+
 ## Homing presentation
 
 Fluidd uses its existing X, Y, XY, Z and All home buttons. The matching button
