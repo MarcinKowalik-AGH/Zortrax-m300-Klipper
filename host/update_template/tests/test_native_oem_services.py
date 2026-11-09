@@ -463,7 +463,8 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             ['Back','Models','Maintenance','Material','Settings','Information'])
         menu.page='maintenance';rows=menu.rows(1.)[1]
         self.assertEqual([name for name,_ in rows],['Back','Autocalibration',
-            'Homing XY','Homing Z','Homing ALL','Heat the extruder','Heat the platform',
+            'Home X','Home Y','Home Z','Home XY','Home XYZ',
+            'Heat the extruder','Heat the platform',
             'Move the platform up','Move the platform down','Fan test'])
         self.assertTrue(require_rows(rows))
         menu.page='material';rows=menu.rows(1.)[1]
@@ -471,7 +472,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
         self.assertTrue(require_rows(rows))
 
     def test_oled_actions_invoke_the_same_macros_as_fluidd_through_native_lexer(self):
-        for page,index,operation in (('maintenance',1,'LEVEL'),('maintenance',5,'HOTEND'),
+        for page,index,operation in (('maintenance',1,'LEVEL'),('maintenance',7,'HOTEND'),
                                      ('material',1,'UNLOAD'),('material',2,'LOAD')):
             h=Harness();calls=[]
             if operation=='LEVEL':

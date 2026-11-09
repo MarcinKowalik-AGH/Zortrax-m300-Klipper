@@ -62,7 +62,7 @@ class M300MenuUI:
 
     def invalidate(self, *args):
         self.history.clear()
-        self._return_cursors.clear()
+        self._return_cursors = {}
         self._present_generation = None
         self._leveling_frames.clear()
         self.leveling_settings = False
@@ -79,10 +79,12 @@ class M300MenuUI:
     def remember_cursor(self, page, selection):
         # Only presentation indices; never cache a G-code action or token.
         if isinstance(page, str) and type(selection) is int and selection >= 0:
+            if not hasattr(self, '_return_cursors'):
+                self._return_cursors = {}
             self._return_cursors[page] = selection
 
     def cursor_for(self, page):
-        return self._return_cursors.get(page)
+        return getattr(self, '_return_cursors', {}).get(page)
 
     def language(self):
         return 'EN'
