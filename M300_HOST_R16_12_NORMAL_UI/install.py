@@ -31,7 +31,7 @@ NAMES += ('m300_calibration_state.py', 'm300_leveling_state.py',
           'm300_material_ui_state.py', 'm300_ui_labels.py')
 NAMES += ('m300_leveling_oem.py', 'm300_leveling_oem_131.json',
           'm300_oem_sprites_131.json', 'm300_oled.py',
-          'm300_oled_transport.py', 'm300_oled_render.py')
+          'm300_oled_transport.py', 'm300_oled_render.py', 'm300_oled_preview.py')
 NAMES += ('m300_filament.py', 'm300_filament_state.py')
 NAMES += ('m300_native_service.py', 'm300_maintenance.py',
           'm300_native_maintenance.py', 'm300_oem_procedure_ui.py')
