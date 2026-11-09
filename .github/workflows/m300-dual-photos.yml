@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'hardware/M300_Dual/photos/_archive_parts/**'
+      - 'hardware/M300_Dual/photos/additional/**'
   workflow_dispatch:
 
 permissions:
@@ -17,33 +18,53 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
-      - name: Reconstruct and validate photo archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install photo conversion dependency
+        run: python -m pip install Pillow==11.3.0
+      - name: Assemble photo archives (read-only image processing)
         shell: bash
         run: |
           set -euo pipefail
           BASE="hardware/M300_Dual/photos"
           PARTS="$BASE/_archive_parts"
           DEST="$BASE/M300_Dual_Photos_21_PNG_GitHub_compact.zip"
-          if ! compgen -G "$PARTS/part-*.b64" > /dev/null; then
-            echo "No staged archive parts; nothing to do."
-            exit 0
+          if compgen -G "$PARTS/part-*.b64" > /dev/null; then
+            cat "$PARTS"/part-*.b64 | base64 --decode > "$DEST"
+            echo "cd41cecc17b8090a58867699e0c3630d6a5c30da71d25021bb52941721da4103  $DEST" | sha256sum -c -
+            unzip -tqq "$DEST"
+            test "$(unzip -Z -1 "$DEST" | grep -c '^IMG_.*\\.png$')" -eq 21
+            git add "$DEST"
+            git rm -r "$PARTS"
           fi
-          cat "$PARTS"/part-*.b64 | base64 --decode > "$DEST"
-          echo "cd41cecc17b8090a58867699e0c3630d6a5c30da71d25021bb52941721da4103  $DEST" | sha256sum -c -
-          unzip -tqq "$DEST"
-          COUNT=$(unzip -Z -1 "$DEST" | grep -c '^IMG_.*\.png$')
-          test "$COUNT" -eq 21
-          echo "Verified $COUNT PNG photos."
-      - name: Commit ZIP and remove transfer parts
+          if [[ -d "$BASE/additional" ]] && compgen -G "$BASE/additional/IMG_*" > /dev/null; then
+            python "$BASE/build_archive.py"
+            git add "$BASE/M300_Dual_Photos_48_PNG.zip"
+            python - <<'PY'
+          from pathlib import Path
+          p = Path("hardware/M300_Dual/photos/README.md")
+          s = p.read_text(encoding="utf-8")
+          start = s.find("**Archive scope:**")
+          end = s.find("\n\n", start) if start != -1 else -1
+          addition = "**Complete photo archive:** [Download all 48 PNG photos](M300_Dual_Photos_48_PNG.zip). The 27 additional photos (IMG_8997–IMG_9024, except IMG_9000) have been included."
+          if start != -1:
+              s = s[:start] + addition + s[end if end != -1 else len(s):]
+          elif addition not in s:
+              s += "\n\n" + addition + "\n"
+          p.write_text(s, encoding="utf-8")
+          PY
+            git add "$BASE/README.md"
+          fi
+      - name: Commit validated archive
         shell: bash
         run: |
           set -euo pipefail
-          BASE="hardware/M300_Dual/photos"
-          DEST="$BASE/M300_Dual_Photos_21_PNG_GitHub_compact.zip"
-          if [[ ! -f "$DEST" ]]; then exit 0; fi
+          if git diff --cached --quiet; then
+            echo "No new complete photo archive to commit."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$DEST"
-          git rm -r "$BASE/_archive_parts"
-          git commit -m "docs: add verified M300 Dual PNG photo ZIP (21 images)"
+          git commit -m "docs(M300 Dual): publish verified PCB photo archive"
           git push
