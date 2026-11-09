@@ -193,7 +193,7 @@ update to replace this port. The operating system and Moonraker are separate
 components; retain backups before changing them.
 
 The package includes build provenance, source/licenses, compiled MCU/Fluidd,
-674 host tests and FILEOUTPUT/first-install reports. Software validation is
+678 host tests and FILEOUTPUT/first-install reports. Software validation is
 not a physical test of every SBC, hardware revision, plate or Z-Suite export.
 Known physical evidence includes the HW05 XY dry run at 750000 baud. Verify
 printing, pause/resume/M600 and the link on the installed machine.
