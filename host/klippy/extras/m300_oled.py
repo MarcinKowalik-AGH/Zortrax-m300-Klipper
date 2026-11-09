@@ -11,6 +11,7 @@ import math
 import textwrap
 
 from .m300_oled_render import Frame
+from .m300_oled_preview import M300OLEDPreview
 from .m300_oled_transport import EncoderSnapshots, OledStream, FastOledStream
 from .m300_settings_ui import menu_label_pixels, menu_frame, notice_frame
 from .m300_ui_labels import english_label
@@ -102,6 +103,7 @@ class M300OLED:
         self.render_at = self.query_at = 0.
         self._user_refresh_pending = False
         self._render_key = self._render_wire = None
+        self._oled_preview = M300OLEDPreview()
         self._input_epoch = 0
         self._presented_context = self._presented_actions = None
         self.commands = {}
@@ -205,6 +207,11 @@ class M300OLED:
         self.stream.stop(reason, state)
         self._user_refresh_pending = False
         self._render_key = self._render_wire = None
+        # Invalidate any displayed image after MCU loss. Never pretend a
+        # disconnected local MCU fallback page is an ACKed host frame.
+        mirror = getattr(self, '_oled_preview', None)
+        if mirror is not None:
+            mirror.reset()
         link = self._link()
         if link is not None:
             link.on_stop()
@@ -1228,7 +1235,16 @@ class M300OLED:
 
     def get_status(self, now):
         age = None if self.encoder.last_time is None else now - self.encoder.last_time
+        # Every 250 ms Moonraker polls Klipper status. Only changed,
+        # acknowledged OLED frames are encoded, at most twice per second.
+        # This observer never renders another frame or issues any MCU I/O.
+        mirror = getattr(self, '_oled_preview', None)
+        oled_preview = (mirror.get_status(
+            now, self.connected and self.stream.ready and self.stream.enabled,
+            getattr(self.stream, 'previous', None))
+            if mirror is not None else None)
         return {'model': 'M300_CLASSIC', 'abi': 1,
+                'oled_preview': oled_preview,
                 'host_revision': '0.13.16.32-OLED-ACK-RECOVERY',
                 'ui_revision': 'KLIPPER_DEFAULT_16X4_EN',
                 'connected': self.connected, 'state': self.stream.state,

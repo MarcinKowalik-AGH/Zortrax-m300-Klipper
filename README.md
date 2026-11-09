@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.10
+# Zortrax M300 Classic — Klipper v1.0.0-beta.11
 
-[Download v1.0.0-beta.10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.10) ·
+[Download v1.0.0-beta.11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.11) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,16 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.11 exact OLED preview in Fluidd:** Adds a read-only 256×64,
+16-luminance OLED preview **within the Temperature card, immediately
+under its chart**, scaled to exactly the available card width, with
+Show/Hide and an offline state. The image is made from the host's last
+**ACK-confirmed** OLED frame, not from a second screen render or a MCU
+readback. It is compact, indexed 4bpp PNG, updated at most twice per
+second over Moonraker's existing object-status WebSocket. RLE windowing,
+DMA, UART, SPI, all motion/temperature procedures, the buzzer and the
+MCU firmware are unchanged. [Release notes](docs/en/RELEASE_v1.0.0-beta.11.md).
 
 **Beta.10 OEM-style icon cleanup (sound unchanged):** The complete three-tone
 Klipper logo retains its lowercase wordmark and native 50×50 printer enclosure,

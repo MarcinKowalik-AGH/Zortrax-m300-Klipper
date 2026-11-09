@@ -1,5 +1,34 @@
 # Five-point M300 results in Fluidd
 
+## Live, read-only mirror of the OLED beneath the Temperature chart (beta.11)
+
+The existing **Temperature** card in the right dashboard column now includes
+an OLED M300 section immediately below its chart. The image scales to the
+card's full content width in the exact 4:1 aspect ratio of the hardware
+SSD1322 (256×64 pixels), with `Show`/`Hide` controls.
+
+The Klipper `m300_oled` object's new `oled_preview` status field contains
+a compact 4-bit palette PNG of **`stream.previous`, the last frame fully
+acknowledged by the native OLED transport**. The 16 brightness levels are
+preserved exactly. The host encodes only changed acknowledged frames,
+no more than twice per second. The existing Moonraker object subscription
+delivers this field to Fluidd; no new web port, MCU command, display query,
+OLED render loop, GPIO operation or motor/heater action is required.
+PNG encoding uses only Python's standard library. The browser shows the
+existing image, without any encoder input controls.
+
+If the Klipper/MCU transport is unavailable, the preview refuses to show a
+possibly stale image and explains that the MCU's independent waiting/error
+screen cannot be mirrored. This is **not an optical readback** of the panel.
+The MCU may display its own fallback page even while Klipper is offline.
+
+The mirror does **not** replace or alter the already validated 4bpp
+OLED transport, RLE/PackBits, SPI DMA and ACK recovery; it observes the
+completed frame after ACK and sends a small PNG to the browser over the
+existing Moonraker connection.
+
+
+
 ## Homing macros shared with the native OLED
 
 `ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`,

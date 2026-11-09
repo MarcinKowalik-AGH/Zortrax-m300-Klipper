@@ -2903,3 +2903,676 @@ index 7edad45..02f01dc 100644
    get supportsBedMesh (): boolean {
      return this.$typedGetters['mesh/getSupportsBedMesh']
    }
+diff --git a/src/components/widgets/thermals/TemperatureCard.vue b/src/components/widgets/thermals/TemperatureCard.vue
+--- a/src/components/widgets/thermals/TemperatureCard.vue
++++ b/src/components/widgets/thermals/TemperatureCard.vue
+@@ -1,260 +1,264 @@
+ <template>
+   <collapsable-card
+     :title="$t('app.general.title.temperature')"
+-    icon="$fire"
+-    :help-tooltip="$t('app.chart.tooltip.help')"
+-    :lazy="false"
+-    draggable
+-    layout-path="dashboard.temperature-card"
+-  >
+-    <template #menu>
+-      <app-btn-collapse-group :collapsed="narrow">
+-        <temperature-presets-menu
+-          @applyOff="handleApplyOff"
+-          @applyPreset="handleApplyPreset"
+-        />
+-      </app-btn-collapse-group>
+-
+-      <v-menu
+-        bottom
+-        left
+-        offset-y
+-        transition="slide-y-transition"
+-        :close-on-content-click="false"
+-      >
+-        <template #activator="{ on, attrs }">
+-          <app-btn
+-            icon
+-            v-bind="attrs"
+-            v-on="on"
+-          >
+-            <v-icon dense>
+-              $cog
+-            </v-icon>
+-          </app-btn>
+-        </template>
+-
+-        <v-list dense>
+-          <v-list-item @click="chartVisible = !chartVisible">
+-            <v-list-item-action class="my-0">
+-              <v-checkbox :input-value="chartVisible" />
+-            </v-list-item-action>
+-            <v-list-item-content>
+-              <v-list-item-title>
+-                {{ $t('app.setting.label.show_chart') }}
+-              </v-list-item-title>
+-            </v-list-item-content>
+-          </v-list-item>
+-
+-          <v-list-item @click="showRateOfChange = !showRateOfChange">
+-            <v-list-item-action class="my-0">
+-              <v-checkbox :input-value="showRateOfChange" />
+-            </v-list-item-action>
+-            <v-list-item-content>
+-              <v-list-item-title>
+-                {{ $t('app.setting.label.show_rate_of_change') }}
+-              </v-list-item-title>
+-            </v-list-item-content>
+-          </v-list-item>
+-
+-          <v-list-item @click="showRelativeHumidity = !showRelativeHumidity">
+-            <v-list-item-action class="my-0">
+-              <v-checkbox :input-value="showRelativeHumidity" />
+-            </v-list-item-action>
+-            <v-list-item-content>
+-              <v-list-item-title>
+-                {{ $t('app.setting.label.show_relative_humidity') }}
+-              </v-list-item-title>
+-            </v-list-item-content>
+-          </v-list-item>
+-
+-          <v-list-item @click="showBarometricPressure = !showBarometricPressure">
+-            <v-list-item-action class="my-0">
+-              <v-checkbox :input-value="showBarometricPressure" />
+-            </v-list-item-action>
+-            <v-list-item-content>
+-              <v-list-item-title>
+-                {{ $t('app.setting.label.show_barometric_pressure') }}
+-              </v-list-item-title>
+-            </v-list-item-content>
+-          </v-list-item>
+-
+-          <v-list-item @click="showGasResistance = !showGasResistance">
+-            <v-list-item-action class="my-0">
+-              <v-checkbox :input-value="showGasResistance" />
+-            </v-list-item-action>
+-            <v-list-item-content>
+-              <v-list-item-title>
+-                {{ $t('app.setting.label.show_gas_resistance') }}
+-              </v-list-item-title>
+-            </v-list-item-content>
+-          </v-list-item>
+-        </v-list>
+-      </v-menu>
+-    </template>
+-
+-    <temperature-targets
+-      @updateChartSelectedLegends="updateChartSelectedLegends"
+-      @highlightChartSeries="highlightChartSeries"
+-      @downplayChartSeries="downplayChartSeries"
+-    />
+-
+-    <template v-if="chartReady && chartVisible">
+-      <v-divider />
+-
+-      <thermal-chart
+-        ref="thermalchart"
+-        :narrow="narrow"
+-      />
+-    </template>
+-  </collapsable-card>
+-</template>
+-
+-<script lang="ts">
+-import { Component, Mixins, Prop, Ref } from 'vue-property-decorator'
+-import StateMixin from '@/mixins/state'
+-import BrowserMixin from '@/mixins/browser'
+-
+-import ThermalChart from '@/components/widgets/thermals/ThermalChart.vue'
+-import TemperatureTargets from '@/components/widgets/thermals/TemperatureTargets.vue'
+-import TemperaturePresetsMenu from './TemperaturePresetsMenu.vue'
+-import type { TemperaturePreset } from '@/store/config/types'
+-import type { ChartSelectedLegends } from '@/store/charts/types'
+-import { encodeGcodeParamValue } from '@/util/gcode-helpers'
+-
+-@Component({
+-  components: {
+-    ThermalChart,
+-    TemperatureTargets,
+-    TemperaturePresetsMenu
+-  }
+-})
+-export default class TemperatureCard extends Mixins(StateMixin, BrowserMixin) {
+-  @Prop({ type: Boolean })
+-  readonly narrow?: boolean
+-
+-  @Ref('thermalchart')
+-  readonly thermalChartElement!: ThermalChart
+-
+-  get chartReady (): boolean {
+-    return (
+-      this.$typedState.socket.acceptingNotifications &&
+-      this.$typedState.socket.status === 'ready' &&
+-      this.$typedState.charts.ready &&
+-      this.klippyReady
+-    )
+-  }
+-
+-  updateChartSelectedLegends (chartSelectedLegends: ChartSelectedLegends) {
+-    if (this.chartVisible) {
+-      this.thermalChartElement.updateChartSelectedLegends(chartSelectedLegends)
+-    }
+-  }
+-
+-  highlightChartSeries (key: string) {
+-    if (this.chartVisible) {
+-      this.thermalChartElement.highlightSeries(key)
+-    }
+-  }
+-
+-  downplayChartSeries () {
+-    if (this.chartVisible) {
+-      this.thermalChartElement.downplaySeries()
+-    }
+-  }
+-
+-  get chartVisible (): boolean {
+-    return this.$typedState.config.uiSettings.general.chartVisible
+-  }
+-
+-  set chartVisible (value: boolean) {
+-    this.$typedDispatch('config/saveByPath', {
+-      path: 'uiSettings.general.chartVisible',
+-      value,
+-      server: true
+-    })
+-  }
+-
+-  get showRateOfChange (): boolean {
+-    return this.$typedState.config.uiSettings.general.showRateOfChange
+-  }
+-
+-  set showRateOfChange (value: boolean) {
+-    this.$typedDispatch('config/saveByPath', {
+-      path: 'uiSettings.general.showRateOfChange',
+-      value,
+-      server: true
+-    })
+-  }
+-
+-  get showRelativeHumidity (): boolean {
+-    return this.$typedState.config.uiSettings.general.showRelativeHumidity
+-  }
+-
+-  set showRelativeHumidity (value: boolean) {
+-    this.$typedDispatch('config/saveByPath', {
+-      path: 'uiSettings.general.showRelativeHumidity',
+-      value,
+-      server: true
+-    })
+-  }
+-
+-  get showBarometricPressure (): boolean {
+-    return this.$typedState.config.uiSettings.general.showBarometricPressure
+-  }
+-
+-  set showBarometricPressure (value: boolean) {
+-    this.$typedDispatch('config/saveByPath', {
+-      path: 'uiSettings.general.showBarometricPressure',
+-      value,
+-      server: true
+-    })
+-  }
+-
+-  get showGasResistance (): boolean {
+-    return this.$typedState.config.uiSettings.general.showGasResistance
+-  }
+-
+-  set showGasResistance (value: boolean) {
+-    this.$typedDispatch('config/saveByPath', {
+-      path: 'uiSettings.general.showGasResistance',
+-      value,
+-      server: true
+-    })
+-  }
+-
+-  handleApplyPreset (preset: TemperaturePreset) {
+-    if (preset) {
+-      if (preset.values) {
+-        for (const key in preset.values) {
+-          const item = preset.values[key]
+-          if (item.type === 'heater' && item.active && item.value > -1) {
+-            this.sendGcode(`SET_HEATER_TEMPERATURE HEATER=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
+-          }
+-          if (item.type === 'fan' && item.active && item.value > -1) {
+-            this.sendGcode(`SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
+-          }
+-        }
+-      }
+-
+-      if (preset.gcode) {
+-        this.sendGcode(preset.gcode)
+-      }
+-    }
+-  }
+-
+-  async handleApplyOff () {
+-    const result = (
+-      !['printing', 'busy', 'paused'].includes(this.printerState) ||
+-      await this.$confirm(
+-        this.$tc('app.general.label.heaters_busy'),
+-        { title: this.$tc('app.general.simple_form.msg.confirm'), color: 'card-heading', icon: '$error' }
+-      )
+-    )
+-
+-    if (result) {
+-      this.sendGcode('TURN_OFF_HEATERS')
+-    }
++    icon="$fire"
++    :help-tooltip="$t('app.chart.tooltip.help')"
++    :lazy="false"
++    draggable
++    layout-path="dashboard.temperature-card"
++  >
++    <template #menu>
++      <app-btn-collapse-group :collapsed="narrow">
++        <temperature-presets-menu
++          @applyOff="handleApplyOff"
++          @applyPreset="handleApplyPreset"
++        />
++      </app-btn-collapse-group>
++
++      <v-menu
++        bottom
++        left
++        offset-y
++        transition="slide-y-transition"
++        :close-on-content-click="false"
++      >
++        <template #activator="{ on, attrs }">
++          <app-btn
++            icon
++            v-bind="attrs"
++            v-on="on"
++          >
++            <v-icon dense>
++              $cog
++            </v-icon>
++          </app-btn>
++        </template>
++
++        <v-list dense>
++          <v-list-item @click="chartVisible = !chartVisible">
++            <v-list-item-action class="my-0">
++              <v-checkbox :input-value="chartVisible" />
++            </v-list-item-action>
++            <v-list-item-content>
++              <v-list-item-title>
++                {{ $t('app.setting.label.show_chart') }}
++              </v-list-item-title>
++            </v-list-item-content>
++          </v-list-item>
++
++          <v-list-item @click="showRateOfChange = !showRateOfChange">
++            <v-list-item-action class="my-0">
++              <v-checkbox :input-value="showRateOfChange" />
++            </v-list-item-action>
++            <v-list-item-content>
++              <v-list-item-title>
++                {{ $t('app.setting.label.show_rate_of_change') }}
++              </v-list-item-title>
++            </v-list-item-content>
++          </v-list-item>
++
++          <v-list-item @click="showRelativeHumidity = !showRelativeHumidity">
++            <v-list-item-action class="my-0">
++              <v-checkbox :input-value="showRelativeHumidity" />
++            </v-list-item-action>
++            <v-list-item-content>
++              <v-list-item-title>
++                {{ $t('app.setting.label.show_relative_humidity') }}
++              </v-list-item-title>
++            </v-list-item-content>
++          </v-list-item>
++
++          <v-list-item @click="showBarometricPressure = !showBarometricPressure">
++            <v-list-item-action class="my-0">
++              <v-checkbox :input-value="showBarometricPressure" />
++            </v-list-item-action>
++            <v-list-item-content>
++              <v-list-item-title>
++                {{ $t('app.setting.label.show_barometric_pressure') }}
++              </v-list-item-title>
++            </v-list-item-content>
++          </v-list-item>
++
++          <v-list-item @click="showGasResistance = !showGasResistance">
++            <v-list-item-action class="my-0">
++              <v-checkbox :input-value="showGasResistance" />
++            </v-list-item-action>
++            <v-list-item-content>
++              <v-list-item-title>
++                {{ $t('app.setting.label.show_gas_resistance') }}
++              </v-list-item-title>
++            </v-list-item-content>
++          </v-list-item>
++        </v-list>
++      </v-menu>
++    </template>
++
++    <temperature-targets
++      @updateChartSelectedLegends="updateChartSelectedLegends"
++      @highlightChartSeries="highlightChartSeries"
++      @downplayChartSeries="downplayChartSeries"
++    />
++
++    <template v-if="chartReady && chartVisible">
++      <v-divider />
++
++      <thermal-chart
++        ref="thermalchart"
++        :narrow="narrow"
++      />
++    </template>
++
++    <m300-oled-preview />
++  </collapsable-card>
++</template>
++
++<script lang="ts">
++import { Component, Mixins, Prop, Ref } from 'vue-property-decorator'
++import StateMixin from '@/mixins/state'
++import BrowserMixin from '@/mixins/browser'
++
++import ThermalChart from '@/components/widgets/thermals/ThermalChart.vue'
++import M300OledPreview from '@/components/widgets/thermals/M300OledPreview.vue'
++import TemperatureTargets from '@/components/widgets/thermals/TemperatureTargets.vue'
++import TemperaturePresetsMenu from './TemperaturePresetsMenu.vue'
++import type { TemperaturePreset } from '@/store/config/types'
++import type { ChartSelectedLegends } from '@/store/charts/types'
++import { encodeGcodeParamValue } from '@/util/gcode-helpers'
++
++@Component({
++  components: {
++    ThermalChart,
++    M300OledPreview,
++    TemperatureTargets,
++    TemperaturePresetsMenu
++  }
++})
++export default class TemperatureCard extends Mixins(StateMixin, BrowserMixin) {
++  @Prop({ type: Boolean })
++  readonly narrow?: boolean
++
++  @Ref('thermalchart')
++  readonly thermalChartElement!: ThermalChart
++
++  get chartReady (): boolean {
++    return (
++      this.$typedState.socket.acceptingNotifications &&
++      this.$typedState.socket.status === 'ready' &&
++      this.$typedState.charts.ready &&
++      this.klippyReady
++    )
++  }
++
++  updateChartSelectedLegends (chartSelectedLegends: ChartSelectedLegends) {
++    if (this.chartVisible) {
++      this.thermalChartElement.updateChartSelectedLegends(chartSelectedLegends)
++    }
++  }
++
++  highlightChartSeries (key: string) {
++    if (this.chartVisible) {
++      this.thermalChartElement.highlightSeries(key)
++    }
++  }
++
++  downplayChartSeries () {
++    if (this.chartVisible) {
++      this.thermalChartElement.downplaySeries()
++    }
++  }
++
++  get chartVisible (): boolean {
++    return this.$typedState.config.uiSettings.general.chartVisible
++  }
++
++  set chartVisible (value: boolean) {
++    this.$typedDispatch('config/saveByPath', {
++      path: 'uiSettings.general.chartVisible',
++      value,
++      server: true
++    })
++  }
++
++  get showRateOfChange (): boolean {
++    return this.$typedState.config.uiSettings.general.showRateOfChange
++  }
++
++  set showRateOfChange (value: boolean) {
++    this.$typedDispatch('config/saveByPath', {
++      path: 'uiSettings.general.showRateOfChange',
++      value,
++      server: true
++    })
++  }
++
++  get showRelativeHumidity (): boolean {
++    return this.$typedState.config.uiSettings.general.showRelativeHumidity
++  }
++
++  set showRelativeHumidity (value: boolean) {
++    this.$typedDispatch('config/saveByPath', {
++      path: 'uiSettings.general.showRelativeHumidity',
++      value,
++      server: true
++    })
++  }
++
++  get showBarometricPressure (): boolean {
++    return this.$typedState.config.uiSettings.general.showBarometricPressure
++  }
++
++  set showBarometricPressure (value: boolean) {
++    this.$typedDispatch('config/saveByPath', {
++      path: 'uiSettings.general.showBarometricPressure',
++      value,
++      server: true
++    })
++  }
++
++  get showGasResistance (): boolean {
++    return this.$typedState.config.uiSettings.general.showGasResistance
++  }
++
++  set showGasResistance (value: boolean) {
++    this.$typedDispatch('config/saveByPath', {
++      path: 'uiSettings.general.showGasResistance',
++      value,
++      server: true
++    })
++  }
++
++  handleApplyPreset (preset: TemperaturePreset) {
++    if (preset) {
++      if (preset.values) {
++        for (const key in preset.values) {
++          const item = preset.values[key]
++          if (item.type === 'heater' && item.active && item.value > -1) {
++            this.sendGcode(`SET_HEATER_TEMPERATURE HEATER=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
++          }
++          if (item.type === 'fan' && item.active && item.value > -1) {
++            this.sendGcode(`SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
++          }
++        }
++      }
++
++      if (preset.gcode) {
++        this.sendGcode(preset.gcode)
++      }
++    }
++  }
++
++  async handleApplyOff () {
++    const result = (
++      !['printing', 'busy', 'paused'].includes(this.printerState) ||
++      await this.$confirm(
++        this.$tc('app.general.label.heaters_busy'),
++        { title: this.$tc('app.general.simple_form.msg.confirm'), color: 'card-heading', icon: '$error' }
++      )
++    )
++
++    if (result) {
++      this.sendGcode('TURN_OFF_HEATERS')
++    }
+   }
+ }
+ </script>
+diff --git a/src/components/widgets/thermals/M300OledPreview.vue b/src/components/widgets/thermals/M300OledPreview.vue
+new file mode 100644
+--- /dev/null
++++ b/src/components/widgets/thermals/M300OledPreview.vue
+@@ -0,0 +1,60 @@
++<template>
++  <section v-if="preview" class="m300-oled-preview" aria-label="Zortrax M300 OLED screen preview">
++    <v-divider />
++    <div class="d-flex align-center justify-space-between px-3 py-2">
++      <span class="text-caption font-weight-medium">OLED M300</span>
++      <v-btn
++        text
++        x-small
++        :aria-label="collapsed ? 'Show OLED preview' : 'Hide OLED preview'"
++        @click="collapsed = !collapsed"
++      >
++        {{ collapsed ? 'Show' : 'Hide' }}
++      </v-btn>
++    </div>
++    <div v-if="!collapsed" class="px-3 pb-3">
++      <img
++        v-if="preview.image"
++        :src="preview.image"
++        class="m300-oled-frame"
++        width="256"
++        height="64"
++        draggable="false"
++        alt="Last acknowledged 256 by 64 Zortrax M300 OLED frame"
++      >
++      <div v-else class="m300-oled-unavailable text-caption py-3 text-center">
++        OLED offline — local MCU screen cannot be mirrored
++      </div>
++    </div>
++  </section>
++</template>
++
++<script lang="ts">
++import { Component, Mixins } from 'vue-property-decorator'
++import StateMixin from '@/mixins/state'
++import { readM300OledPreview, type M300OledPreviewStatus } from '@/util/m300-oled-preview'
++
++@Component({})
++export default class M300OledPreview extends Mixins(StateMixin) {
++  collapsed = false
++
++  get preview (): M300OledPreviewStatus | null {
++    return readM300OledPreview(this.$typedState.printer.printer)
++  }
++}
++</script>
++
++<style scoped lang="scss">
++.m300-oled-frame {
++  display: block;
++  width: 100%;
++  height: auto;
++  aspect-ratio: 4 / 1;
++  image-rendering: pixelated;
++  background: #020610;
++}
++.m300-oled-unavailable {
++  width: 100%;
++  background: #020610;
++}
++</style>
+diff --git a/src/util/m300-oled-preview.ts b/src/util/m300-oled-preview.ts
+new file mode 100644
+--- /dev/null
++++ b/src/util/m300-oled-preview.ts
+@@ -0,0 +1,30 @@
++// Read-only, strictly validated status adapter for the M300 OLED preview.
++// Moonraker already subscribes to all Klipper status objects in Fluidd.
++export interface M300OledPreviewStatus {
++  online: boolean
++  sequence: number
++  image: string | null
++}
++
++export function readM300OledPreview (printer: unknown): M300OledPreviewStatus | null {
++  if (!printer || typeof printer !== 'object') return null
++  const oled = (printer as { m300_oled?: unknown }).m300_oled
++  if (!oled || typeof oled !== 'object') return null
++  const state = (oled as { oled_preview?: unknown }).oled_preview
++  if (!state || typeof state !== 'object') return null
++  const item = state as Record<string, unknown>
++  const seq = typeof item.sequence === 'number' && Number.isSafeInteger(item.sequence)
++    ? item.sequence
++    : 0
++  const valid = item.online === true &&
++    item.width === 256 && item.height === 64 &&
++    item.format === 'indexed4-png' &&
++    typeof item.image_base64 === 'string' &&
++    item.image_base64.length > 0 && item.image_base64.length <= 32768 &&
++    /^[a-zA-Z0-9+/]+={0,2}$/.test(item.image_base64)
++  return {
++    online: valid,
++    sequence: seq,
++    image: valid ? 'data:image/png;base64,' + (item.image_base64 as string) : null
++  }
++}
+diff --git a/src/util/m300-oled-preview.spec.ts b/src/util/m300-oled-preview.spec.ts
+new file mode 100644
+--- /dev/null
++++ b/src/util/m300-oled-preview.spec.ts
+@@ -0,0 +1,46 @@
++import { describe, expect, it } from 'vitest'
++import { readM300OledPreview } from './m300-oled-preview'
++
++const frame = {
++  online: true,
++  sequence: 14,
++  width: 256,
++  height: 64,
++  format: 'indexed4-png',
++  image_base64: 'iVBORw0KGgo='
++}
++
++describe('M300 OLED preview status', () => {
++  it('does not render a widget on printers without the M300 OLED status', () => {
++    expect(readM300OledPreview(null)).toBeNull()
++    expect(readM300OledPreview({})).toBeNull()
++    expect(readM300OledPreview({ m300_oled: { connected: true } })).toBeNull()
++  })
++
++  it('keeps a safe PNG data URI and sequence for a connected printer', () => {
++    expect(readM300OledPreview({ m300_oled: { oled_preview: frame } })).toEqual({
++      online: true,
++      sequence: 14,
++      image: 'data:image/png;base64,' + frame.image_base64
++    })
++  })
++
++  it('does not show a stale MCU-local screen after disconnection', () => {
++    expect(readM300OledPreview({
++      m300_oled: { oled_preview: { ...frame, online: false } }
++    })).toEqual({ online: false, sequence: 14, image: null })
++  })
++
++  it('refuses oversized, malformed, wrong-dimension or wrong-format frames', () => {
++    const invalid = [
++      { ...frame, image_base64: 'data:image/svg+xml;base64,AAAA' },
++      { ...frame, image_base64: 'a'.repeat(32769) },
++      { ...frame, width: 128 },
++      { ...frame, format: 'image/svg+xml' },
++      { ...frame, image_base64: '' }
++    ]
++    invalid.forEach(item => {
++      expect(readM300OledPreview({ m300_oled: { oled_preview: item } })?.image).toBeNull()
++    })
++  })
++})
