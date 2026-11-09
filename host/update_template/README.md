@@ -10,7 +10,7 @@ Hold the knob for 10 seconds to pause or reprint an eligible completed copy.
 The pause menu uses the existing native controls and material change procedure.
 [Print contexts](docs/en/PRINT_CONTEXT.md) · [Procedure inventory](docs/en/PROCEDURE_INVENTORY.md)
 
-Run `python3 VERIFY.py`, the 690 self-contained tests and `install.py` to
+Run `python3 VERIFY.py`, the 692 self-contained tests and `install.py` to
 inspect the plan. Stop Klipper before applying, then start it and update the
 Fluidd groups with `python3 setup_fluidd.py --apply`. Keep the rollback
 receipt.

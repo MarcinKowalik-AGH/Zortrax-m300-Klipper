@@ -202,7 +202,7 @@ sklonować i używać zwykłego instalatora `install-orange-pi.py --port 80`
 instalującym stockowego Klippera lub Fluidd. System Linux i Moonraker to osobne
 komponenty — przed ich zmianą zachowuj kopie konfiguracji.
 
-Raporty w paczce obejmują 690 testów hosta, prawdziwe procesy Klippera FILEOUTPUT,
+Raporty w paczce obejmują 692 testów hosta, prawdziwe procesy Klippera FILEOUTPUT,
 test pierwszej konfiguracji oraz budowanie ARM i Fluidd. Nie zastępują prób
 na wszystkich płytkach SBC, rewizjach drukarki i eksportach Z-Suite.
 Potwierdzony sprzętowo jest m.in. test XY na HW05 przy 750000 baud. Na nowej

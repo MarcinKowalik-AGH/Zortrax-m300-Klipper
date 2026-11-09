@@ -675,7 +675,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         h.objects['m300_motion'] = motion
         h.gcode.register_command('G28', None)
         h.gcode.register_command('G28', lambda gcmd: motion.home(axes='z'))
-        with self.assertRaisesRegex(native_gcode.CommandError, 'Home XY first'):
+        with self.assertRaisesRegex(native_gcode.CommandError, 'Home Z requires homed X and Y'):
             h.run('ZORTRAX_HOME_Z')
         self.assertEqual(motion.events, [])
 

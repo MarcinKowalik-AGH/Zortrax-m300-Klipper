@@ -362,6 +362,17 @@ class M300NativeMotion:
                     self._phase('HOME_' + axis.upper())
                     self._native_home(axis)
                     self._check(token)
+            if 'z' not in axes and not self.board.mcu.is_fileoutput():
+                # Native axis homing just moved a known X or Y, with no
+                # Z motion after the guarded initial clearance. Verify PC7
+                # is still OPEN, then carry the exact resulting position
+                # forward to the next explicit X/Y/Z home. This never
+                # reuses a clearance after arbitrary Fluidd/jog movement,
+                # a changed Z position, a released stepper or a failure.
+                self._check_z_contact(token)
+                self._xy_clearance_position = (
+                    tuple(self.toolhead.get_position()),
+                    'z' in kin.get_status(self.reactor.monotonic())['homed_axes'])
             if 'z' in axes:
                 self._phase('Z_CONTACT_POSITION')
                 point = self.home_xy if contact_xy is None else tuple(contact_xy)
@@ -408,6 +419,8 @@ class M300NativeMotion:
                            'native_endstop_stopping': True,'z_reference':reference,
                            'oem_leveling':oem_leveling,'initial_clearance':initial_clearance}
         except Exception as exc:
+            # Never reuse XY clearance after a rejected/failed homing.
+            self._xy_clearance_position = None
             self.reason = str(exc)
             from .m300_error_codes import report
             report(self.printer, exc, source='m300_motion', fatal=self.printer.is_shutdown())

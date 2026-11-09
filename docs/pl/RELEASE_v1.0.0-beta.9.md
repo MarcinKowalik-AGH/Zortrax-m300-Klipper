@@ -9,6 +9,11 @@ Zachowano również `Home XY`, `Home Z` i `Home XYZ`.
 **Ważne:** możesz bazować najpierw X, później Y albo odwrotnie.
 Po zbazowaniu obydwu osi możliwe jest samodzielne Home Z. Można też
 wykonać Home XY przed Home Z albo od razu Home XYZ.
+Po zakończeniu bazowania pojedynczej osi potwierdzony prześwit i otwarty
+PC7 są zachowywane tylko przy niezmienionej pozycji, żeby sekwencja
+X → Y → Z nie dodawała kolejnych 5 mm odsunięcia stołu.
+Ręczny ruch, utrata referencji Z lub błąd bazowania unieważniają ten stan.
+
 Wymagany prześwit stołu 5 mm, sprawdzenie PC7 i temperatura dyszy
 180°C przy bazowaniu Z pozostają bez zmian. Błędny komunikat
 `Home XY first, or use G28 for XYZ` zastąpiono jednoznacznym opisem.
@@ -37,6 +42,6 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
 Następnie odśwież Fluidd (Cmd+Shift+R). Wymagana walidacja wydania:
-690 testów hosta, scenariusze G28, kompilacja STM32 i Fluidd oraz
+692 testów hosta, scenariusze G28, kompilacja STM32 i Fluidd oraz
 kontrola sum SHA-256. Testy nie zastępują nadzorowanego sprawdzenia
 fizycznego ruchu głowicy i stołu na drukarce.

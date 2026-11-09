@@ -175,21 +175,48 @@ class NormalHomingTests(unittest.TestCase):
     def test_home_x_then_y_allows_subsequent_z_without_rehoming_xy(self):
         m = motion_fixture()
         m.homed.clear()
+        m.toolhead.set_position([100.,100.,307.,17.])
         m.home(axes='x')
         self.assertEqual(m.homed, {'x'})
         self.assertEqual([event for event in m.events if event[0]=='home'], [('home','X')])
         self.assertFalse(any(event[0]=='heat' for event in m.events))
+        self.assertFalse(m.result['initial_clearance'].get('clearance_reused',False))
         m.events.clear()
         m.home(axes='y')
+        self.assertTrue(m.result['initial_clearance']['clearance_reused'])
         self.assertEqual(m.homed, {'x', 'y'})
         self.assertEqual([event for event in m.events if event[0]=='home'], [('home','Y')])
         self.assertFalse(any(event[0]=='heat' for event in m.events))
         m.events.clear()
         m.home(axes='z')
+        self.assertTrue(m.result['initial_clearance']['clearance_reused'])
         self.assertEqual([event for event in m.events if event[0]=='home'], [('home','Z')])
         self.assertEqual(m.homed, {'x', 'y', 'z'})
         self.assertEqual(m.events[-1], ('heat',0.,False))
         self.assertEqual(m.toolhead.get_position()[3],17.)
+
+    def test_verified_split_clearance_cannot_survive_an_external_xy_move(self):
+        m = motion_fixture()
+        m.homed.clear()
+        m.toolhead.set_position([100.,100.,307.,17.])
+        m.home(axes='x')
+        self.assertIsNotNone(m._xy_clearance_position)
+        m.toolhead.manual_move([None,110.,None],m.travel_speed)
+        m.events.clear()
+        with self.assertRaisesRegex(RuntimeError, 'CLEARANCE'):
+            m.home(axes='y')
+        self.assertEqual(m.homed, {'x'})
+        self.assertFalse(any(event[0]=='home' for event in m.events))
+        self.assertIsNone(m._xy_clearance_position)
+
+    def test_failed_contact_after_single_axis_cannot_cache_clearance(self):
+        m = motion_fixture()
+        m.homed.clear()
+        m.precision.endstop.query_endstop.side_effect = [False,False,True]
+        with self.assertRaisesRegex(RuntimeError, 'NO_RELEASE'):
+            m.home(axes='x')
+        self.assertIsNone(m._xy_clearance_position)
+        self.assertEqual(m.state,'FAULT')
 
     def test_home_y_then_x_preserves_independent_axis_states_and_e(self):
         m = motion_fixture()

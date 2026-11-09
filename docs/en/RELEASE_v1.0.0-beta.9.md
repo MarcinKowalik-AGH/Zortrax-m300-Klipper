@@ -40,6 +40,13 @@ by Home XY, or with full Home XYZ. Tests assert that Home Z refuses
 to move or heat when only one axis is known, while X then Y then Z
 works without repeating X or Y.
 
+The native owner also carries forward a verified, electrically open PC7
+clearance after a completed X-only or Y-only home, provided the machine's
+position has not changed in the meantime. That prevents adding another
+unnecessary 5 mm of Z travel in the X → Y → Z sequence. An external
+move, a changed Z coordinate, disabled Z stepper or failed homing
+invalidates this reuse; any later XY travel requires fresh clearance.
+
 **Safety is unchanged:** 5 mm initial Z clearance before any lateral
 movement; PC7 release check; protected print/session checks; 180 C
 contact homing for Z; five native refinement contacts and final Z
@@ -74,7 +81,7 @@ overwriting it.
 ## Required validation
 
 The beta release is published only after its matching successful
-GitHub Actions build: **690 host tests**, nine repository contracts,
+GitHub Actions build: **692 host tests**, nine repository contracts,
 migration checks through beta.8, MCU ARM build, native Klippy FILEOUTPUT,
 OLED artwork/return tests, compiled Fluidd and release SHA-256 checks.
 These are software validations; confirm actual home X/Y/Z travel and
