@@ -1,8 +1,13 @@
 # Zortrax M300 Classic — pierwsza instalacja
 
-[Wydanie v1.0.0-beta.14](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.14) ·
+[Wydanie v1.0.0-beta.16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.16) ·
 [Instalacja od pustego Raspberry Pi / Orange Pi](docs/pl/FIRST_INSTALL.md) ·
 [Pełny opis projektu po angielsku](README.md)
+
+**Beta.16: natychmiastowa aktualizacja zaznaczenia menu w podglądzie OLED Fluidd.** Osobny kanał zdarzeniowy korzysta z istniejącego autoryzowanego WebSocket, bez czekania na cykl statusów. Animacje, rozmiar 344x86, transport fizycznego OLED oraz poprawki PAUSE/CANCEL i cztery linie startowe z beta.15 pozostają bez zmian.
+[Opis beta.16](docs/pl/RELEASE_v1.0.0-beta.16.md).
+
+**Sprostowanie opisu beta.13 poniżej:** `objects/query` nadal korzystało z cyklu 250 ms Klippera. Beta.16 omija go osobnym punktem API zdarzeń.
 
 **Beta.14:** Stała wysokość podglądu OLED we Fluidd: **86 px** przy
 szerokości **344 px** (proporcja 4:1), bez przeskalowywania po zmianie
