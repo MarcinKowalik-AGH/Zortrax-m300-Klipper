@@ -1,5 +1,26 @@
 # Printer activity symbols
 
+## Beta.10 OEM line-weight and native MCU 4bpp compatibility
+
+- All Klipper, Home and Move icons use a 50×50 SSD1322 frame. The
+  interactive Cartesian enclosure and axis arrows use fixed two-pixel
+  high-brightness strokes (15/15) consistent with the original 1.6-pixel
+  menu outline after native rasterization. Non-active axis arrows are
+  intensity 9, while the selected axes blink 15/3.
+- The complete Klipper V/nozzle logo with lowercase wordmark remains
+  at luminance 7/11/15. The former animated 3px line under the bed is
+  removed. A fixed two-pixel platform line remains; the head/gantry
+  animation above the platform remains.
+- The STM32F103 MCU does **not** render the main Klipper/Move/Home menu.
+  The Orange Pi sends the 4bpp image. The MCU firmware now explicitly
+  advertises native 4bpp pass-through and a test transmits 7, 11 and 15
+  without quantization. The MCU's own fallback graphics retain the
+  same 50×50 bounding box, bright=15 and divider=5.
+- No buzzer code, duration, sound policy, UART rate, motor, heater,
+  probe or contact logic is changed in beta.10. Reflashing the MCU
+  is **not necessary** for this menu artwork update.
+
+
 ## Complete Klipper logo and wordmark on the original M300 OLED
 
 The **Klipper** item contains the official angular V/nozzle emblem **with

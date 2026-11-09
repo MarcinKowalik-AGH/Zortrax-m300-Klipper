@@ -318,10 +318,14 @@ int main(void) {
     assert((GPIOE->ODR&((1u<<9)|(1u<<10)))==((1u<<9)|(1u<<10)));
     assert(ack_count==1 && last_token==1);
     for(unsigned i=0;i<32;i++)payload[i]=i;
+    // Three native Klipper logo luminances must pass through the MCU.
+    payload[0]=0x7b; payload[1]=0xf0;
     SPI2->SR=1u<<1;
     uint32_t write[]={2,1,32,0}; unsigned before=cs_low;
     command_m300_oled_write(write);
     assert(byte_count==32 && !memcmp(payload,wire,32));
+    assert(wire[0]==0x7b && wire[1]==0xf0);
+    assert((wire[0]>>4)==7 && (wire[0]&15)==11 && (wire[1]>>4)==15);
     assert(cs_low-before==1 && (GPIOB->ODR&(1u<<12)));
     assert(GPIOB->ODR&(1u<<14));
     assert(ack_count==2 && last_token==2);

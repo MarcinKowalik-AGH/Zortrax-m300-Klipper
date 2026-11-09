@@ -64,6 +64,17 @@ class ActivityGraphicsTests(unittest.TestCase):
                                 for x in (12,14,20,28,30,36)))
             for y in range(0,13):
                 self.assertEqual(actual[2][y*25:(y+1)*25],stock[2][y*25:(y+1)*25])
+            # The older bank included an animated 3px line at y44. The
+            # platform now stays static, while the top toolhead still moves.
+            def px(raw,x,y):
+                return (raw[y*25+x//2] >> (0 if x%2 else 4)) & 15
+            for clock in (0.,.5,1.,1.5):
+                item=h.ui.get_oem_sprite('m04',rows,0,clock)[2]
+                self.assertTrue(all(px(item,x,y)==0 for x in range(10,41)
+                                    for y in (44,45)))
+                self.assertTrue(all(px(item,x,y)==15 for y in (42,43) for x in range(8,43)))
+            self.assertNotEqual(h.ui.get_oem_sprite('m04',rows,0,0.)[2][:25*14],
+                                h.ui.get_oem_sprite('m04',rows,0,.5)[2][:25*14])
             self.assertEqual(_replace_k.cache_info().maxsize,4)
             svg=(Path(__file__).resolve().parents[1] / 'docs/assets/menu-symbols'
                  / 'klipper-official-mark-50.svg').read_text()
@@ -88,12 +99,28 @@ class ActivityGraphicsTests(unittest.TestCase):
                 for axis,(x,y) in samples.items():
                     def value(raw):
                         return (raw[y*25+x//2] >> (0 if x%2 else 4)) & 15
-                    self.assertEqual(value(frames[0][2]),15 if axis in selected else 7)
-                    self.assertEqual(value(frames[1][2]),3 if axis in selected else 7)
+                    self.assertEqual(value(frames[0][2]),15 if axis in selected else 9)
+                    self.assertEqual(value(frames[1][2]),3 if axis in selected else 9)
                 self.assertTrue(all(((frames[0][2][y*25+x//2] >>
                     (0 if x%2 else 4)) & 15)==0 for y in (47,48,49) for x in range(50)))
         self.assertIsNone(graphics.get('cartesian:invalid'))
         self.assertLessEqual(CartesianGraphics.frame.cache_info().currsize,36)
+
+    def test_cartesian_oem_thickness_brightness_and_footprint(self):
+        graphics = CartesianGraphics()
+        frame = graphics.get('cartesian:home_x',0.)[2]
+        def level(x,y):
+            return (frame[y*25+x//2] >> (0 if x%2 else 4)) & 15
+        # Native 2px strokes, full OEM white on the 50x50 canvas.
+        for x,y in ((4,20),(5,20),(44,20),(45,20),
+                    (12,4),(12,5),(12,45),(12,46)):
+            self.assertEqual(level(x,y),15,(x,y))
+        self.assertTrue(all(level(x,y)==0 for x in range(50)
+                            for y in (47,48,49)))
+        # Each frame has exactly 1250 bytes; host RGB text/electronics
+        # never change the 4bpp grayscale contract.
+        for i in range(4):
+            self.assertEqual(len(graphics.get('cartesian:home_x',i*.5)[2]),1250)
 
     def test_move_axis_pages_animate_in_parent_and_selected_axis(self):
         with session() as h:

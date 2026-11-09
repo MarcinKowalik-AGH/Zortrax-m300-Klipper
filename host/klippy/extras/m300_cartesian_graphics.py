@@ -38,6 +38,15 @@ def _line(pixels, x0, y0, x1, y1, value):
             error += dx
             y0 += sy
 
+def _stroke(pixels, x0, y0, x1, y1, value):
+    """Consistent 2px-width high-contrast menu strokes at native resolution."""
+    _line(pixels, x0, y0, x1, y1, value)
+    if abs(x1-x0) >= abs(y1-y0):
+        _line(pixels, x0, y0+1, x1, y1+1, value)
+    else:
+        _line(pixels, x0+1, y0, x1+1, y1, value)
+
+
 def _glyph(pixels, letter, x, y, level):
     # Stroke letters remain legible at the native 50x50 OLED icon size.
     if letter == 'X':
@@ -66,28 +75,29 @@ def _axis(pixels, letter, level):
         end = 25, 17
         wings = ((22,21),(28,21))
         label = (29,17)
-    _line(pixels,ox,oy,*end,level)
+    _stroke(pixels,ox,oy,*end,level)
     for wing in wings:
-        _line(pixels,*wing,*end,level)
+        _stroke(pixels,*wing,*end,level)
     _glyph(pixels,letter,*label,level)
 
 def _make(name, frame):
     pixels = bytearray(WIDTH * HEIGHT)
-    # Machine outline, top bridge and the print platform are stationary.
-    for x0,y0,x1,y1 in ((4,4,45,4),(4,4,4,46),(45,4,45,46),
-                        (4,46,45,46),(9,9,40,9),(9,43,40,43)):
-        _line(pixels,x0,y0,x1,y1,6)
+    # OEM-equivalent two-pixel 15/15 frame strokes, in the same 50x50
+    # envelope as the recovered firmware. No marker below the platform.
+    for x0,y0,x1,y1 in ((4,4,44,4),(4,4,4,46),(44,4,44,46),
+                        (4,45,44,45),(9,9,39,9),(9,43,39,43)):
+        _stroke(pixels,x0,y0,x1,y1,15)
     # Retain the top toolhead motion. Nothing flashes under the platform.
     head = (19,22,25,23)[frame]
-    _line(pixels,head-4,7,head+4,7,11)
-    _line(pixels,head-2,7,head-2,12,11)
-    _line(pixels,head+2,7,head+2,12,11)
-    _line(pixels,head-2,12,head,15,13)
-    _line(pixels,head+2,12,head,15,13)
+    _stroke(pixels,head-4,7,head+4,7,15)
+    _stroke(pixels,head-2,7,head-2,12,15)
+    _stroke(pixels,head+2,7,head+2,12,15)
+    _line(pixels,head-2,12,head,15,15)
+    _line(pixels,head+2,12,head,15,15)
     active = KINDS[name]
     # Every axis remains visible; only selected axes and letters blink.
     for letter in 'XYZ':
-        tone = (15 if frame % 2 == 0 else 3) if letter in active else 7
+        tone = (15 if frame % 2 == 0 else 3) if letter in active else 9
         _axis(pixels,letter,tone)
     _pixel(pixels,25,31,15)
     raw = bytearray(WIDTH * HEIGHT // 2)

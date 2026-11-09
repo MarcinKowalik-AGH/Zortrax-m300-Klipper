@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.9
+# Zortrax M300 Classic — Klipper v1.0.0-beta.10
 
-[Download v1.0.0-beta.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.9) ·
+[Download v1.0.0-beta.10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.10) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,16 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.10 OEM-style icon cleanup (sound unchanged):** The complete three-tone
+Klipper logo retains its lowercase wordmark and native 50×50 printer enclosure,
+with a fixed two-pixel platform instead of the obsolete animated rectangle
+under the bed. Home/Move Cartesian frames now use even 2px, full-bright
+outlines comparable to the original recovered firmware icons. The MCU's
+independent fallback renderer stays 50×50 and 15-level bright; the onboard
+SPI pass-through now has an explicit 4bpp 7/11/15 regression check.
+**Buzzer code, timings and controls are untouched.**
+[Release notes](docs/en/RELEASE_v1.0.0-beta.10.md).
 
 **Beta.9 independent X and Y homing, one OLED/Fluidd owner and full logo:**
 `Home X` and `Home Y` now run through the same guarded procedures as Fluidd

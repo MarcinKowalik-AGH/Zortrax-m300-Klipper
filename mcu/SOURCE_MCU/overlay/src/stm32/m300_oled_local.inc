@@ -6,6 +6,14 @@
 #include "m300_oled_stock_glyphs.inc"
 #include "m300_oled_activity.inc"
 #include "m300_error_icons.inc"
+/* Host and MCU share the stock 50x50 OLED icon envelope and luminance.
+ * Normal Klipper menus (including the three-tone Klipper logo) are rendered
+ * on the Orange Pi and transferred unchanged as native 4bpp pixel data.
+ * The local renderer below is for waiting/disconnected/error screens. */
+#define M300_LOCAL_ICON_WIDTH 50u
+#define M300_LOCAL_ICON_HEIGHT 50u
+#define M300_LOCAL_ICON_BRIGHT 15u
+#define M300_LOCAL_SEPARATOR_LEVEL 5u
 enum {
     LOCAL_OFF, LOCAL_WAIT_POWER, LOCAL_WAIT_LOW, LOCAL_WAIT_HIGH,
     LOCAL_INIT_CMDS, LOCAL_WINDOW, LOCAL_FRAME, LOCAL_DISPLAY_ON,
@@ -106,14 +114,15 @@ static void local_text(unsigned x,unsigned y,const char *str) {
 }
 
 static void local_render_icon(unsigned row) {
-    if(row<7u || row>=57u)return;
+    if(row<7u || row>=7u+M300_LOCAL_ICON_HEIGHT)return;
     unsigned y=row-7u;
     const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
     const uint8_t *bits=(local_error.code || local_error.kind)
         ? local_error_rows[local_error_frames[error->icon][local_animation_frame][y]]
         : local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
-    for(unsigned x=0;x<50u;x++)
-        if(bits[x>>3u] & (0x80u>>(x&7u)))local_pixel(200u+x,(int)row,15u);
+    for(unsigned x=0;x<M300_LOCAL_ICON_WIDTH;x++)
+        if(bits[x>>3u] & (0x80u>>(x&7u)))
+            local_pixel(200u+x,(int)row,M300_LOCAL_ICON_BRIGHT);
 }
 static void local_render(unsigned row) {
     local_render_row=row;
@@ -125,7 +134,7 @@ static void local_render(unsigned row) {
         title[8]='0'+(local_error.code/10)%10;
         title[9]='0'+local_error.code%10;
         local_text(4,2,local_error.code ? title : "ZORTRAX M300 - Error");
-        for(unsigned x=4;x<192;x++)local_pixel(x,12,5);
+        for(unsigned x=4;x<192;x++)local_pixel(x,12,M300_LOCAL_SEPARATOR_LEVEL);
         local_text(4,18,error->title);
         local_text(4,34,error->hint1);
         local_text(4,50,error->hint2);
@@ -133,7 +142,7 @@ static void local_render(unsigned row) {
         return;
     }
     local_text(4,2,"ZORTRAX M300");
-    for(unsigned x=4;x<192;x++)local_pixel(x,12,5);
+    for(unsigned x=4;x<192;x++)local_pixel(x,12,M300_LOCAL_SEPARATOR_LEVEL);
     local_text(4,18,local_reason==3 ? "MCU shutdown" :
                local_reason==2 ? "Klipper disconnected" : "Waiting for Klipper...");
     local_text(4,34,M300_LOCAL_RELEASE_TEXT);
