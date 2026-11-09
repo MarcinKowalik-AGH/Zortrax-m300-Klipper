@@ -152,7 +152,7 @@ class OEMLevelingTests(unittest.TestCase):
             o.render_count=0;o.render_max_ms=0.;o.render_at=0.;o.timer='oled'
             o.encoder=test_display.transport.EncoderSnapshots(4,validated=True)
             menu=NS(page='procedure',generation=1,_motion_jog_token=None,
-                    maintenance=NS(activity=lambda:None,click=lambda:None))
+                    maintenance=NS(activity=lambda:None,click=lambda kind='short':None))
             menu.home=lambda:setattr(menu,'page','main')
             ui.menu=menu;ui.oled=o
             h.objects.update(m300_oled=o,m300_menu=menu)
