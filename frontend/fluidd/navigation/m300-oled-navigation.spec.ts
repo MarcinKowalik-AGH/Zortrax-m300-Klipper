@@ -68,14 +68,25 @@ describe('immediate M300 menu navigation', () => {
     h.events.stop()
   })
 
-  it('does not request more images while a slow browser paints', async () => {
+  it('re-arms the network while a slow browser paints, without concurrent waits', async () => {
     let finish!: () => void
     const show = vi.fn(() => new Promise<void>(resolve => { finish = resolve }))
     const h = setup(show)
     h.events.start()
     h.replies[0]({ changed: true, frame: frame(5) }); await tick()
-    expect(h.api.wait).toHaveBeenCalledTimes(1)
+    expect(h.api.wait).toHaveBeenCalledTimes(2)
+    h.replies[1]({ changed: true, frame: frame(16) }); await tick()
+    expect(h.show).toHaveBeenLastCalledWith(expect.objectContaining({ navigationRevision: 16 }))
+    expect(h.api.wait).toHaveBeenCalledTimes(3)
     finish(); await tick()
+    expect(h.api.wait).toHaveBeenCalledTimes(3)
+    h.events.stop()
+  })
+
+  it('keeps receiving after a view promise rejects', async () => {
+    const h = setup(async () => { throw new Error('view removed') })
+    h.events.start()
+    h.replies[0]({ changed: true, frame: frame(1) }); await tick()
     expect(h.api.wait).toHaveBeenCalledTimes(2)
     h.events.stop()
   })

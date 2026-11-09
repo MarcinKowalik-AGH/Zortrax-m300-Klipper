@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // @vitest-environment jsdom
-import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Vue from 'vue'
 import { shallowMount, type Wrapper } from '@vue/test-utils'
@@ -44,6 +43,8 @@ const frame = (sequence: number, image_base64: string) => readM300OledPreview({
 const images: TestImage[] = []
 class TestImage {
   src = ''
+  naturalWidth = 256
+  naturalHeight = 64
   onload: (() => void) | null = null
   onerror: (() => void) | null = null
   constructor () { images.push(this) }
@@ -69,7 +70,7 @@ beforeEach(() => {
   images.length = 0
   draw.mockClear()
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(false)
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: draw } as unknown as CanvasRenderingContext2D)
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: draw, fillRect: vi.fn() } as unknown as CanvasRenderingContext2D)
   vi.stubGlobal('Image', TestImage)
 })
 afterEach(() => {
@@ -78,28 +79,55 @@ afterEach(() => {
 })
 
 describe('M300 navigation canvas', () => {
-  it('retains native pixels and the fixed 344 by 86 layout', async () => {
+  it('uses integer device pixels and never stretches with column width', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
     const view = await mountPreview()
-    expect(view.find('canvas').attributes('width')).toBe('256')
-    expect(view.find('canvas').attributes('height')).toBe('64')
-    const source = readFileSync('src/components/widgets/thermals/M300OledPreview.vue', 'utf8')
-    expect(source).toContain('width: 344px;')
-    expect(source).toContain('height: 86px;')
-    expect(source).not.toContain('height: auto;')
+    expect(view.find('canvas').attributes('width')).toBe('260')
+    expect(view.find('canvas').attributes('height')).toBe('68')
+    expect(view.find('canvas').attributes('style')).toContain('width: 260px;')
+    expect(view.find('section').attributes('data-preview-revision')).toBe('NAV-PIPELINE-2')
     expect(control.starts).toBeGreaterThan(0)
   })
 
-  it('cannot repaint an old selection when its PNG finishes decoding late', async () => {
+  it('adapts backing pixels to a fractional DPR rather than stretching them', async () => {
+    vi.stubGlobal('devicePixelRatio', 1.25)
+    const view = await mountPreview()
+    expect(view.find('canvas').attributes('width')).toBe('516')
+    expect(view.find('canvas').attributes('height')).toBe('132')
+    expect(view.find('canvas').attributes('style')).toContain('width: 412.8px;')
+    expect(view.find('section').attributes('data-pixel-scale')).toBe('2')
+  })
+
+  it('coalesces navigation while decoding and never paints the superseded selection', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
     await mountPreview()
     const old = images.at(-1)!
-    const shown = control.show!(frame(16, 'dGVzdA=='))
+    await control.show!(frame(8, 'YWJj'))
+    await control.show!(frame(16, 'dGVzdA=='))
     await Vue.nextTick(); await Vue.nextTick()
+    expect(images).toHaveLength(1)
+    old.onload?.()
+    expect(draw).not.toHaveBeenCalled()
     const newest = images.at(-1)!
     expect(newest).not.toBe(old)
-    newest.onload?.(); await shown
-    old.onload?.()
+    expect(newest.src).toBe('data:image/png;base64,dGVzdA==')
+    newest.onload?.()
     expect(draw).toHaveBeenCalledTimes(1)
-    expect(draw).toHaveBeenLastCalledWith(newest, 0, 0, 256, 64)
+    expect(draw).toHaveBeenLastCalledWith(newest, 2, 2, 256, 64)
+  })
+
+  it('repaints an already decoded frame after zoom without another PNG decode', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const view = await mountPreview()
+    images.at(-1)!.onload?.()
+    vi.stubGlobal('devicePixelRatio', 2)
+    window.dispatchEvent(new Event('resize'))
+    await vi.advanceTimersByTimeAsync(20)
+    await Vue.nextTick(); await Vue.nextTick()
+    expect(images).toHaveLength(1)
+    expect(view.find('canvas').attributes('width')).toBe('772')
+    expect(view.find('canvas').attributes('height')).toBe('196')
+    expect(draw).toHaveBeenLastCalledWith(images[0], 2, 2, 768, 192)
   })
 
   it('cancels navigation when collapsed and re-arms when opened', async () => {
