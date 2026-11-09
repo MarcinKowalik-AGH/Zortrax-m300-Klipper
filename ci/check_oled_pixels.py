@@ -81,7 +81,10 @@ def main():
                     page.wait_for_function('typeof window.testPixels === "function"')
                     for width in (817.3, 607.7):
                         layout = page.evaluate('(w) => window.testPixels(w)', width)
-                        screenshot = page.screenshot()
+                        # Capture the whole page: Firefox keeps a fixed device-pixel
+                        # window in no_viewport mode. At high DPR the centered
+                        # canvas can extend beyond its visible CSS viewport.
+                        screenshot = page.screenshot(full_page=True)
                         image = Image.open(io.BytesIO(screenshot)).convert('RGB')
                         # Some engines quantize the requested scale factor: use the reported DPR.
                         dpr = layout['dpr']
@@ -102,10 +105,12 @@ def main():
                                 break
                         if match is None:
                             args.output.parent.mkdir(parents=True, exist_ok=True)
+                            image.save(args.output.parent / f'OLED_PIXELS_FULL_{name}_{ratio}.png')
                             actual.save(args.output.parent / f'OLED_PIXELS_FAIL_{name}_{ratio}.png')
                             raise AssertionError(f'{name} DPR={ratio}, width={width}: unequal/interpolated pixels at {box}; {layout}')
                         results.append({'browser': name, 'requested_dpr': ratio, 'dpr': dpr,
                                         'column_width': width, 'integer_scale': layout['scale'],
+                                        'screenshot_size': list(image.size),
                                         'compositor_origin_delta': match,
                                         'screen_pixels_verified': layout['width']*layout['height'], 'status': 'PASS'})
                     context.close()
