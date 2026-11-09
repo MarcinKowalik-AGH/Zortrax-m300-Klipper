@@ -5,9 +5,18 @@ import { readM300OledPreview, selectM300OledPreview, type M300OledPreviewStatus 
 
 const epoch = 'a'.repeat(32)
 function frame (navigation: number, sequence = navigation) {
-  return { online: true, sequence, width: 256, height: 64, format: 'indexed4-png',
-    source: 'host-rendered', image_base64: 'iVBORw0KGgo=', epoch,
-    navigation_revision: navigation, navigation_api: 'NAV-EVENT-1' }
+  return {
+    online: true,
+    sequence,
+    width: 256,
+    height: 64,
+    format: 'indexed4-png',
+    source: 'host-rendered',
+    image_base64: 'iVBORw0KGgo=',
+    epoch,
+    navigation_revision: navigation,
+    navigation_api: 'NAV-EVENT-1'
+  }
 }
 const tick = async () => { for (let i = 0; i < 12; i++) await Promise.resolve() }
 

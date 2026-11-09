@@ -26,9 +26,18 @@ vi.mock('@/util/m300-oled-navigation', () => ({
   }
 }))
 
-const raw = { online: true, sequence: 1, width: 256, height: 64,
-  format: 'indexed4-png', source: 'host-rendered', image_base64: 'iVBORw0KGgo=',
-  epoch: 'a'.repeat(32), navigation_revision: 1, navigation_api: 'NAV-EVENT-1' }
+const raw = {
+  online: true,
+  sequence: 1,
+  width: 256,
+  height: 64,
+  format: 'indexed4-png',
+  source: 'host-rendered',
+  image_base64: 'iVBORw0KGgo=',
+  epoch: 'a'.repeat(32),
+  navigation_revision: 1,
+  navigation_api: 'NAV-EVENT-1'
+}
 const frame = (sequence: number, image_base64: string) => readM300OledPreview({
   m300_oled: { oled_preview: { ...raw, sequence, navigation_revision: sequence, image_base64 } }
 })!
@@ -44,7 +53,8 @@ let wrapper: Wrapper<Vue> | undefined
 async function mountPreview () {
   wrapper = shallowMount(M300OledPreview, {
     mocks: {
-      socketReady: true, klippyReady: true,
+      socketReady: true,
+      klippyReady: true,
       $typedState: Vue.observable({ printer: { printer: { m300_oled: { oled_preview: raw } } } })
     },
     stubs: { 'v-divider': true, 'v-btn': true }

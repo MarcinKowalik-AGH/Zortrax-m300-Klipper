@@ -14,6 +14,8 @@ export interface NavigationReply {
 }
 
 declare global {
+  // Augment the upstream ambient RPC namespace; no runtime namespace is emitted.
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Moonraker {
     interface Methods {
       'printer.m300.oled_preview.wait': { params: NavigationCursor; result: NavigationReply }
@@ -54,7 +56,7 @@ export class M300NavigationEvents {
     this.active = true
     const generation = ++this.generation
     const client = this.requestClient = this.clientId + '-' + generation
-    void this.run(generation, { client, epoch: '', navigation_revision: -1 })
+    this.run(generation, { client, epoch: '', navigation_revision: -1 }).catch(() => undefined)
   }
 
   stop () {
@@ -65,7 +67,7 @@ export class M300NavigationEvents {
     this.retryTimer = null
     const client = this.requestClient
     this.requestClient = null
-    if (client) void this.api.cancel(client).catch(() => undefined)
+    if (client) this.api.cancel(client).catch(() => undefined)
   }
 
   private current (generation: number): boolean {
@@ -97,7 +99,7 @@ export class M300NavigationEvents {
       // Existing status/animation preview remains available during failure.
       this.retryTimer = setTimeout(() => {
         this.retryTimer = null
-        if (this.current(generation)) void this.run(generation, cursor)
+        if (this.current(generation)) this.run(generation, cursor).catch(() => undefined)
       }, 3000)
     }
   }

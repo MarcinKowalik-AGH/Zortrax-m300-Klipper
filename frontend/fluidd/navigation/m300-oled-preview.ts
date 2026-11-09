@@ -30,9 +30,11 @@ export function readM300OledPreview (printer: unknown): M300OledPreviewStatus | 
     sequence: seq,
     image: valid ? 'data:image/png;base64,' + (item.image_base64 as string) : null,
     ...(typeof item.epoch === 'string' && /^[a-f0-9]{32}$/.test(item.epoch)
-      ? { epoch: item.epoch } : {}),
+      ? { epoch: item.epoch }
+      : {}),
     ...(typeof item.navigation_revision === 'number' && Number.isSafeInteger(item.navigation_revision) && item.navigation_revision >= 0
-      ? { navigationRevision: item.navigation_revision } : {}),
+      ? { navigationRevision: item.navigation_revision }
+      : {}),
     ...(item.navigation_api === 'NAV-EVENT-1' ? { navigationApi: item.navigation_api } : {})
   }
 }
