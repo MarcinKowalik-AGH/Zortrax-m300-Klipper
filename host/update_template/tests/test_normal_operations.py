@@ -557,6 +557,8 @@ class NormalMenuTests(unittest.TestCase):
                              ('xyz','ZORTRAX_HOME_ALL')):
             with self.subTest(axis=suffix):
                 menu,objects=menu_fixture()
+                # The compact menu fixture has no clock; real M300Menu does.
+                menu.reactor.monotonic=lambda:1.
                 objects['m300_motion'].normal_control=True
                 menu.page='klipper'
                 action=('motion_home_'+suffix,)
