@@ -14,7 +14,7 @@ import os
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.29-UNIFIED-NATIVE-START'
+REVISION = '0.13.16.38-PRINT-DRAIN-XY-PURGE'
 PERIOD = .25
 
 
@@ -44,9 +44,11 @@ class M300PrintControl:
         self.standby_temp = number('pause_standby_temperature',150.,0.,300.)
         self.heat_timeout = number('heat_timeout',1800.,60.,3600.)
         self.move_timeout = number('move_timeout',120.,1.,1200.)
-        self.purge_length = number('purge_length',40.,1.,100.)
-        self.purge_filament = number('purge_filament',3.,0.,10.)
-        self.purge_height = number('purge_height',.3,.2,1.)
+        self.purge_length = number('purge_length',250.,1.,1000.)
+        # CR-10 S5 used 20 mm of filament per approximately 350 mm line.
+        # Keep that dose per mm when shortening the path for the M300 bed.
+        self.purge_filament = number('purge_filament',20.*self.purge_length/350.,0.,100.)
+        self.purge_height = number('purge_height',.28,.2,1.)
         self.platform_soak_seconds = number('platform_soak_seconds',60.,0.,600.)
         if self.standby_after > self.off_after or self.clearance > self.z_hop:
             raise config.error('M300 print control: invalid pause deadlines/clearance')
@@ -259,8 +261,15 @@ class M300PrintControl:
         return (id(transform),id(mesh),tuple(getattr(mesh,'mesh_offsets',())))
 
     def _drained(self, now):
-        self.toolhead.get_last_move_time()  # Flush the final native lookahead segment.
+        # get_last_move_time() is NOT a passive status read. Native Klipper
+        # primes an idle motion clock to estimated_print_time + 250 ms.
+        # Calling it on every tick prevents PAUSE/CANCEL/END from draining.
+        # Flush only when actual lookahead moves remain, then observe the
+        # existing horizon without repeatedly moving it into the future.
         print_time,estimated,empty=self.toolhead.check_busy(now)
+        if not empty:
+            self.toolhead.get_last_move_time()
+            print_time,estimated,empty=self.toolhead.check_busy(now)
         return empty and print_time <= estimated
 
     def _position_is(self, expected):
@@ -490,13 +499,19 @@ class M300PrintControl:
         self.context=None;self.operation=None;self._change_pending=False
         self.state='CANCELLING';self._phase('WAIT_CANCEL');self._wake()
 
-    def _cancel_drained(self):
+    def _cancel_native_file(self):
         # Internal start/end barriers also pause the SD worker, while native
         # pause.sd_paused is false. Native cmd_CANCEL_PRINT alone then skips
         # do_cancel(); close via that native method after the worker drains.
         if self.sd.current_file is not None:self.sd.do_cancel()
         self.base_cancel(self._command('CANCEL_PRINT'))
         self._off();self._fan_off()
+        # UI/native file cancellation does not depend on physical parking.
+        # The worker has stopped, so close it and clear PAUSE immediately;
+        # only the subsequent park waits for the queued motion to drain.
+        self._phase('WAIT_CANCEL_DRAIN')
+
+    def _cancel_drained(self):
         self.steps.clear()
         if self._cancel_park and not self._material_busy() and not self.printer.is_shutdown():
             try:
@@ -560,9 +575,11 @@ class M300PrintControl:
             raise self._error('saved mesh '+mesh+' is unavailable; measure/save it or use MESH=NONE')
         nvm=self.printer.lookup_object('m300_nvm',None)
         full_preheat=bool(nvm is not None and nvm.get_setting('full_platform_preheat',False))
+        purge=gcmd.get_float('PURGE',self.purge_length,above=0.,maxval=1000.)
+        if not math.isfinite(purge):raise self._error('invalid PURGE')
         self._begin_operation('STARTING')
         self.operation.update(targets=dict(hotend=target,bed=bed),mesh=mesh,
-                              requested_mesh=requested_mesh,
+                              purge_length=purge,requested_mesh=requested_mesh,
                               soak_seconds=self.platform_soak_seconds if full_preheat and bed>0. else 0.)
 
     def cmd_end(self,gcmd):
@@ -601,17 +618,42 @@ class M300PrintControl:
         self._release()
         low,high,homed=self._bounds()
         if not set('xyz') <= set(homed):raise self._error('start homing did not establish XYZ')
-        x,y=low[0]+5.,low[1]+10.
-        if x+self.purge_length>high[0] or y>high[1] or high[2]<5.:
-            raise self._error('purge line does not fit native travel')
+        lines=self._purge_lines(low,high,self.operation['purge_length'])
         self._script('SAVE_GCODE_STATE NAME=M300_START_STATE')
-        for line in ('G90','M83','M220 S100','M221 S100','G1 Z5 F300',f'G1 X{x:.5f} Y{y:.5f} F6000',
-                     f'G1 Z{self.purge_height:.5f} F300',
-                     f'G1 X{x+self.purge_length:.5f} E{self.purge_filament:.5f} F600',
-                     'G1 Z5 F300','RESTORE_GCODE_STATE NAME=M300_START_STATE MOVE=0'):
-            self._guard(token);self._script(line)
+        try:
+            for line in ('G90','M83','M220 S100','M221 S100',*lines):
+                self._guard(token);self._script(line)
+        finally:
+            # Do not leave M83/M220/M221 changed if a purge move fails.
+            # Restoring parser state never moves the machine or resumes SD.
+            if self.ready and not self.printer.is_shutdown():
+                self._script('RESTORE_GCODE_STATE NAME=M300_START_STATE MOVE=0')
         self._guard(token);self._lease();self.waiting=True
         self.steps.append(('started',None));self._phase('PURGE_DRAIN')
+
+    def _purge_lines(self,low,high,length):
+        # Same four-leg pattern as CR-10 S5: Y out/back, then X out/back.
+        # Its 350 mm path cannot be copied to a 300 mm M300 unbounded.
+        # Keep both lanes inside native travel with a 5 mm far-edge margin.
+        x,y=low[0]+3.,low[1]+10.
+        cross_y=low[1]+20.
+        x_end=min(x+length,high[0]-5.)
+        y_end=min(cross_y+length,high[1]-5.)
+        if (x_end <= x or y_end <= cross_y+.5 or x+.5 > high[0]-5.
+                or not low[2] <= self.purge_height <= high[2] or high[2] < 5.):
+            raise self._error('four purge lines do not fit native travel')
+        dose=self.purge_filament/self.purge_length
+        ey=(y_end-y)*dose
+        ex=(x_end-x)*dose
+        return ('G1 Z5 F300',f'G1 X{x:.5f} Y{y:.5f} F6000',
+                f'G1 Z{self.purge_height:.5f} F300',
+                f'G1 Y{y_end:.5f} E{ey:.5f} F1000',
+                f'G1 X{x+.5:.5f} F5000',f'G1 Y{y:.5f} E{ey:.5f} F1000',
+                'G1 Z5 F300',f'G1 X{x:.5f} Y{cross_y:.5f} F6000',
+                f'G1 Z{self.purge_height:.5f} F300',
+                f'G1 X{x_end:.5f} E{ex:.5f} F1000',
+                f'G1 Y{cross_y+.5:.5f} F5000',f'G1 X{x:.5f} E{ex:.5f} F1000',
+                'G1 Z5 F300')
 
     def _script(self,line):
         self._internal=True
@@ -676,8 +718,10 @@ class M300PrintControl:
                         if self.sd.work_timer is not None or not self._drained(now):return now+PERIOD
                         self._park_pause()
                     elif self.phase=='WAIT_CANCEL':
-                        if (self.sd.work_timer is not None or self._material_busy()
-                                or not self._drained(now)):return now+PERIOD
+                        if self.sd.work_timer is not None:return now+PERIOD
+                        self._cancel_native_file()
+                    elif self.phase=='WAIT_CANCEL_DRAIN':
+                        if self._material_busy() or not self._drained(now):return now+PERIOD
                         self._cancel_drained()
                     elif self.state=='RESUMING' and self.phase=='HEATING':
                         if self._temperatures_ready(self.context['targets'],now):self._resume_moves()
@@ -705,7 +749,7 @@ class M300PrintControl:
             session_token=self.generation,park_xy=list(self.park_xy),last_error=self.last_error,
             notice=self.notice,paused=bool(ctx),targets=copy.deepcopy(ctx['targets']) if ctx else None,
             start=copy.deepcopy({key:self.operation.get(key) for key in
-                                ('targets','mesh','requested_mesh','soak_seconds')}) if self.operation else None,
+                                ('targets','mesh','requested_mesh','soak_seconds','purge_length')}) if self.operation else None,
             soak_remaining=(max(0.,2.+self.operation['soak_seconds']-(now-self.stable_since))
                             if self.operation and self.phase=='PLATFORM_SOAK' and self.stable_since is not None else None),
             pause_seconds=max(0.,now-ctx['started']) if ctx else 0.,

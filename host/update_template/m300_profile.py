@@ -114,6 +114,24 @@ def migrate_idle(block):
         '    {% endif %}\n')
 
 
+
+# Exact deployed START_PRINT wrappers only; never replace operator code.
+OLD_START_COMMAND_SHAS = {
+    '755b166889401782cf97ab47c0aada89853f9ea7dc2bdf0078b139fa4744a00c',
+    '155b45b87275ebe2a5e3099ada3e5fcfe3c3f95df4731f1b0a449c34d9437900',
+}
+START_GCODE = "gcode:\n    {% set hotend = params.EXTRUDER_TEMP|default(printer.extruder.target)|float %}\n    {% set bed = params.BED_TEMP|default(printer.heater_bed.target)|float %}\n    {% set mesh = params.MESH|default('AUTO') %}\n    {% set purge = ' PURGE=' ~ params.PURGE if params.PURGE is defined else '' %}\n    ZORTRAX_PRINT_START EXTRUDER_TEMP={hotend} BED_TEMP={bed} MESH={mesh}{purge}\n"
+
+
+def migrate_start(block):
+    match, commands = gcode_body(block)
+    if match is None:return block
+    header_options = set(re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M))
+    digest = hashlib.sha256('\n'.join(commands).encode()).hexdigest()
+    if header_options <= {'description','gcode'} and digest in OLD_START_COMMAND_SHAS:
+        return block[:match.start()] + START_GCODE + '\n'
+    return block
+
 def convert_text(text, stock_xy=None):
     prefix, chunks, saved = blocks(text)
     output = [prefix]
@@ -123,9 +141,7 @@ def convert_text(text, stock_xy=None):
         if section.startswith('gcode_macro '):
             old = section[12:]
             if old=='START_PRINT':
-                _,commands=gcode_body(block)
-                if hashlib.sha256('\n'.join(commands).encode()).hexdigest()=='755b166889401782cf97ab47c0aada89853f9ea7dc2bdf0078b139fa4744a00c':
-                    block=block.replace("params.MESH|default('m300_pads')", "params.MESH|default('AUTO')")
+                block=migrate_start(block)
             if old in RETIRED_LEVEL_MACROS:
                 header_options = re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M)
                 _, commands = gcode_body(block)

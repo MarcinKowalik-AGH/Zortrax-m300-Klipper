@@ -353,7 +353,10 @@ class PrintControlTests(unittest.TestCase):
         h.control_until('IDLE')
         self.assertAlmostEqual(h.gmove.speed_factor,1.5/60.)
         self.assertEqual(h.gmove.extrude_factor,2.)
-        self.assertAlmostEqual(h.position[3],20.)  # Only 3 mm prime, not M221-scaled 6 mm.
+        # Two Y legs of 260 mm and two X legs of 250 mm; M221=200 must
+        # not double the metered dose. Native parser state is then restored.
+        expected=17.+(2.*260.+2.*250.)*h.c.purge_filament/h.c.purge_length
+        self.assertAlmostEqual(h.position[3],expected,places=4)
 
     def test_oled_offers_reheat_after_material_nozzle_off_then_confirmation_then_resume(self):
         h=self.h;ui=M300PrintUI(h.config);ui._ready();h.pause_print()
