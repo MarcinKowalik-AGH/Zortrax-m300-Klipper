@@ -14,14 +14,27 @@ export function oledPixelLayout (ratio: number) {
   const guard = 2
   const canvasWidth = width + 2 * guard
   const canvasHeight = height + 2 * guard
-  return { dpr, scale, width, height, guard, canvasWidth, canvasHeight,
-    cssWidth: canvasWidth / dpr, cssHeight: canvasHeight / dpr }
+  return {
+    dpr,
+    scale,
+    width,
+    height,
+    guard,
+    canvasWidth,
+    canvasHeight,
+    cssWidth: canvasWidth / dpr,
+    cssHeight: canvasHeight / dpr
+  }
 }
 
 export function oledPixelStyle (layout: ReturnType<typeof oledPixelLayout>) {
   return {
-    width: `${layout.cssWidth}px`, minWidth: `${layout.cssWidth}px`, maxWidth: 'none',
-    height: `${layout.cssHeight}px`, minHeight: `${layout.cssHeight}px`, maxHeight: `${layout.cssHeight}px`
+    width: `${layout.cssWidth}px`,
+    minWidth: `${layout.cssWidth}px`,
+    maxWidth: 'none',
+    height: `${layout.cssHeight}px`,
+    minHeight: `${layout.cssHeight}px`,
+    maxHeight: `${layout.cssHeight}px`
   }
 }
 
