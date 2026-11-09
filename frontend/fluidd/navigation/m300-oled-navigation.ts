@@ -88,9 +88,10 @@ export class M300NavigationEvents {
           throw new Error('Invalid OLED navigation frame')
         }
         cursor = { ...cursor, epoch: frame.epoch, navigation_revision: frame.navigationRevision }
-        // Backpressure: while the browser paints, the host retains only its
-        // newest state. Next request gets that state, not intermediate frames.
-        await this.show(frame)
+        // Re-arm reception without waiting for Vue, PNG decode or painting.
+        // The view owns one decode plus one replaceable latest frame, not a FIFO.
+        // This keeps exactly one network wait outstanding even on a slow browser.
+        this.show(frame).catch(() => undefined)
         if (this.current(generation)) this.setLive(true)
       }
     } catch {
