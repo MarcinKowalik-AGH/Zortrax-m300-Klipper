@@ -44,6 +44,7 @@ class M300MenuUI:
         self.leveling_settings = False
         self._brightness_presented = None
         self.history = MenuHistory(self.menu_max_depth)
+        self._return_cursors = {}
         path = os.path.join(os.path.dirname(__file__), 'm300_m11_stock_atlas.json')
         with open(path,encoding='utf-8') as stream:
             self.atlas = json.load(stream)['stock_structures']
@@ -61,6 +62,7 @@ class M300MenuUI:
 
     def invalidate(self, *args):
         self.history.clear()
+        self._return_cursors = {}
         self._present_generation = None
         self._leveling_frames.clear()
         self.leveling_settings = False
@@ -73,6 +75,16 @@ class M300MenuUI:
 
     def parent(self, current):
         return self.history.parent(current)
+
+    def remember_cursor(self, page, selection):
+        # Only presentation indices; never cache a G-code action or token.
+        if isinstance(page, str) and type(selection) is int and selection >= 0:
+            if not hasattr(self, '_return_cursors'):
+                self._return_cursors = {}
+            self._return_cursors[page] = selection
+
+    def cursor_for(self, page):
+        return getattr(self, '_return_cursors', {}).get(page)
 
     def language(self):
         return 'EN'
@@ -167,7 +179,8 @@ class M300MenuUI:
             filament=snapshot('m300_filament') if (panel_page.startswith('filament')
                 or menu_page=='material_status') else {},
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
-        if self.last_sprite in ('project-klipper', 'project-zortrax'):
+        if self.last_sprite in ('project-klipper', 'project-zortrax') or (
+                isinstance(self.last_sprite, str) and self.last_sprite.startswith('cartesian:')):
             return self.oem_sprites.get(self.last_sprite, now)
         if menu_page not in ('procedure', 'calibration', 'material_status') and not panel_page.startswith(('job', 'filament')):
             return self.oem_sprites.get(self.last_sprite)

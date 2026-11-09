@@ -11,8 +11,9 @@ import zlib
 
 Symbol = namedtuple('Symbol', 'key animated')
 PREFIX = 'activity:'
-HOMING_ICONS = {'HOME_X':'homing-xy', 'HOME_Y':'homing-xy', 'HOME_XY':'homing-xy',
-                'HOME_Z':'homing-z', 'HOME_ALL':'homing-all'}
+HOMING_ICONS = {'HOME_X':'cartesian:home_x', 'HOME_Y':'cartesian:home_y',
+                'HOME_Z':'cartesian:home_z', 'HOME_XY':'cartesian:home_xy',
+                'HOME_ALL':'cartesian:home_xyz'}
 HOMING_ACTIONS = {'motion_home_x':'HOME_X', 'motion_home_y':'HOME_Y',
                   'motion_home_xy':'HOME_XY', 'motion_home_z':'HOME_Z',
                   'motion_home_xyz':'HOME_ALL'}
@@ -129,8 +130,8 @@ PAGE_SYMBOLS = {
     'setting_sleep_mode': '0x0801d908', 'setting_language': '0x0801dab4',
     'setting_full_platform_preheat': PREFIX+'heat_bed',
     'setting_sort_mode': '0x0801c4f4', 'native_pid': PREFIX+'heat_nozzle',
-    'native_moves': '0x0801cb24', 'native_move_x': '0x0801cb24',
-    'native_move_y': '0x0801cb24', 'native_move_z': '0x0801cb24',
+    'native_moves': 'cartesian:move_xyz', 'native_move_x': 'cartesian:move_x',
+    'native_move_y': 'cartesian:move_y', 'native_move_z': 'cartesian:move_z',
     'bed_mesh': PREFIX+'bed_mesh', 'fans': PREFIX+'fan_upper',
     'sd_status': PREFIX+'sd_read', 'board': PREFIX+'link_status',
     'oled_link': PREFIX+'link_status', 'inputs': '0x0801dc08', 'temps': PREFIX+'heat_nozzle',
@@ -174,7 +175,8 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if kind in HOMING_ACTIONS:
             return Symbol(HOMING_ICONS[HOMING_ACTIONS[kind]], True)
         if kind == 'page' and target in PAGE_SYMBOLS:
-            return Symbol(PAGE_SYMBOLS[target], False)
+            key = PAGE_SYMBOLS[target]
+            return Symbol(key, key.startswith('cartesian:'))
         if kind == 'browse' and target == 'sd':
             return symbol('sd_read')
         if kind == 'fan_set' or kind == 'fan_test' and target == 'PRINT':
@@ -211,4 +213,4 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
             if name == 'M112':
                 return symbol('emergency_stop')
     key = PAGE_SYMBOLS.get(page) or PAGE_SYMBOLS.get(panel_page)
-    return Symbol(key, False) if key else None
+    return Symbol(key, key.startswith('cartesian:')) if key else None

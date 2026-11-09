@@ -1050,6 +1050,9 @@ class M300OLED:
                 menu.reason = 'Panel is not ready; action refused.'
                 return
             previous_page, previous_selection = menu.page, self.selection
+            ui = self.printer.lookup_object('m300_menu_ui', None)
+            if ui is not None and hasattr(ui, 'remember_cursor'):
+                ui.remember_cursor(previous_page, previous_selection)
             page = menu.select(action, now)
             if page == '_procedure_view_restored':
                 return
@@ -1059,10 +1062,21 @@ class M300OLED:
                 (menu.page.startswith('setting_') and action and action[0] == 'set'))
             self.page, self.selection = 'm04', previous_selection if in_place else 0
             if previous_page != menu.page:
-                ui = self.printer.lookup_object('m300_menu_ui', None)
+                # Back and temperature-choice returns preserve the selected
+                # parent row without replaying the action or trusting a stale token.
+                returning = (isinstance(action, tuple) and bool(action)
+                             and (action[0] in ('ui_back', 'temp')
+                                  or (action[0] == 'page' and index == 0
+                                      and str(rows[index][0]).strip().lower() in ('back', 'up'))))
+                if returning and ui is not None and hasattr(ui, 'cursor_for'):
+                    position = ui.cursor_for(menu.page)
+                    if position is not None:
+                        self.selection = position
                 brightness_selection = getattr(ui, 'brightness_selection', None)
                 if brightness_selection is not None:
-                    self.selection = brightness_selection() or 0
+                    brightness = brightness_selection()
+                    if brightness is not None:
+                        self.selection = brightness
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None

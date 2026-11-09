@@ -71,7 +71,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.14-PAD-OLED"
+    MENU_REVISION = "0.13.16.34-CARTESIAN-MENU"
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -379,9 +379,11 @@ class M300Menu:
         if native and self.page == 'maintenance':
             return self.t('Maintenance'), self._notice([(self.t('Back'), ('page', 'zortrax')),
                 (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
-                ('Homing XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
-                ('Homing Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
-                ('Homing ALL', ('native_gcode', 'ZORTRAX_HOME_ALL')),
+                ('Home X', ('motion_home_x',)),
+                ('Home Y', ('motion_home_y',)),
+                ('Home Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
+                ('Home XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
+                ('Home XYZ', ('native_gcode', 'ZORTRAX_HOME_ALL')),
                 (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
                 (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
@@ -601,10 +603,10 @@ class M300Menu:
                     ('Heat hotend', ('service', 'HOTEND')),
                     ('Heat bed', ('service', 'BED')),
                     ('Turn off heaters', ('native_gcode', 'TURN_OFF_HEATERS')),
-                    ('Home Y', ('motion_home_y',)),
                     ('Home X', ('motion_home_x',)),
+                    ('Home Y', ('motion_home_y',)),
+                    ('Home Z', ('motion_home_z',)),
                     ('Home XY', ('motion_home_xy',)),
-                    ('Home Z (180C)', ('motion_home_z',)),
                     ('Home XYZ', ('motion_home_xyz',)),
                     ('Move axes', ('page', 'native_moves')),
                     ('Fans', ('page', 'fans')),
