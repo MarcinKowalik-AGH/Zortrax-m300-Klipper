@@ -140,9 +140,15 @@ def plan(root, config, *, organize_config=False):
     for p, data in desired.items():
         if p.name == 'm300_menu.py' and not p.is_file():
             raise ValueError('An installed native M300 menu is required')
-        if (p.exists() and p.read_bytes() != data
-                and digest(p.read_bytes()) not in baselines.get(p.name, [])):
-            raise ValueError('Existing unknown M300 runtime module: ' + str(p))
+        if p.exists():
+            installed = p.read_bytes()
+            if installed != data:
+                installed_sha256 = digest(installed)
+                if installed_sha256 not in baselines.get(p.name, []):
+                    raise ValueError(
+                        'Existing unknown M300 runtime module: %s (SHA-256: %s). '
+                        'Refusing to overwrite unverified local changes.' %
+                        (p, installed_sha256))
     settings = config.parent / 'm300_display.cfg'
     settings_data = settings.read_bytes() if settings.exists() else (
         HERE / 'payload/m300_display.cfg').read_bytes()

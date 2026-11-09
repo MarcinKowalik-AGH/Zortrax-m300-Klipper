@@ -1,10 +1,10 @@
 {
   "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
-  "README.md": "d72cb48b38a9e7145dc67169302b5e8a2abcda14e09a93b7f89bb88371da982b",
-  "SUPPORTED_BASELINES.json": "c18e3fa5d237be9d942a0b68b1460b4ff14d326ac0741b73794f6b9999ff2dad",
+  "README.md": "2ee8dcedddcb058957ca2c3aa993802f753e844ffe4db0ca375df88a8b95d61f",
+  "SUPPORTED_BASELINES.json": "58c2d41c3362fcdcc2ea39bee752edfc8ecdfba7435e8a186d9033c1e4b01e2d",
   "VERIFY.py": "29d0a03b6fad2a211e1e5779c43147c4bf64ecb894217855820326ed0d59248b",
   "check-zcode.py": "93b9cc5683a31b9e96b0e8b3bb5a907b63f07d1760c22f1a3cbba03700e8c32c",
-  "install.py": "b5528d7d740c98d6a1cb33013a58c09c9b58f880349c68fc51026239c084a99a",
+  "install.py": "779bd893ef657400f62c731d20b0ee72bdff463c19f7de76b1cbeaaae69a405e",
   "m300_profile.py": "0a59268526009073dfb69998c6f55f6f066ee1d2b6ce636f6d15571097267868",
   "payload/klipper_calibration.cfg": "df3bfaaa68343822f8d648eb671593cd27be141d6101a73640bfd9eb777fc6e7",
   "payload/m300_activity_graphics.py": "5f316b5e93d4b84cdb8ab004698324d17427b38e99635ee90e7cbf8b93bf15a7",
