@@ -53,6 +53,23 @@ class RepositoryContracts(unittest.TestCase):
                                  (ROOT / 'host/klippy/extras' / name).read_bytes())
             self.assertGreater(installer.verify(), 30)
 
+        # The OLED mirror is intentionally a fixed physical-size display
+        # preview: resizing Fluidd's columns must not shrink its height.
+        # The intrinsic 256x64 canvas is displayed at 344x86 (exact 4:1).
+        # Narrow layouts scroll rather than warp the M300's native pixels.
+        patch = (ROOT / 'frontend/fluidd/m300-leveling.patch').read_text()
+        start = patch.index('diff --git a/src/components/widgets/thermals/M300OledPreview.vue')
+        end = patch.index('diff --git a/src/util/m300-oled-preview.ts', start)
+        preview = patch[start:end]
+        for required in ('+    class="m300-oled-viewport pb-3"',
+                         '+  overflow-x: auto;', '+  width: 344px;',
+                         '+  min-width: 344px;', '+  height: 86px;',
+                         '+  min-height: 86px;', '+  max-height: 86px;',
+                         '+  image-rendering: pixelated;'):
+            self.assertIn(required, preview)
+        self.assertNotIn('+  width: 50%;', preview)
+        self.assertNotIn('+  height: auto;', preview)
+
     def test_m300_container_round_trip_uses_application_offset(self):
         tool = load('container_roundtrip', KIT / 'tools/test01_m3b.py')
         image = struct.pack('<II', 0x20005000, 0x08008009) + bytes(56)

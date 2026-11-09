@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.13
+# Zortrax M300 Classic — Klipper v1.0.0-beta.14
 
-[Download v1.0.0-beta.13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.13) ·
+[Download v1.0.0-beta.14](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.14) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
@@ -11,6 +11,16 @@ normal updater below is for an already installed M300.
 
 **R29 host stuck in Shutdown with `M300NativeMaintenance ... hotend`?**
 [Startup repair without requiring Ready](docs/en/RELEASE_v1.0.0-beta.2.md#recover-an-installed-r29-host-that-is-stuck-in-shutdown).
+
+**Beta.14 fixed-height OLED preview:** The canvas is displayed at a fixed
+**344×86 CSS pixels** (native 4:1 aspect ratio) irrespective of Fluidd
+window or dashboard column width. This closely matches half the width of
+the original two-column temperature card at normal desktop size.
+Narrow cards scroll horizontally instead of shrinking or distorting
+the display; offline messaging has the same fixed dimensions.
+Rendering, WebSocket preview polling, image animation, 4bpp transport,
+all MCU and printer controls remain unchanged.
+[Release notes](docs/en/RELEASE_v1.0.0-beta.14.md).
 
 **Beta.13 responsive OLED mirror:** Fixes the slow/browser-blank OLED mirror
 seen after beta.12 without changing physical OLED transport. Fluidd now uses

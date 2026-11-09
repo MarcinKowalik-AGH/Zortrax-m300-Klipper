@@ -1,5 +1,26 @@
 # Five-point M300 results in Fluidd
 
+## Fixed-height OLED preview regardless of window width (beta.14)
+
+The preview remains in the Temperature card, immediately beneath
+the temperature plot. In the usual two-column desktop layout it
+occupies approximately half the card's width. The actual CSS
+display size is now **344 × 86 px**, matching the original OLED
+256 × 64 aspect ratio (4:1). It no longer uses `width: 50%` and
+`height: auto`, which previously shrank the image vertically
+when the Fluidd dashboard column became narrower.
+
+The preview's containing element permits horizontal scrolling
+(`overflow-x: auto`) on narrow layouts; neither the image nor the
+offline placeholder scales, warps, or clips. This ensures a
+constant 86 px display height on both desktop and mobile.
+The physical 256 × 64 bitmap, canvas paint loop and all animated
+sprites stay exactly as in beta.13.
+
+Only the Fluidd component CSS and its layout contract changed.
+There is no new WebSocket traffic, additional MCU command,
+change to RLE/DMA/SPI/UART/ACK, or altered printer procedure.
+
 ## Responsive OLED preview with preserved animation (beta.13)
 
 The browser's normal Klipper object subscription is delivered by Moonraker

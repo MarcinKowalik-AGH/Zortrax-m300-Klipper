@@ -1,8 +1,15 @@
 # Zortrax M300 Classic — pierwsza instalacja
 
-[Wydanie v1.0.0-beta.13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.13) ·
+[Wydanie v1.0.0-beta.14](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.14) ·
 [Instalacja od pustego Raspberry Pi / Orange Pi](docs/pl/FIRST_INSTALL.md) ·
 [Pełny opis projektu po angielsku](README.md)
+
+**Beta.14:** Stała wysokość podglądu OLED we Fluidd: **86 px** przy
+szerokości **344 px** (proporcja 4:1), bez przeskalowywania po zmianie
+rozmiaru okna. Przy zbyt wąskiej karcie pojawia się przewijanie
+poziome, zamiast zmniejszania obrazu. Nie zmieniono animacji,
+odświeżania, połączenia WebSocket ani firmware MCU.
+[Opis beta.14](docs/pl/RELEASE_v1.0.0-beta.14.md).
 
 **Beta.13:** Podgląd OLED odświeża się szybciej przez osobny,
 wyłącznie odczytowy odczyt statusu Moonraker WebSocket, niezależny

@@ -3429,7 +3429,7 @@ diff --git a/src/components/widgets/thermals/M300OledPreview.vue b/src/component
 new file mode 100644
 --- /dev/null
 +++ b/src/components/widgets/thermals/M300OledPreview.vue
-@@ -0,0 +1,192 @@
+@@ -0,0 +1,197 @@
 +<template>
 +  <section
 +    v-if="preview"
@@ -3450,7 +3450,7 @@ new file mode 100644
 +    </div>
 +    <div
 +      v-if="!collapsed"
-+      class="pb-3"
++      class="m300-oled-viewport pb-3"
 +    >
 +      <canvas
 +        v-if="preview.image"
@@ -3606,20 +3606,25 @@ new file mode 100644
 +</script>
 +
 +<style scoped lang="scss">
-+.m300-oled-frame {
++.m300-oled-viewport {
++  width: 100%;
++  overflow-x: auto;
++}
++.m300-oled-frame,
++.m300-oled-unavailable {
 +  display: block;
-+  width: 50%;
-+  max-width: 50%;
++  width: 344px;
++  min-width: 344px;
++  max-width: none;
++  height: 86px;
++  min-height: 86px;
++  max-height: 86px;
 +  margin: 0 auto;
-+  height: auto;
-+  aspect-ratio: 4 / 1;
-+  image-rendering: pixelated;
++  box-sizing: border-box;
 +  background: #020610;
 +}
-+.m300-oled-unavailable {
-+  width: 50%;
-+  margin: 0 auto;
-+  background: #020610;
++.m300-oled-frame {
++  image-rendering: pixelated;
 +}
 +</style>
 diff --git a/src/util/m300-oled-preview.ts b/src/util/m300-oled-preview.ts
