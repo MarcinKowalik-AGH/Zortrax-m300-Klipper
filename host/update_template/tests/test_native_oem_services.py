@@ -602,9 +602,9 @@ def physical_panel(h):
 class PhysicalPanelDispatchTests(unittest.TestCase):
     def test_homing_macros_and_oled_rows_share_native_progress(self):
         for axes, label, command, g28 in (
-                ('xy', 'Homing XY', 'ZORTRAX_HOME_XY', 'G28 X Y'),
-                ('z', 'Homing Z', 'ZORTRAX_HOME_Z', 'G28 Z'),
-                ('xyz', 'Homing ALL', 'ZORTRAX_HOME_ALL', 'G28')):
+                ('xy', 'Home XY', 'ZORTRAX_HOME_XY', 'G28 X Y'),
+                ('z', 'Home Z', 'ZORTRAX_HOME_Z', 'G28 Z'),
+                ('xyz', 'Home XYZ', 'ZORTRAX_HOME_ALL', 'G28')):
             with self.subTest(axes=axes):
                 h = Harness()
                 oled, menu, ui, _, _ = physical_panel(h)
@@ -632,7 +632,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
                         oled._render(h.now)
                         before = oled._render_wire
                         oled._render(h.now + .5)
-                        self.assertEqual(ui.last_sprite, {'xy':'homing-xy','z':'homing-z','xyz':'homing-all'}[axes])
+                        self.assertEqual(ui.last_sprite, {'xy':'cartesian:home_xy','z':'cartesian:home_z','xyz':'cartesian:home_xyz'}[axes])
                         self.assertNotEqual(before, oled._render_wire)
                     native_home(params)
 
