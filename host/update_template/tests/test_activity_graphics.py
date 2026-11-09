@@ -35,7 +35,11 @@ class ActivityGraphicsTests(unittest.TestCase):
                 frames=[h.ui.get_oem_sprite('m04',rows,index,frame*.5) for frame in range(4)]
                 self.assertEqual(h.ui.last_sprite,key)
                 self.assertEqual({(w,height,len(raw)) for w,height,raw in frames},{(50,50,1250)})
-                self.assertEqual(len({raw for _,_,raw in frames}),4)
+                # The top carriage bounces: its outbound and inbound
+                # middle location is intentionally identical. The old
+                # under-platform marker was the only fourth-frame difference.
+                self.assertEqual(len({raw for _,_,raw in frames}),
+                                 3 if key == 'project-klipper' else 4)
                 for _,_,raw in frames:
                     tones={(value >> 4) for value in raw} | {(value & 15) for value in raw}
                     self.assertLessEqual(tones, {0,SLATE,ACCENT,BRIGHT})
