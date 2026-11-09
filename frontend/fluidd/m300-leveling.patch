@@ -3429,7 +3429,7 @@ diff --git a/src/components/widgets/thermals/M300OledPreview.vue b/src/component
 new file mode 100644
 --- /dev/null
 +++ b/src/components/widgets/thermals/M300OledPreview.vue
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,192 @@
 +<template>
 +  <section
 +    v-if="preview"
@@ -3524,7 +3524,9 @@ new file mode 100644
 +  private schedulePoll (delay: number) {
 +    if (this.disposed || this.collapsed || document.hidden) return
 +    this.clearPoll()
-+    this.pollTimer = window.setTimeout(() => { void this.poll() }, delay)
++    this.pollTimer = window.setTimeout(() => {
++      this.poll().catch(() => undefined)
++    }, delay)
 +  }
 +
 +  private async poll () {
