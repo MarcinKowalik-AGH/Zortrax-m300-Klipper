@@ -175,7 +175,8 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if kind in HOMING_ACTIONS:
             return Symbol(HOMING_ICONS[HOMING_ACTIONS[kind]], True)
         if kind == 'page' and target in PAGE_SYMBOLS:
-            return Symbol(PAGE_SYMBOLS[target], False)
+            key = PAGE_SYMBOLS[target]
+            return Symbol(key, key.startswith('cartesian:'))
         if kind == 'browse' and target == 'sd':
             return symbol('sd_read')
         if kind == 'fan_set' or kind == 'fan_test' and target == 'PRINT':
@@ -212,4 +213,4 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
             if name == 'M112':
                 return symbol('emergency_stop')
     key = PAGE_SYMBOLS.get(page) or PAGE_SYMBOLS.get(panel_page)
-    return Symbol(key, False) if key else None
+    return Symbol(key, key.startswith('cartesian:')) if key else None

@@ -59,6 +59,24 @@ class ActivityGraphicsTests(unittest.TestCase):
         self.assertIsNone(graphics.get('cartesian:invalid'))
         self.assertLessEqual(CartesianGraphics.frame.cache_info().currsize,36)
 
+    def test_move_axis_pages_animate_in_parent_and_selected_axis(self):
+        with session() as h:
+            h.menu.page='native_moves'
+            _, rows=h.menu.rows(h.now)
+            for axis in 'XYZ':
+                choice=next(i for i,(label,action) in enumerate(rows)
+                            if label=='Move '+axis)
+                first=h.ui.get_oem_sprite('m04',rows,choice,0.)
+                second=h.ui.get_oem_sprite('m04',rows,choice,.5)
+                self.assertEqual(h.ui.last_sprite, 'cartesian:move_'+axis.lower())
+                self.assertNotEqual(first,second)
+                h.menu.page='native_move_'+axis.lower()
+                _,sub=h.menu.rows(h.now)
+                self.assertNotEqual(h.ui.get_oem_sprite('m04',sub,0,0.),
+                                    h.ui.get_oem_sprite('m04',sub,0,.5))
+                h.menu.page='native_moves'
+            self.assertFalse(any(event[0] in ('move','heat','fan') for event in h.events))
+
     def test_all_native_frames_decode_and_cache_stays_bounded(self):
         graphics=ActivityGraphics()
         for name in graphics.spec['symbols']:
