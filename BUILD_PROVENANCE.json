@@ -3,8 +3,8 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "mcu_release": "0.13.14.19-TONED-OLED-UART8",
   "host_update": "R16.12",
-  "github_commit": "29d326d20bc07656789f2be64a8101996fcb7538",
-  "github_run_id": "42882069066",
+  "github_commit": "aee1204f0ba741ca09cf569d6ed3ff2f31ec8ecc",
+  "github_run_id": "42895826425",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -17,5 +17,5 @@
   "release_stage": "VERIFIED",
   "hotend_cooling_on_temperature": 50,
   "hotend_cooling_off_temperature": 45,
-  "distribution_version": "v1.0.0-beta.22"
+  "distribution_version": "v1.0.0-beta.23"
 }
