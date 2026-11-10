@@ -70,7 +70,8 @@ def main():
     for sprite in ((49, 50, bytes(1250)), (50, 50, b''), (50, 50, bytearray(1250))):
         try:
             sharp_sprite(sprite)
-        except ValueError:
+        except (ValueError, TypeError):
+            # lru_cache rejects unhashable mutable data before the body runs.
             pass
         else:
             raise AssertionError('Invalid frame accepted')
