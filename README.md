@@ -1,4 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.21
+# Zortrax M300 Classic — Klipper v1.0.0-beta.22
+
+> **Beta.22 — sharp host menu icons:** 24 activity designs restored to crisp binary pixels and 37 OEM groups thresholded for a physical-OLED visual test. Source evidence remains intact; no MCU flash. [Instructions, port 4480 and optional comparison](docs/en/RELEASE_v1.0.0-beta.22.md).
 
 **Beta.21:** Toned activity icons and native 4bpp autonomous MCU artwork. [Release notes and host/MCU update instructions](docs/en/RELEASE_v1.0.0-beta.21.md). The illustrated handbook below retains its explicit beta.20 visual baseline.
 

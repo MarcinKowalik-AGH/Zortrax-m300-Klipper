@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from functools import lru_cache
 import zlib
 
 from .m300_activity_graphics import ActivityGraphics, PREFIX, HOMING_ICONS
@@ -49,8 +50,27 @@ SCREW_LOW={'rear_left':'0x0801e90c','rear_right':'0x0801ed14',
 SCREW_HIGH={'rear_left':'0x0801f4c0','rear_right':'0x0801f8b4',
             'front':'0x0801fc6c'}
 
+SHARP_ICON_REVISION = 'SHARP-HOST-1'
+# Threshold packed nibbles independently: 0..7 -> 0, 8..15 -> 15.
+# This removes the added <=6 edge tones without changing a bright core.
+_SHARP_TABLE = bytes((240 if b >> 4 >= 8 else 0) |
+                     (15 if b & 15 >= 8 else 0) for b in range(256))
+
+
+@lru_cache(maxsize=64)
+def sharp_sprite(sprite):
+    """Cached presentation copy; never rewrite original OEM evidence/assets."""
+    width, height, raw = sprite
+    if (width, height) != (50, 50) or type(raw) is not bytes or len(raw) != 1250:
+        raise ValueError('Sharp OLED icons require a native 50x50 packed frame')
+    return width, height, raw.translate(_SHARP_TABLE)
+
+
 class OEMGraphics:
-    def __init__(self, path=None):
+    def __init__(self, path=None, *, sharp=False):
+        if type(sharp) is not bool:
+            raise ValueError('Sharp icon mode must be boolean')
+        self.sharp = sharp
         if path is None:
             path=Path(__file__).with_name('m300_oem_sprites_131.json')
         with open(path, encoding='utf-8') as fp:
@@ -66,6 +86,16 @@ class OEMGraphics:
         self.cache={}
 
     def get(self, addr, now=0.):
+        addr = str(addr).lower()
+        original = self._get_source(addr, now)
+        # Functional axis dimming and the three-tone Klipper wordmark are
+        # independent designs, not soft edge shading; preserve them exactly.
+        if original is not None and self.sharp and (
+                addr.startswith(PREFIX) or addr in self.frames):
+            return sharp_sprite(original)
+        return original
+
+    def _get_source(self, addr, now=0.):
         addr=str(addr).lower()
         if addr.startswith(PREFIX):
             if not hasattr(self, 'activity'):
