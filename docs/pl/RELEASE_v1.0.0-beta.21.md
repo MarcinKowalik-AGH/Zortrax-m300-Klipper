@@ -10,7 +10,7 @@ Wersja zastępuje beta.20. Host nadal R16.12; aplikacja MCU **0.13.14.19-TONED-O
 
 Po lewej poprzedni obraz, po prawej nowy. To render danych, nie fotografia drukarki ani pomiar fizycznej jasności. Cieniowane są dysza, stół, wentylatory, mesh, pliki/SD, połączenie i komunikaty. Oryginalne bitmapy OEM, osobne Home/Move oraz trójtonowe logo Klippera pozostają niezmienione — nie twierdzimy, że zmodyfikowano wszystkie ikony.
 
-Podczas pracy Klippera Orange Pi wysyła te same 4-bitowe klatki na fizyczny OLED i do podglądu Fluidd. Osobno aplikacja MCU ma teraz 4-bitowe zasoby swoich ekranów oczekiwania, utraty połączenia i błędów. Powtarzające się wiersze przechowuje tylko raz w pamięci Flash. Pozostaje bufor jednej linii **128 bajtów**, bez pełnego bufora obrazu 8192 bajty w MCU. Nie zmieniono klasyfikacji błędów ani obsługi zatrzymania.
+Podczas pracy Klippera Orange Pi wysyła te same 4-bitowe klatki na fizyczny OLED i do podglądu Fluidd. Osobno aplikacja MCU ma teraz 4-bitowe zasoby swoich ekranów oczekiwania, utraty połączenia i błędów. Powtarzające się wiersze przechowuje tylko raz w pamięci Flash i bezstratnie kompresuje ich 4-bitowe wartości. Dekoder przetwarza najwyżej 50 tokenów na wiersz; nie oblicza filtrów ani nie zmienia odcieni. Pozostaje bufor jednej linii **128 bajtów**, bez pełnego bufora obrazu 8192 bajty w MCU. Nie zmieniono klasyfikacji błędów ani obsługi zatrzymania.
 
 ## Aktualizacja istniejącej drukarki
 

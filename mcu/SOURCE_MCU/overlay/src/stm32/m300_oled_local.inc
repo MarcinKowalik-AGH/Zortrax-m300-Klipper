@@ -118,11 +118,18 @@ static void local_render_icon(unsigned row) {
     unsigned y=row-7u;
     const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
     const uint8_t *pixels=(local_error.code || local_error.kind)
-        ? local_error_rows[local_error_frames[error->icon][local_animation_frame][y]]
-        : local_activity_rows[local_activity_frames[local_reason>=2u][local_animation_frame][y]];
-    for(unsigned x=0;x<M300_LOCAL_ICON_WIDTH;x++) {
-        unsigned level=(pixels[x>>1u]>>((x&1u)?0u:4u))&15u;
-        if(level)local_pixel(200u+x,(int)row,level);
+        ? local_error_rle+local_error_frames[error->icon][local_animation_frame][y]
+        : local_activity_rle+local_activity_frames[local_reason>=2u][local_animation_frame][y];
+    // Immutable, CI-verified row stream. Every token emits 1..16 pixels;
+    // at most 50 reads/writes per row, no allocation or full framebuffer.
+    unsigned x=0;
+    while(x<M300_LOCAL_ICON_WIDTH) {
+        unsigned token=*pixels++,end=x+(token>>4u)+1u,level=token&15u;
+        if(end>M300_LOCAL_ICON_WIDTH)end=M300_LOCAL_ICON_WIDTH;
+        while(x<end) {
+            if(level)local_pixel(200u+x,(int)row,level);
+            x++;
+        }
     }
 }
 static void local_render(unsigned row) {

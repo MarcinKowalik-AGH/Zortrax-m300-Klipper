@@ -101,23 +101,30 @@ class ArtworkContracts(unittest.TestCase):
         # Independent parsing: actual const flash lookup must reproduce EVERY
         # native pixel value, not just binary foreground membership.
         def parsed(source, prefix):
-            body = re.search(prefix+r'_rows\[\d+\]\[25\] = \{(.*?)\n\};', source, re.S)[1]
-            rows = bytes(int(v,16) for v in re.findall(r'0x([0-9a-f]{2})',body))
+            body = re.search(prefix+r'_rle\[\d+\] = \{(.*?)\n\};',source,re.S)[1]
+            stream = bytes(int(v,16) for v in re.findall(r'0x([0-9a-f]{2})',body))
             body = re.search(prefix+r'_frames\[\d+\]\[4\]\[50\] = \{(.*?)\n\};',source,re.S)[1]
-            ids = [int(v) for v in re.findall(r'\d+',body)]
-            return rows, ids
+            offsets = [int(v) for v in re.findall(r'\d+',body)]
+            def decode(offset):
+                pixels=[]
+                while len(pixels)<50:
+                    token=stream[offset]; offset+=1
+                    pixels.extend([token&15]*((token>>4)+1))
+                    self.assertLessEqual(len(pixels),50)
+                return bytes((pixels[i]<<4)|pixels[i+1] for i in range(0,50,2))
+            return decode, offsets
         bank = json.loads((OUT/'native_frames.json').read_text())
         error_spec = json.loads((HOST_FRAMES.parent/'m300_error_codes.json').read_text())
         error_names = list(dict.fromkeys(item['icon'] for item in error_spec['codes']+error_spec['native']))
         groups = [(MCU_FRAMES,'local_activity',['waiting_klipper','connection_lost']),
                   (MCU_FRAMES.with_name('m300_error_icons.inc'),'local_error',error_names)]
         for path,prefix,names in groups:
-            rows,ids = parsed(path.read_text(),prefix)
+            decode,ids = parsed(path.read_text(),prefix)
             self.assertEqual(len(ids),len(names)*4*50)
             for index,name in enumerate(names):
                 for frame in range(4):
                     expected = bytes.fromhex(bank['symbols'][name]['frames'][frame])
-                    actual = b''.join(rows[i*25:(i+1)*25] for i in ids[(index*4+frame)*50:(index*4+frame+1)*50])
+                    actual = b''.join(decode(i) for i in ids[(index*4+frame)*50:(index*4+frame+1)*50])
                     self.assertEqual(actual,expected,(name,frame))
 
     def test_download_has_all_animated_gifs_and_individual_frames(self):

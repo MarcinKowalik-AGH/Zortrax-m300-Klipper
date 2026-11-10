@@ -77,10 +77,10 @@ def main():
     rom=0
     for prefix,file in [('local_activity','m300_oled_activity.inc'),('local_error','m300_error_icons.inc')]:
         s=(mcu/file).read_text()
-        rows=int(re.search(prefix+r'_rows\[(\d+)\]\[25\]',s)[1])
+        encoded=int(re.search(prefix+r'_rle\[(\d+)\]',s)[1])
         banks=int(re.search(prefix+r'_frames\[(\d+)\]\[4\]\[50\]',s)[1])
-        rom+=rows*25+banks*4*50*2
-    assert rom<=22000,rom
+        rom+=encoded+banks*4*50*2
+    assert rom<=16000,rom
     assert 'static uint8_t local_row[128];' in (mcu/'m300_oled_local.inc').read_text()
     report=dict(status='PASS_OLED_TONES',symbols=24,frames=len(all_frames),
                 native_icon_bytes=1250,frame_ms=500,original_bright_pixels_preserved=True,

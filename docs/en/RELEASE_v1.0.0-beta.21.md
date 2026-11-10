@@ -30,3 +30,5 @@ The release requires the full matching ARM/host/native-Klippy/Fluidd CI, previou
 Tonal edges can cost bandwidth: isolated icon RLE payload averages rise from about 498 to 625 bytes/frame across 96 frames (excluding protocol overhead and unrelated screen content). Packet bounds and animation timing are unchanged. The report is REPORTS/OLED_TONES.json; no unmeasured latency guarantee is made.
 
 The existing 65-screen handbook remains an explicitly versioned beta.20 reference. This release supplement and its image document the new activity artwork; controls and functions have not changed.
+
+The MCU stores deduplicated scanlines as lossless 4bpp runs (count and unmodified luminance). Decoding is bounded to 50 tokens/pixels per row and uses the existing 128-byte line buffer. The ROM/RAM linker limits remain unchanged.

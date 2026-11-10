@@ -236,6 +236,19 @@ static void test_navigation_report_coalescing(void) {
     assert(snapshot_count == initial + 11 && !snapshot_v2 && snapshot_invalid == 1);
 }
 
+// Independent test-only decoding of the immutable 4bpp ROM row stream.
+static void expected_icon_row(const uint8_t *source, uint8_t result[25]) {
+    memset(result,0,25);
+    unsigned total=0,tokens=0;
+    while(total<50) {
+        assert(++tokens<=50);
+        unsigned token=*source++,length=(token>>4)+1,level=token&15;
+        assert(total+length<=50);
+        for(unsigned j=0;j<length;j++,total++)
+            result[total/2]|=level<<((total&1u)?0:4);
+    }
+}
+
 int main(void) {
     const char *baud_env=getenv("M300_BAUD");
     if(baud_env)fake_baud=strtoul(baud_env,NULL,10);
@@ -295,11 +308,11 @@ int main(void) {
             memcpy(frame+(y+7)*128+100,wire+saved,26);
         }
         assert(local_state==LOCAL_READY && local_animation_frame==(animation&3u));
-        for(unsigned y=0;y<50;y++)for(unsigned x=0;x<52;x++) {
-            unsigned actual=(frame[(y+7)*128+100+x/2]>>((x&1u)?0:4))&15u;
-            const uint8_t *pixels=local_activity_rows[local_activity_frames[0][animation&3u][y]];
-            unsigned expected=x<50 ? (pixels[x/2]>>((x&1u)?0:4))&15u : 0;
-            assert(actual==expected);
+        for(unsigned y=0;y<50;y++) {
+            uint8_t expected[25];
+            expected_icon_row(local_activity_rle+local_activity_frames[0][animation&3u][y],expected);
+            assert(!memcmp(frame+(y+7)*128+100,expected,25));
+            assert(frame[(y+7)*128+125]==0); // last two window pixels stay black
         }
         // Keep the fixed-size test wire buffer bounded across complete cycles.
         byte_count=0;
@@ -321,7 +334,8 @@ int main(void) {
                 local_animation_frame=f;
                 for(unsigned y=0;y<50;y++) {
                     local_render(y+7);
-                    const uint8_t *expected=local_error_rows[local_error_frames[text->icon][f][y]];
+                    uint8_t expected[25];
+                    expected_icon_row(local_error_rle+local_error_frames[text->icon][f][y],expected);
                     assert(!memcmp(local_row+100,expected,25));
                     for(unsigned x=0;x<25;x++) {
                         unsigned hi=expected[x]>>4,lo=expected[x]&15;
