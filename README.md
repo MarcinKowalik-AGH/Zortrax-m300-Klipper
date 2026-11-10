@@ -1,10 +1,12 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.17
+# Zortrax M300 Classic — Klipper v1.0.0-beta.19
 
-> **Complete illustrated Polish manual:** [start here](README_PL.md) · [OLED menu and 43 rendered screens](docs/pl/OLED_MENU_REFERENCE.md) · [technical reference](docs/pl/TECHNICAL_REFERENCE.md) · [documentation verification](docs/pl/DOCUMENTATION_CHECK.md). Documentation baseline: beta.17; runtime code is unchanged.
+> **Complete illustrated Polish manual:** [start here](README_PL.md) · [OLED menu and 43 rendered screens](docs/pl/OLED_MENU_REFERENCE.md) · [technical reference](docs/pl/TECHNICAL_REFERENCE.md) · [documentation verification](docs/pl/DOCUMENTATION_CHECK.md). Documentation baseline: beta.17; newer front-end controls are described in beta.19. The runtime MCU and host protocol are unchanged.
 
-[Download v1.0.0-beta.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.17) ·
+[Download v1.0.0-beta.19](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.19) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
+
+**Beta.19 — OLED zoom controls:** Cyan-on-black ×1, ×2 and ×3 pixel-perfect magnification buttons are mounted immediately to the right of the Fluidd OLED mirror. Choice is saved in the browser; the cached frame is repainted without a new network request or PNG decode. [Release notes](docs/en/RELEASE_v1.0.0-beta.19.md).
 
 For a blank Raspberry Pi / Orange Pi, use the versioned beta bundle and its
 first-install helper after KIAUH has prepared the services. The bundle contains
