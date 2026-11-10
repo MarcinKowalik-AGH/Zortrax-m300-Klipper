@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-beta.16 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-beta.17 — instalacja od początku
 
 Instrukcja zakłada, że w drukarce jest już zgodny bootloader M300 obsługujący
 aktualizację z SD, a na Raspberry Pi lub Orange Pi nie ma jeszcze oprogramowania
@@ -97,11 +97,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.16/Zortrax_M300_Klipper_v1.0.0-beta.16.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.16/SHA256SUMS-v1.0.0-beta.16.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-beta.16.zip$' SHA256SUMS-v1.0.0-beta.16.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-beta.16.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-beta.16 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.17/Zortrax_M300_Klipper_v1.0.0-beta.17.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.17/SHA256SUMS-v1.0.0-beta.17.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-beta.17.zip$' SHA256SUMS-v1.0.0-beta.17.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-beta.17.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-beta.17 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -166,7 +166,7 @@ M105
 Oczekiwane: Ready, zgodne 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`,
 kontroler druku `0.13.16.29-UNIFIED-NATIVE-START`, cele temperatur 0°C i poprawne
 odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
-[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.16/docs/en/HARDWARE_VARIANTS.md)
+[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.17/docs/en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.
 
@@ -191,11 +191,11 @@ Procedura końcowa:
 END_PRINT
 ```
 
-[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.16/docs/pl/PRINT_CONTROL.md).
+[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.17/docs/pl/PRINT_CONTROL.md).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Tag i pliki `v1.0.0-beta.16` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
+Tag i pliki `v1.0.0-beta.17` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
 późniejszych aktualizacji projektu. Po tej pierwszej instalacji można ją
 sklonować i używać zwykłego instalatora `install-orange-pi.py --port 80`
 (jego historyczną wartością domyślną jest 4080). Nie aktualizuj portu przyciskiem
@@ -212,3 +212,10 @@ instalacji pozostają do wykonania wydruk, pauza/wznowienie/M600 i ocena łącza
 [UART Raspberry Pi](https://www.raspberrypi.com/documentation/computers/configuration.html),
 [Armbian](https://docs.armbian.com/User-Guide_Getting-Started/),
 [Moonraker](https://moonraker.readthedocs.io/en/latest/installation/).
+
+
+## Dokumentacja po uruchomieniu
+
+[Obsługa](USER_GUIDE.md) · [Menu OLED i rendery](OLED_MENU_REFERENCE.md) · [Mesh](BED_MESH_AND_LEVELING.md) · [Parametry i termika](TECHNICAL_REFERENCE.md) · [Spis dokumentacji](../../README_PL.md).
+
+Ta instrukcja opisuje pierwszą instalację. Dokumentacja użytkowa z 10.11.2026 nie zmienia kodu wykonawczego beta.17 ani parametrów istniejącej drukarki. Host API podglądu to NAV-EVENT-1, frontend beta.17 to NAV-PIPELINE-2.

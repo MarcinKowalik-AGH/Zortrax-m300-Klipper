@@ -1,0 +1,254 @@
+{
+  "release": "v1.0.0-beta.17",
+  "count": 39,
+  "macros": [
+    {
+      "name": "BED_MESH",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "BED_TEMP",
+        "CENTER_BOUNDS",
+        "CENTER_PAD_WIDTH",
+        "CENTER_X",
+        "CENTER_Y",
+        "CORNER_PAD_WIDTH",
+        "EDGE_MARGIN",
+        "FIT_TRAVEL",
+        "FRONT_LEFT_BOUNDS",
+        "FRONT_LEFT_X",
+        "FRONT_LEFT_Y",
+        "FRONT_RIGHT_BOUNDS",
+        "FRONT_RIGHT_X",
+        "FRONT_RIGHT_Y",
+        "HOTEND_TEMP",
+        "PREVIEW",
+        "PROFILE",
+        "REAR_LEFT_BOUNDS",
+        "REAR_LEFT_X",
+        "REAR_LEFT_Y",
+        "REAR_RIGHT_BOUNDS",
+        "REAR_RIGHT_X",
+        "REAR_RIGHT_Y",
+        "TRAVEL_MARGIN"
+      ]
+    },
+    {
+      "name": "CANCEL_PRINT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "END_PRINT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "PID_BED",
+      "source": "host/config/klipper_calibration.cfg",
+      "parameters": [
+        "TARGET"
+      ]
+    },
+    {
+      "name": "PID_HOTEND",
+      "source": "host/config/klipper_calibration.cfg",
+      "parameters": [
+        "TARGET"
+      ]
+    },
+    {
+      "name": "PID_SAVE",
+      "source": "host/config/klipper_calibration.cfg",
+      "parameters": []
+    },
+    {
+      "name": "START_PRINT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "BED_TEMP",
+        "EXTRUDER_TEMP",
+        "MESH",
+        "PURGE"
+      ]
+    },
+    {
+      "name": "TEST_ZORTRAX_STATUS",
+      "source": "host/config/m300_tests.cfg",
+      "parameters": []
+    },
+    {
+      "name": "TEST_ZORTRAX_XY",
+      "source": "host/config/m300_tests.cfg",
+      "parameters": [
+        "LOOPS",
+        "SPEED"
+      ]
+    },
+    {
+      "name": "ZORTRAX_BUZZER",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_CHANGE",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    },
+    {
+      "name": "ZORTRAX_FANS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_FAN_LOWER",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_FAN_TEST_END",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_FAN_TEST_START",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_FAN_UPPER",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_FULL_PLATFORM_PREHEAT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HEAT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    },
+    {
+      "name": "ZORTRAX_HEAT_PLATFORM",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    },
+    {
+      "name": "ZORTRAX_HELP",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HOME_ALL",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HOME_X",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HOME_XY",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HOME_Y",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_HOME_Z",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_INFORMATION",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_LANGUAGE",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_LEVEL",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    },
+    {
+      "name": "ZORTRAX_LIGHT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_LOAD",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    },
+    {
+      "name": "ZORTRAX_MODELS_SORT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_PLATFORM_DOWN",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "DISTANCE"
+      ]
+    },
+    {
+      "name": "ZORTRAX_PLATFORM_UP",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "DISTANCE"
+      ]
+    },
+    {
+      "name": "ZORTRAX_REPRINT",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_SCREEN",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_SETTINGS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_SLEEP_MODE",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_STATUS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
+    },
+    {
+      "name": "ZORTRAX_UNLOAD",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "TEMP"
+      ]
+    }
+  ]
+}

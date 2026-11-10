@@ -1,0 +1,44 @@
+[
+  {
+    "file": "docs/img/fluidd_overview.png",
+    "original_filename": "Zrzut ekranu 2026-11-10 o 07.25.16.png",
+    "original_sha256": "4fd580ae84ac407a33bc5e33414117c916a5c66375aec47c182eb7cf6bddfe59",
+    "published_sha256": "4fd580ae84ac407a33bc5e33414117c916a5c66375aec47c182eb7cf6bddfe59",
+    "dimensions": [
+      1776,
+      1200
+    ],
+    "source": "User-supplied screenshot, permission to publish in project documentation",
+    "capture_date": "2026-11-10",
+    "caption_pl": "Aktualny widok Fluidd",
+    "processing": "Original uploaded PNG bytes; no cropping, scaling, palette change or text reconstruction"
+  },
+  {
+    "file": "docs/img/macros_panel.png",
+    "original_filename": "Zrzut ekranu 2026-11-8 o 22.40.50(1).png",
+    "original_sha256": "ee1f70ce5dadbf618a7162a44e1a2ed68ad39c81c68d549562ced879941aa707",
+    "published_sha256": "ee1f70ce5dadbf618a7162a44e1a2ed68ad39c81c68d549562ced879941aa707",
+    "dimensions": [
+      714,
+      920
+    ],
+    "source": "User-supplied screenshot, permission to publish in project documentation",
+    "capture_date": "2026-11-08",
+    "caption_pl": "Historyczny podział makr, nie stan bieżący",
+    "processing": "Original uploaded PNG bytes; no cropping, scaling, palette change or text reconstruction"
+  },
+  {
+    "file": "docs/img/bed_mesh_preview.png",
+    "original_filename": "Zrzut ekranu 2026-11-9 o 15.44.03.png",
+    "original_sha256": "18d26bf4df2e4094b6ebe568d4b9853412309e2ab14382d50df796288ea0c15c",
+    "published_sha256": "18d26bf4df2e4094b6ebe568d4b9853412309e2ab14382d50df796288ea0c15c",
+    "dimensions": [
+      1426,
+      1208
+    ],
+    "source": "User-supplied screenshot, permission to publish in project documentation",
+    "capture_date": "2026-11-09",
+    "caption_pl": "Mesh m300_pads, profil nieaktywny",
+    "processing": "Original uploaded PNG bytes; no cropping, scaling, palette change or text reconstruction"
+  }
+]
