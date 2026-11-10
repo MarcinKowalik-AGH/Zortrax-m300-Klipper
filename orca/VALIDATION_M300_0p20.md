@@ -54,12 +54,12 @@ Kody Z-Code identyfikują materiały w **projekcie Inventure** i **nie są autom
 2. Wszystkie 144/334/123 pola pozostały obecne, ale ustawienia rzeczywistej komory grzewczej, filtracji i power-loss recovery wyłączono (M300 Classic nie ma tych funkcji).
 3. Wszelkie prędkości w G-code to mm/s; `retraction_speed_mm_min_or_zsuite_setting` w źródle nie ma potwierdzonej jednostki — nie przepisano wartości 73/80 jako mm/s. Zastosowano nominalne 35 mm/s i dodatkowe ograniczenia dla FLEX.
 4. Skorygowano niespójności w źródle: Z-PCABS 270→265°C, 115→105°C stołu; Z-ULTRAT Plus temperatura następnych warstw 235→250°C; Z-SUPPORT 220→240°C, Z-SUPPORT Plus 220→245°C; typ Z-NYLON ABS→PA.
-5. Materiały Z-SUPPORT (3) katalogowo obecne, lecz oznaczone błędem jako materiały dual; Z-PEEK (380°C) oznaczony jako niekompatybilny z `max_temp=270`. Pozostałe profile spoza siedmiu materiałów firmowo wymienionych dla M300 Classic są **eksperymentalne**.
+5. Materiały Z-SUPPORT (3) katalogowo obecne i widoczne dla jednej głowicy, lecz nie da się używać odrębnych, rozpuszczalnych podpór równocześnie z filamentem modelowym; Z-PEEK (380°C) z maską `filament_printable=0` oznaczony jako niekompatybilny z `max_temp=270`. Pozostałe profile spoza siedmiu materiałów firmowo wymienionych dla M300 Classic są **eksperymentalne**.
 6. M300 ma obszar **300×300×300**, a 305 mm pozycji Y jest strefą parkowania, nie dodatkowym obszarem druku. Limit `max_velocity=300`, `max_accel=700`, Z max 25/50, SCV=2 pochodzą z bieżącej konfiguracji portu Klippera, nie z fabrycznego pliku Z-SUITE.
 7. Fabryczna specyfikacja M300 mówi o hotend max 290°C i stole max 105°C, podczas gdy aktualny Klipper ma odpowiednio 270°C i 120°C; przyjęto ostrożniejsze limity operacyjne 265°C i 105°C.
 
 ## Przyjęcie instalacji
-W Orca: **File > Import > Import Configs** → plik `.orca_printer` → wybierz `Zortrax M300 0.4 nozzle` i `0.20mm Standard @Zortrax M300 0.4 nozzle`. Sprawdź 18 materiałów oznaczonych `@Zortrax M300`. Przetnij testowy model dla Z-PLA Pro, obejrzyj G-code pod kątem `START_PRINT`/`END_PRINT`, braku wywołania konwertera i braku prędkości/temperatur poza limitami. Na fizycznej drukarce kwalifikuj homing, ruch, grzanie, wentylatory, purge, bed-mesh, raft i wydruk dopiero po sprawdzeniu stanu Ready i jego zabezpieczeń. **Nie drukuj Z-PEEK ani Z-SUPPORT w konfiguracji jednogłowicowej.**
+W Orca: **File > Import > Import Configs** → plik `.orca_printer` → wybierz `Zortrax M300 0.4 nozzle` i `0.20mm Standard @Zortrax M300 0.4 nozzle`. Sprawdź 18 materiałów oznaczonych `@Zortrax M300`. Przetnij testowy model dla Z-PLA Pro, obejrzyj G-code pod kątem `START_PRINT`/`END_PRINT`, braku wywołania konwertera i braku prędkości/temperatur poza limitami. Na fizycznej drukarce kwalifikuj homing, ruch, grzanie, wentylatory, purge, bed-mesh, raft i wydruk dopiero po sprawdzeniu stanu Ready i jego zabezpieczeń. **Nie drukuj Z-PEEK. Materiałów Z-SUPPORT nie można użyć jako oddzielnego materiału podporowego równolegle z innym filamentem na jednogłowicowym M300.**
 
 ## Materiały źródłowe
 - `MarcinKowalik-AGH/Zortrax-Inventure-OrcaSlicer-integration`: `presets/Zortrax Inventure 0.4 nozzle - single.orca_printer`, `docs/ZCODE_HEADER_AND_MATERIALS.md`, `docs/analysis_databases/speed_accel_material_database_v2026-05-03.json`.
@@ -67,3 +67,6 @@ W Orca: **File > Import > Import Configs** → plik `.orca_printer` → wybierz 
 - Audyt `ZORTRAX_M300_STOCK_1.3.1_PELNA_INWENTARYZACJA_I_BRAKI_2026-10-18` na Google Drive.
 - Specyfikacja fabryczna: https://store.zortrax.com/sale/zortrax-outlet-m300classic1
 - Import w Orca: https://github.com/OrcaSlicer/OrcaSlicer/wiki/import_export
+
+## Poprawka kompatybilności pól OrcaSlicer
+Pole `filament_printable` to **maska bitowa ekstruderów**, nie poziom ostrzeżenia: `1` umożliwia użycie na pierwszym (jedynym) ekstruderze M300, `3` w Inventure dopuszcza oba ekstrudery, `0` zabrania użycia Z-PEEK. Dla 17 materiałów ustawiono `1`, dla Z-PEEK `0`. Pole `enable_power_loss_recovery` jest enumem tekstowym i ustawiono prawidłowe `disable` zamiast niepoprawnego `0`. Poprawka z audytu schematu OrcaSlicer wykonana bez zmian liczby i typów pól.
