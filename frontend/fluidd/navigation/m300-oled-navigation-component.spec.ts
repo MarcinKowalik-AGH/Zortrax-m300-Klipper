@@ -69,6 +69,7 @@ beforeEach(() => {
   control.starts = control.stops = 0
   images.length = 0
   draw.mockClear()
+  window.localStorage.clear()
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(false)
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: draw, fillRect: vi.fn() } as unknown as CanvasRenderingContext2D)
   vi.stubGlobal('Image', TestImage)
@@ -92,10 +93,10 @@ describe('M300 navigation canvas', () => {
   it('adapts backing pixels to a fractional DPR rather than stretching them', async () => {
     vi.stubGlobal('devicePixelRatio', 1.25)
     const view = await mountPreview()
-    expect(view.find('canvas').attributes('width')).toBe('516')
-    expect(view.find('canvas').attributes('height')).toBe('132')
-    expect(view.find('canvas').attributes('style')).toContain('width: 412.8px;')
-    expect(view.find('section').attributes('data-pixel-scale')).toBe('2')
+    expect(view.find('canvas').attributes('width')).toBe('260')
+    expect(view.find('canvas').attributes('height')).toBe('68')
+    expect(view.find('canvas').attributes('style')).toContain('width: 208px;')
+    expect(view.find('section').attributes('data-pixel-scale')).toBe('1')
   })
 
   it('coalesces navigation while decoding and never paints the superseded selection', async () => {
@@ -125,9 +126,69 @@ describe('M300 navigation canvas', () => {
     await vi.advanceTimersByTimeAsync(20)
     await Vue.nextTick(); await Vue.nextTick()
     expect(images).toHaveLength(1)
+    expect(view.find('canvas').attributes('width')).toBe('516')
+    expect(view.find('canvas').attributes('height')).toBe('132')
+    expect(draw).toHaveBeenLastCalledWith(images[0], 2, 2, 512, 128)
+  })
+
+  it('places three cyan zoom buttons on the right of the OLED scroll viewport', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const view = await mountPreview()
+    const buttons = view.findAll('.m300-oled-zoom-button')
+    expect(buttons.length).toBe(3)
+    expect(buttons.wrappers.map(button => button.text())).toEqual(['×1', '×2', '×3'])
+    expect(buttons.at(0)!.attributes('aria-pressed')).toBe('true')
+    expect(buttons.at(1)!.attributes('aria-pressed')).toBe('false')
+    expect(view.find('.m300-oled-zoom-controls').element.parentElement)
+      .toBe(view.find('.m300-oled-viewport').element.parentElement)
+    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-1')
+  })
+
+  it('changes ×1 → ×2 → ×3 → ×1 without requesting or decoding another PNG', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const view = await mountPreview()
+    expect(images.length).toBe(1)
+    images[0].onload?.()
+    const originalDecodes = images.length
+    const levels = [
+      { number: 1, width: '516', height: '132', drawWidth: 512, drawHeight: 128, value: '2' },
+      { number: 2, width: '772', height: '196', drawWidth: 768, drawHeight: 192, value: '3' },
+      { number: 0, width: '260', height: '68', drawWidth: 256, drawHeight: 64, value: '1' }
+    ]
+    for (const level of levels) {
+      await view.findAll('.m300-oled-zoom-button').at(level.number)!.trigger('click')
+      await vi.advanceTimersByTimeAsync(20)
+      await Vue.nextTick(); await Vue.nextTick()
+      expect(view.find('canvas').attributes('width')).toBe(level.width)
+      expect(view.find('canvas').attributes('height')).toBe(level.height)
+      expect(view.findAll('.m300-oled-zoom-button').at(level.number)!.attributes('aria-pressed')).toBe('true')
+      expect(draw).toHaveBeenLastCalledWith(images[0], 2, 2, level.drawWidth, level.drawHeight)
+      expect(images).toHaveLength(originalDecodes)
+      expect(window.localStorage.getItem('m300-oled-preview-zoom')).toBe(level.value)
+      expect(control.starts).toBeGreaterThan(0)
+    }
+  })
+
+  it('restores the selected zoom after reopening without changing the host', async () => {
+    vi.stubGlobal('devicePixelRatio', 2)
+    window.localStorage.setItem('m300-oled-preview-zoom', '3')
+    const view = await mountPreview()
+    expect(view.find('canvas').attributes('width')).toBe('1540')
+    expect(view.find('canvas').attributes('height')).toBe('388')
+    expect(view.findAll('.m300-oled-zoom-button').at(2)!.attributes('aria-pressed')).toBe('true')
+    expect(control.starts).toBeGreaterThan(0)
+  })
+
+  it('uses square device pixels at fractional DPR when x2 is selected', async () => {
+    vi.stubGlobal('devicePixelRatio', 1.25)
+    const view = await mountPreview()
+    await view.findAll('.m300-oled-zoom-button').at(1)!.trigger('click')
+    await vi.advanceTimersByTimeAsync(20)
+    await Vue.nextTick(); await Vue.nextTick()
     expect(view.find('canvas').attributes('width')).toBe('772')
     expect(view.find('canvas').attributes('height')).toBe('196')
-    expect(draw).toHaveBeenLastCalledWith(images[0], 2, 2, 768, 192)
+    expect(view.find('section').attributes('data-pixel-scale')).toBe('3')
+    expect(view.find('canvas').attributes('style')).toContain('width: 617.6px;')
   })
 
   it('cancels navigation when collapsed and re-arms when opened', async () => {

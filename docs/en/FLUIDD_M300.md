@@ -1,5 +1,17 @@
 # Five-point M300 results in Fluidd
 
+## Cyan OLED ×1 / ×2 / ×3 preview controls (beta.19)
+
+Three compact OLED-style controls sit to the right of the live display in the
+Temperature card. The current selection is highlighted and persisted as a browser
+preference. The magnified source image can scroll horizontally without moving
+the controls. Choosing ×1, ×2 or ×3 repaints the last decoded PNG; the event-driven
+navigation channel, normal status cadence, animations and the physical OLED are
+unchanged. Pixels are always integer device-pixel squares; at ordinary DPR 1/2
+source content targets 256×64, 512×128 or 768×192 CSS pixels, with a small border.
+At fractional DPR the dimensions snap to the nearest square device-pixel block.
+[Beta.19 notes](../pl/RELEASE_v1.0.0-beta.19.md).
+
 ## Fixed-height OLED preview regardless of window width (beta.14)
 
 The preview remains in the Temperature card, immediately beneath

@@ -3,10 +3,21 @@ export const OLED_WIDTH = 256
 export const OLED_HEIGHT = 64
 export const OLED_TARGET_CSS_WIDTH = 344
 
+// User-selected logical zoom is expressed in source OLED pixels per CSS pixel
+// at DPR 1. At fractional DPR the nearest integer DEVICE-pixel block wins.
+export type OledZoom = 1 | 2 | 3
+
+export function parseOledZoom (stored: string | null): OledZoom {
+  return stored === '3' ? 3 : stored === '2' ? 2 : 1
+}
+
 /** Equal integer DEVICE-pixel blocks, not fractional CSS stretching. */
-export function oledPixelLayout (ratio: number) {
+export function oledPixelLayout (ratio: number, zoom?: OledZoom) {
   const dpr = Number.isFinite(ratio) && ratio >= 0.125 && ratio <= 16 ? ratio : 1
-  const scale = Math.max(1, Math.min(16, Math.round(OLED_TARGET_CSS_WIDTH * dpr / OLED_WIDTH)))
+  // Default preserves the legacy test/auto geometry. The Fluidd widget
+  // always supplies explicit ×1/×2/×3 and never uses CSS interpolation.
+  const desiredBlock = zoom === undefined ? OLED_TARGET_CSS_WIDTH * dpr / OLED_WIDTH : zoom * dpr
+  const scale = Math.max(1, Math.min(16, Math.round(desiredBlock)))
   const width = OLED_WIDTH * scale
   const height = OLED_HEIGHT * scale
   // Guard pixels keep browser edge antialiasing outside the native OLED image.

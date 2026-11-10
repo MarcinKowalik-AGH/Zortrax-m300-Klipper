@@ -1,12 +1,14 @@
 # Zortrax M300 Classic — Klipper, Orange Pi i oryginalny OLED
 
-**Pełna instrukcja użytkownika i opis techniczny portu.** Stan dokumentacji: 10 listopada 2026; oprogramowanie odniesienia: **v1.0.0-beta.17**. Projekt dotyczy klasycznego M300 ze sterownikiem STM32F103, nie modeli Plus, Dual ani Inventure.
+**Pełna instrukcja użytkownika i opis techniczny portu.** Stan dokumentacji: 10 listopada 2026; oprogramowanie odniesienia: **v1.0.0-beta.19**. Projekt dotyczy klasycznego M300 ze sterownikiem STM32F103, nie modeli Plus, Dual ani Inventure.
 
-[Gotowa beta.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.17) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
+[Gotowa beta.19](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.19) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
 
 ![Fluidd: ruch, temperatury, podgląd OLED, makra i konsola](docs/img/fluidd_overview.png)
 
 *Rys. 1. Rzeczywisty interfejs użytkownika, zrzut z 10.11.2026. Panel temperatur zawiera podgląd OLED. Widoczne wartości, nazwy plików i stan menu są zapisem chwili wykonania zrzutu, nie zalecanymi nastawami.*
+
+**Beta.19:** Po prawej stronie podglądu OLED we Fluidd dodano cyjanowe przyciski **×1 / ×2 / ×3**. Każdy piksel pozostaje kwadratowy, wybór jest zapamiętywany w przeglądarce, a zmiana wielkości nie pobiera nowej klatki. [Opis zmiany i aktualizacji](docs/pl/RELEASE_v1.0.0-beta.19.md).
 
 ## Co jest w tym porcie
 
