@@ -30,9 +30,10 @@ for (let y=0; y<64; y++) for (let x=0; x<256; x++) {
   data.data[i+2]=((x+y)%3)*127; data.data[i+3]=255;
 }
 ctx.putImageData(data,0,0);
-window.testPixels = (width) => {
+window.testPixels = (width, zoom) => {
   document.querySelector('#viewport').style.width=width+'px';
-  const p = oledPixelLayout(window.devicePixelRatio), canvas=document.querySelector('#oled');
+  const p = zoom === null ? oledPixelLayout(window.devicePixelRatio) : oledPixelLayout(window.devicePixelRatio, zoom);
+  const canvas=document.querySelector('#oled');
   drawOledPixels(canvas,native,p);
   const r=canvas.getBoundingClientRect();
   return {...p,left:r.left,top:r.top,actualWidth:r.width,actualHeight:r.height};
@@ -79,8 +80,18 @@ def main():
                     page.set_content(markup)
                     page.add_script_tag(content=script)
                     page.wait_for_function('typeof window.testPixels === "function"')
-                    for width in (817.3, 607.7):
-                        layout = page.evaluate('(w) => window.testPixels(w)', width)
+                    # Retain all legacy screenshot cases, and also inspect the
+                    # new ×1/×2/×3 controls at representative real render DPRs.
+                    # Give magnified cases enough width to avoid clipping under
+                    # the scroll viewport (overflow behavior is separately
+                    # covered in the Vue component tests).
+                    cases = [(width, None) for width in (817.3, 607.7)]
+                    if ratio in (1, 1.25, 2, 3):
+                        cases.extend((940.3, zoom) for zoom in (1, 2, 3))
+                    for width, zoom in cases:
+                        layout = page.evaluate(
+                            '(args) => window.testPixels(args.width, args.zoom)',
+                            {'width': width, 'zoom': zoom})
                         # Capture the whole page: Firefox keeps a fixed device-pixel
                         # window in no_viewport mode. At high DPR the centered
                         # canvas can extend beyond its visible CSS viewport.
@@ -107,9 +118,10 @@ def main():
                             args.output.parent.mkdir(parents=True, exist_ok=True)
                             image.save(args.output.parent / f'OLED_PIXELS_FULL_{name}_{ratio}.png')
                             actual.save(args.output.parent / f'OLED_PIXELS_FAIL_{name}_{ratio}.png')
-                            raise AssertionError(f'{name} DPR={ratio}, width={width}: unequal/interpolated pixels at {box}; {layout}')
+                            raise AssertionError(f'{name} DPR={ratio}, zoom={zoom}, width={width}: unequal/interpolated pixels at {box}; {layout}')
                         results.append({'browser': name, 'requested_dpr': ratio, 'dpr': dpr,
-                                        'column_width': width, 'integer_scale': layout['scale'],
+                                        'column_width': width, 'zoom': zoom or 'legacy',
+                                        'integer_scale': layout['scale'],
                                         'screenshot_size': list(image.size),
                                         'compositor_origin_delta': match,
                                         'screen_pixels_verified': layout['width']*layout['height'], 'status': 'PASS'})
