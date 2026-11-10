@@ -85,13 +85,15 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
          text
        >
          <template v-if="error">
-@@ -24,7 +24,13 @@
+@@ -24,7 +24,15 @@
              {{ error.action }}
            </div>
          </template>
 -        <template v-else-if="status.busy">
 +        <template v-else-if="standaloneHoming">
-+          <div data-m300-homing>{{ standaloneHoming.message }}</div>
++          <div data-m300-homing>
++            {{ standaloneHoming.message }}
++          </div>
 +          <div>Homing only — no new mesh measurement.</div>
 +          <div>Nozzle actual: {{ actualTemperature('extruder') }} °C. Nozzle target: {{ targetTemperature('extruder') }} °C.</div>
 +          <div>Bed actual: {{ actualTemperature('heater_bed') }} °C. Bed target: {{ targetTemperature('heater_bed') }} °C.</div>
@@ -100,15 +102,19 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
            <template v-if="preparationMessage">
              {{ preparationMessage }}
            </template>
-@@ -40,10 +46,16 @@
+@@ -40,10 +48,20 @@
            Profile {{ profileName }} created.
            {{ active ? 'Compensation is active.' : 'Compensation remains inactive until loaded.' }}
          </template>
 +        <template v-else-if="status && status.state === 'IDLE'">
-+          <div data-m300-idle>Contact plan ready: 25 positions on five pads.</div>
++          <div data-m300-idle>
++            Contact plan ready: 25 positions on five pads.
++          </div>
 +          <div>All homes the axes. Calibrate starts BED_MESH, including heating and homing.</div>
 +          <div>Opening Tune does not start a measurement or enable compensation.</div>
-+          <div v-if="savedPreview">Saved profile {{ savedPreview.name }} is available for preview (not active).</div>
++          <div v-if="savedPreview">
++            Saved profile {{ savedPreview.name }} is available for preview (not active).
++          </div>
 +        </template>
          <template v-else>
            No new mesh profile was created.
@@ -118,7 +124,7 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
            {{ status.last_error }}
          </div>
        </v-alert>
-@@ -54,7 +66,7 @@
+@@ -54,7 +72,7 @@
        >
          Acknowledge
        </app-btn>
@@ -127,7 +133,7 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
          <p>
            Measured range: {{ status.last_attempt.span_mm.toFixed(4) }} mm.
            Allowed range: {{ status.last_attempt.limit_mm.toFixed(4) }} mm.
-@@ -72,7 +84,7 @@
+@@ -72,7 +90,7 @@
          </v-simple-table>
        </template>
        <app-btn
@@ -136,7 +142,7 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
          :disabled="!klippyReady || printerBusy"
          class="mt-3"
          @click="save"
-@@ -86,7 +98,7 @@
+@@ -86,7 +104,7 @@
  <script lang="ts">
  import { Component, Mixins } from 'vue-property-decorator'
  import StateMixin from '@/mixins/state'
@@ -145,7 +151,7 @@ diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/componen
  import { padMeshError } from '@/util/m300-feedback'
  
  @Component
-@@ -99,6 +111,21 @@
+@@ -99,6 +117,21 @@
  
    get accepted () {
      return isM300PadMeshAccepted(this.status)
