@@ -1,0 +1,13 @@
+{
+  "source_package_files": 42,
+  "archive_files": 21,
+  "archive_size_bytes": 150014,
+  "printer_fields": 144,
+  "process_fields": 334,
+  "filament_fields": 123,
+  "filament_count": 18,
+  "total_field_parity": 2692,
+  "zip_crc": "PASS",
+  "host_max_accel": 700,
+  "physical_print_test": "NOT RUN"
+}
