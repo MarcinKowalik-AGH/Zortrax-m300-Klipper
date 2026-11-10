@@ -1,5 +1,16 @@
 # Five-point M300 results in Fluidd
 
+## Pixel-color-matched, centered OLED and pinned 1×-height zoom controls (beta.20)
+
+The display is centered relative to the complete Temperature card using equal
+40 px left/right gutters. The ×1/×2/×3 control column stays beneath HIDE
+at the far-right card edge, even when the magnified OLED scrolls horizontally.
+Its total height equals that of the ×1 preview (e.g. 68 CSS px at DPR1 or
+66 CSS px at DPR2), regardless of selected zoom. Colors use the exact original
+16-level OLED palette: foreground #16A1FE, border #0A436C, selected #0C588E
+and background #020610. No host/MCU change or additional image decode.
+See [beta.20 notes](RELEASE_v1.0.0-beta.20.md).
+
 ## Cyan OLED ×1 / ×2 / ×3 preview controls (beta.19)
 
 Three compact OLED-style controls sit to the right of the live display in the

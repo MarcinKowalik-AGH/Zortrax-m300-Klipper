@@ -29,6 +29,7 @@ pnpm exec tsc --ignoreConfig --target ES2022 --module ES2022 --lib ES2022,DOM --
 python -m pip install --quiet playwright==1.57.0 Pillow==11.3.0
 python -m playwright install --with-deps chromium firefox
 python "$root/ci/check_oled_pixels.py" --module "$root/.ci/oled-browser" --output "$root/.ci/reports/OLED_PIXELS.json"
+python "$root/ci/check_oled_zoom_layout.py" --component "$root/frontend/fluidd/navigation/M300OledPreview.vue" --module "$root/.ci/oled-browser" --output "$root/.ci/reports/OLED_ZOOM_LAYOUT.json"
 pnpm run build
 
 cd "$work"

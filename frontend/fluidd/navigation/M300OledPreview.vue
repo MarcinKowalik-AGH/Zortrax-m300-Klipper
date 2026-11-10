@@ -4,7 +4,7 @@
     class="m300-oled-preview"
     :data-navigation="navigationActive ? 'event' : 'fallback'"
     data-preview-revision="NAV-PIPELINE-2"
-    data-zoom-controls="OLED-ZOOM-1"
+    data-zoom-controls="OLED-ZOOM-2"
     :data-pixel-scale="pixelLayout.scale"
     aria-label="Zortrax M300 OLED screen preview"
   >
@@ -52,6 +52,7 @@
         class="m300-oled-zoom-controls"
         role="group"
         aria-label="OLED preview pixel zoom"
+        :style="zoomControlsStyle"
       >
         <button
           v-for="level in zoomLevels"
@@ -126,6 +127,12 @@ export default class M300OledPreview extends Mixins(StateMixin) {
 
   get pixelStyle () {
     return oledPixelStyle(this.pixelLayout)
+  }
+
+  get zoomControlsStyle () {
+    // The toolbar always occupies the height of the ×1 canvas, regardless of
+    // the active zoom. Recalculate on DPR/zoom changes without fetching a frame.
+    return { height: `${oledPixelLayout(this.pixelLayout.dpr, 1).cssHeight}px` }
   }
 
   mounted () {
@@ -326,53 +333,65 @@ export default class M300OledPreview extends Mixins(StateMixin) {
 
 <style scoped lang="scss">
 .m300-oled-display-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 8px;
+  // Equal left and right gutters keep the OLED centered in the card itself,
+  // rather than in the space remaining beside the buttons.
+  --m300-oled-bright: #16a1fe; // exact brightness 15 of the host OLED palette
+  --m300-oled-border: #0a436c; // exact brightness 6
+  --m300-oled-selected: #0c588e; // exact brightness 7
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: start;
+  width: 100%;
   min-width: 0;
 }
 .m300-oled-viewport {
-  flex: 0 1 auto;
+  grid-column: 2;
+  width: 100%;
   min-width: 0;
-  max-width: calc(100% - 52px);
   overflow-x: auto;
 }
 .m300-oled-zoom-controls {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
-  flex: 0 0 40px;
+  box-sizing: border-box;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px;
+  flex: none;
+  width: 40px;
+  min-width: 40px;
+  gap: 1px;
+  padding: 2px;
   background: #020610;
-  border: 1px solid #17546d;
-  border-radius: 2px;
+  border: 1px solid var(--m300-oled-border);
+  border-radius: 0;
 }
 .m300-oled-zoom-button {
+  display: block;
   box-sizing: border-box;
-  width: 30px;
-  height: 26px;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
   padding: 0;
-  color: #00ccee;
+  color: var(--m300-oled-bright);
   background: #020610;
-  border: 1px solid #17546d;
+  border: 1px solid var(--m300-oled-border);
   border-radius: 0;
-  font: 700 12px/1 "Courier New", monospace;
+  font: 700 11px/1 "Courier New", monospace;
   text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .m300-oled-zoom-button:hover,
 .m300-oled-zoom-button:focus-visible {
-  border-color: #20e7ff;
-  outline: 1px solid #20e7ff;
-  outline-offset: 1px;
+  color: var(--m300-oled-bright);
+  border-color: var(--m300-oled-bright);
+  outline: 1px solid var(--m300-oled-bright);
+  outline-offset: -1px;
 }
 .m300-oled-zoom-button--selected {
-  color: #c6faff;
-  background: #07536b;
-  border-color: #20e7ff;
-  box-shadow: inset 0 0 0 1px #0f89aa;
+  color: var(--m300-oled-bright);
+  background: var(--m300-oled-selected);
+  border-color: var(--m300-oled-bright);
 }
 .m300-oled-frame,
 .m300-oled-unavailable {

@@ -141,7 +141,7 @@ describe('M300 navigation canvas', () => {
     expect(buttons.at(1)!.attributes('aria-pressed')).toBe('false')
     expect(view.find('.m300-oled-zoom-controls').element.parentElement)
       .toBe(view.find('.m300-oled-viewport').element.parentElement)
-    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-1')
+    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-2')
   })
 
   it('changes ×1 → ×2 → ×3 → ×1 without requesting or decoding another PNG', async () => {
@@ -189,6 +189,32 @@ describe('M300 navigation canvas', () => {
     expect(view.find('canvas').attributes('height')).toBe('196')
     expect(view.find('section').attributes('data-pixel-scale')).toBe('3')
     expect(view.find('canvas').attributes('style')).toContain('width: 617.6px;')
+  })
+
+  it('keeps the right-side zoom toolbar at x1 height when the OLED grows', async () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const view = await mountPreview()
+    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-2')
+    const controls = view.find('.m300-oled-zoom-controls')
+    expect(controls.attributes('style')).toContain('height: 68px;')
+    for (const index of [1, 2, 0]) {
+      await view.findAll('.m300-oled-zoom-button').at(index)!.trigger('click')
+      await vi.advanceTimersByTimeAsync(20)
+      await Vue.nextTick(); await Vue.nextTick()
+      expect(controls.attributes('style')).toContain('height: 68px;')
+    }
+
+    // DPR changes may adjust the smallest canvas's CSS height, but changing
+    // zoom never makes the toolbar as tall as x2 or x3 content.
+    vi.stubGlobal('devicePixelRatio', 2)
+    window.dispatchEvent(new Event('resize'))
+    await vi.advanceTimersByTimeAsync(20)
+    await Vue.nextTick(); await Vue.nextTick()
+    expect(controls.attributes('style')).toContain('height: 66px;')
+    await view.findAll('.m300-oled-zoom-button').at(2)!.trigger('click')
+    await vi.advanceTimersByTimeAsync(20)
+    await Vue.nextTick(); await Vue.nextTick()
+    expect(controls.attributes('style')).toContain('height: 66px;')
   })
 
   it('cancels navigation when collapsed and re-arms when opened', async () => {
