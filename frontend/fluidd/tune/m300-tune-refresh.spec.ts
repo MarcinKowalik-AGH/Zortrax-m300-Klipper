@@ -11,7 +11,7 @@ const deferred = <T>() => {
 
 function fixture () {
   let available = true
-  const printer = { bed_mesh: { profile_name: '', mesh_matrix: [[]] } } as Klipper.PrinterState
+  const printer = { bed_mesh: { profile_name: '', mesh_matrix: [[]] } } as unknown as Klipper.PrinterState
   const pending = deferred<{ status: Partial<Klipper.PrinterState> }>()
   const query = vi.fn(() => pending.promise)
   const publish = vi.fn()
@@ -28,13 +28,13 @@ const response = () => ({
   status: {
     bed_mesh: { profile_name: '', mesh_matrix: [[]], profiles: {} },
     m300_pad_mesh: { state: 'IDLE', busy: false, total_points: 25, points_measured: 0 }
-  } as Partial<Klipper.PrinterState>
+  } as unknown as Partial<Klipper.PrinterState>
 })
 
 describe('read-only M300 Tune snapshots', () => {
   it('recognizes the configured service before its first status arrives', () => {
     expect(supportsM300Tune({} as Klipper.PrinterState)).toBe(false)
-    expect(supportsM300Tune({ m300_pad_mesh: {} } as Klipper.PrinterState)).toBe(true)
+    expect(supportsM300Tune({ m300_pad_mesh: {} } as unknown as Klipper.PrinterState)).toBe(true)
     expect(supportsM300Tune({} as Klipper.PrinterState, { m300_pad_mesh: {} } as Klipper.SettingsState)).toBe(true)
   })
 
