@@ -1,3 +1,5 @@
+> ARCHIWALNY AUDYT STATYCZNY. Wyniki testu rzeczywistego i korekty R2: [ORCA_RUNTIME_AUDIT_R2.md](ORCA_RUNTIME_AUDIT_R2.md). W szczegolnosci stary opis blokady PEEK i braku testu slicera jest nieaktualny.
+
 # Audyt OrcaSlicer M300 Classic 0,20 mm (2026-11-10)
 
 ## Rezultat

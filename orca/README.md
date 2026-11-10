@@ -1,3 +1,5 @@
+> Aktualny pakiet: **R2**, sprawdzony w silniku OrcaSlicer 2.3.2: 17 profili PASS G-code, PEEK tylko katalog. [Wyniki i ograniczenia](ORCA_RUNTIME_AUDIT_R2.md). Zastap poprzedni preset po imporcie. Nie wykonano testu GUI ani fizycznego wydruku.
+
 # Zortrax M300 — OrcaSlicer 0,20 mm
 
 Pakiet `Zortrax_M300_Classic_0p20_18_filaments.orca_printer` zawiera **jeden preset drukarki**, **jeden proces 0,20 mm** oraz **18 presetów materiałów Zortrax**. Przygotowany pod **Klipper M300 Classic z Orange Pi**, a nie pod oryginalny interpreter Z-Code.

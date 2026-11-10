@@ -1,16 +1,47 @@
 {
-  "source_package_files": 42,
-  "archive_files": 21,
-  "archive_size_bytes": 150162,
-  "printer_fields": 144,
-  "process_fields": 334,
-  "filament_fields": 123,
-  "filament_count": 18,
-  "total_field_parity": 2692,
+  "orca_version": "2.3.2",
+  "profile_revision": "R2",
+  "source_sha256": "b696611f54e3805a35304b78a781d7392bb4f170dd4722e251af1cb4b28ce32f",
+  "bundle_sha256": "e1e0407a3ff23c8a2d82ba9db7a7122a65df7ac6ec400473601024e402c57363",
+  "materials": 18,
+  "pass_count": 17,
+  "fail_count": 0,
+  "unsupported_catalog_count": 1,
+  "gui_import_test": "NOT RUN",
+  "physical_print_test": "NOT RUN",
+  "metadata_adapter": [
+    "type",
+    "from=system"
+  ],
+  "schema_fields": {
+    "printer": [
+      144
+    ],
+    "process": [
+      334
+    ],
+    "filament": [
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123,
+      123
+    ]
+  },
   "zip_crc": "PASS",
-  "printable_mask_first_extruder": 1,
-  "peek_mask": 0,
-  "power_loss_recovery_enum": "disable",
-  "host_max_accel": 700,
-  "physical_print_test": "NOT RUN"
+  "tested_commit": "9c7f9013ddfaf86a11cd7ec4ff69d9cc6034486e",
+  "workflow_run_id": "42923979192"
 }
