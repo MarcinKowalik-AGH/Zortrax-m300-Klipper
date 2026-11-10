@@ -1,0 +1,153 @@
+diff --git a/src/views/Tune.vue b/src/views/Tune.vue
+--- a/src/views/Tune.vue
++++ b/src/views/Tune.vue
+@@ -2,24 +2,41 @@
+   <v-row
+     v-if="klippyReady"
+     :dense="$vuetify.breakpoint.smAndDown"
++    :data-m300-tune-revision="m300Tune ? tuneRevision : undefined"
+   >
+     <v-col
+       v-if="supportsBedMesh"
+       cols="12"
+       md="8"
+     >
+-      <m300-pad-contact-map v-if="!meshChartFirst" />
+       <bed-mesh-card
+         fullscreen
+-        :class="{ 'mb-2 mb-md-4': meshChartFirst }"
++        class="mb-2 mb-md-4"
+       />
+-      <m300-pad-contact-map v-if="meshChartFirst" />
++      <m300-pad-contact-map />
+     </v-col>
+     <v-col
+       cols="12"
+       md="4"
+     >
+       <m300-pad-mesh-status />
++      <div
++        v-if="m300Tune"
++        class="mb-2 text-caption"
++        data-m300-tune-help
++      >
++        All homes the axes only. BED_MESH / Calibrate measures the bed.
++        Opening Tune does not enable mesh compensation.
++        <app-btn
++          small
++          text
++          :disabled="!canRefreshMeshView"
++          data-m300-refresh
++          @click="refreshMeshView"
++        >
++          Refresh view
++        </app-btn>
++      </div>
+       <bed-mesh-controls
+         v-if="supportsBedMesh"
+         class="mb-2 mb-md-4"
+@@ -46,9 +63,10 @@
+ </template>
+ 
+ <script lang="ts">
+-import { Component, Mixins } from 'vue-property-decorator'
++import { Component, Mixins, Watch } from 'vue-property-decorator'
+ import StateMixin from '@/mixins/state'
+-import { hasBedMeshMatrix, m300PadMeshPreview } from '@/util/m300-pad-mesh'
++import { SocketActions } from '@/api/socketActions'
++import { M300TuneRefresh, M300_TUNE_REVISION, supportsM300Tune } from '@/util/m300-tune-refresh'
+ 
+ import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
+ import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
+@@ -70,9 +88,51 @@
+   }
+ })
+ export default class Tune extends Mixins(StateMixin) {
+-  get meshChartFirst (): boolean {
+-    const printer = this.$typedState.printer.printer
+-    return hasBedMeshMatrix(printer.bed_mesh?.mesh_matrix) || !!m300PadMeshPreview(printer)
++  readonly tuneRevision = M300_TUNE_REVISION
++  private meshRefresh: M300TuneRefresh | null = null
++  private disposed = false
++
++  get m300Tune (): boolean {
++    return supportsM300Tune(this.$typedState.printer.printer,
++      this.$typedGetters['printer/getPrinterSettings'])
++  }
++
++  get canRefreshMeshView (): boolean {
++    return !this.disposed && this.klippyReady && this.socketReady && this.m300Tune
++  }
++
++  mounted () {
++    this.meshRefresh = new M300TuneRefresh({
++      available: () => this.canRefreshMeshView,
++      state: () => this.$typedState.printer.printer,
++      query: () => SocketActions.printerObjectsQuery(
++        { bed_mesh: null, m300_pad_mesh: null }, { suppressError: true }
++      ),
++      publish: status => this.$typedDispatch('printer/onNotifyStatusUpdate', status)
++    })
++    this.refreshMeshView()
++  }
++
++  beforeDestroy () {
++    this.disposed = true
++    this.meshRefresh?.invalidate()
++  }
++
++  @Watch('canRefreshMeshView')
++  onMeshAvailabilityChanged (available: boolean) {
++    if (available) this.refreshMeshView()
++    else this.meshRefresh?.invalidate()
++  }
++
++  @Watch('m300Homing')
++  onM300HomeChanged (current: unknown, previous: unknown) {
++    // The All button retains its original G28; after it finishes, update
++    // both read-only views without starting BED_MESH or loading a profile.
++    if (previous && !current) this.refreshMeshView()
++  }
++
++  refreshMeshView () {
++    void this.meshRefresh?.refresh()
+   }
+ 
+   get supportsBedMesh (): boolean {
+diff --git a/src/components/widgets/bedmesh/BedMeshCard.vue b/src/components/widgets/bedmesh/BedMeshCard.vue
+--- a/src/components/widgets/bedmesh/BedMeshCard.vue
++++ b/src/components/widgets/bedmesh/BedMeshCard.vue
+@@ -74,6 +74,14 @@
+         :height="(isMobileViewport) ? 225 : 525"
+       />
+ 
++      <p
++        v-else-if="m300Tune"
++        class="text-caption"
++        data-m300-mesh-empty
++      >
++        No current M300 mesh to display. A saved m300_pads profile is previewed
++        when available; otherwise use BED_MESH / Calibrate. All only homes axes.
++      </p>
+       <span v-else>{{ $t('app.bedmesh.msg.not_loaded') }}</span>
+     </v-card-text>
+   </collapsable-card>
+@@ -87,5 +95,6 @@
+ import type { AppMeshes, MatrixType } from '@/store/mesh/types'
+ import { m300PadMeshPreview } from '@/util/m300-pad-mesh'
++import { supportsM300Tune } from '@/util/m300-tune-refresh'
+ 
+ @Component({
+   components: {
+@@ -93,6 +102,11 @@
+   }
+ })
+ export default class BedMeshCard extends Mixins(StateMixin, ToolheadMixin, BrowserMixin) {
++  get m300Tune (): boolean {
++    return supportsM300Tune(this.$typedState.printer.printer,
++      this.$typedGetters['printer/getPrinterSettings'])
++  }
++
+   get m300Preview () {
+     return m300PadMeshPreview(this.$typedState.printer.printer)
+   }
