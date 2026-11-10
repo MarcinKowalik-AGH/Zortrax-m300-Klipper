@@ -117,12 +117,13 @@ static void local_render_icon(unsigned row) {
     if(row<7u || row>=7u+M300_LOCAL_ICON_HEIGHT)return;
     unsigned y=row-7u;
     const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
-    const uint8_t *bits=(local_error.code || local_error.kind)
+    const uint8_t *pixels=(local_error.code || local_error.kind)
         ? local_error_rows[local_error_frames[error->icon][local_animation_frame][y]]
-        : local_activity_frames[local_reason>=2u][local_animation_frame]+y*7u;
-    for(unsigned x=0;x<M300_LOCAL_ICON_WIDTH;x++)
-        if(bits[x>>3u] & (0x80u>>(x&7u)))
-            local_pixel(200u+x,(int)row,M300_LOCAL_ICON_BRIGHT);
+        : local_activity_rows[local_activity_frames[local_reason>=2u][local_animation_frame][y]];
+    for(unsigned x=0;x<M300_LOCAL_ICON_WIDTH;x++) {
+        unsigned level=(pixels[x>>1u]>>((x&1u)?0u:4u))&15u;
+        if(level)local_pixel(200u+x,(int)row,level);
+    }
 }
 static void local_render(unsigned row) {
     local_render_row=row;

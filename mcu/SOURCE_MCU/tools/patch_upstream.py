@@ -16,7 +16,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.18-OEM-ERRORS-UART8"
+VERSION = "M300_CLASSIC-0.13.14.19-TONED-OLED-UART8"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "src/sched.c": "61c00658d8bb829f1e0344adf3e47939deea7f972381e8928e228fd168fab94b",

@@ -58,6 +58,7 @@ def main():
                                 '-s', 'tests', '-p', 'test_repository.py', '-v'], expected_tests=9)
     run('ui_activity_artwork', [sys.executable, ROOT/'ci/check_ui_symbols.py', '-v'],
         expected_tests=4)
+    run('toned_activity_transport', [sys.executable, ROOT/'ci/check_toned_activity.py'])
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
     run('first_install', [sys.executable, ROOT / 'ci/test_install_fresh.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',

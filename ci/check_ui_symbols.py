@@ -84,7 +84,9 @@ class ArtworkContracts(unittest.TestCase):
                 for raw, checksum in zip(record['frames'], record['sha256']):
                     packed = bytes.fromhex(raw)
                     self.assertEqual(len(packed), 1250)
-                    self.assertLessEqual(set(packed), {0, 15, 240, 255})
+                    levels = {v for b in packed for v in (b >> 4, b & 15)}
+                    self.assertTrue({0, 15}.issubset(levels))
+                    self.assertTrue(any(0 < level < 15 for level in levels))
                     self.assertEqual(hashlib.sha256(packed).hexdigest(), checksum)
                 svg = ET.fromstring((OUT/(name+'.svg')).read_text())
                 animations = svg.findall('.//{http://www.w3.org/2000/svg}animate')
@@ -96,19 +98,27 @@ class ArtworkContracts(unittest.TestCase):
                 self.assertNotEqual(drawing(name, 0), drawing(name, 1))
 
     def test_mcu_flash_frames_match_downloadable_native_artwork(self):
-        source = MCU_FRAMES.read_text()
-        values = bytes(int(raw, 16) for raw in re.findall(r'0x([0-9a-f]{2})', source))
-        self.assertEqual(len(values), 2800)
+        # Independent parsing: actual const flash lookup must reproduce EVERY
+        # native pixel value, not just binary foreground membership.
+        def parsed(source, prefix):
+            body = re.search(prefix+r'_rows\[\d+\]\[25\] = \{(.*?)\n\};', source, re.S)[1]
+            rows = bytes(int(v,16) for v in re.findall(r'0x([0-9a-f]{2})',body))
+            body = re.search(prefix+r'_frames\[\d+\]\[4\]\[50\] = \{(.*?)\n\};',source,re.S)[1]
+            ids = [int(v) for v in re.findall(r'\d+',body)]
+            return rows, ids
         bank = json.loads((OUT/'native_frames.json').read_text())
-        for index, name in enumerate(('waiting_klipper', 'connection_lost')):
-            for frame in range(4):
-                expected = bytes.fromhex(bank['symbols'][name]['frames'][frame])
-                bits = values[(index*4+frame)*350:(index*4+frame+1)*350]
-                for y in range(50):
-                    self.assertEqual(bits[y*7+6]&0x3f, 0)
-                    for x in range(50):
-                        pixel = (expected[y*25+x//2] >> (0 if x%2 else 4)) & 15
-                        self.assertEqual(bool(bits[y*7+x//8] & (128 >> (x%8))), bool(pixel))
+        error_spec = json.loads((HOST_FRAMES.parent/'m300_error_codes.json').read_text())
+        error_names = list(dict.fromkeys(item['icon'] for item in error_spec['codes']+error_spec['native']))
+        groups = [(MCU_FRAMES,'local_activity',['waiting_klipper','connection_lost']),
+                  (MCU_FRAMES.with_name('m300_error_icons.inc'),'local_error',error_names)]
+        for path,prefix,names in groups:
+            rows,ids = parsed(path.read_text(),prefix)
+            self.assertEqual(len(ids),len(names)*4*50)
+            for index,name in enumerate(names):
+                for frame in range(4):
+                    expected = bytes.fromhex(bank['symbols'][name]['frames'][frame])
+                    actual = b''.join(rows[i*25:(i+1)*25] for i in ids[(index*4+frame)*50:(index*4+frame+1)*50])
+                    self.assertEqual(actual,expected,(name,frame))
 
     def test_download_has_all_animated_gifs_and_individual_frames(self):
         with zipfile.ZipFile(OUT/'M300_ACTIVITY_SYMBOLS_24.zip') as archive:

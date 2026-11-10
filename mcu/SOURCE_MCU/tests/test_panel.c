@@ -297,12 +297,42 @@ int main(void) {
         assert(local_state==LOCAL_READY && local_animation_frame==(animation&3u));
         for(unsigned y=0;y<50;y++)for(unsigned x=0;x<52;x++) {
             unsigned actual=(frame[(y+7)*128+100+x/2]>>((x&1u)?0:4))&15u;
-            unsigned expected=x<50 && (local_activity_frames[0][animation&3u][y*7+x/8]&(0x80u>>(x&7u)))?15:0;
+            const uint8_t *pixels=local_activity_rows[local_activity_frames[0][animation&3u][y]];
+            unsigned expected=x<50 ? (pixels[x/2]>>((x&1u)?0:4))&15u : 0;
             assert(actual==expected);
         }
         // Keep the fixed-size test wire buffer bounded across complete cycles.
         byte_count=0;
     }
+    // Exercise the production local blitter for every OEM/native error and
+    // every animation frame. Metadata, SPI timing and fault ownership unchanged.
+    struct m300_error_state saved_error=local_error;
+    uint8_t saved_animation=local_animation_frame;
+    unsigned tested_tone_pixels=0;
+    for(unsigned group=0;group<2;group++) {
+        unsigned count=group ? sizeof(error_native)/sizeof(error_native[0])
+                             : sizeof(error_codes)/sizeof(error_codes[0]);
+        for(unsigned item=0;item<count;item++) {
+            local_error.code=group ? 0 : error_codes[item].code;
+            local_error.kind=group ? item : 0;
+            if(!local_error.code && !local_error.kind)continue;
+            const struct m300_error_text *text=m300_error_text(local_error.code,local_error.kind);
+            for(unsigned f=0;f<4;f++) {
+                local_animation_frame=f;
+                for(unsigned y=0;y<50;y++) {
+                    local_render(y+7);
+                    const uint8_t *expected=local_error_rows[local_error_frames[text->icon][f][y]];
+                    assert(!memcmp(local_row+100,expected,25));
+                    for(unsigned x=0;x<25;x++) {
+                        unsigned hi=expected[x]>>4,lo=expected[x]&15;
+                        tested_tone_pixels+=(hi>0 && hi<15)+(lo>0 && lo<15);
+                    }
+                }
+            }
+        }
+    }
+    assert(tested_tone_pixels>0);
+    local_error=saved_error;local_animation_frame=saved_animation;
     byte_count=0;
     uint32_t config[]={1000000}, control[]={1,1,1};
     REJECT(command_m300_oled_control(control));

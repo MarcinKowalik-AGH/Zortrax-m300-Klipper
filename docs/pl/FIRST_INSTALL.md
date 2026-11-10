@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-beta.20 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-beta.21 — instalacja od początku
 
 Instrukcja zakłada, że w drukarce jest już zgodny bootloader M300 obsługujący
 aktualizację z SD, a na Raspberry Pi lub Orange Pi nie ma jeszcze oprogramowania
@@ -17,7 +17,7 @@ Nie trzeba ręcznie kopiować patchy ani kompilować firmware drukarki lub Fluid
 |---|---|
 | System Linux | Obraz dobrany do konkretnego Raspberry Pi lub Orange Pi; nie ma jednego obrazu pasującego do obu rodzin |
 | Klipper host | Pełne źródła przypiętej wersji z kompletem zmian M300, nie same moduły extras |
-| MCU | Gotowy `MCU/M300APP.M3B`, R14.18, do posiadanego bootloadera SD |
+| MCU | Gotowy `MCU/M300APP.M3B`, R14.19, do posiadanego bootloadera SD |
 | Fluidd | Gotowa kompilacja 1.37.7 z menu i wizualizacją M300 |
 | Konfiguracja | Oddzielne pliki sprzętu, termiki, procedur i makr; ścieżki i UART ustawia instalator |
 | Kontrola wydania | Sumy SHA-256, identyfikator źródeł, raporty testów i licencje |
@@ -97,11 +97,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.20/Zortrax_M300_Klipper_v1.0.0-beta.20.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.20/SHA256SUMS-v1.0.0-beta.20.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-beta.20.zip$' SHA256SUMS-v1.0.0-beta.20.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-beta.20.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-beta.20 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.21/Zortrax_M300_Klipper_v1.0.0-beta.21.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.21/SHA256SUMS-v1.0.0-beta.21.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-beta.21.zip$' SHA256SUMS-v1.0.0-beta.21.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-beta.21.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-beta.21 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -166,7 +166,7 @@ M105
 Oczekiwane: Ready, zgodne 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`,
 kontroler druku `0.13.16.29-UNIFIED-NATIVE-START`, cele temperatur 0°C i poprawne
 odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
-[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.20/docs/en/HARDWARE_VARIANTS.md)
+[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.21/docs/en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.
 
@@ -191,11 +191,11 @@ Procedura końcowa:
 END_PRINT
 ```
 
-[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.20/docs/pl/PRINT_CONTROL.md).
+[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.21/docs/pl/PRINT_CONTROL.md).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Tag i pliki `v1.0.0-beta.20` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
+Tag i pliki `v1.0.0-beta.21` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
 późniejszych aktualizacji projektu. Po tej pierwszej instalacji można ją
 sklonować i używać zwykłego instalatora `install-orange-pi.py --port 80`
 (jego historyczną wartością domyślną jest 4080). Nie aktualizuj portu przyciskiem

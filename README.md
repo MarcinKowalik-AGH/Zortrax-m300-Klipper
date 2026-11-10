@@ -1,4 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.20
+# Zortrax M300 Classic — Klipper v1.0.0-beta.21
+
+**Beta.21:** Toned activity icons and native 4bpp autonomous MCU artwork. [Release notes and host/MCU update instructions](docs/en/RELEASE_v1.0.0-beta.21.md). The illustrated handbook below retains its explicit beta.20 visual baseline.
 
 **Current user and technical documentation, updated 10 November 2026.** This port targets the original **M300 Classic with STM32F103**, not M300 Plus, M300 Dual or Inventure. Runtime reference: `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`.
 

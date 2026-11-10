@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate MCU text/1-bit fault icons from the shared host error catalogue."""
+"""Generate MCU text/4-bit fault icons from the shared host error catalogue."""
 import argparse
 import base64
 import json
@@ -24,37 +24,11 @@ def generated():
             lines.append('    {' + ', '.join(fields) + '},')
         lines.append('};')
     texts = '\n'.join(lines) + '\n'
-    # Share exact 7-byte scanlines across symbols/frames. Indexed flash reads
-    # retain constant work per row; no RLE decode or extra RAM is needed.
-    rows, row_ids, frames = [], {}, []
-    for name in icons:
-        icon_frames = []
-        for frame in bank[name]['frames']:
-            raw = zlib.decompress(base64.b64decode(frame['zlib_b64']))
-            bits = bytearray(350)
-            for y in range(50):
-                for x in range(50):
-                    if (raw[y*25 + x//2] >> (0 if x % 2 else 4)) & 15:
-                        bits[y*7 + x//8] |= 128 >> (x % 8)
-            indices = []
-            for y in range(50):
-                row = bytes(bits[y*7:(y+1)*7])
-                if row not in row_ids:
-                    row_ids[row] = len(rows)
-                    rows.append(row)
-                indices.append(row_ids[row])
-            icon_frames.append(indices)
-        frames.append(icon_frames)
-    lines = ['// Generated shared monochrome scanlines; no decoder or framebuffer.',
-             'static const uint8_t local_error_rows[%d][7] = {' % len(rows)]
-    lines += ['    {' + ','.join('0x%02x' % v for v in row) + '},' for row in rows]
-    lines += ['};', 'static const uint16_t local_error_frames[%d][4][50] = {' % len(icons)]
-    for name, icon in zip(icons, frames):
-        lines.append('  { // ' + name)
-        lines += ['    {' + ','.join(map(str, indices)) + '},' for indices in icon]
-        lines.append('  },')
-    lines.append('};')
-    return {'m300_error_catalog.inc': texts, 'm300_error_icons.inc': '\n'.join(lines) + '\n'}
+    from tone_activity import indexed_rows
+    raw_banks = [[zlib.decompress(base64.b64decode(frame['zlib_b64']))
+                  for frame in bank[name]['frames']] for name in icons]
+    pixels = indexed_rows(raw_banks, 'local_error')
+    return {'m300_error_catalog.inc': texts, 'm300_error_icons.inc': pixels}
 
 
 def main():
