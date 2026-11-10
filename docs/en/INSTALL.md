@@ -2,7 +2,7 @@
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.16 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.16).
+[v1.0.0-beta.20 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.20).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
@@ -238,3 +238,7 @@ fill. Each result is the minimum of five samples with interrupts enabled.
 Offset 1 models one alignment of the DMA slot. The test writes to a scratch
 buffer in SRAM. The numbers measure fill time only. `ZORTRAX_OLED_STATUS`
 reports complete frame timings, which also include the host and serial link.
+
+## Current beta.20 user interface
+
+See the [current illustrated manual](../pl/OLED_FUNCTIONS.md) and the [10 November update summary](FRONTEND_BETA20.md). The OLED is centered; ×1/×2/×3 stay at the right below HIDE and have the total height of ×1. Tune shows preparation before probing. All only homes; Calibrate uses BED_MESH. Updating beta.18–20 does not require re-flashing the unchanged MCU. Existing release archives remain immutable; these repository instructions are the current reference.

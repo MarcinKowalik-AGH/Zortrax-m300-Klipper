@@ -1,5 +1,7 @@
 # Autocalibration and Z reference — R16.12
 
+> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+
 [Maintenance / Material](MAINTENANCE_MATERIAL.md) · [Validation](VALIDATION_R16_7.md)
 
 Autocalibration is a five-point contact procedure with manual adjustment of

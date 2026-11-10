@@ -1,8 +1,8 @@
 # Architektura i zakres funkcjonalny
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## Warstwy systemu
@@ -46,7 +46,11 @@ Od beta.16 zmiana menu budzi osobny, wyłącznie odczytowy punkt `m300/oled_prev
 
 Po utracie połączenia MCU może pokazywać własne lokalne ekrany oczekiwania lub awarii. Nie są one automatycznie dostępne jako podgląd hosta; interfejs powinien wtedy pokazać niedostępność, nie udawać aktualnego obrazu.
 
-Źródła: [podgląd hosta](../../host/klippy/extras/m300_oled_preview.py), [frontend](../../frontend/fluidd/navigation), [beta.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.17/docs/pl/RELEASE_v1.0.0-beta.17.md).
+Źródła: [podgląd hosta](../../host/klippy/extras/m300_oled_preview.py), [frontend](../../frontend/fluidd/navigation), [beta.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.20/docs/pl/RELEASE_v1.0.0-beta.20.md).
+
+## Uzupełnienia interfejsu beta.18–20
+
+Beta.18 ujednoliciła Tune przed pomiarem: przygotowanie w IDLE, osobny postęp All i stały schemat nad heatmapą. Beta.19 dodała wybór ×1/×2/×3, a beta.20 dopasowała jego kolory i umieściła przyciski pod HIDE, z wysokością ×1 oraz niezależnym centrowaniem OLED. Są to zmiany frontendu, nie nowe procedury termiki ani firmware MCU. [Szczegóły i obrazy](UPDATE_2026-11-10.md).
 
 ## Bezpieczeństwo i stan funkcjonalny
 

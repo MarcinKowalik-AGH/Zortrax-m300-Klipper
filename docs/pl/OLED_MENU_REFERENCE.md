@@ -1,9 +1,11 @@
 # Menu OLED — struktura, funkcje i rendery z kodu
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
+
+**Instrukcja działania:** [65 ekranów z opisem funkcji, warunków, ikon i odpowiedników we Fluidd](OLED_FUNCTIONS.md). Ten dokument pozostaje pełnym spisem wierszy menu i zapisem renderowania, a nie tylko galerią obrazków.
 
 ## 1. Zasada zgodności
 
@@ -319,262 +321,530 @@ python docs/tools/check_manual.py
 
 Zmiana kodu menu może świadomie zmienić rendery — wtedy trzeba ponownie przejrzeć obrazy i odnowić manifest, zamiast podmieniać je ręcznymi szkicami.
 
-## 7. Galeria — 43 ekrany
+## 7. Galeria — 65 ekranów
 
-### 1. Menu główne: Klipper
+Pełny opis każdej funkcji jest pod odnośnikiem przy ilustracji. Nie przepisuj przykładowych nastaw ani wskazań regulacji śrub.
 
-![Menu główne: Klipper](../img/oled/main_klipper@3x.png)
+### 1. Klipper — wejście do sterowania
 
-[Obraz natywny 256×64](../img/oled/main_klipper.png). Stan demonstracyjny: `{"page":"main","selected":1,"sprite":"project-klipper"}`.
+![Klipper — wejście do sterowania](../img/oled/main_klipper@3x.png)
 
-### 2. Menu główne: Zortrax
+Otwiera zestaw funkcji natywnych: wybór temperatur, grzanie, bazowanie, mesh, ręczne ruchy, wentylatory, PID i status druku. Samo wejście nie rozpoczyna procedury.
 
-![Menu główne: Zortrax](../img/oled/main_zortrax@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#main_klipper) · [Natywne 256×64](../img/oled/main_klipper.png).
 
-[Obraz natywny 256×64](../img/oled/main_zortrax.png). Stan demonstracyjny: `{"page":"main","selected":2,"sprite":"project-zortrax"}`.
+### 2. Zortrax M300 — menu funkcji OEM
 
-### 3. Menu Zortrax M300
+![Zortrax M300 — menu funkcji OEM](../img/oled/main_zortrax@3x.png)
 
-![Menu Zortrax M300](../img/oled/zortrax_menu@3x.png)
+Otwiera Models, Maintenance, Material, Settings oraz Information. Jest to gałąź obsługi charakterystycznej dla M300, a nie przełączenie z powrotem na fabryczny firmware.
 
-[Obraz natywny 256×64](../img/oled/zortrax_menu.png). Stan demonstracyjny: `{"page":"zortrax","selected":2,"sprite":"0x0801c958"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#main_zortrax) · [Natywne 256×64](../img/oled/main_zortrax.png).
 
-### 4. Klipper: bazowanie X
+### 3. Pięć grup menu Zortrax
 
-![Klipper: bazowanie X](../img/oled/klipper_home@3x.png)
+![Pięć grup menu Zortrax](../img/oled/zortrax_menu@3x.png)
 
-[Obraz natywny 256×64](../img/oled/klipper_home.png). Stan demonstracyjny: `{"page":"klipper","selected":6,"sprite":"cartesian:home_x"}`.
+Models obsługuje pliki, Maintenance czynności przy platformie i głowicy, Material filament, Settings preferencje, Information dane drukarki i pomoc.
 
-### 5. Klipper: mesh
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#zortrax_menu) · [Natywne 256×64](../img/oled/zortrax_menu.png).
 
-![Klipper: mesh](../img/oled/klipper_mesh@3x.png)
+### 4. Home X — bazowanie
 
-[Obraz natywny 256×64](../img/oled/klipper_mesh.png). Stan demonstracyjny: `{"page":"klipper","selected":11,"sprite":"activity:bed_mesh"}`.
+![Home X — bazowanie](../img/oled/klipper_home@3x.png)
 
-### 6. Klipper: PID
+Wyznacza odniesienie osi X. Nie wykonuje celowo bazowania Y ani pomiaru mesh.
 
-![Klipper: PID](../img/oled/klipper_pid@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_home) · [Natywne 256×64](../img/oled/klipper_home.png).
 
-[Obraz natywny 256×64](../img/oled/klipper_pid.png). Stan demonstracyjny: `{"page":"klipper","selected":14,"sprite":"activity:heat_nozzle"}`.
+### 5. Bed mesh — wejście do podmenu
 
-### 7. Maintenance: autokalibracja
+![Bed mesh — wejście do podmenu](../img/oled/klipper_mesh@3x.png)
 
-![Maintenance: autokalibracja](../img/oled/maintenance_level@3x.png)
+Otwiera ekran przygotowania i stanu mesh. Uruchomienie jest oddzielną pozycją Measure 25 pad points.
 
-[Obraz natywny 256×64](../img/oled/maintenance_level.png). Stan demonstracyjny: `{"page":"maintenance","selected":1,"sprite":"0x0801ca28"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_mesh) · [Natywne 256×64](../img/oled/klipper_mesh.png).
 
-### 8. Maintenance: Home Z
+### 6. PID calibration — wejście
 
-![Maintenance: Home Z](../img/oled/maintenance_home_z@3x.png)
+![PID calibration — wejście](../img/oled/klipper_pid@3x.png)
 
-[Obraz natywny 256×64](../img/oled/maintenance_home_z.png). Stan demonstracyjny: `{"page":"maintenance","selected":4,"sprite":"cartesian:home_z"}`.
+Otwiera listę kalibracji PID. Samo otwarcie nie włącza grzałek.
 
-### 9. Maintenance: grzanie
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_pid) · [Natywne 256×64](../img/oled/klipper_pid.png).
 
-![Maintenance: grzanie](../img/oled/maintenance_heat@3x.png)
+### 7. Autocalibration — mechaniczne ustawienie platformy
 
-[Obraz natywny 256×64](../img/oled/maintenance_heat.png). Stan demonstracyjny: `{"page":"maintenance","selected":7,"sprite":"activity:heat_nozzle"}`.
+![Autocalibration — mechaniczne ustawienie platformy](../img/oled/maintenance_level@3x.png)
 
-### 10. Maintenance: platforma
+Uruchamia kreator OEM M07, który mierzy odniesienia i prowadzi przez regulację śrub. Nie zastępuje 25-punktowego mesh.
 
-![Maintenance: platforma](../img/oled/maintenance_platform@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_level) · [Natywne 256×64](../img/oled/maintenance_level.png).
 
-[Obraz natywny 256×64](../img/oled/maintenance_platform.png). Stan demonstracyjny: `{"page":"maintenance","selected":9,"sprite":"0x0801cb24"}`.
+### 8. Home Z w Maintenance
 
-### 11. Material: ładowanie
+![Home Z w Maintenance](../img/oled/maintenance_home_z@3x.png)
 
-![Material: ładowanie](../img/oled/material_load@3x.png)
+Uruchamia tę samą chronioną procedurę Z co Home Z w Klipper. Nie jest inną, zimną wersją bazowania.
 
-[Obraz natywny 256×64](../img/oled/material_load.png). Stan demonstracyjny: `{"page":"material","selected":2,"sprite":"0x0801d0b8"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_home_z) · [Natywne 256×64](../img/oled/maintenance_home_z.png).
 
-### 12. Settings: ustawienia
+### 9. Heat the extruder — procedura OEM
 
-![Settings: ustawienia](../img/oled/settings@3x.png)
+![Heat the extruder — procedura OEM](../img/oled/maintenance_heat@3x.png)
 
-[Obraz natywny 256×64](../img/oled/settings.png). Stan demonstracyjny: `{"page":"settings","selected":1,"sprite":"0x0801d3bc"}`.
+Uruchamia wspólną procedurę ZORTRAX_HEAT z komunikatami dla operatora. Domyślny cel procedury to 260°C; nie myl go z przykładową nastawą 200°C w gałęzi Klipper.
 
-### 13. Settings: wygrzewanie platformy
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_heat) · [Natywne 256×64](../img/oled/maintenance_heat.png).
 
-![Settings: wygrzewanie platformy](../img/oled/settings_preheat@3x.png)
+### 10. Move the platform up — ruch z przytrzymaniem
 
-[Obraz natywny 256×64](../img/oled/settings_preheat.png). Stan demonstracyjny: `{"page":"settings","selected":6,"sprite":"0x0801d3bc"}`.
+![Move the platform up — ruch z przytrzymaniem](../img/oled/maintenance_platform@3x.png)
+
+Przesuwa platformę w stronę dyszy w kontrolowanej sesji przytrzymania przycisku. Zwolnienie przerywa ruch; obowiązują granice i kontrola styku.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_platform) · [Natywne 256×64](../img/oled/maintenance_platform.png).
+
+### 11. Load the material — ładowanie
+
+![Load the material — ładowanie](../img/oled/material_load@3x.png)
+
+Uruchamia procedurę ładowania z nagrzewaniem, czynnościami operatora i podawaniem filamentu. Domyślna temperatura 240°C i długości wynikają z konfiguracji portu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#material_load) · [Natywne 256×64](../img/oled/material_load.png).
+
+### 12. Settings — preferencje użytkownika
+
+![Settings — preferencje użytkownika](../img/oled/settings@3x.png)
+
+Otwiera światło, dźwięk, uśpienie, język, sortowanie modeli, dodatkowe wygrzewanie platformy oraz jasność OLED i LED.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#settings) · [Natywne 256×64](../img/oled/settings.png).
+
+### 13. Full platform preheating — wybór ustawienia
+
+![Full platform preheating — wybór ustawienia](../img/oled/settings_preheat@3x.png)
+
+Otwiera Enabled/Disabled dla dodatkowej stabilizacji platformy przed drukiem. Ta pozycja nie ustawia bezpośrednio temperatury stołu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#settings_preheat) · [Natywne 256×64](../img/oled/settings_preheat.png).
 
 ### 14. Light
 
 ![Light](../img/oled/setting_light@3x.png)
 
-[Obraz natywny 256×64](../img/oled/setting_light.png). Stan demonstracyjny: `{"page":"setting_light_mode","selected":1,"sprite":"0x0801d55c"}`.
+DYNAMIC: światło zależne od stanu; WHITE: białe; Disabled: wyłączone według polityki projektu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_light) · [Natywne 256×64](../img/oled/setting_light.png).
 
 ### 15. Buzzer
 
 ![Buzzer](../img/oled/setting_buzzer@3x.png)
 
-[Obraz natywny 256×64](../img/oled/setting_buzzer.png). Stan demonstracyjny: `{"page":"setting_sound","selected":1,"sprite":"0x0801d72c"}`.
+Włącza albo wyłącza sygnalizację dźwiękową użytkownika.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_buzzer) · [Natywne 256×64](../img/oled/setting_buzzer.png).
 
 ### 16. Sleep mode
 
 ![Sleep mode](../img/oled/setting_sleep@3x.png)
 
-[Obraz natywny 256×64](../img/oled/setting_sleep.png). Stan demonstracyjny: `{"page":"setting_sleep_mode","selected":1,"sprite":"0x0801d908"}`.
+Włącza albo wyłącza mechanizm bezczynności ekranu.
 
-### 17. Language: English
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_sleep) · [Natywne 256×64](../img/oled/setting_sleep.png).
 
-![Language: English](../img/oled/setting_language@3x.png)
+### 17. Language
 
-[Obraz natywny 256×64](../img/oled/setting_language.png). Stan demonstracyjny: `{"page":"setting_language","selected":1,"sprite":"0x0801dab4"}`.
+![Language](../img/oled/setting_language@3x.png)
+
+W tej wersji udostępnia język English.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_language) · [Natywne 256×64](../img/oled/setting_language.png).
 
 ### 18. Models sorting
 
 ![Models sorting](../img/oled/setting_sort@3x.png)
 
-[Obraz natywny 256×64](../img/oled/setting_sort.png). Stan demonstracyjny: `{"page":"setting_sort_mode","selected":1,"sprite":"0x0801c4f4"}`.
+Zmienia kolejność prezentacji plików: data, nazwa, nazwa z rozróżnianiem wielkości liter albo wielkość pliku.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_sort) · [Natywne 256×64](../img/oled/setting_sort.png).
 
 ### 19. Full platform preheating
 
 ![Full platform preheating](../img/oled/setting_preheat@3x.png)
 
-[Obraz natywny 256×64](../img/oled/setting_preheat.png). Stan demonstracyjny: `{"page":"setting_full_platform_preheat","selected":1,"sprite":"activity:heat_bed"}`.
+Zapisuje opcję dodatkowej stabilizacji stołu przy następnym START_PRINT; domyślny czas wynika z konfiguracji, w tym porcie 60 s.
 
-### 20. Information
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#setting_preheat) · [Natywne 256×64](../img/oled/setting_preheat.png).
 
-![Information](../img/oled/information@3x.png)
+### 20. Information — dane drukarki i pomoc
 
-[Obraz natywny 256×64](../img/oled/information.png). Stan demonstracyjny: `{"page":"information","selected":2,"sprite":"0x0801dc08"}`.
+![Information — dane drukarki i pomoc](../img/oled/information@3x.png)
 
-### 21. Firmware version
+Udostępnia wersje, model/revizję sprzętu/numer seryjny i czas pracy oraz pomoc. Dane dostępne są według aktualnej identyfikacji i zapamiętanych liczników.
 
-![Firmware version](../img/oled/firmware@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#information) · [Natywne 256×64](../img/oled/information.png).
 
-[Obraz natywny 256×64](../img/oled/firmware.png). Stan demonstracyjny: `{"page":"info_firmware","selected":0,"sprite":"activity:firmware_update"}`.
+### 21. Firmware version — wersje komponentów
 
-### 22. Printer information — dane demonstracyjne
+![Firmware version — wersje komponentów](../img/oled/firmware@3x.png)
 
-![Printer information — dane demonstracyjne](../img/oled/printer_information@3x.png)
+Pokazuje R16.12, wersję MCU, przypięty commit Klippera i odniesienie do OEM 1.3.1. Sam odczyt niczego nie wgrywa.
 
-[Obraz natywny 256×64](../img/oled/printer_information.png). Stan demonstracyjny: `{"page":"info_printer","selected":0,"sprite":"0x0801dc08"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#firmware) · [Natywne 256×64](../img/oled/firmware.png).
 
-### 23. Help
+### 22. Printer information — identyfikacja
 
-![Help](../img/oled/help@3x.png)
+![Printer information — identyfikacja](../img/oled/printer_information@3x.png)
 
-[Obraz natywny 256×64](../img/oled/help.png). Stan demonstracyjny: `{"page":"help","selected":0,"sprite":"0x0801de00"}`.
+Wyświetla model, wersję sprzętu, numer seryjny i sumę czasu według dostępnych danych fabrycznych oraz liczników portu.
 
-### 24. Move axes
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#printer_information) · [Natywne 256×64](../img/oled/printer_information.png).
 
-![Move axes](../img/oled/move_axes@3x.png)
+### 23. Help — katalog komunikatów
 
-[Obraz natywny 256×64](../img/oled/move_axes.png). Stan demonstracyjny: `{"page":"native_moves","selected":1,"sprite":"cartesian:move_x"}`.
+![Help — katalog komunikatów](../img/oled/help@3x.png)
 
-### 25. Move X
+Prowadzi do Errors i wskazuje adres dokumentacji projektu. Kody komunikatów mają opisy, a nie każdy komunikat jest krytycznym wyłączeniem.
 
-![Move X](../img/oled/move_x@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#help) · [Natywne 256×64](../img/oled/help.png).
 
-[Obraz natywny 256×64](../img/oled/move_x.png). Stan demonstracyjny: `{"page":"native_move_x","selected":4,"sprite":"cartesian:move_x"}`.
+### 24. Move axes — wybór osi
 
-### 26. Move Z
+![Move axes — wybór osi](../img/oled/move_axes@3x.png)
 
-![Move Z](../img/oled/move_z@3x.png)
+Otwiera wybór X/Y/Z. Samo wejście nie wykonuje przejazdu.
 
-[Obraz natywny 256×64](../img/oled/move_z.png). Stan demonstracyjny: `{"page":"native_move_z","selected":4,"sprite":"cartesian:move_z"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#move_axes) · [Natywne 256×64](../img/oled/move_axes.png).
 
-### 27. PID calibration
+### 25. Move X — kroki ręczne
 
-![PID calibration](../img/oled/pid@3x.png)
+![Move X — kroki ręczne](../img/oled/move_x@3x.png)
 
-[Obraz natywny 256×64](../img/oled/pid.png). Stan demonstracyjny: `{"page":"native_pid","selected":1,"sprite":"activity:heat_nozzle"}`.
+Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.
 
-### 28. Models
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#move_x) · [Natywne 256×64](../img/oled/move_x.png).
 
-![Models](../img/oled/models@3x.png)
+### 26. Move Z — kroki ręczne
 
-[Obraz natywny 256×64](../img/oled/models.png). Stan demonstracyjny: `{"page":"models","selected":1,"sprite":"activity:sd_read"}`.
+![Move Z — kroki ręczne](../img/oled/move_z@3x.png)
 
-### 29. Bed mesh
+Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.
 
-![Bed mesh](../img/oled/bed_mesh@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#move_z) · [Natywne 256×64](../img/oled/move_z.png).
 
-[Obraz natywny 256×64](../img/oled/bed_mesh.png). Stan demonstracyjny: `{"page":"bed_mesh","selected":2,"sprite":"activity:bed_mesh"}`.
+### 27. Hotend PID 200C
 
-### 30. Service / Tests
+![Hotend PID 200C](../img/oled/pid@3x.png)
 
-![Service / Tests](../img/oled/service_tests@3x.png)
+Uruchamia PID_CALIBRATE dla extruder przy 200°C z tej pozycji menu.
 
-[Obraz natywny 256×64](../img/oled/service_tests.png). Stan demonstracyjny: `{"page":"tests","selected":1,"sprite":"0x0801c958"}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#pid) · [Natywne 256×64](../img/oled/pid.png).
 
-### 31. Jasność OLED
+### 28. Models — źródło plików
 
-![Jasność OLED](../img/oled/oled_brightness@3x.png)
+![Models — źródło plików](../img/oled/models@3x.png)
 
-[Obraz natywny 256×64](../img/oled/oled_brightness.png). Stan demonstracyjny: `{"level":12,"demonstration":true}`.
+Pozwala wybrać oryginalną kartę SD albo pliki hosta. Dostępność SD zależy od zakwalifikowania jej obsługi, a nie samego obecnego w drukarce gniazda.
 
-### 32. Jasność LED
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#models) · [Natywne 256×64](../img/oled/models.png).
 
-![Jasność LED](../img/oled/led_brightness@3x.png)
+### 29. Bed mesh — uruchomienie pomiaru
 
-[Obraz natywny 256×64](../img/oled/led_brightness.png). Stan demonstracyjny: `{"level":12,"demonstration":true}`.
+![Bed mesh — uruchomienie pomiaru](../img/oled/bed_mesh@3x.png)
 
-### 33. M07: przygotowanie
+Kliknięcie Measure 25 pad points uruchamia BED_MESH: przygotowanie temperatur i bazowania, 25 pozycji po trzy kontakty, interpolację oraz utworzenie profilu. Samo wejście do podmenu jeszcze nie mierzy.
 
-![M07: przygotowanie](../img/oled/level_prepare@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#bed_mesh) · [Natywne 256×64](../img/oled/bed_mesh.png).
 
-[Obraz natywny 256×64](../img/oled/level_prepare.png). Stan demonstracyjny: `{"state":"WAIT_PREPARE","can_confirm":true}`.
+### 30. Service / Tests — narzędzia kontrolne
 
-### 34. M07: dokręcenie
+![Service / Tests — narzędzia kontrolne](../img/oled/service_tests@3x.png)
 
-![M07: dokręcenie](../img/oled/level_tighten@3x.png)
+Zawiera odczyt diagnostyki i statusów, ale także wywołania testów materiału, kalibracji i przejazdów XY.
 
-[Obraz natywny 256×64](../img/oled/level_tighten.png). Stan demonstracyjny: `{"state":"WAIT_TIGHTEN","can_confirm":true}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#service_tests) · [Natywne 256×64](../img/oled/service_tests.png).
 
-### 35. M07: nagrzewanie
+### 31. Hotend TEMP — wybór wartości
 
-![M07: nagrzewanie](../img/oled/level_heating@3x.png)
+![Hotend TEMP — wybór wartości](../img/oled/klipper_temp_hotend@3x.png)
 
-[Obraz natywny 256×64](../img/oled/level_heating.png). Stan demonstracyjny: `{"state":"HEATING"}`.
+Otwiera listę wartości do późniejszego polecenia grzania. Wskazana liczba jest nastawą menu, nie pomiarem aktualnej temperatury.
 
-### 36. M07: regulacja
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_temp_hotend) · [Natywne 256×64](../img/oled/klipper_temp_hotend.png).
 
-![M07: regulacja](../img/oled/level_adjust@3x.png)
+### 32. Bed TEMP — wybór wartości
 
-[Obraz natywny 256×64](../img/oled/level_adjust.png). Stan demonstracyjny: `{"state":"ADJUST","instruction":{"screw":"rear_left","action":"LOOSEN","delta_mm":-0.25,"turns":0.5}}`.
+![Bed TEMP — wybór wartości](../img/oled/klipper_temp_bed@3x.png)
 
-### 37. M07: wynik
+Otwiera listę wartości do późniejszego polecenia grzania. Wskazana liczba jest nastawą menu, nie pomiarem aktualnej temperatury.
 
-![M07: wynik](../img/oled/level_result@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_temp_bed) · [Natywne 256×64](../img/oled/klipper_temp_bed.png).
 
-[Obraz natywny 256×64](../img/oled/level_result.png). Stan demonstracyjny: `{"state":"REVIEW","review":[-0.05,0.0,0.02,-0.03,0.01]}`.
+### 33. Heat hotend — bezpośrednie grzanie
 
-### 38. Pauza druku
+![Heat hotend — bezpośrednie grzanie](../img/oled/klipper_heat_hotend@3x.png)
 
-![Pauza druku](../img/oled/pause@3x.png)
+Wysyła natywne ustawienie celu grzałki extruder na temperaturę wybraną wcześniej w menu. Nie bazuje i nie uruchamia druku.
 
-[Obraz natywny 256×64](../img/oled/pause.png). Stan demonstracyjny: `{"state":"PAUSED","demonstration":true}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_heat_hotend) · [Natywne 256×64](../img/oled/klipper_heat_hotend.png).
 
-### 39. Potwierdzenie zatrzymania
+### 34. Heat bed — bezpośrednie grzanie
 
-![Potwierdzenie zatrzymania](../img/oled/cancel_confirmation@3x.png)
+![Heat bed — bezpośrednie grzanie](../img/oled/klipper_heat_bed@3x.png)
 
-[Obraz natywny 256×64](../img/oled/cancel_confirmation.png). Stan demonstracyjny: `{"state":"STOP_CONFIRM","demonstration":true}`.
+Wysyła natywne ustawienie celu grzałki heater_bed na temperaturę wybraną wcześniej w menu. Nie bazuje i nie uruchamia druku.
 
-### 40. Przykładowy komunikat braku modeli
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_heat_bed) · [Natywne 256×64](../img/oled/klipper_heat_bed.png).
 
-![Przykładowy komunikat braku modeli](../img/oled/no_models@3x.png)
+### 35. Turn off heaters — wyłączenie celów grzałek
 
-[Obraz natywny 256×64](../img/oled/no_models.png). Stan demonstracyjny: `{"state":"illustrative_notice","demonstration":true}`.
+![Turn off heaters — wyłączenie celów grzałek](../img/oled/klipper_heaters_off@3x.png)
 
-### 41. Uśpienie: księżyc
+Wywołuje TURN_OFF_HEATERS. Nie jest to polecenie CANCEL_PRINT i nie należy go używać zamiast anulowania zadania.
 
-![Uśpienie: księżyc](../img/oled/sleep@3x.png)
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_heaters_off) · [Natywne 256×64](../img/oled/klipper_heaters_off.png).
 
-[Obraz natywny 256×64](../img/oled/sleep.png). Stan demonstracyjny: `{"state":"ENTERING_SLEEP"}`.
+### 36. Home Y — bazowanie
 
-### 42. Natywny status Klipper: Ready
+![Home Y — bazowanie](../img/oled/klipper_home_y@3x.png)
 
-![Natywny status Klipper: Ready](../img/oled/status_ready@3x.png)
+Wyznacza odniesienie osi Y. Nie wykonuje celowo bazowania X ani pomiaru mesh.
 
-[Obraz natywny 256×64](../img/oled/status_ready.png). Stan demonstracyjny: `{"temperatures":[20.2,20.4],"targets":[0,0],"demonstration":true}`.
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_home_y) · [Natywne 256×64](../img/oled/klipper_home_y.png).
 
-### 43. Natywny status Klipper: druk
+### 37. Home Z — bazowanie
 
-![Natywny status Klipper: druk](../img/oled/status_printing@3x.png)
+![Home Z — bazowanie](../img/oled/klipper_home_z@3x.png)
 
-[Obraz natywny 256×64](../img/oled/status_printing.png). Stan demonstracyjny: `{"progress":0.42,"demonstration":true}`.
+Wyznacza odniesienie osi Z kontaktem dyszy z polem platformy; nie tworzy mapy nierówności.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_home_z) · [Natywne 256×64](../img/oled/klipper_home_z.png).
+
+### 38. Home XY — bazowanie
+
+![Home XY — bazowanie](../img/oled/klipper_home_xy@3x.png)
+
+Bazowanie obu osi poziomych odbywa się w kolejności Y, potem X. Nie jest to pełny homing Z.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_home_xy) · [Natywne 256×64](../img/oled/klipper_home_xy.png).
+
+### 39. Home XYZ — bazowanie
+
+![Home XYZ — bazowanie](../img/oled/klipper_home_xyz@3x.png)
+
+Uruchamia wspólne bazowanie Y, X i kontaktowe Z. Pozostaje zwykłym bazowaniem, a nie nowym pomiarem 25 pozycji.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_home_xyz) · [Natywne 256×64](../img/oled/klipper_home_xyz.png).
+
+### 40. Fans — stan i sterowanie nawiewem
+
+![Fans — stan i sterowanie nawiewem](../img/oled/klipper_fans@3x.png)
+
+Otwiera odczyt wentylatora modelu i automatycznego chłodzenia hotendu, z pozycjami prędkości nawiewu modelu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#klipper_fans) · [Natywne 256×64](../img/oled/klipper_fans.png).
+
+### 41. Print status — szczegóły zadania
+
+![Print status — szczegóły zadania](../img/oled/print_details@3x.png)
+
+Pokazuje stan zadania, nazwę pliku i czas. Przy aktywnym właścicielu m300_print_ui czynności pauzy i zatrzymania mają osobny kontekstowy ekran.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#print_details) · [Natywne 256×64](../img/oled/print_details.png).
+
+### 42. Heat the platform — procedura stołu
+
+![Heat the platform — procedura stołu](../img/oled/maintenance_heat_bed@3x.png)
+
+Uruchamia wspólną procedurę grzania platformy, dostępną także z makra ZORTRAX_HEAT_PLATFORM.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_heat_bed) · [Natywne 256×64](../img/oled/maintenance_heat_bed.png).
+
+### 43. Move the platform down — ruch z przytrzymaniem
+
+![Move the platform down — ruch z przytrzymaniem](../img/oled/maintenance_platform_down@3x.png)
+
+Przesuwa platformę od dyszy w kontrolowanej sesji przytrzymania przycisku. Zwolnienie przerywa ruch; obowiązują granice i kontrola styku.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_platform_down) · [Natywne 256×64](../img/oled/maintenance_platform_down.png).
+
+### 44. Fan test — test serwisowy
+
+![Fan test — test serwisowy](../img/oled/maintenance_fan_test@3x.png)
+
+Uruchamia interaktywny test górnego i dolnego wentylatora. Kontroler przejmuje sterowanie wyjściami na czas tej jawnej sesji.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#maintenance_fan_test) · [Natywne 256×64](../img/oled/maintenance_fan_test.png).
+
+### 45. Unload the material — rozładowanie
+
+![Unload the material — rozładowanie](../img/oled/material_unload@3x.png)
+
+Uruchamia rozgrzanie i kontrolowane wycofanie materiału zgodnie z fazami procedury.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#material_unload) · [Natywne 256×64](../img/oled/material_unload.png).
+
+### 46. Move Y — kroki ręczne
+
+![Move Y — kroki ręczne](../img/oled/move_y@3x.png)
+
+Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#move_y) · [Natywne 256×64](../img/oled/move_y.png).
+
+### 47. Bed PID 60C
+
+![Bed PID 60C](../img/oled/pid_bed@3x.png)
+
+Uruchamia PID_CALIBRATE dla heater_bed przy 60°C z tej pozycji menu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#pid_bed) · [Natywne 256×64](../img/oled/pid_bed.png).
+
+### 48. Save calibration — zapis PID
+
+![Save calibration — zapis PID](../img/oled/pid_save@3x.png)
+
+Wywołuje SAVE_CONFIG, zapisując oczekujące wyniki kalibracji i restartując Klippera. To nie jest polecenie samego odczytu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#pid_save) · [Natywne 256×64](../img/oled/pid_save.png).
+
+### 49. Host files — pliki na Orange Pi
+
+![Host files — pliki na Orange Pi](../img/oled/models_host@3x.png)
+
+Przechodzi do katalogu modeli hosta obsługiwanego przez projekt. Plik nie jest automatycznie uruchamiany tylko przez wejście do listy.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#models_host) · [Natywne 256×64](../img/oled/models_host.png).
+
+### 50. Lista temperatur HOTEND
+
+![Lista temperatur HOTEND](../img/oled/temperature_hotend@3x.png)
+
+Krótki klik na liczbie ustawia wartość używaną przez późniejsze Heat. Lista jest filtrowana limitami grzałki z konfiguracji; widoczne 200/60°C są przykładami.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#temperature_hotend) · [Natywne 256×64](../img/oled/temperature_hotend.png).
+
+### 51. Lista temperatur BED
+
+![Lista temperatur BED](../img/oled/temperature_bed@3x.png)
+
+Krótki klik na liczbie ustawia wartość używaną przez późniejsze Heat. Lista jest filtrowana limitami grzałki z konfiguracji; widoczne 200/60°C są przykładami.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#temperature_bed) · [Natywne 256×64](../img/oled/temperature_bed.png).
+
+### 52. Print speed — prędkość wentylatora modelu
+
+![Print speed — prędkość wentylatora modelu](../img/oled/fan_controls@3x.png)
+
+Ustawia nawiew modelu na jeden z poziomów 0/25/50/75/100%. W tym podmenu słowo speed dotyczy wentylatora, nie prędkości drukowania.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#fan_controls) · [Natywne 256×64](../img/oled/fan_controls.png).
+
+### 53. OLED brightness
+
+![OLED brightness](../img/oled/oled_brightness@3x.png)
+
+Zmienia jasność oryginalnego wyświetlacza w 16 dostępnych poziomach. Ekran regulacji pokazuje podgląd poziomu i polecenia obsługi.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#oled_brightness) · [Natywne 256×64](../img/oled/oled_brightness.png).
+
+### 54. LED brightness
+
+![LED brightness](../img/oled/led_brightness@3x.png)
+
+Zmienia jasność oświetlenia drukarki w 16 dostępnych poziomach. Ekran regulacji pokazuje podgląd poziomu i polecenia obsługi.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#led_brightness) · [Natywne 256×64](../img/oled/led_brightness.png).
+
+### 55. M07 — przygotowanie
+
+![M07 — przygotowanie](../img/oled/level_prepare@3x.png)
+
+Wyświetla ostrzeżenie i warunki przygotowania autokalibracji.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#level_prepare) · [Natywne 256×64](../img/oled/level_prepare.png).
+
+### 56. M07 — pozycja wyjściowa śrub
+
+![M07 — pozycja wyjściowa śrub](../img/oled/level_tighten@3x.png)
+
+Prosi o dokręcenie trzech pokręteł regulacyjnych zgodnie z procedurą.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#level_tighten) · [Natywne 256×64](../img/oled/level_tighten.png).
+
+### 57. M07 — nagrzewanie
+
+![M07 — nagrzewanie](../img/oled/level_heating@3x.png)
+
+Pokazuje etap nagrzewania ekstrudera w kreatorze.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#level_heating) · [Natywne 256×64](../img/oled/level_heating.png).
+
+### 58. M07 — regulacja wskazanej śruby
+
+![M07 — regulacja wskazanej śruby](../img/oled/level_adjust@3x.png)
+
+Podaje narożnik, kierunek i przybliżony obrót potrzebny według bieżącego pomiaru.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#level_adjust) · [Natywne 256×64](../img/oled/level_adjust.png).
+
+### 59. M07 — wynik i zakończenie
+
+![M07 — wynik i zakończenie](../img/oled/level_result@3x.png)
+
+Prezentuje wynik autokalibracji i przejście dalej po potwierdzeniu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#level_result) · [Natywne 256×64](../img/oled/level_result.png).
+
+### 60. PAUSE MENU — wznowienie, wymiana, zatrzymanie
+
+![PAUSE MENU — wznowienie, wymiana, zatrzymanie](../img/oled/pause@3x.png)
+
+Resume the print wznawia zgodne zadanie; Change the material otwiera wymianę w pauzie; Stop the print przechodzi do jawnego potwierdzenia anulowania.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#pause) · [Natywne 256×64](../img/oled/pause.png).
+
+### 61. STOP THE PRINT? — potwierdzenie anulowania
+
+![STOP THE PRINT? — potwierdzenie anulowania](../img/oled/cancel_confirmation@3x.png)
+
+No pozostawia zadanie w pauzie; Yes, stop the print wywołuje CANCEL_PRINT. Anulowanie zamyka plik i usuwa stan pauzy, wyłącza cele grzałek, a parkowanie nie może blokować anulowania.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#cancel_confirmation) · [Natywne 256×64](../img/oled/cancel_confirmation.png).
+
+### 62. Notice #101 — brak modeli
+
+![Notice #101 — brak modeli](../img/oled/no_models@3x.png)
+
+Informuje o braku modeli w odczytywanym źródle. Nie jest sam w sobie błędem planera ruchu.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#no_models) · [Natywne 256×64](../img/oled/no_models.png).
+
+### 63. Księżyc — ekran bezczynności
+
+![Księżyc — ekran bezczynności](../img/oled/sleep@3x.png)
+
+Pokazuje przejście panelu w uśpienie zgodnie z polityką wyświetlacza.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#sleep) · [Natywne 256×64](../img/oled/sleep.png).
+
+### 64. Status Ready — temperatury i stan
+
+![Status Ready — temperatury i stan](../img/oled/status_ready@3x.png)
+
+Pokazuje temperatury, nawiew, mnożnik prędkości i komunikat statusu. Wartości są bieżącymi obserwacjami w działającej drukarce; tutaj użyto stanu demonstracyjnego.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#status_ready) · [Natywne 256×64](../img/oled/status_ready.png).
+
+### 65. Status Printing — postęp zadania
+
+![Status Printing — postęp zadania](../img/oled/status_printing@3x.png)
+
+Pokazuje temperatury, postęp, czas i komunikat. 42% oraz 200/60°C w renderze są wyłącznie przykładem.
+
+[Obsługa, warunki, grafika i Fluidd](OLED_FUNCTIONS.md#status_printing) · [Natywne 256×64](../img/oled/status_printing.png).
+
+## 8. Podgląd w Fluidd
+
+Sterowanie ×1/×2/×3, centrowanie, kolorystyka i zasady HIDE/SHOW opisane są w [aktualizacji z 10.11.2026](UPDATE_2026-11-10.md). To nie są nowe pozycje na fizycznym OLED.

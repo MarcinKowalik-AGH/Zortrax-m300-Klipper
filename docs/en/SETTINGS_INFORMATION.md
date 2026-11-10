@@ -1,5 +1,7 @@
 # Settings and Information
 
+> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+
 OLED menu button audio has two fixed pulse lengths: normal entry and other
 selection/exit clicks are 35 ms, while an explicitly visible **Back** or
 **Up** row produces a 140 ms pulse. A dedicated, bounded buzzer-off timer

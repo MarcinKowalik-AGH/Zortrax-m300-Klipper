@@ -1,8 +1,8 @@
 # Poziomowanie, pola kontaktowe i aktywacja mesh
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Dwie odrębne procedury
@@ -12,13 +12,21 @@
 | Polecenie | `ZORTRAX_LEVEL` | `BED_MESH` lub przechwycone `BED_MESH_CALIBRATE` |
 | Cel | Mechaniczne ustawienie platformy śrubami | Pomiar wysokości i programowa kompensacja Z |
 | Model | Odtworzony przebieg M07, pięć pól | 25 pozycji: po pięć w każdym z pięciu pól |
-| Udział operatora | Potwierdzenia i regulacja śrub według ekranu | Potwierdzenie przygotowania; pomiar jest automatyczny |
+| Udział operatora | Potwierdzenia i regulacja śrub według ekranu | Świadome uruchomienie BED_MESH; przygotowanie i pomiar są automatyczne |
 | Temperatura proceduralna | Domyślnie 260°C | Domyślnie hotend 260°C i stół 60°C, z polityką zachowania wyższej temperatury hotendu |
 | Wynik | Ocena ustawienia i instrukcja regulacji | Profil `m300_pads`, początkowo **nieaktywny** |
 
 Nie utożsamiaj autokalibracji śrub, bazowania Z i mapy mesh. Bazowanie wyznacza odniesienie osi; mesh opisuje odchylenia powierzchni względem odniesienia. Żadna z tych procedur nie usuwa mechanicznego luzu ani zabrudzenia styku.
 
 Źródła: [M07](../../host/klippy/extras/m300_calibration.py), [kontaktowe Z](../../host/klippy/extras/m300_native_z.py), [mesh](../../host/klippy/extras/m300_pad_mesh.py), [makra](../../host/config/m300_operations.cfg).
+
+## 1a. Tune przed rozpoczęciem procedury — beta.18–20
+
+Wejście do Tune przez ikonę suwaków pokazuje przygotowanie również w pierwotnym IDLE, gdy nie powstał identyfikator sesji pomiarowej. Samo otwarcie nie wysyła G-code, nie grzeje, nie bazuje i nie aktywuje zapisanego profilu.
+
+**All** wywołuje wspólne `ZORTRAX_HOME_ALL` i pokazuje postęp/temperatury. **Calibrate** uruchamia `BED_MESH`, tak samo jak makro; przygotowanie temperatury i niezbędnego bazowania należy do tej procedury. Przycisk All nie jest wymaganym osobnym pierwszym krokiem kalibracji M300.
+
+Schemat płyty i pól kontaktu pozostaje **nad heatmapą** we wszystkich stanach. Stary zrzut poniżej ma odwrotną kolejność i jest zachowany jako zapis rzeczywistego pomiaru, nie wzór układu beta.20. Brak nowego pomiaru nie oznacza błędu, a saved preview nie oznacza aktywnej kompensacji. Nie kasuj `m300_pads` tylko dlatego, że wcześniej interfejs nie pokazywał panelu przygotowania.
 
 ## 2. Warunki przed pomiarem
 
@@ -66,7 +74,7 @@ Z tego powodu zakres wysokości z 25 pomiarów i zakres siatki prezentowanej po 
 
 ![Rzeczywisty wynik mesh i pięć obszarów kontaktu](../img/bed_mesh_preview.png)
 
-*Zrzut użytkownika z 09.11.2026, zachowany jako przykład konkretnego pomiaru, nie wzorcowa geometria wszystkich M300. Tekst „Preview: m300_pads (not active)” oznacza brak aktywnej kompensacji.*
+*Zrzut użytkownika z 09.11.2026: historyczna kolejność kart (w beta.20 schemat jest na górze), zachowany jako przykład konkretnego pomiaru, nie wzorcowa geometria wszystkich M300. Tekst „Preview: m300_pads (not active)” oznacza brak aktywnej kompensacji.*
 
 | Wartość widoczna na zrzucie | Znaczenie |
 |---|---|

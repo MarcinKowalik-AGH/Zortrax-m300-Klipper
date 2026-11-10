@@ -6,9 +6,15 @@
 
 ![Fluidd: ruch, temperatury, podgląd OLED, makra i konsola](docs/img/fluidd_overview.png)
 
-*Rys. 1. Rzeczywisty interfejs użytkownika, zrzut z 10.11.2026. Panel temperatur zawiera podgląd OLED. Widoczne wartości, nazwy plików i stan menu są zapisem chwili wykonania zrzutu, nie zalecanymi nastawami.*
+*Rys. 1. Rzeczywisty interfejs użytkownika z 10.11.2026, sprzed beta.20; historyczny układ podglądu OLED. Panel temperatur zawiera podgląd OLED. Widoczne wartości, nazwy plików i stan menu są zapisem chwili wykonania zrzutu, nie zalecanymi nastawami.*
 
-**Beta.20:** Ekran OLED jest wycentrowany niezależnie od przycisków ×1/×2/×3. Przyciski trzymają się prawej krawędzi pod HIDE, mają zawsze wysokość podglądu ×1 i korzystają z oryginalnej palety cyjanowego OLED. [Szczegóły](docs/pl/RELEASE_v1.0.0-beta.20.md).\n\n**Beta.19:** Po prawej stronie podglądu OLED we Fluidd dodano cyjanowe przyciski **×1 / ×2 / ×3**. Każdy piksel pozostaje kwadratowy, wybór jest zapamiętywany w przeglądarce, a zmiana wielkości nie pobiera nowej klatki. [Opis zmiany i aktualizacji](docs/pl/RELEASE_v1.0.0-beta.19.md).
+## Nowe instrukcje po poprawkach z 10 listopada
+
+**[OLED — 65 ekranów, grafik i opisów funkcji](docs/pl/OLED_FUNCTIONS.md)**: ścieżka menu, działanie po kliknięciu, wymagania, odpowiednik w Fluidd oraz znaczenie symbolu. Osobny [przewodnik po beta.18–20](docs/pl/UPDATE_2026-11-10.md) opisuje Tune, All/Calibrate i nowy układ skalowania.
+
+![Układ podglądu beta.20 — render przeglądarkowy ×1](docs/img/fluidd_oled_beta20_x1.png)
+
+*Render demonstracyjny z produkcyjnym CSS i bitmapą projektu, nie zdjęcie sesji drukarki. Ekran jest wycentrowany, przyciski ×1/×2/×3 są pod HIDE i mają wysokość podglądu ×1. Użytkownik potwierdził poprawny efekt beta.20.*
 
 ## Co jest w tym porcie
 
@@ -33,7 +39,9 @@ Klipper na hoście planuje ruch i steruje zadaniami. MCU wykonuje zaplanowane im
 | [Przegląd i architektura](docs/pl/OVERVIEW_PL.md) | Podział host/MCU/Moonraker/Fluidd, diagram połączeń, funkcje OEM i Klipper-native, ograniczenia |
 | [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) | Linux, KIAUH, UART, przygotowany pakiet, aplikacja MCU, kontrola pierwszego uruchomienia |
 | [Codzienna obsługa](docs/pl/USER_GUIDE.md) | Start, pauza, wznowienie, anulowanie, filament, grzanie, aktualizacja, diagnostyka |
-| [Menu OLED i galeria](docs/pl/OLED_MENU_REFERENCE.md) | Rzeczywiste drzewo, przycisk i pokrętło, 43 rendery, ekrany kontekstowe, podgląd w Fluidd |
+| [Funkcje OLED krok po kroku](docs/pl/OLED_FUNCTIONS.md) | 65 ilustracji, działania, warunki i znaczenie grafik |
+| [Zmiany z 10.11.2026](docs/pl/UPDATE_2026-11-10.md) | Tune, All/Calibrate, skala ×1/×2/×3, centrowanie, aktualizacja i weryfikacja |
+| [Menu OLED i galeria](docs/pl/OLED_MENU_REFERENCE.md) | Rzeczywiste drzewo, przycisk i pokrętło, 65 renderów, ekrany kontekstowe, podgląd w Fluidd |
 | [Poziomowanie i mesh](docs/pl/BED_MESH_AND_LEVELING.md) | M07 a mesh, pomiar 25 punktów, ocena wyniku, zapis, wczytanie i aktywacja |
 | [Parametry techniczne i łącza](docs/pl/TECHNICAL_REFERENCE.md) | Fabryczne parametry, limity konfiguracji, rewizje Z, UART/SPI, mapy temperatur i bezpieczeństwo |
 | [Planer i ograniczenia prędkości](docs/pl/PRINT_LIMITS_AND_PLANNER.md) | Look-ahead, przyspieszenie, kroki, przepływ objętościowy, ekstruder/hotend, przykład obliczeniowy |
@@ -49,7 +57,7 @@ git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
-Potem odśwież Fluidd przez **Cmd+Shift+R**. Zmiany podglądu z beta.16/17 nie wymagają ponownego wgrywania MCU. Nie zastępuj portu aktualizacją standardowego Klippera/Fluidd. Instalator zachowuje kalibracje i odmawia nadpisania nieznanych zmian; nie używaj `reset --hard`, aby ominąć taką kontrolę. Szczegóły: [aktualizacja i odzyskiwanie](docs/pl/USER_GUIDE.md).
+Potem odśwież Fluidd przez **Cmd+Shift+R**. Zmiany frontendu z beta.18–20 nie wymagają ponownego wgrywania MCU. Nie zastępuj portu aktualizacją standardowego Klippera/Fluidd. Instalator zachowuje kalibracje i odmawia nadpisania nieznanych zmian; nie używaj `reset --hard`, aby ominąć taką kontrolę. Szczegóły: [aktualizacja i odzyskiwanie](docs/pl/USER_GUIDE.md).
 
 ## Trzy ważne rozróżnienia
 
@@ -69,10 +77,10 @@ Potem odśwież Fluidd przez **Cmd+Shift+R**. Zmiany podglądu z beta.16/17 nie 
 
 ![Podgląd nieaktywnego profilu m300_pads i mapa obszarów kontaktu](docs/img/bed_mesh_preview.png)
 
-*Rys. 3. Zrzut użytkownika z 09.11.2026: utworzony profil, kompensacja jeszcze nieaktywna. Zakres bezpośrednich obserwacji 0,5625 mm i zakres prezentowanej siatki 0,5612 mm dotyczą tego konkretnego pomiaru.*
+*Rys. 3. Historyczny zrzut użytkownika z 09.11.2026 (w beta.20 schemat jest nad heatmapą): utworzony profil, kompensacja jeszcze nieaktywna. Zakres bezpośrednich obserwacji 0,5625 mm i zakres prezentowanej siatki 0,5612 mm dotyczą tego konkretnego pomiaru.*
 
 ## Weryfikacja i odpowiedzialność
 
-Wydanie beta.17 przeszło 741 testów hosta, 111 testów frontendu i 60 porównań rastra przeglądarek oraz kompilację ARM i testy natywnego Klippy. [Przebieg wydania](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/42723306325). Są to testy programowe — nie pomiar temperatur zewnętrzną sondą, powtarzalności kontaktu, przepływu materiału ani opóźnienia na każdym komputerze.
+Wydanie beta.20 przeszło 741 testów hosta, 140 testów frontendu, 84 porównania rastra i 54 testy układu przeglądarek oraz kompilację ARM i testy natywnego Klippy. [Przebieg wydania](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/42798305380). Są to testy programowe — nie pomiar temperatur zewnętrzną sondą, powtarzalności kontaktu, przepływu materiału ani opóźnienia na każdym komputerze.
 
 Pierwsze próby ruchu, kontaktowego Z, grzania i druku wykonuj pod nadzorem. Nie kasuj danych fabrycznych MCU i nie kopiuj ustawień innych wersji M300. Kod portu i zależności zachowują swoje licencje; prawa do grafiki OEM pozostają przy właścicielu. [Pochodzenie](docs/en/PROVENANCE.md) · [Licencje](THIRD_PARTY_NOTICES.md).

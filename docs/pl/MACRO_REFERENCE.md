@@ -1,13 +1,13 @@
 # Katalog makr, procedur i komend diagnostycznych
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 39 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w beta.17. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 39 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w beta.20. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -101,3 +101,7 @@ Aktualny pełny zrzut w [instrukcji użytkownika](USER_GUIDE.md) pokazuje grupy 
 ## 6. Źródła
 
 [Operacje](../../host/config/m300_operations.cfg) · [PID](../../host/config/klipper_calibration.cfg) · [Testy](../../host/config/m300_tests.cfg) · [Kontroler wydruku](../../host/klippy/extras/m300_print_control.py) · [Procedury UI](../../host/klippy/extras/m300_procedures.py).
+
+## 5. Gdzie zobaczyć funkcję na OLED i w Tune
+
+[Ilustrowana instrukcja funkcji](OLED_FUNCTIONS.md) wiąże każdą z 65 ilustracji z działaniem i właściwym poleceniem Fluidd. Home XYZ i All w Tune używają ZORTRAX_HOME_ALL; Calibrate w Tune używa BED_MESH. Powiększenie ×1/×2/×3 oraz HIDE/SHOW nie są makrami i nie wysyłają poleceń ruchu ani temperatury. Sama lista TEMP w gałęzi Klipper nie jest tym samym co wykonanie Heat.
