@@ -2,12 +2,12 @@
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.20 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.20).
+[v1.0.0-beta.21 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.21).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-The main package pairs the native R16.12 host with MCU R14.18 for M300 Classic.
+The main package pairs the native R16.12 host with MCU R14.19 for M300 Classic.
 The host installer also accepts supported installations running earlier MCU revisions.
 Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
 baseline uses 750,000 baud. The installer preserves the configured baud.
@@ -49,7 +49,8 @@ The existing transactional backup/rollback covers all changed files.
 
 The two project menu marks use monochrome 50×50 frames, four frames at 500 ms,
 and the existing bounded sprite cache/display cadence. MCU R14.18 remains
-compatible; this update does not require flashing it again.
+compatible for host-rendered menus; beta.21 also supplies R14.19 for toned
+autonomous waiting/fault screens. Flashing R14.19 is separate from host installation.
 See [the configuration audit](CONFIGURATION_AUDIT.md).
 
 GitHub Actions builds and verifies the host, Fluidd and MCU. The same run
@@ -175,7 +176,7 @@ The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_18_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_R14_19_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. A printer already running

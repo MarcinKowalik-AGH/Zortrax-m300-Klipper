@@ -517,5 +517,8 @@
   "m300_oled_preview.py": [
     "eb4b88f15b34a2cbb5b76f1cdc219d4f571fec49aa777a4667801d4053fe6759",
     "999dad8f13fdf3c471561cd00309d83004141c528f1c365243f5456768a55b46"
+  ],
+  "m300_activity_sprites.json": [
+    "ca95fb1996ea10aabdc59db1936d77cb957d7ec94ff9697aef87076f9b2ed4e5"
   ]
 }
