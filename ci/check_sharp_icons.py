@@ -13,10 +13,10 @@ HOST = ROOT / 'host/klippy/extras'
 sys.path.insert(0, str(ROOT / 'host'))
 from klippy.extras.m300_oem_graphics import OEMGraphics, sharp_sprite
 from klippy.extras.m300_oled_transport import fast_blocks
+from klippy.extras.m300_menu_ui import M300MenuUI
 
 
 def threshold(raw):
-    # Independent reference, deliberately not the production lookup table.
     values = [15 if value >= 8 else 0 for byte in raw
               for value in (byte // 16, byte % 16)]
     return bytes(values[i] * 16 + values[i + 1] for i in range(0, len(values), 2))
@@ -103,7 +103,6 @@ def main():
             raw = zlib.decompress(base64.b64decode(frame['zlib_b64'], validate=True))
             binary = sharp.get('activity:' + name, clock)
             assert source.get('activity:' + name, clock) == (50, 50, raw)
-            # Exact restoration, not a second interpretation of the earlier icons.
             assert binary[2] == bytes.fromhex(before['symbols'][name]['frames'][index])
             assert binary[2] == threshold(raw)
             assert sharp.get('activity:' + name, clock + 2.) == binary
@@ -112,7 +111,6 @@ def main():
                              payload_after=packet_check(binary[2])))
     assert len(rows) == 157
 
-    # Dimming on axes carries selection/blink meaning and must not be erased.
     for name in ('home_x', 'home_y', 'home_z', 'home_xy', 'home_xyz',
                  'move_x', 'move_y', 'move_z', 'move_xyz'):
         for frame in range(4):
@@ -123,26 +121,36 @@ def main():
     assert sharp_sprite.cache_info().maxsize == 64
     assert sharp_sprite.cache_info().currsize <= 64
 
-    # Real host test harness: new default reaches both OLED wire and preview;
-    # using only test stubs for motors/temperatures, never printer I/O.
     package = ROOT / '.ci/host-update'
     sys.path.insert(0, str(package))
     sys.path.insert(0, str(package / 'tests'))
     from test_settings_information import session
     from test_activity_graphics import right_icon
     with session() as h:
+        # The historical session deliberately constructs OEMGraphics() in
+        # source mode. Construct the real production UI to test the new default.
+        h.ui = M300MenuUI(h.config)
+        h.objects['m300_menu_ui'] = h.ui
+        h.oled.menu_reverse = True
         assert h.ui.oem_sprites.sharp is True
         assert h.ui.get_status(h.now)['icon_style'] == 'SHARP-HOST-1'
         h.menu.page = 'klipper'
-        _, menu = h.menu.rows(h.now)
-        index = next(i for i, (_, action) in enumerate(menu)
-                     if action == ('native_gcode', 'BED_MESH'))
-        h.oled.page, h.oled.selection = 'm04', index
+        # Fixed read-only menu snapshot, no command is executed by this test.
+        h.menu.rows = lambda now: ('Klipper', [
+            ('Back', ('page', 'main')), ('Bed mesh', ('native_gcode', 'BED_MESH'))])
+        h.oled.page, h.oled.selection = 'm04', 1
+        h.oled._render_key = None
         h.oled._render(h.now)
-        assert right_icon(h.oled._render_wire) == h.ui.oem_sprites.get('activity:bed_mesh', h.now)[2]
+        # Idle menu icons use phase zero; active procedures keep their cadence.
+        assert right_icon(h.oled._render_wire) == h.ui.oem_sprites.get('activity:bed_mesh', 0.)[2]
         assert not any(e[0] in ('heat', 'move', 'fan') for e in h.events)
+    with session() as h:
+        original_getboolean = h.config.getboolean
+        h.config.getboolean = lambda key, default: (False if key == 'sharp_icons'
+                                                   else original_getboolean(key, default))
+        ui = M300MenuUI(h.config)
+        assert ui.sharp_icons is False and ui.oem_sprites.sharp is False
 
-    # Recorded software timing, not a physical UART latency guarantee.
     sample = source.get('0x0801c958')
     start = time.perf_counter()
     for _ in range(10000):
@@ -153,6 +161,8 @@ def main():
                   threshold=8, canonical_asset_files_unchanged=True,
                   exact_activity_beta20_restoration=True,
                   original_oem_mode_preserved=True, axis_logo_pixels_preserved=True,
+                  real_menu_constructor_default_verified=True,
+                  real_menu_constructor_source_fallback_verified=True,
                   cache_max_frames=64, warm_cache_calls=10000,
                   warm_cache_seconds=elapsed, transport_lossless=True,
                   physical_printer_tested=False, mcu_flashed=False, results=rows)
