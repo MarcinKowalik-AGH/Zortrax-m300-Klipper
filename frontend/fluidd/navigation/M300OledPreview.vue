@@ -20,7 +20,10 @@
         {{ collapsed ? 'Show' : 'Hide' }}
       </v-btn>
     </div>
-    <div v-if="!collapsed" class="m300-oled-display-row px-3 pb-3">
+    <div
+      v-if="!collapsed"
+      class="m300-oled-display-row px-3 pb-3"
+    >
       <div
         ref="pixelViewport"
         class="m300-oled-viewport"
