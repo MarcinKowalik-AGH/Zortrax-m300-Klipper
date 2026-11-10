@@ -1,0 +1,70 @@
+name: Prepare and validate sharp host icons
+on:
+  push:
+    branches: [fix/beta22-sharp-host-icons]
+    paths: ['.github/workflows/prepare-beta22-sharp.yml']
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/beta22-sharp-host-icons
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply verified presentation-only edits
+        run: python ci/_prepare_beta22.py
+      - name: Fetch pinned Klipper and test dependencies
+        run: |
+          python ci/prepare_upstream.py
+          python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
+          python -m pip install Jinja2==3.1.6
+      - name: Stage host package with real manifest
+        run: |
+          PYTHONPATH=ci python -c "from project import ROOT, stage_host_update; stage_host_update(ROOT/'.ci/host-update')"
+      - name: Verify 157 sharp frames and actual host UI integration
+        run: python ci/check_sharp_icons.py
+      - name: Verify all 741 host regressions and prior install migrations
+        run: |
+          cd .ci/host-update
+          python VERIFY.py
+          python -m unittest discover -s tests -v > ../sharp-host-tests.log 2>&1 || { tail -150 ../sharp-host-tests.log; exit 1; }
+          tail -5 ../sharp-host-tests.log
+      - name: Commit only reviewed source paths and remove one-time preparer
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm ci/_prepare_beta22.py .github/workflows/prepare-beta22-sharp.yml
+          python - <<'PY'
+          import subprocess
+          allowed={'PORT.json','README.md','README_PL.md','ci/check_sharp_icons.py',
+            'ci/run_checks.py','host/klippy/extras/m300_oem_graphics.py',
+            'host/klippy/extras/m300_menu_ui.py','host/update_template/SUPPORTED_BASELINES.json',
+            'docs/pl/RELEASE_v1.0.0-beta.22.md','docs/en/RELEASE_v1.0.0-beta.22.md'}
+          diff=subprocess.check_output(['git','diff','--name-only','6c359c8b301bf8dd3c0e3e4ec69382c6be324cad'],text=True).splitlines()
+          untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines()
+          assert set(diff)<=allowed, set(diff)-allowed
+          for path in allowed:
+              subprocess.run(['git','add','--',path],check=True)
+          PY
+          git add -u -- ci/_prepare_beta22.py .github/workflows/prepare-beta22-sharp.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Prepare beta.22 sharp host icons with original asset evidence and migration guards preserved'
+          git push origin HEAD:fix/beta22-sharp-host-icons
+      - name: Preserve verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_SHARP_HOST_PREPARATION
+          path: |
+            .ci/reports/OLED_SHARP.json
+            .ci/sharp-host-tests.log
+          if-no-files-found: ignore
