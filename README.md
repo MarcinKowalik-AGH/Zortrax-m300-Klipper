@@ -1,4 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.22
+# Zortrax M300 Classic — Klipper v1.0.0-beta.23
+
+> **Beta.23 operational completion:** [installer 4480 and bounded CI retry](docs/pl/INSTALLATION_AND_CI.md), [current four-line START](docs/pl/PRINT_CONTROL.md), [hardware acceptance ledger](docs/pl/ACCEPTANCE_REGISTER.md), [release notes](docs/en/RELEASE_v1.0.0-beta.23.md). No MCU, motion or beta.22 artwork changes.
 
 > **Beta.22 — sharp host menu icons:** 24 activity designs restored to crisp binary pixels and 37 OEM groups thresholded for a physical-OLED visual test. Source evidence remains intact; no MCU flash. [Instructions, port 4480 and optional comparison](docs/en/RELEASE_v1.0.0-beta.22.md).
 
@@ -6,7 +8,7 @@
 
 **Current user and technical documentation, updated 10 November 2026.** This port targets the original **M300 Classic with STM32F103**, not M300 Plus, M300 Dual or Inventure. The historical illustration reference is `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`; current firmware and artwork are described in the beta.21 supplement.
 
-[Download beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.21) · [Polski — pełna instrukcja](README_PL.md) · [First installation](docs/en/FIRST_INSTALL.md) · [Existing installation](docs/en/INSTALL.md)
+[Download beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23) · [Polski — pełna instrukcja](README_PL.md) · [First installation](docs/en/FIRST_INSTALL.md) · [Existing installation](docs/en/INSTALL.md)
 
 ## Start with the illustrated instructions
 
@@ -42,7 +44,7 @@ Only while **idle and Ready**, without a paused job or active procedure:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
 Hard-refresh Fluidd with **Cmd+Shift+R**. The host update provides toned normal-menu artwork even on MCU R14.18. To change the independent MCU waiting/error screens as well, separately install **R14.19** using the [beta.21 host/MCU instructions](docs/en/RELEASE_v1.0.0-beta.21.md). The host installer does not flash the MCU. Retain UART baud, bootloader and factory data; no new mesh calibration is needed.

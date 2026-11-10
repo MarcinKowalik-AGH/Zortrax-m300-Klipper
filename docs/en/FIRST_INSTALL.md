@@ -1,4 +1,6 @@
-# Zortrax M300 Classic v1.0.0-beta.21 — first installation
+# Zortrax M300 Classic v1.0.0-beta.23 — first installation
+
+> **Beta.23 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
 
 This guide starts with a printer that already has the compatible M300 SD
 bootloader, and a Raspberry Pi or Orange Pi without printer software.
@@ -91,11 +93,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.21/Zortrax_M300_Klipper_v1.0.0-beta.21.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.21/SHA256SUMS-v1.0.0-beta.21.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-beta.21.zip$' SHA256SUMS-v1.0.0-beta.21.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-beta.21.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-beta.21 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.23/Zortrax_M300_Klipper_v1.0.0-beta.23.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.23/SHA256SUMS-v1.0.0-beta.23.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-beta.23.zip$' SHA256SUMS-v1.0.0-beta.23.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-beta.23.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-beta.23 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -115,7 +117,7 @@ Restart the temporary host service if it was stopped for flashing:
 
 ```bash
 sudo systemctl start klipper
-python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 80
+python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 4480
 ```
 
 The command prints a read-only plan. For Raspberry Pi, substitute the UART
@@ -123,7 +125,7 @@ selected in step 1, for example `--serial /dev/serial0`. Review those paths,
 then apply the same command with `--apply`:
 
 ```bash
-python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 80 --apply
+python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 4480 --apply
 ```
 
 The helper verifies checksums, refuses an existing printer/M300 setup, installs
@@ -157,7 +159,7 @@ M105
 Expect Ready, matching 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`, print
 controller `0.13.16.29-UNIFIED-NATIVE-START`, zero heater targets and sensible
 ambient temperatures. Confirm the endstops/contact change when operated.
-The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.21/docs/en/HARDWARE_VARIANTS.md)
+The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.23/docs/en/HARDWARE_VARIANTS.md)
 must match the printer. An erased/unknown factory record is an error, not a
 reason to guess a Z scale.
 
@@ -181,14 +183,14 @@ START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_tempe
 END_PRINT
 ```
 
-See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.21/docs/pl/PRINT_CONTROL.md).
+See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.23/docs/pl/PRINT_CONTROL.md).
 
 ## Updates and acceptance scope
 
 This beta is a fixed tag and fixed assets. `orange-pi` remains the moving
 deployment channel for later project updates. To join that channel after the
-first installation, clone its branch and use the normal updater with `--port 80`
-(its historical default is 4080). Never use a generic upstream Klipper/Fluidd
+first installation, clone its branch and use the normal updater with `--port 4480`
+(beta.23 prefers 4480 and revalidates a saved port/root). Never use a generic upstream Klipper/Fluidd
 update to replace this port. The operating system and Moonraker are separate
 components; retain backups before changing them.
 

@@ -142,3 +142,7 @@ Logi przydatne do zgłoszenia: `klippy.log`, `moonraker.log`, statusy powyżej i
 Nie uruchamiaj aktualizacji na podstawie samej informacji, że powstał commit lub PR. Sprawdź końcowy przebieg dla właściwego commita, gotowe wydanie i BUILD_PROVENANCE.json gałęzi orange-pi. Nieudany wcześniejszy przebieg testowy pozostaje w historii nawet po poprawieniu kodu. Ponowienie bez poprawki pomaga przy chwilowej awarii sieci, nie naprawia błędu programu lub testu.
 
 Publikacja wydania wymaga udanej budowy oraz kontroli paczki. Ta instrukcja **nie deklaruje stałego automatycznego naprawiania błędów** — funkcji tej nie dodają dzisiejsze zmiany frontendu. [Zakres weryfikacji](DOCUMENTATION_CHECK.md).
+
+## Aktualizacja zasad beta.23
+
+Port użytkownika to **4480**. Instalator zapisuje potwierdzony wybór poza repozytorium i ponownie porównuje go z nginx. Nowy [automat CI](INSTALLATION_AND_CI.md) ponawia wyłącznie rozpoznane przejściowe awarie, najwyżej dwa razy; nadal **nie deklaruje automatycznego naprawiania błędów kodu**. [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) rozdziela potwierdzenia użytkownika i testy programowe. Aktualny opis START 2Y + 2X jest w [PRINT_CONTROL](PRINT_CONTROL.md).

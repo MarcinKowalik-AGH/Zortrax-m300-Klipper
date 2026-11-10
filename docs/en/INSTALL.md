@@ -1,8 +1,10 @@
 # Install the main Orange Pi release
 
+> **Beta.23 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
+
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.21 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.21).
+[v1.0.0-beta.23 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
@@ -29,7 +31,7 @@ To organize the current native configuration while installing the ready build:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --organize-config
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --organize-config --port 4480
 ```
 
 This separates the original ADC temperature tables into
@@ -65,7 +67,7 @@ else
   git clone --depth 1 --single-branch --no-tags --branch orange-pi \
     https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
 fi &&
-python3 "$m300_dir/install-orange-pi.py"
+python3 "$m300_dir/install-orange-pi.py" --port 4480
 ```
 
 The full build archive and test reports are also available in the successful
@@ -73,7 +75,7 @@ The full build archive and test reports are also available in the successful
 
 The installer checks the delivered file hashes, reads the active Klipper paths
 from Moonraker, updates the host and macro groups, and deploys the compiled
-Fluidd to the existing nginx web root on port 4080. It saves the old web files
+Fluidd to the verified nginx Fluidd root (saved endpoint, otherwise preferred port 4480, otherwise one unique installation). It saves the old web files
 and preserves config.json. A host already on the same R16.12 files skips its
 restart. For a different nginx port, pass `--port`; for an atypical nginx
 configuration, pass `--fluidd-root /absolute/path/to/current/fluidd`.

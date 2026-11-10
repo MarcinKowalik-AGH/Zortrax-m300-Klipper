@@ -34,7 +34,7 @@ For an existing idle, Ready installation:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
 Hard-refresh Fluidd with Cmd+Shift+R. Beta.18–20 do not require a new MCU flash, baud change or mesh reset. Preserve local edits and use the installer safeguards. For a new host, follow [FIRST_INSTALL](FIRST_INSTALL.md), not the updater alone.

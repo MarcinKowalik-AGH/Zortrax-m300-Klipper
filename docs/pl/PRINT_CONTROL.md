@@ -1,192 +1,116 @@
-# Druk M300: Start, pauza, wymiana filamentu, wznowienie i End
+# M300 — aktualna obsługa START, PAUSE, RESUME, CANCEL i END
 
-Zmiana hosta `0.13.16.29-UNIFIED-NATIVE-START`. Obowiązuje natywny Klipper
-przypięty w projekcie do `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51`.
-MCU pozostaje `0.13.14.18-OEM-ERRORS-UART8`; ta aktualizacja nie wymaga
-ponownego wgrywania firmware do drukarki.
+[Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-## Instalacja
+**Stan instrukcji: beta.23, 10 listopada 2026.** Kontroler druku pozostaje
+`0.13.16.38-PRINT-DRAIN-XY-PURGE`; niniejsza aktualizacja porządkuje opis,
+nie zmienia ruchów drukarki. [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+i [makra](../../host/config/m300_operations.cfg) są źródłem parametrów.
 
-Gdy drukarka nie drukuje, na Orange Pi:
+Opis starszego kontrolera `.29`, pojedynczej linii 40 mm i dawnych wartości
+znajduje się w [archiwum](PRINT_CONTROL_LEGACY_R16_29.md). **Nie należy już
+kopiować go jako aktualnej konfiguracji.**
+
+## Aktualizacja działającej instalacji
+
+Przy bezczynnej drukarce **Ready**, bez pauzy ani aktywnej procedury, na Orange Pi:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --organize-config
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
-Instalator dodaje `[m300_print_control]` i brakujące makra. Instalator aktualizuje rozpoznane, standardowe makro Start do `MESH=AUTO`. Istniejące własne
-makra `START_PRINT`/`END_PRINT` pozostają zachowane; wtedy trzeba świadomie
-włączyć do nich `ZORTRAX_PRINT_START`/`ZORTRAX_PRINT_END` zamiast powielać ruchy.
-Dotychczasowe pliki G-code z własnym startem nadal wykonują swoje polecenia.
+Beta.23 preferuje port 4480 i zapisuje zweryfikowany wybór w katalogu konfiguracji,
+w `.m300-installer.json`, poza repozytorium i jego sumami. Następne wywołanie bez
+`--port` odczytuje ten zapis i ponownie sprawdza nginx. Nie zmienia portu nginx.
+Nie trzeba wgrywać MCU: pozostaje `0.13.14.19-TONED-OLED-UART8`. Instalator hosta
+nie programuje MCU. Nie obchodź odmowy nadpisania nieznanych zmian.
 
-## Kolejność pracy
-
-| Wywołanie | Działanie |
-|---|---|
-| `PAUSE`, `M601`, `M25`, przycisk Fluidd, przytrzymanie OLED 10 s | Natywny zapis `PAUSE_STATE`, zatrzymanie odczytu pliku i opróżnienie kolejki. Retrakcja 2 mm tylko przy gorącej dyszy, odsunięcie stołu o Z+5 mm i parkowanie X300 Y305. |
-| Pauza 10 minut | Dysza przechodzi do 150°C, jeżeli jej cel jest wyższy. Stół zachowuje temperaturę wydruku; silniki nie są zwalniane przez bezczynność. |
-| Pauza 30 minut | Cel dyszy 0°C. Stół i pozycja pozostają utrzymane. |
-| `RESUME` | Przywrócenie pierwotnych celów dyszy i stołu, oczekiwanie na stabilizację, powrót XY na podniesionym Z, następnie powrót Z, odtworzenie retrakcji i natywnego stanu parsera, wznowienie tego samego pliku. |
-| `M600` / `ZORTRAX_CHANGE` | Najpierw wspólna pauza i parkowanie, potem dotychczasowa procedura CHANGE: 110 mm wycofania, potwierdzenie włożenia i 150 mm ładowania. Zachowane tokeny, fazy i ograniczenia transportu. |
-| `FILAMENT_READY` | Po udanej wymianie i sprawdzeniu wypływu odblokowuje osobne `RESUME`. Wymiana sama nie wznawia pliku. Jeśli dysza ostygła, `RESUME` najpierw ją dogrzewa i zatrzymuje się przy potwierdzeniu wypływu. |
-| `END_PRINT` | Opróżnienie kolejki, bezpieczne parkowanie, grzałki OFF i natywne `M107`. Natywny czytnik dochodzi do rzeczywistego EOF; zachowane zakończenie i ponowny wydruk. |
-| `CANCEL_PRINT` | Unieważnienie oczekujących operacji, zakończenie aktywnego transportu filamentu, grzałki OFF, zamknięcie pliku po zatrzymaniu czytnika, nawiew OFF i parkowanie przy ważnej pozycji. Anulowanie nie oznacza ukończenia wydruku. |
-
-Na M300 **Z+ odsuwa stół od dyszy**. Przy końcu zakresu Z, gdy zabraknie
-pełnych 5 mm prześwitu, ruch XY jest pomijany; wymiana filamentu wymaga
-bezpiecznego parkowania. Skonfigurowany punkt poza zakresem osi nie jest
-po cichu przesuwany: pauza pozostaje w miejscu i pokazuje przyczynę.
-
-Podczas pauzy blokowane są ruchy ręczne, sondowanie, zmiana siatki, bazowanie,
-przestawienie współrzędnych i obejście wznowienia przez `M24`. Wyłączenie
-silników, zmiana pliku, nadpisanie `PAUSE_STATE`, zmiana geometrii/siatki lub
-restart unieważniają możliwość wznowienia. Nie ma automatycznego G28 w pauzie.
-Anulowanie trwającego natywnego homingu zachowuje istniejące zatrzymanie
-Klippera — po przerwanym bazowaniu nie zakłada się ważnej pozycji.
-
-## OrcaSlicer
-
-W startowym G-code drukarki użyj jednej procedury:
+## Jedno wywołanie START z OrcaSlicera
 
 ```gcode
-START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_temperature_initial_layer_single]
+START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_temperature_initial_layer_single] MESH=AUTO
 ```
 
-W końcowym G-code:
+Końcowy G-code:
 
 ```gcode
 END_PRINT
 ```
 
-Start nagrzewa oba elementy jednocześnie, wykonuje dotychczasowy natywny
-homing M300 (minimum 180°C, zachowanie wyższego celu), ładuje **zapisaną**
-siatkę `m300_pads` po homingu, jeśli istnieje (`MESH=AUTO`), a następnie wykonuje linię 40 mm z 3 mm
-filamentu na wysokości 0,3 mm. Ruchy linii przechodzą przez natywny Bed Mesh.
-M220/M221 dla tej linii wynoszą 100%, po niej przywracany jest poprzedni stan.
-Nie wykonuje się 25 pomiarów przed każdym wydrukiem.
+Nie powielaj w profilu slicera dodatkowego G28, grzania i czterech linii, gdy
+wywołujesz wspólny START_PRINT. Dla świadomego wymagania konkretnej siatki użyj
+`MESH=m300_pads`; dla świadomego druku bez kompensacji `MESH=NONE`.
 
-Domyślne `MESH=AUTO` ładuje istniejący profil `m300_pads`; bez niego jawnie
-wyłącza kompensację. Nie tworzy fikcyjnej siatki. Jawne `MESH=m300_pads`
-lub inna nazwa wymaga istnienia wybranego profilu i zgłasza brak przed startem.
-Świadome pominięcie kompensacji:
+## Obecna kolejność START_PRINT: dwie linie Y i dwie X
 
-```gcode
-START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60 MESH=NONE
-```
+1. Sprawdzenie temperatur, dostępności profilu i braku konkurencyjnej procedury.
+2. Przygotowanie natywnego pliku oraz nagrzewanie dyszy i stołu do zadanych celów.
+   Włączone Full platform preheating dodaje skonfigurowaną stabilizację (domyślnie
+   60 s); nie jest pomiarem temperatury każdego miejsca powierzchni stołu.
+3. Wspólne bazowanie M300. Z korzysta z dotychczasowej procedury kontaktowej i
+   minimum 180°C, nie obniżając wyższego celu drukowania.
+4. **Po bazowaniu** załadowanie i aktywacja wybranego profilu bed_mesh. `AUTO`
+   oznacza `m300_pads`, gdy profil istnieje; przy jego braku **NONE, bez kompensacji**.
+   Jawna nieistniejąca nazwa jest odrzucana przed rozpoczęciem operacji.
+5. **Cztery odcinki z ekstruzją: Y tam i z powrotem, następnie X tam i z powrotem
+   (2Y + 2X).** Pomiędzy parami wykonywane jest uniesienie/odsunięcie Z.
+6. Odtworzenie trybów parsera, mnożników i wznowienie wykonania właściwego pliku.
 
-Geometria linii jest sprawdzana względem natywnych granic. Profil Orca może
-mieć dodatkowe własne ruchy; usuń z jego startu/końca powielone bazowanie,
-grzanie, parkowanie i linię rozruchową, jeżeli zastępujesz je tymi makrami.
+Ruchy rozruchowe przechodzą przez natywny G-code i aktywną transformację mesh.
+To nie jest obejście kompensacji przez bezpośrednie manual_move. Podczas rozruchu
+używane są G90, M83 i mnożniki M220/M221 = 100%; wcześniejszy stan parsera jest
+odtwarzany również przy przerwaniu. Nowy pomiar 25 pozycji **nie jest wykonywany
+przy każdym wydruku**.
 
-## Grzanie platformy i pełne wygrzewanie
+### Domyślna geometria w kodzie, nie nakaz nadpisania własnych nastaw
 
-W Maintenance, pod Heat the extruder, dostępne jest **Heat the platform**.
-`ZORTRAX_HEAT_PLATFORM TEMP=60` uruchamia tę samą procedurę z Fluidd.
-Grzeje tylko stół, nie wymaga bazowania i zachowuje poprzedni cel dyszy.
-Po osiągnięciu celu ±2°C czeka na potwierdzenie. Potwierdzenie albo anulowanie
-wyłącza stół; token i faza chronią przed powtórzonym kliknięciem. OLED pokazuje
-animację grzania stołu, a Fluidd tę samą procedurę.
-
-W Settings dostępne jest **Full platform preheating → Enabled / Disabled**:
-
-```gcode
-ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED
-ZORTRAX_FULL_PLATFORM_PREHEAT STATE=DISABLED
-```
-
-Zapisany wybór jest pobierany raz na początku nowej sesji. Enabled dodaje
-`platform_soak_seconds` (domyślnie 60 s) ciągłej stabilizacji obu temperatur
-przed homingiem. Wyjście poza pasmo ±2°C rozpoczyna stabilizację od nowa.
-Oryginalny limit oczekiwania na grzanie nadal obowiązuje; anulowanie odwołuje
-wszystkie dalsze ruchy i grzanie. Dla celu stołu 0°C dodatkowe czekanie jest
-pomijane. To zachowana polityka portu oparta na wygrzewaniu: jeden czujnik
-stołu nie mierzy rozkładu temperatur na całej powierzchni.
-
-## Z-code i kontrola plików
-
-Konwerter używa teraz tego samego `START_PRINT ... MESH=AUTO` i `END_PRINT`
-co G-code. Grzanie, homing, zapisana siatka, wygrzewanie oraz parkowanie
-X300 Y305 należą do jednego właściciela. Plik jest w całości sprawdzany
-przed udostępnieniem przycisku druku. Nieznany opcode nawet w ostatnim
-rekordzie odrzuca cały model przed grzaniem i ruchem.
-
-Do paczki dodano narzędzie, które wyłącznie czyta i sprawdza pliki:
-
-```bash
-python3 "$HOME/m300-orange-pi/M300_HOST_R16_12_NORMAL_UI/check-zcode.py" --limits printer_limits.json model.zcode
-```
-
-Przykładowa struktura `printer_limits.json` poniżej wymaga wpisania
-**rzeczywistych granic z własnej konfiguracji**. Narzędzie nie zmienia limitów
-drukarki i nie wysyła G-code ani komend do MCU.
-
-```json
-{"heater_limits":{"hotend":[0,300],"bed":[0,130]},"axis_limits":{"X":[0,300],"Y":[0,305],"Z":[0,315]}}
-```
-
-Sprawdzane są rodzina M300 20–29, wersja profilu, skale, CRC nagłówka i każdego
-rekordu, długości/liczby rekordów, wszystkie obsługiwane polecenia, temperatury,
-zakres osi i limity rozmiaru. Z=400/800 w pliku nie nadpisuje ustawień mechaniki.
-Podzbiór formatu pozostaje jawny: pliki obcego modelu, dual/support i nieznane
-polecenia są odrzucane. Testy referencyjne są syntetyczne; poprawna walidacja
-nie jest potwierdzeniem fizycznego wydruku ani zgodności każdego eksportu Z-Suite.
-
-## Parametry i odczyt
-
-Sekcja trafia do `m300_services.cfg` przy porządkowaniu konfiguracji:
-
-```ini
-[m300_print_control]
-park_x: 300
-park_y: 305
-pause_z_hop: 5
-min_park_clearance: 5
-park_speed: 100
-z_lift_speed: 5
-pause_retract: 2
-retract_speed: 2
-pause_standby_after: 600
-pause_standby_temperature: 150
-pause_heater_off_after: 1800
-heat_timeout: 1800
-move_timeout: 120
-purge_length: 40
-purge_filament: 3
-purge_height: 0.3
-platform_soak_seconds: 60
-```
-
-`PRINT_CONTROL_STATUS` lub `PAUSE_TEMP_STATUS` pokazują fazę, pierwotne cele,
-czas pauzy, wymóg potwierdzenia filamentu i ostatnią przyczynę odmowy.
-Nie dodawaj drugiej sekcji, jeśli instalator już ją utworzył.
-
-## Audyt zgodności
-
-| Obszar | Wynik przeglądu |
+| Parametr | Wartość domyślna i znaczenie |
 |---|---|
-| Odczyt pliku | Jeden natywny `virtual_sdcard`; brak nowego podajnika i ponownego uruchomienia silnika M02/M08. Stopień wykonania pliku ustala natywny czytnik. |
-| Pauza i powrót | Natywny `pause_resume` jest właścicielem `PAUSE_STATE`. Zachowane tryby osi/E, przepływ i prędkość; powrót dopiero po dogrzaniu i sprawdzeniu tej samej sesji. |
-| Start/End | Usunięta kolizja nazw ze starym M02 w trybie natywnym. Makra kierują do jednego właściciela procedur. |
-| Models / SD / Z-code / reprint | Sprawdzany ten sam otwarty plik lub niezmienna kopia wykonawcza, pozycja pliku oraz metadane deskryptora. Zachowane kryterium rzeczywistego EOF i opróżnienia kolejki przed reprint. |
-| Filament | Zachowana oryginalna maszyna stanów, limity E, tokeny i fazy; własny target wydruku przywracany także po standby/OFF. Potwierdzenie wypływu jest osobnym krokiem. |
-| Bezczynność | Dotychczasowe skrypty pozostają w gałęzi poza chronioną pauzą; w pauzie/Start/End nie wyłączają stołu ani silników. |
-| Bed Mesh | Zapisaną siatkę ładuje natywny menedżer profili. Linia startowa używa transformacji; podczas pauzy identyfikator i offset siatki są sprawdzane. Pomiar padów i oryginalna Autocalibration pozostają osobnymi funkcjami. |
-| OLED / Fluidd | Wspólne komendy i stan; zachowane przytrzymania 10 s i potwierdzenia wyświetlonej klatki. Podczas przygotowania używany jest standardowy ekran temperatur/statusu, a po wymianie pojawia się potwierdzenie wypływu. |
-| LED | Prawdziwa pauza i wznowienie: fiolet. Grzanie: czerwony. Bariera czytnika w Start/End nie udaje pauzy. Gotowość: zielony; praca: biały; rzeczywiste błędy: dotychczasowe RGB co 5 s. |
-| Termika i MCU | Bez zmian ADC, PID, PWM, watchdogów, progów termostatu 50/45°C, lokalnych zatrzasków i jawnego ARM. Błąd wyłączenia grzałek żąda natywnego shutdown. |
-| Napędy i komunikacja | Bez zmian MCU, timerów XY, próbkowania pokrętła, UART, OLED DMA i ograniczeń osi. Planowanie pozostaje natywne. |
-| Instalacja | Nowy moduł i jego zależność geometrii w faktycznej paczce; listy bazowych sum obejmują poprzednią wersję. Zachowane migracje i wycofanie instalacji. |
+| `purge_length` | 250 mm; odniesienie do długości i obliczenia dawki |
+| `purge_filament` | `20 × purge_length / 350`, czyli około 14,286 mm filamentu dla 250 mm odniesienia |
+| `purge_height` | 0,28 mm |
+| `PURGE` w komendzie | Żądana długość, dalej ograniczana do rzeczywistego pola osi |
+| Początek pary Y | `X_min+3`, `Y_min+10`; powrót z przesunięciem X o 0,5 mm |
+| Początek pary X | `X_min+3`, `Y_min+20`; powrót z przesunięciem Y o 0,5 mm |
+| Daleka krawędź | Nie bliżej niż 5 mm od rzeczywistego maksimum osi |
+| Z przed przemieszczeniem | 5 mm w układzie użytym przez procedurę; dodatnie Z odsuwa stół |
 
-Sprawdzenia obejmują testy hosta, istniejący zestaw regresji i rzeczywiste
-procesy przypiętego Klippera w FILEOUTPUT, w tym pełny plik z wymianą
-filamentu, anulowanie, import Z-code i reprint. W FILEOUTPUT modelowane są
-temperatury/ADC, upływ czasu MCU i brak fizycznych potwierdzeń OLED. To
-walidacja oprogramowania, **nie potwierdzenie ruchów ani temperatur na sprzęcie**.
+Dawka jest proporcjonalna do **faktycznej długości każdego odcinka**, a nie
+stała po skróceniu do granic M300. `PURGE=350` nie robi z M300 stołu CR-10 S5.
+Początek Y i odniesienie końca Y różnią się o 10 mm, dlatego nie należy obiecywać
+czterech odcinków dokładnie po 250 mm. Istniejące własne nastawy pozostają
+w konfiguracji; ta aktualizacja dokumentacji ich nie zmienia.
 
-Po instalacji pierwszą krótką próbę wykonaj bez modelu: sprawdź odsunięcie Z,
-parkowanie, zatrzymanie pliku, cele w pauzie, powrót i anulowanie. Następnie
-krótki wydruk z wymianą, widocznym wypływem i osobnym Resume. Nie powtarzaj
-homingu nad wydrukiem po utracie pozycji. Raport zbiorczy testów buduje GitHub
-Actions; jego wersja jest związana z SHA opublikowanego commitu.
+## Pauza, wznowienie, zakończenie
 
-Natywne zasady komend: [Klipper G-Codes](https://www.klipper3d.org/G-Codes.html).
+| Wywołanie | Zachowanie |
+|---|---|
+| PAUSE / przycisk Fluidd / odpowiednik OLED | Zatrzymanie czytnika, zapis PAUSE_STATE, opróżnienie rzeczywistej kolejki, gorąca retrakcja, odsunięcie i parkowanie |
+| RESUME | Przywrócenie celów, dogrzanie, bezpieczny powrót i odtworzenie stanu tego samego pliku; brak automatycznego G28 nad modelem |
+| CANCEL_PRINT | Przerwanie operacji i wyłączenie celów grzania; zamknięcie zatrzymanego pliku i usunięcie pauzy **nie czekają na parkowanie**; parkowanie jest etapem warunkowym |
+| END_PRINT | Opróżnienie kolejki, zakończenie, parkowanie w granicach ważnej pozycji, grzałki i nawiew modelu OFF |
+| M600 / ZORTRAX_CHANGE | Wspólna pauza, wymiana, potwierdzenie wypływu i dopiero osobne RESUME |
+
+Domyślne parkowanie to X300/Y305, odsunięcie Z o 5 mm i gorąca retrakcja 2 mm.
+Przy braku bezpiecznego prześwitu nie należy wymuszać przejazdu nad modelem.
+Pauza zachowuje stół i pozycję; domyślnie po 600 s obniża wyższy cel dyszy do
+150°C, a po 1800 s wyłącza jej cel. To parametry konfigurowalne, nie obietnica
+nieskończonego bezpiecznego pozostawiania rozgrzanej drukarki bez nadzoru.
+
+Wyłączenie silników, zmiana pliku, restart lub utrata pozycji unieważniają
+bezpieczne wznowienie. Nie odblokowuj go przez ręczne nadpisywanie PAUSE_STATE.
+Zabezpieczenia grzania, autonomiczne chłodzenie MCU i sygnalizacja błędów
+pozostają niezależne od wyłączenia nawiewu modelu.
+
+## Kontrola i odbiór
+
+`PRINT_CONTROL_STATUS` podaje bieżącą fazę i cele. `BED_MESH_OUTPUT` pozwala
+odczytać aktywną siatkę bez nowego sondowania. Sam kolorowy podgląd profilu we
+Fluidd nie jest dowodem włączenia kompensacji. Rejestrowanie rzeczywistych prób
+odbywa się w [rejestrze](ACCEPTANCE_REGISTER.md): start, pauza, wznowienie,
+anulowanie w różnych fazach, wymiana i zakończenie mają osobne pozycje.
+
+Programowe testy i udana kompilacja nie są odbiorem ruchów ani pierwszej warstwy
+na Twojej drukarce. Wpis bez potwierdzenia użytkownika pozostaje oczekujący.
+Nie przypisujemy tu nowych wyników testów sprzętowych.

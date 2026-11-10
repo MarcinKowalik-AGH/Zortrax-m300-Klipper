@@ -1,12 +1,14 @@
 # Zortrax M300 Classic — Klipper, Orange Pi i oryginalny OLED
 
+> **Beta.23 — porządki operacyjne:** [instalator 4480 i ograniczone retry CI](docs/pl/INSTALLATION_AND_CI.md), [aktualny START 2Y + 2X](docs/pl/PRINT_CONTROL.md), [wspólny rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md), [opis wydania](docs/pl/RELEASE_v1.0.0-beta.23.md). Firmware MCU, ruch i wygląd beta.22 pozostają bez zmian.
+
 > **Beta.22 — ostre ikony OLED:** przywrócone 24 dodatkowe ikony oraz wyostrzone 37 zestawów OEM, bez nadpisywania oryginalnych zasobów. [Aktualizacja na porcie 4480 i porównanie wariantów](docs/pl/RELEASE_v1.0.0-beta.22.md). Nie trzeba wgrywać MCU.
 
 **Beta.21:** Cieniowane 24 ikony aktywności i zgodne zasoby autonomicznego OLED w MCU R14.19. [Zakres, ilustracja i dwie części aktualizacji](docs/pl/RELEASE_v1.0.0-beta.21.md). Ilustrowany manual 65 ekranów poniżej zachowuje jawny punkt odniesienia beta.20.
 
 **Pełna instrukcja użytkownika i opis techniczny portu.** Stan dokumentacji: 10 listopada 2026; oprogramowanie odniesienia: **v1.0.0-beta.20**. Projekt dotyczy klasycznego M300 ze sterownikiem STM32F103, nie modeli Plus, Dual ani Inventure.
 
-[Gotowa beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.21) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
+[Gotowa beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
 
 ![Fluidd: ruch, temperatury, podgląd OLED, makra i konsola](docs/img/fluidd_overview.png)
 
@@ -58,7 +60,7 @@ Tylko przy **bezczynnej drukarce w stanie Ready**, bez aktywnego lub wstrzymaneg
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
 Potem odśwież Fluidd przez **Cmd+Shift+R**. Zmiany frontendu z beta.18–20 nie wymagają ponownego wgrywania MCU. Nie zastępuj portu aktualizacją standardowego Klippera/Fluidd. Instalator zachowuje kalibracje i odmawia nadpisania nieznanych zmian; nie używaj `reset --hard`, aby ominąć taką kontrolę. Szczegóły: [aktualizacja i odzyskiwanie](docs/pl/USER_GUIDE.md).
