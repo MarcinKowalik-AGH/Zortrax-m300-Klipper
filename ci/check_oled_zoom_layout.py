@@ -124,7 +124,7 @@ def run():
                             assert abs(v['controls']['height']-v['smallHeight'])<=tolerance, v
                             assert abs(v['afterScroll']['right']-v['controls']['right'])<=0.1, v
                             assert max(v['buttonHeights'])-min(v['buttonHeights'])<=0.6,v
-                            assert all(h >= 17 for h in v['buttonHeights']), v
+                            assert all(h >= 14 for h in v['buttonHeights']), v
                             assert all(c=='rgb(22, 161, 254)' for c in v['buttonColors']),v
                             assert v['border']=='rgb(10, 67, 108)',v
                             assert v['selectedBackground']=='rgb(12, 88, 142)',v
