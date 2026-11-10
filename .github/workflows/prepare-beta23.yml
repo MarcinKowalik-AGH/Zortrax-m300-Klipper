@@ -1,0 +1,96 @@
+name: Prepare and verify beta.23 operational fixes
+on:
+  push:
+    branches: [fix/beta23-installer-ci-acceptance]
+    paths: ['.github/workflows/prepare-beta23.yml']
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/beta23-installer-ci-acceptance
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve and apply only the checksum-pinned operational patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/f63bd4bc8a82c7c4182f7d5a52e42eb53489b3de --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/operational.zip"
+          echo '991217dc805dd06e94ab48b7bf05c57f9f854469ca31c8a7b80f2e1cc52a07f1  '"$RUNNER_TEMP/operational.zip" | sha256sum -c -
+          python - <<'PY'
+          import os,stat,subprocess,zipfile
+          from pathlib import Path
+          base='29d326d20bc07656789f2be64a8101996fcb7538'
+          changed=subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines()
+          assert changed==['.github/workflows/prepare-beta23.yml'],changed
+          destination=Path(os.environ['RUNNER_TEMP'])/'operational'
+          destination.mkdir()
+          with zipfile.ZipFile(Path(os.environ['RUNNER_TEMP'])/'operational.zip') as z:
+              assert len(z.infolist())==16
+              assert sum(x.file_size for x in z.infolist())<300000
+              for info in z.infolist():
+                  p=Path(info.filename)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert not stat.S_ISLNK(info.external_attr >> 16)
+                  assert info.filename=='apply_repository.py' or info.filename.startswith(('payload/ci/','payload/docs/','payload/.github/workflows/'))
+                  target=destination/p
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(z.read(info.filename))
+          subprocess.run(['python',str(destination/'apply_repository.py')],check=True)
+          PY
+      - name: Validate installer selection, bounded retries, ledger and START documentation
+        run: |
+          set -euo pipefail
+          python ci/test_fluidd_selection.py
+          python ci/test_retry_failed_workflow.py
+          python ci/test_acceptance_register.py
+          python ci/test_release23_contracts.py
+          python ci/test_install_orange_pi.py
+          python ci/acceptance_register.py --check
+          python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
+          python docs/tools/check_manual.py --output docs/reports/DOCUMENTATION_BETA23_VALIDATION.json
+      - name: Commit reviewed operational scope and remove one-time importer
+        run: |
+          set -euo pipefail
+          rm .github/workflows/prepare-beta23.yml
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          base='29d326d20bc07656789f2be64a8101996fcb7538'
+          assert not subprocess.check_output(['git','diff',base,'--','host','mcu','frontend'],text=True)
+          for path in subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines():
+              assert path in ('PORT.json','README.md','README_PL.md') or path.startswith(('ci/','docs/','.github/workflows/')),path
+          for path in Path('ci').glob('*.py'):
+              compile(path.read_text(),str(path),'exec')
+          manifest=Path('docs/reports/DOCUMENTATION_FILES.json')
+          data=json.loads(manifest.read_text())
+          for name in data['files']:
+              data['files'][name]=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+          data['files']['docs/reports/DOCUMENTATION_BETA23_VALIDATION.json']=hashlib.sha256(Path('docs/reports/DOCUMENTATION_BETA23_VALIDATION.json').read_bytes()).hexdigest()
+          manifest.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add PORT.json README.md README_PL.md ci docs .github/workflows
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Unify beta.23 Fluidd 4480 selection, four-line START docs, bounded CI retry and evidence-based acceptance ledger'
+          git push origin HEAD:fix/beta23-installer-ci-acceptance
+      - name: Preserve verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_BETA23_OPERATIONAL_VERIFICATION
+          path: |
+            docs/reports/DOCUMENTATION_BETA23_VALIDATION.json
+            docs/reports/HARDWARE_ACCEPTANCE.json
+          if-no-files-found: warn
