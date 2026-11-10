@@ -1,6 +1,6 @@
 {
   "model": "M300_CLASSIC",
-  "distribution_version": "v1.0.0-beta.21",
+  "distribution_version": "v1.0.0-beta.22",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "upstream_archive_sha256": "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0",
   "upstream_archive_url": "https://codeload.github.com/Klipper3d/klipper/zip/ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
@@ -104,12 +104,13 @@
   "error_revision": "0.13.16.27-SD-NOTICE",
   "oem_error_count": 21,
   "print_control_revision": "0.13.16.38-PRINT-DRAIN-XY-PURGE",
-  "supersedes_version": "v1.0.0-beta.20",
+  "supersedes_version": "v1.0.0-beta.21",
   "oled_revision": "0.13.16.32-OLED-ACK-RECOVERY",
   "precision_z_release_retries": 2,
   "oled_preview_revision": "NAV-EVENT-1",
   "oled_frontend_revision": "NAV-PIPELINE-2",
   "tune_frontend_revision": "TUNE-PREPARE-1",
   "oled_zoom_revision": "OLED-ZOOM-2",
-  "activity_artwork_revision": "ACTIVITY-TONES-1"
+  "activity_artwork_revision": "ACTIVITY-TONES-1",
+  "oled_icon_style": "SHARP-HOST-1"
 }

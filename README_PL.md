@@ -1,5 +1,7 @@
 # Zortrax M300 Classic — Klipper, Orange Pi i oryginalny OLED
 
+> **Beta.22 — ostre ikony OLED:** przywrócone 24 dodatkowe ikony oraz wyostrzone 37 zestawów OEM, bez nadpisywania oryginalnych zasobów. [Aktualizacja na porcie 4480 i porównanie wariantów](docs/pl/RELEASE_v1.0.0-beta.22.md). Nie trzeba wgrywać MCU.
+
 **Beta.21:** Cieniowane 24 ikony aktywności i zgodne zasoby autonomicznego OLED w MCU R14.19. [Zakres, ilustracja i dwie części aktualizacji](docs/pl/RELEASE_v1.0.0-beta.21.md). Ilustrowany manual 65 ekranów poniżej zachowuje jawny punkt odniesienia beta.20.
 
 **Pełna instrukcja użytkownika i opis techniczny portu.** Stan dokumentacji: 10 listopada 2026; oprogramowanie odniesienia: **v1.0.0-beta.20**. Projekt dotyczy klasycznego M300 ze sterownikiem STM32F103, nie modeli Plus, Dual ani Inventure.
