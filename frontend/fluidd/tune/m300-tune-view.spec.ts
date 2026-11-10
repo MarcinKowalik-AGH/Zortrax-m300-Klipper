@@ -14,10 +14,12 @@ import { getters } from '@/store/mesh/getters'
 import type { MeshState } from '@/store/mesh/types'
 import type { RootState } from '@/store/types'
 
-vi.mock('@/api/socketActions', () => ({ SocketActions: {
-  printerObjectsQuery: vi.fn().mockResolvedValue({ status: {} }),
-  printerGcodeScript: vi.fn().mockResolvedValue({})
-} }))
+vi.mock('@/api/socketActions', () => ({
+  SocketActions: {
+    printerObjectsQuery: vi.fn().mockResolvedValue({ status: {} }),
+    printerGcodeScript: vi.fn().mockResolvedValue({})
+  }
+}))
 
 const slot = { template: '<section><slot /><slot name="menu" /></section>' }
 const stubs = { 'v-row': slot, 'v-col': slot, 'v-card-text': slot, 'collapsable-card': slot }
@@ -31,29 +33,56 @@ function setup (saved = false) {
   }))
   const points = regions.flatMap(r => [r.center, [r.bounds[0], r.bounds[1]], [r.bounds[2], r.bounds[1]],
     [r.bounds[2], r.bounds[3]], [r.bounds[0], r.bounds[3]]])
+  const savedProfile = {
+    points: [[0, 0.01, 0.02], [0.01, 0.02, 0.03], [0.02, 0.03, 0.04]],
+    mesh_params: {
+      min_x: 0,
+      min_y: 0,
+      max_x: 300,
+      max_y: 305,
+      algo: 'direct',
+      x_count: 3,
+      y_count: 3,
+      mesh_x_pps: 0,
+      mesh_y_pps: 0,
+      tension: 0.2
+    }
+  }
   const printer = {
     webhooks: { state: 'ready' },
     m300_motion: { normal_control: true, ready: true, busy: false, state: 'IDLE', operation: 'HOME_ALL', session_token: 7, phase_id: 0 },
     m300_pad_mesh: {
-      state: 'IDLE', phase: 'IDLE', busy: false, run_id: null, total_points: 25,
-      points_measured: 0, last_error: '', last_attempt: null, result: null, plan_matches_run: false,
-      contact_regions: regions, probe_points: points,
+      state: 'IDLE',
+      phase: 'IDLE',
+      busy: false,
+      run_id: null,
+      total_points: 25,
+      points_measured: 0,
+      last_error: '',
+      last_attempt: null,
+      result: null,
+      plan_matches_run: false,
+      contact_regions: regions,
+      probe_points: points,
       travel: { configured_x: [0, 300], configured_y: [0, 305], fits: true }
     },
     toolhead: { homed_axes: '' },
     motion_report: { live_position: [0, 305, 5, 0] },
     bed_mesh: {
-      profile_name: '', mesh_matrix: [[]], probed_matrix: [[]], mesh_min: [0, 0], mesh_max: [0, 0],
-      profiles: saved ? { m300_pads: {
-        points: [[0, 0.01, 0.02], [0.01, 0.02, 0.03], [0.02, 0.03, 0.04]],
-        mesh_params: { min_x: 0, min_y: 0, max_x: 300, max_y: 305, algo: 'direct',
-          x_count: 3, y_count: 3, mesh_x_pps: 0, mesh_y_pps: 0, tension: 0.2 }
-      } } : {}
+      profile_name: '',
+      mesh_matrix: [[]],
+      probed_matrix: [[]],
+      mesh_min: [0, 0],
+      mesh_max: [0, 0],
+      profiles: saved ? { m300_pads: savedProfile } : {}
     }
   } as unknown as Klipper.PrinterState
-  const state = Vue.observable({ printer: { printer }, mesh: {
-    range: 0, wireframe: false, scale: 0, boxScale: 1, flatSurface: false, matrix: 'mesh_matrix'
-  } as MeshState })
+  const state = Vue.observable({
+    printer: { printer },
+    mesh: {
+      range: 0, wireframe: false, scale: 0, boxScale: 1, flatSurface: false, matrix: 'mesh_matrix'
+    } as MeshState
+  })
   const dispatch = vi.fn()
   const query = { printer: 'm300' }
   const push = vi.fn().mockResolvedValue(undefined)
@@ -87,11 +116,14 @@ function setup (saved = false) {
 }
 
 function tune (f: ReturnType<typeof setup>) {
-  return shallowMount(Tune, { mocks: f.mocks, stubs: {
-    ...stubs,
-    'bed-mesh-card': { template: '<div data-order="heatmap" />' },
-    'm300-pad-contact-map': { template: '<div data-order="contact-map" />' }
-  } })
+  return shallowMount(Tune, {
+    mocks: f.mocks,
+    stubs: {
+      ...stubs,
+      'bed-mesh-card': { template: '<div data-order="heatmap" />' },
+      'm300-pad-contact-map': { template: '<div data-order="contact-map" />' }
+    }
+  })
 }
 
 const order = (wrapper: ReturnType<typeof tune>) => wrapper.findAll('[data-order]').wrappers.map(w => w.attributes('data-order'))

@@ -5,7 +5,7 @@ import { M300TuneRefresh, supportsM300Tune } from './m300-tune-refresh'
 const deferred = <T>() => {
   let resolve!: (value: T) => void
   let reject!: (error: Error) => void
-  const promise = new Promise<T>((ok, fail) => { resolve = ok; reject = fail })
+  const promise = new Promise<T>((_resolve, _reject) => { resolve = _resolve; reject = _reject })
   return { promise, resolve, reject }
 }
 
@@ -24,10 +24,12 @@ function fixture () {
   return { printer, pending, query, publish, refresh, disconnect: () => { available = false } }
 }
 
-const response = () => ({ status: {
-  bed_mesh: { profile_name: '', mesh_matrix: [[]], profiles: {} },
-  m300_pad_mesh: { state: 'IDLE', busy: false, total_points: 25, points_measured: 0 }
-} as Partial<Klipper.PrinterState> })
+const response = () => ({
+  status: {
+    bed_mesh: { profile_name: '', mesh_matrix: [[]], profiles: {} },
+    m300_pad_mesh: { state: 'IDLE', busy: false, total_points: 25, points_measured: 0 }
+  } as Partial<Klipper.PrinterState>
+})
 
 describe('read-only M300 Tune snapshots', () => {
   it('recognizes the configured service before its first status arrives', () => {
@@ -93,7 +95,7 @@ describe('read-only M300 Tune snapshots', () => {
     const next = deferred<{ status: Partial<Klipper.PrinterState> }>()
     f.query.mockImplementationOnce(() => f.pending.promise).mockImplementationOnce(() => next.promise)
     const work = f.refresh.refresh()
-    for (let i = 0; i < 100; i++) void f.refresh.refresh()
+    for (let i = 0; i < 100; i++) await f.refresh.refresh()
     expect(f.query).toHaveBeenCalledTimes(1)
     f.pending.resolve(response())
     await work

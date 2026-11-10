@@ -110,7 +110,7 @@ diff --git a/src/views/Tune.vue b/src/views/Tune.vue
 +  }
 +
 +  refreshMeshView () {
-+    void this.meshRefresh?.refresh()
++    this.meshRefresh?.refresh().catch(() => undefined)
    }
  
    get supportsBedMesh (): boolean {

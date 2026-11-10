@@ -54,7 +54,9 @@ export class M300TuneRefresh {
       const status = Object.fromEntries(objects.flatMap(key => {
         const value = response.status[key]
         return before[key] === current[key] && value != null &&
-          typeof value === 'object' && !Array.isArray(value) ? [[key, value]] : []
+          typeof value === 'object' && !Array.isArray(value)
+          ? [[key, value]]
+          : []
       })) as Partial<Klipper.PrinterState>
       if (Object.keys(status).length) await this.options.publish(status)
     } catch {
@@ -65,7 +67,7 @@ export class M300TuneRefresh {
         this.request = null
         if (this.queued) {
           this.queued = false
-          void this.refresh()
+          this.refresh().catch(() => undefined)
         }
       }
     }
