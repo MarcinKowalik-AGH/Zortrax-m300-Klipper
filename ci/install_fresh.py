@@ -218,7 +218,7 @@ def main():
     parser.add_argument('--data',type=Path,default=Path.home()/'printer_data')
     parser.add_argument('--klipper-root',type=Path,default=Path.home()/'klipper')
     parser.add_argument('--python',type=Path,default=Path.home()/'klippy-env/bin/python')
-    parser.add_argument('--port',type=int,default=80,help='KIAUH Fluidd nginx port')
+    parser.add_argument('--port',type=int,default=None,help='Existing Fluidd port; prefer 4480, else unambiguous nginx detection')
     parser.add_argument('--fluidd-root',type=Path)
     parser.add_argument('--apply',action='store_true')
     args=parser.parse_args()
@@ -239,16 +239,19 @@ def main():
         check_service(data,root,python)
         deploy=module('m300_first_deploy_plan',PACKAGE/'install-orange-pi.py')
         run('sudo','-v')
-        web=deploy.verified_web_root(args.fluidd_root or deploy.nginx_root(run('sudo','nginx','-T',capture=True),args.port))
+        web,fluidd_port,selection=deploy.select_fluidd(
+            run('sudo','nginx','-T',capture=True),args.port,args.fluidd_root)
         # An empty KIAUH printer must not be able to drive another configured machine.
         info=deploy.printer('/printer/info')
         if info.get('state') in ('printing','paused','ready'):
             raise ValueError('First install expects an unused, unconfigured KIAUH instance')
         plan=dict(status='PLAN_FIRST_M300_INSTALL',source_commit=provenance['github_commit'],
                   serial=str(args.serial),baud=args.baud,klipper=str(root),data=str(data),
-                  fluidd_root=str(web),mcu_flashed=False,motion_or_heating_sent=False)
+                  fluidd_root=str(web),fluidd_port=fluidd_port,selection=selection,
+                  mcu_flashed=False,motion_or_heating_sent=False)
         if args.apply:
             plan['backup']=str(install(PACKAGE,root,data,python,args.serial,args.baud,web))
+            deploy.save_install_state(data/'config',web,fluidd_port)
             plan['status']='INSTALLED_FIRST_M300_CHECK_READY'
         print(json.dumps(plan,indent=2))
     except (ValueError,OSError,KeyError,subprocess.CalledProcessError) as exc:

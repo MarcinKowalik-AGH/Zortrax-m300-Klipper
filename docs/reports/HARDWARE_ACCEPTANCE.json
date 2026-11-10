@@ -1,0 +1,378 @@
+{
+  "schema": 1,
+  "updated": "2026-11-10",
+  "printer": "M300_CLASSIC",
+  "rules": [
+    "CI_PASS is never hardware acceptance.",
+    "Append new evidence; do not erase earlier acceptance or rejection.",
+    "Contextual release labels are not readbacks of installed versions.",
+    "Unknown results remain AWAITING_TEST; no artificial pass/fail.",
+    "Screenshot evidence is scoped to what is visible, not the entire procedure."
+  ],
+  "features": [
+    {
+      "id": "OLED_NAV",
+      "function": "Synchronizacja zaznaczenia OLED–Fluidd",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.16–20",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Ocena użytkownika po przyspieszeniu kanału nawigacji",
+          "status": "CONFIRMED_UI",
+          "result": "Odświeżanie zostało zaakceptowane; brak pomiaru opóźnienia w ms.",
+          "problem": "",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "ok teraz jest ok z odświeraniem w kliperze .",
+            "date": "2026-11-10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "OLED_LAYOUT",
+      "function": "Skala ×1/×2/×3, centrowanie, kolor i przyciski pod HIDE",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.20",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Ocena wyglądu przez użytkownika po zmianie układu",
+          "status": "CONFIRMED_UI",
+          "result": "Efekt zaakceptowany w kontekście beta.20; nie oznacza odbioru całej drukarki.",
+          "problem": "",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "jest ok . zaktualizuj github i manuale oraz instrukcje w kontekście dzisiejszych poprawke.",
+            "date": "2026-11-10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "FLUIDD_PORT",
+      "function": "Stały port interfejsu Fluidd",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "konfiguracja użytkownika",
+          "version_basis": "explicit_user_setting",
+          "test": "Deklaracja po przeniesieniu interfejsu na port 4480",
+          "status": "CONFIGURATION_CONFIRMED",
+          "result": "4480 jest portem obowiązującym; to nie wynik testu nowego instalatora.",
+          "problem": "",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "tak od teraz ten port będzie obowiązywał",
+            "date": "2026-11-10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "OLED_SHARP",
+      "function": "Ostre ikony OEM i aktywności",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.21",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Oględziny ikon po dodaniu półtonów",
+          "status": "REJECTED_VISUAL",
+          "result": "Cieniowanie odrzucone jako rozmazane.",
+          "problem": "Poprzedni wygląd nie spełnił oczekiwań.",
+          "evidence": {
+            "kind": "user_message",
+            "date": "2026-11-10",
+            "quote": "nie nie wyszło to najlepiej i ikony sa rozmazane."
+          }
+        },
+        {
+          "date": "2026-11-10",
+          "version": "beta.22",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Oględziny fizycznego OLED po instalacji SHARP-HOST-1",
+          "status": "AWAITING_TEST",
+          "result": "Wersja opublikowana, brak potwierdzenia wyglądu.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "TUNE",
+      "function": "Tune → przygotowanie / All / Calibrate / kolejność grafik",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.18+",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Osobne wejście suwakiem, All bez mesh, Calibrate z mesh",
+          "status": "AWAITING_TEST",
+          "result": "Poprawka istnieje; brak osobnego potwierdzenia całej sekwencji.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "MESH_MEASURE",
+      "function": "Pomiar pól i pokazanie profilu m300_pads",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "wersja z chwili zrzutu niepotwierdzona",
+          "version_basis": "user_screenshot_version_unknown",
+          "test": "Przesłany zrzut wyniku 25 pozycji kontaktowych",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Widoczny wynik pomiaru i utworzony nieaktywny profil.",
+          "problem": "Nie potwierdza powtarzalności Z, zapisu po restarcie ani pierwszej warstwy.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "Profile m300_pads created. Compensation remains inactive until loaded.",
+            "date": "2026-11-10"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Z_REPEAT",
+      "function": "Powtarzalność kontaktowego Z",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Powtarzane bazowanie na rozgrzanym egzemplarzu",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "MESH_PERSIST",
+      "function": "Zapis, restart i aktywacja mesh",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Pomiar → SAVE_CONFIG → restart → START z profilem",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "FIRST_LAYER",
+      "function": "Pierwsza warstwa na większej części stołu",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Środek oraz okolice narożników",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PRINT_START",
+      "function": "START i cztery linie 2Y+2X",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Grzanie → bazowanie → mesh → rozruch → model",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PRINT_PAUSE",
+      "function": "PAUSE i parkowanie",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Próba z OLED oraz przycisku Fluidd",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PRINT_RESUME",
+      "function": "RESUME",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Dogrzanie i bezkolizyjny powrót do tego samego pliku",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PRINT_CANCEL",
+      "function": "CANCEL w druku, przygotowaniu i pauzie",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Zamknięcie pliku, usunięcie pauzy, cele grzania OFF",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PRINT_END",
+      "function": "END i ponowne zadanie",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Normalne ukończenie i uruchomienie kolejnego pliku",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "FILAMENT_CHANGE",
+      "function": "Zmiana filamentu w pauzie",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Wycofanie, ładowanie, wypływ, osobne RESUME",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "LONG_PRINT",
+      "function": "Stabilność dłuższego wydruku",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Ruch, grzanie, OLED, Fluidd i kontrola logów łącza",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "FLOW_PROFILE",
+      "function": "Przepływ i profile Orca",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Pomiary dla konkretnego materiału, dyszy i temperatury",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "SD_ZCODE",
+      "function": "Rzeczywista karta SD i pliki Z-Suite M300",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.22 / konfiguracja egzemplarza",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Import i nadzorowany druk reprezentatywnych plików",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "UPDATE23",
+      "function": "Nowy instalator i zapamiętanie portu",
+      "events": [
+        {
+          "date": "2026-11-10",
+          "version": "beta.23",
+          "version_basis": "conversation_context_not_device_report",
+          "test": "Aktualizacja → odczyt FLUIDD_ENDPOINT_SELECTED → ponowne wywołanie",
+          "status": "AWAITING_TEST",
+          "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
+          "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/build-m300.yml'
+      - '.github/workflows/**'
       - 'PORT.json'
       - 'ci/**'
       - 'mcu/**'
@@ -38,6 +38,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Validate port selection, retry policy and hardware ledger
+        run: |
+          python ci/test_fluidd_selection.py
+          python ci/test_retry_failed_workflow.py
+          python ci/test_acceptance_register.py
+          python ci/test_release23_contracts.py
+          python ci/acceptance_register.py --check
 
       - name: Install GNU ARM and native test compiler
         shell: bash
@@ -88,6 +96,9 @@ jobs:
 
       - name: Build and test the Fluidd diagram
         run: bash ci/build_fluidd.sh
+
+      - name: Validate current instructions and historical OLED illustrations
+        run: python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_BETA23_VALIDATION.json
 
       - name: Assemble the complete Orange Pi artifact
         shell: bash

@@ -8,7 +8,7 @@
     "host/klippy/extras/m300_settings_ui.py": "926f3ba2a1d3600548aab7b77b8d72b927d4a37c5418e088cee0c1995c10841f",
     "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
     "host/klippy/extras/m300_oled_preview.py": "8bde30a5f94f8aabef8eee8ff7e89ed6ca2285131dccf59327360ff6a9781de7",
-    "host/klippy/extras/m300_oem_graphics.py": "60b259fd2909a864ba5373baa1cf6074201a6251ef23c77e273ee274caaf2f2e",
+    "host/klippy/extras/m300_oem_graphics.py": "5a57d7148c5aba1e936fd13e09454a954ef40e9362152bd2b49c3b229e22591e",
     "host/klippy/extras/m300_activity_graphics.py": "66fd8d138f8f6154640c2c6f2e49cd2c71f067370842abd12c1e15deaf447f5b",
     "host/klippy/extras/m300_leveling_oem.py": "b540bffda306139926cd88cc209217943d1b2abe68b5679315daefa5e910d423",
     "host/klippy/extras/m300_print_ui.py": "973063079c476c0186c233a60125b767cf4e305bfc21da73f4175d1a749c8cc0",
@@ -27,5 +27,7 @@
     "frontend/fluidd/navigation/M300OledPreview.vue": "5c8cb03ae1e3a812603bbfa7348e0234b651c2378a1a6a19ea65c0b8f5a19656",
     "frontend/fluidd/navigation/m300-oled-pixels.ts": "3b561d3fb84921c0bb1373d33457203fe09cab34238061c255ad17344272ee82",
     "frontend/fluidd/m300-tune.patch": "2915dee165733453ba72249c1109cecee373cfbb71c4204ce5a4997c84ace6e7"
-  }
+  },
+  "current_fact_source_commit": "29d326d20bc07656789f2be64a8101996fcb7538",
+  "note_beta23": "Current factual sources rechecked against beta.22; 65-image beta.20 visual manifests remain unchanged."
 }
