@@ -141,7 +141,7 @@ describe('M300 navigation canvas', () => {
     expect(buttons.at(1)!.attributes('aria-pressed')).toBe('false')
     expect(view.find('.m300-oled-zoom-controls').element.parentElement)
       .toBe(view.find('.m300-oled-viewport').element.parentElement)
-    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-1')
+    expect(view.find('section').attributes('data-zoom-controls')).toBe('OLED-ZOOM-2')
   })
 
   it('changes ×1 → ×2 → ×3 → ×1 without requesting or decoding another PNG', async () => {
