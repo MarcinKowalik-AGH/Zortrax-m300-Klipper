@@ -31,4 +31,6 @@ Tonal edges can cost bandwidth: isolated icon RLE payload averages rise from abo
 
 The existing 65-screen handbook remains an explicitly versioned beta.20 reference. This release supplement and its image document the new activity artwork; controls and functions have not changed.
 
-The MCU stores deduplicated scanlines as lossless 4bpp runs (count and unmodified luminance). Decoding is bounded to 50 tokens/pixels per row and uses the existing 128-byte line buffer. The ROM/RAM linker limits remain unchanged.
+## MCU artwork memory
+
+The MCU stores deduplicated scanlines as lossless 4bpp runs (count and unmodified luminance). Decoding is bounded to 50 tokens/pixels per row and uses the existing 128-byte line buffer. Encoded row data and frame-offset tables occupy **15,162 bytes**, compared with 21,275 bytes in the rejected uncompressed-row candidate. These are artwork-table sizes, not complete application sizes. The final ARM build independently verifies the full application against the unchanged 64KiB ROM / 20KiB RAM limits; no linker region was enlarged to hide an overflow.
