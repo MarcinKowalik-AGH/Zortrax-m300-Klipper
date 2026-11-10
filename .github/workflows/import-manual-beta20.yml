@@ -1,0 +1,139 @@
+name: Verify and import the beta.20 illustrated M300 manual
+
+on:
+  push:
+    branches: [docs/manual-beta20-20261110]
+    paths: ['.github/workflows/import-manual-beta20.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  documentation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/manual-beta20-20261110
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Import only checksum-verified documentation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/2f9904a6da2c42c3cae3d28a8b939bb38865200f --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/manual.zip"
+          echo '7cfc2cbcdcefff04128ad80da9dc5065e7bc03b544ccd4eafe51be613ee2cebf  '"$RUNNER_TEMP/manual.zip" | sha256sum -c -
+          python - <<'PY'
+          import hashlib,json,os,stat,zipfile
+          from pathlib import Path
+          root=Path.cwd().resolve()
+          with zipfile.ZipFile(Path(os.environ['RUNNER_TEMP'])/'manual.zip') as z:
+              assert len(z.infolist())==169
+              assert sum(x.file_size for x in z.infolist())<20000000
+              assert len(set(z.namelist()))==len(z.namelist())
+              for info in z.infolist():
+                  p=Path(info.filename)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert info.filename in ('README.md','README_PL.md') or info.filename.startswith(('docs/pl/','docs/en/','docs/img/','docs/reports/','docs/tools/'))
+                  assert not stat.S_ISLNK(info.external_attr >> 16)
+                  target=root/p
+                  assert target.resolve().is_relative_to(root)
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(z.read(info.filename))
+          manifest=json.loads((root/'docs/reports/DOCUMENTATION_FILES.json').read_text())
+          assert len(manifest['files'])==168
+          for name,expected in manifest['files'].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==expected,name
+          print('Imported 169 documentation-only files; all input file hashes verified.')
+          PY
+      - name: Check all links, 65 illustrated functions, original screenshots and current source facts
+        run: |
+          python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
+          python docs/tools/check_manual.py
+      - name: Reproduce every OLED bitmap from the exact beta.20 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp docs/reports/OLED_RENDER_MANIFEST.json "$RUNNER_TEMP/oled-before.json"
+          python ci/prepare_upstream.py
+          python docs/tools/render_oled_manual.py --klipper .ci/pristine
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          before=json.loads((Path(os.environ['RUNNER_TEMP'])/'oled-before.json').read_text())
+          after=json.loads(Path('docs/reports/OLED_RENDER_MANIFEST.json').read_text())
+          assert len(after['screens'])==65
+          assert before['menu_rows']==after['menu_rows']
+          assert {s['id']:s['wire_sha256'] for s in before['screens']}=={s['id']:s['wire_sha256'] for s in after['screens']}
+          print('PASS: all 65 native OLED frame hashes and generated menu rows reproduce exactly.')
+          PY
+          python docs/tools/check_manual.py
+      - name: Commit verified documentation only and remove this one-time importer
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/import-manual-beta20.yml
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          base='4828a9da9d5fd8b0b93eb2ac267732ee7e49d506'
+          for name in subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines():
+              assert name in ('README.md','README_PL.md') or name.startswith('docs/'),name
+          report=json.loads(Path('docs/reports/DOCUMENTATION_VALIDATION.json').read_text())
+          assert report['status']=='PASS_DOCUMENTATION' and not report['errors']
+          path=Path('docs/reports/DOCUMENTATION_FILES.json')
+          manifest=json.loads(path.read_text())
+          for name in manifest['files']:
+              manifest['files'][name]=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+          path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add README.md README_PL.md docs .github/workflows/import-manual-beta20.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update manuals for beta.20 and explain 65 real OLED screens with source-based checks'
+          git push origin HEAD:docs/manual-beta20-20261110
+      - name: Package the exact verified manual
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,zipfile
+          from pathlib import Path
+          manifest_path=Path('docs/reports/DOCUMENTATION_FILES.json')
+          files=json.loads(manifest_path.read_text())['files']
+          out=Path(os.environ['RUNNER_TEMP'])/'M300_DOKUMENTACJA_BETA20_20261110.zip'
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for name,expected in sorted(files.items()):
+                  data=Path(name).read_bytes()
+                  assert hashlib.sha256(data).hexdigest()==expected,name
+                  z.writestr(name,data)
+              z.write(manifest_path,str(manifest_path))
+          checksum=hashlib.sha256(out.read_bytes()).hexdigest()
+          out.with_suffix('.sha256').write_text(checksum+'  '+out.name+'\n')
+          print(json.dumps({'files':len(files)+1,'sha256':checksum,'git_commit':os.popen('git rev-parse HEAD').read().strip()}))
+          PY
+      - name: Preserve verified documentation and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_BETA20_MANUAL_VERIFIED
+          path: |
+            ${{ runner.temp }}/M300_DOKUMENTACJA_BETA20_20261110.zip
+            ${{ runner.temp }}/M300_DOKUMENTACJA_BETA20_20261110.sha256
+            docs/reports/DOCUMENTATION_VALIDATION.json
+          if-no-files-found: error
+      - name: Preserve diagnostic reports if verification fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_BETA20_MANUAL_DIAGNOSTICS
+          path: docs/reports/
+          if-no-files-found: ignore
