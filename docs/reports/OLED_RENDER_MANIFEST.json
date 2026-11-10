@@ -1,6 +1,6 @@
 {
-  "source_release": "v1.0.0-beta.17",
-  "source_commit": "d6ddf9c3bee58dc2209946a0073f8a708d964073",
+  "source_release": "v1.0.0-beta.20",
+  "source_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
   "method": "Production menu rows, bitmap font, sprite selectors and pure renderers; illustrative in-memory state only",
   "physical_printer": false,
   "screens": [
@@ -573,6 +573,424 @@
       ],
       "wire_sha256": "fc0ba24b7f5940c9e671d785e622d70e9aae4e6ece19ddd107e7780ea7a6cf30",
       "png_sha256": "da191dc4f533f05f7e30e01f1f36e58984be7cbb9ef4510b7849c0037103bdb9"
+    },
+    {
+      "id": "klipper_temp_hotend",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 1,
+        "sprite": "activity:heat_nozzle"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "294ac2901d618b3bd3d125f449735f2ebba5d10dcd68ca9b75f3be2512792cd1",
+      "png_sha256": "9f56c26c3dddda72114388dfeaea8bd3dabf61c76156627dd00ca46b5986f024"
+    },
+    {
+      "id": "klipper_temp_bed",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 2,
+        "sprite": "activity:heat_bed"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "bb956c069facc0a70a1861d66ec1d9ff11419fe94e423177aced5e2195775f2c",
+      "png_sha256": "ce37b79b719621cdd6f64362c265dc89ec2dcbebf3dc9a0a4cc0166dd0cdd224"
+    },
+    {
+      "id": "klipper_heat_hotend",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 3,
+        "sprite": "activity:heat_nozzle"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "2ed9f4dcd73682df0940a1403a743d1c6b96e93880e0c00f479c0d5e24c85198",
+      "png_sha256": "3e461791c078d1a8c97c21c212e4352b2df67f2d3d19ca60effc394369c948de"
+    },
+    {
+      "id": "klipper_heat_bed",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 4,
+        "sprite": "activity:heat_bed"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "a5ae5551421f0e3e556ba0e07b97c6c450a65548869c236d3c321efd372abbfb",
+      "png_sha256": "8ce4f3f3bd5ccedc49c201e583eec12f4f5ecb54eba964bc05eb67fd5d43100f"
+    },
+    {
+      "id": "klipper_heaters_off",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 5,
+        "sprite": "activity:cooling"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "a352ad962f618ddc20c09a56bbafe769044377bfd67bd624136a002c4a18094b",
+      "png_sha256": "ae2267e6a8461d70875e0e666a639f37b175c8439309716997666777372e173d"
+    },
+    {
+      "id": "klipper_home_y",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 7,
+        "sprite": "cartesian:home_y"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "3d77b9eddffbba5fc3a7dffd3940b8b46e148f7b0a5434b963b8eed9cf1ddc6c",
+      "png_sha256": "534f61b2b737561121e317343f6a32e8013e2ce607f2cb32bff70b8380de0bb1"
+    },
+    {
+      "id": "klipper_home_z",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 8,
+        "sprite": "cartesian:home_z"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "e4ea8a2cd75ced635ade48a1d1104e74c974401c3c1816f349016f846a00bd56",
+      "png_sha256": "87dd3e4978716d19f69cd83cec04ec4b9d6b5bcb5224a3ddcca480f83d65ce75"
+    },
+    {
+      "id": "klipper_home_xy",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 9,
+        "sprite": "cartesian:home_xy"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "f9982c21713f42fb2fb9af8ed573d400eedbf5f8d7e369564c21768057d731fa",
+      "png_sha256": "bc01b88adc68848c1855da7b222f9618d3400eb92a4d3e487171097085921943"
+    },
+    {
+      "id": "klipper_home_xyz",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 10,
+        "sprite": "cartesian:home_xyz"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "ed025f1bc39bcdae9870b98c051c6e7afbd4f8208b84324458f80481212ab712",
+      "png_sha256": "d70eac4ac462c5f9eb541117bf7834fc3b769ad3cfaa4a7413f3aab81ee298fe"
+    },
+    {
+      "id": "klipper_fans",
+      "title": "Klipper",
+      "example_state": {
+        "page": "klipper",
+        "selected": 13,
+        "sprite": "activity:fan_upper"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "8dd4def3d7a6017561a812861af45a713fa929d442f22649c3303d8524cd9315",
+      "png_sha256": "7c3c5456fe01efce1f41beddb3570b118a06dcf5b7050917b6d9de3cf09ad696"
+    },
+    {
+      "id": "print_details",
+      "title": "Print status",
+      "example_state": {
+        "page": "native_job",
+        "selected": 0,
+        "sprite": "0x08020fb8"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "7f266ad810c028d99bb5cae6e5b595450d29e1eed0601c4829f3fe0ea6d2fef2",
+      "png_sha256": "23cf4f3e96415c47c6ebd59d84e73f178547dd71530e57dad2c538d60865b6de"
+    },
+    {
+      "id": "maintenance_heat_bed",
+      "title": "Maintenance",
+      "example_state": {
+        "page": "maintenance",
+        "selected": 8,
+        "sprite": "activity:heat_bed"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "55a2cf422c5d35cb15885fec086a78118203c5278047973213574987901f4ef4",
+      "png_sha256": "b8f0ecde9e2d12ace21adcb650bc36781eed5de03eed4283463a4373af031d5a"
+    },
+    {
+      "id": "maintenance_platform_down",
+      "title": "Maintenance",
+      "example_state": {
+        "page": "maintenance",
+        "selected": 10,
+        "sprite": "0x0801cc24"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "02cdea0c30e734661de589a1517a43cf430f541026e4fa63426ca790af5d9a09",
+      "png_sha256": "1909a5891285e347855c39abb9a259a0c173515c461d2809ebfb1b48a1858b7d"
+    },
+    {
+      "id": "maintenance_fan_test",
+      "title": "Maintenance",
+      "example_state": {
+        "page": "maintenance",
+        "selected": 11,
+        "sprite": "activity:fan_upper"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "b209291565e0c90e1402b1439c4d1e7a51376640988e0d941e09669018954415",
+      "png_sha256": "e821de3fde5336df54797c17e7e6ca2df607f5e4b03a4d53fd6f99aedc9c2d58"
+    },
+    {
+      "id": "material_unload",
+      "title": "Material",
+      "example_state": {
+        "page": "material",
+        "selected": 1,
+        "sprite": "0x0801cfb0"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "0d0916aea43375908934d5217b0f6703f24bfc8b81cf7db0eb19088747caf415",
+      "png_sha256": "e8306f1655644281b19ac2dccd87909d63e29186660a9001f795497a62b13095"
+    },
+    {
+      "id": "move_y",
+      "title": "Move Y",
+      "example_state": {
+        "page": "native_move_y",
+        "selected": 4,
+        "sprite": "cartesian:move_y"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "0d51acc14e0751ea6aad82794cf3bd789b3fdb8ce84fe2a37d0dcaa783a9b47a",
+      "png_sha256": "aecdeda53f5d4630464f0a7048d555529ebe82fe468f18f55fc3db53835e5389"
+    },
+    {
+      "id": "pid_bed",
+      "title": "PID calibration",
+      "example_state": {
+        "page": "native_pid",
+        "selected": 2,
+        "sprite": "activity:heat_bed"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "66e7e52958d0ed73029d32b5a71f0c5c8beeed3272ed2a2f210fd7bc12e40c98",
+      "png_sha256": "a5f1120c306ba20002242a9e531e016ca0668491b6a0931cd3b3a082ec65e84c"
+    },
+    {
+      "id": "pid_save",
+      "title": "PID calibration",
+      "example_state": {
+        "page": "native_pid",
+        "selected": 3,
+        "sprite": "activity:firmware_update"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "dbdd99bfdfa3c4d3217417a8b1fc4030e7c7d08da90770988b4aa13344b31973",
+      "png_sha256": "7de5104ce209b04b93c0163192a711246fa4823deb76f9765048fc23f2d85d90"
+    },
+    {
+      "id": "models_host",
+      "title": "Models",
+      "example_state": {
+        "page": "models",
+        "selected": 2,
+        "sprite": "0x0801c690"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "39b387beb95c42c98a0cae374e2e447b5d57c8cc0b767a722a7900eb2a37cf64",
+      "png_sha256": "d13d6668b121981cd9dd86b869789f250bf94007fe80295e81f1bc1660ddaf46"
+    },
+    {
+      "id": "temperature_hotend",
+      "title": "Select HOTEND TEMP",
+      "example_state": {
+        "page": "temperature_HOTEND",
+        "selected": 4,
+        "sprite": "0x0801dc08"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "a2aaa1d3efe5078c26d3bd02487c0b4892c9baf18b819d83926d60ac0d2368ba",
+      "png_sha256": "8fad64499b3585d1a3ae315f490227b35f986bc29ace137201513dbad3fefcfc"
+    },
+    {
+      "id": "temperature_bed",
+      "title": "Select BED TEMP",
+      "example_state": {
+        "page": "temperature_BED",
+        "selected": 3,
+        "sprite": "0x0801dc08"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "76afad0ff2cd4c80667d05e713fa4361b6e05cb69689489696e5136557a0fff4",
+      "png_sha256": "479f50598d42f28dbdc0cc4463106c26ea802c65b121d86735b012aaeac35f23"
+    },
+    {
+      "id": "fan_controls",
+      "title": "Fans",
+      "example_state": {
+        "page": "fans",
+        "selected": 9,
+        "sprite": "activity:fan_lower"
+      },
+      "native_dimensions": [
+        256,
+        64
+      ],
+      "preview_dimensions": [
+        768,
+        192
+      ],
+      "wire_sha256": "51c10e8c46b9f7e6f1e621aaadf4be4260746033576896638d8b07135ba1c5a8",
+      "png_sha256": "3227a1dcd9bb3fa8943500c49d4b09b0714d2b459cff5cccc08e372a65c63f79"
     },
     {
       "id": "oled_brightness",
@@ -1742,6 +2160,348 @@
           "native_gcode",
           "TEST_ZORTRAX_XY SPEED=60"
         ]
+      }
+    ],
+    "native_job": [
+      {
+        "label": "Back",
+        "action": [
+          "page",
+          "main"
+        ]
+      },
+      {
+        "label": "State: standby",
+        "action": null
+      },
+      {
+        "label": "File: ",
+        "action": null
+      },
+      {
+        "label": "Print time: 0 s",
+        "action": null
+      }
+    ],
+    "native_move_y": [
+      {
+        "label": "Back",
+        "action": [
+          "page",
+          "main"
+        ]
+      },
+      {
+        "label": "Y -10.0 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-10 F3000"
+        ]
+      },
+      {
+        "label": "Y -1.0 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-1 F3000"
+        ]
+      },
+      {
+        "label": "Y -0.1 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-0.1 F3000"
+        ]
+      },
+      {
+        "label": "Y +0.1 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y0.1 F3000"
+        ]
+      },
+      {
+        "label": "Y +1.0 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y1 F3000"
+        ]
+      },
+      {
+        "label": "Y +10.0 mm",
+        "action": [
+          "native_gcode",
+          "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y10 F3000"
+        ]
+      }
+    ],
+    "temperature_HOTEND": [
+      {
+        "label": "Back",
+        "action": [
+          "page",
+          "klipper"
+        ]
+      },
+      {
+        "label": "170°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          170,
+          "klipper"
+        ]
+      },
+      {
+        "label": "180°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          180,
+          "klipper"
+        ]
+      },
+      {
+        "label": "190°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          190,
+          "klipper"
+        ]
+      },
+      {
+        "label": "200°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          200,
+          "klipper"
+        ]
+      },
+      {
+        "label": "210°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          210,
+          "klipper"
+        ]
+      },
+      {
+        "label": "220°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          220,
+          "klipper"
+        ]
+      },
+      {
+        "label": "230°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          230,
+          "klipper"
+        ]
+      },
+      {
+        "label": "240°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          240,
+          "klipper"
+        ]
+      },
+      {
+        "label": "250°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          250,
+          "klipper"
+        ]
+      },
+      {
+        "label": "260°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          260,
+          "klipper"
+        ]
+      },
+      {
+        "label": "270°C",
+        "action": [
+          "temp",
+          "HOTEND",
+          270,
+          "klipper"
+        ]
+      }
+    ],
+    "temperature_BED": [
+      {
+        "label": "Back",
+        "action": [
+          "page",
+          "klipper"
+        ]
+      },
+      {
+        "label": "40°C",
+        "action": [
+          "temp",
+          "BED",
+          40,
+          "klipper"
+        ]
+      },
+      {
+        "label": "50°C",
+        "action": [
+          "temp",
+          "BED",
+          50,
+          "klipper"
+        ]
+      },
+      {
+        "label": "60°C",
+        "action": [
+          "temp",
+          "BED",
+          60,
+          "klipper"
+        ]
+      },
+      {
+        "label": "70°C",
+        "action": [
+          "temp",
+          "BED",
+          70,
+          "klipper"
+        ]
+      },
+      {
+        "label": "80°C",
+        "action": [
+          "temp",
+          "BED",
+          80,
+          "klipper"
+        ]
+      },
+      {
+        "label": "90°C",
+        "action": [
+          "temp",
+          "BED",
+          90,
+          "klipper"
+        ]
+      },
+      {
+        "label": "100°C",
+        "action": [
+          "temp",
+          "BED",
+          100,
+          "klipper"
+        ]
+      },
+      {
+        "label": "110°C",
+        "action": [
+          "temp",
+          "BED",
+          110,
+          "klipper"
+        ]
+      },
+      {
+        "label": "120°C",
+        "action": [
+          "temp",
+          "BED",
+          120,
+          "klipper"
+        ]
+      }
+    ],
+    "fans": [
+      {
+        "label": "Back",
+        "action": [
+          "page",
+          "main"
+        ]
+      },
+      {
+        "label": "Fan status: READY",
+        "action": null
+      },
+      {
+        "label": "Print PE13: 0%",
+        "action": null
+      },
+      {
+        "label": "Requested: 0%",
+        "action": null
+      },
+      {
+        "label": "Hotend PE14: 0%",
+        "action": null
+      },
+      {
+        "label": "Requested: 0%",
+        "action": null
+      },
+      {
+        "label": "Hotend: native automatic cooling",
+        "action": null
+      },
+      {
+        "label": "Print speed: 0%",
+        "action": [
+          "fan_set",
+          0
+        ]
+      },
+      {
+        "label": "Print speed: 25%",
+        "action": [
+          "fan_set",
+          25
+        ]
+      },
+      {
+        "label": "Print speed: 50%",
+        "action": [
+          "fan_set",
+          50
+        ]
+      },
+      {
+        "label": "Print speed: 75%",
+        "action": [
+          "fan_set",
+          75
+        ]
+      },
+      {
+        "label": "Print speed: 100%",
+        "action": [
+          "fan_set",
+          100
+        ]
+      },
+      {
+        "label": "RPM: no verified tachometer input",
+        "action": null
       }
     ]
   }

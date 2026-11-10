@@ -1,4 +1,7 @@
-# Five-point M300 results in Fluidd
+# M300 in Fluidd — current beta.20 and historical implementation notes
+
+**Current reference:** [beta.20 user-interface guide](FRONTEND_BETA20.md) · [65 illustrated OLED functions](../pl/OLED_FUNCTIONS.md). This page retains explicitly historical notes; 344×86, 50%-width and ACK-only mirroring below are not the current UI.
+
 
 ## Pixel-color-matched, centered OLED and pinned 1×-height zoom controls (beta.20)
 
@@ -22,6 +25,9 @@ unchanged. Pixels are always integer device-pixel squares; at ordinary DPR 1/2
 source content targets 256×64, 512×128 or 768×192 CSS pixels, with a small border.
 At fractional DPR the dimensions snap to the nearest square device-pixel block.
 [Beta.19 notes](../pl/RELEASE_v1.0.0-beta.19.md).
+
+<details>
+<summary>Historical beta.11–14 implementation notes — superseded; not current dimensions or API behavior</summary>
 
 ## Fixed-height OLED preview regardless of window width (beta.14)
 
@@ -129,6 +135,9 @@ existing Moonraker connection.
 
 
 
+
+</details>
+
 ## Homing macros shared with the native OLED
 
 `ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`,
@@ -186,6 +195,9 @@ from navigation or restart are still rejected. No per-step console refresh
 or additional MCU polling is needed.
 
 ## Native pad mesh in Tune
+
+**Beta.18–20:** direct Tune entry presents IDLE preparation without G-code. All uses ZORTRAX_HOME_ALL; Calibrate uses BED_MESH. The contact-area drawing always precedes the heatmap. See [current guide](FRONTEND_BETA20.md).
+
 
 `BED_MESH` is the visible Klipper macro, including the matching OLED action.
 The installer renames the previous `ZORTRAX_BED_MESH` macro and its Fluidd

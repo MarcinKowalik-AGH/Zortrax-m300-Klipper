@@ -1,5 +1,7 @@
 # Printer activity symbols
 
+> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+
 ## Beta.10 OEM line-weight and native MCU 4bpp compatibility
 
 - All Klipper, Home and Move icons use a 50×50 SSD1322 frame. The

@@ -1,5 +1,7 @@
 # R16.9 features and acceptance boundaries
 
+> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+
 [Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
 Current host print workflow: [Start/End, protected pause, M600 and compatibility audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md).
@@ -16,7 +18,7 @@ This extends the earlier acceptance inventory below; hardware acceptance remains
 | Interactive upper/lower fan test | Shared native fan session and four macros | Original 0/150 duty, entry/Back flow and 12 complete cold-menu frames; upper thermostat and MCU cooling have priority |
 | Load / Unload | Native filament owner and matching macros | 240/238, confirmation-before-transport, nominal 130/110 mm, native calibrated E |
 | Change during pause | Real native pause/file owner | 110 mm out / 150 mm in, one insertion confirmation, preserved pause and explicit Resume |
-| English interface | Shared presenter and NVM-facing language policy | Old saved PL/FR/DE/ES choices cannot alter runtime text; release documents are English only |
+| English interface | Shared presenter and NVM-facing language policy | Old saved PL/FR/DE/ES choices cannot alter runtime text; OLED runtime labels remain English; user documentation is available in Polish and English |
 | Original dialogs / sprites | Recovered text, 13-pixel font and existing sprite decoder | 110 original dialog frames plus 12 English fan-menu frames retained as evidence |
 | Sleep mode / OLED transport | Existing frame/ACK and dim/off/wake controllers | Saved Enabled/Disabled choice uses the configured timing |
 | Settings and Information | Shared OLED and Fluidd menu | Persistent choices, actual available printer data and GitHub Help |

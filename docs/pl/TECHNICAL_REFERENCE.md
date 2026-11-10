@@ -1,8 +1,8 @@
 # Parametry drukarki, komunikacja i odzyskane mapy temperatur
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co jest parametrem fabrycznym, a co ustawieniem portu
@@ -17,7 +17,7 @@
 | Host | Linux na Orange Pi; pakiet obsługuje też właściwie przygotowany Raspberry Pi | Instrukcja instalacji |
 | Frontend / serwer API | Zmodyfikowany Fluidd 1.37.7 / Moonraker | Przypięta kompilacja |
 | Klipper upstream | `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51` | `PORT.json` |
-| Wersja aplikacji MCU | `0.13.14.18-OEM-ERRORS-UART8` | Manifest beta.17 |
+| Wersja aplikacji MCU | `0.13.14.18-OEM-ERRORS-UART8` | Manifest beta.20 |
 | Adres aplikacji MCU | `0x08008000`, kontener M300APP.M3B | Pakiet i bootloader |
 | Host / kontroler druku | R16.12 / `0.13.16.38-PRINT-DRAIN-XY-PURGE` | Manifest i moduł druku |
 | OLED / szybki podgląd | 256 × 64, 4 bity/piksel, 16 poziomów; NAV-EVENT-1 / NAV-PIPELINE-2 | Kod hosta i frontendu |
@@ -64,7 +64,7 @@ Nie wystarczy zobaczyć liczbę 4 lub 8 w starym pliku, aby uznać skalę za wł
 |---|---|---|
 | Linux ↔ MCU | UART 3,3 V, `/dev/ttyS1` w testowanym Orange Pi; zalecane 750000 baud, 8N1 | Komendy planera, telemetria i obsługa sprzętu |
 | MCU ↔ OLED | SPI2, `spi_speed: 4500000`, porcje hosta `chunk_interval: 0.002` | Fizyczny ekran; kompresja RLE, DMA i ACK pozostają |
-| Przeglądarka ↔ Moonraker ↔ Klippy | Istniejący autoryzowany WebSocket; beta.16/17 ma osobny endpoint zdarzeń menu | Obraz z pamięci hosta, nie odczyt ekranu z MCU |
+| Przeglądarka ↔ Moonraker ↔ Klippy | Istniejący autoryzowany WebSocket; beta.20 zachowuje osobny endpoint zdarzeń menu z beta.16 oraz pipeline z beta.17 | Obraz z pamięci hosta, nie odczyt ekranu z MCU |
 
 Parametr `refresh_interval: 0.2` jest ustawieniem modułu OLED w konfiguracji bazowej. Nie oznacza sztywnego okresu wszystkich zdarzeń i nie zastępuje odrębnych terminów renderera. Standardowe statusy Klippera pozostają w dotychczasowym cyklu; nie zwiększono częstotliwości wszystkich temperatur i wykresów tylko dla podglądu.
 
@@ -86,7 +86,7 @@ UART: TX hosta → RX MCU, RX hosta ← TX MCU, wspólne GND; poziomy 3,3 V, nie
 
 Dla ilustracji 32 bajty przy 8N1 zajmują na przewodzie około 0,427 ms przy 750000 oraz 0,213 ms przy 1500000; nie obejmuje to protokołu, kolejek, planowania i sieci. Opóźnienie podglądu rozwiązano omijając cykl statusów, nie redukując pozycji menu do czterech bitów.
 
-### Podgląd w beta.17
+### Podgląd w beta.20
 
 Host zna menu po interpretacji pokrętła i tworzy obraz. Odbiorca oczekuje na zmianę przez `m300/oled_preview/wait`; 10 s to limit bezczynnego oczekiwania, nie opóźnienie reakcji. Po odebraniu obrazu frontend od razu uzbraja następne oczekiwanie, niezależnie od dekodowania PNG. Jedna dekodowana klatka i jedna zastępowalna najnowsza nie tworzą kolejki starych menu. Przed wysyłką do MCU obraz może być już dostępny w przeglądarce; podgląd nie potwierdza optycznego wyświetlenia ani ACK danej klatki.
 
@@ -125,4 +125,20 @@ PID hotendu i stołu ma własne parametry. `PID_HOTEND`, `PID_BED`, `PID_SAVE` u
 
 Fizyczny OLED pozostaje przy MCU; ekran nie jest przełączany bezpośrednio na SPI Orange Pi. Obraz hosta ma 8192 bajty w formacie 4bpp. Podgląd w przeglądarce wykorzystuje PNG z tej samej pamięci renderera, nie drugi niezależny system menu. Na błędzie/utracie połączenia lokalny MCU może wyświetlać własny ekran, którego podgląd hosta nie potrafi wiarygodnie odwzorować; wtedy pokazuje stan niedostępności.
 
-W beta.17 piksel OLED jest mapowany na cały kwadrat N×N pikseli urządzenia. Nie można równocześnie wymagać dokładnie 344×86 pikseli CSS przy każdym DPI i całkowitego powiększenia 256×64. Szerokość jest dobierana skokowo w pobliżu dawnego celu, a wąskie kolumny przewijają zawartość. Lupa systemowa, przeskalowany pulpit zdalny i chwilowy pinch-zoom są poza kontrolą rastra aplikacji.
+W beta.20 użytkownik wybiera **×1 / ×2 / ×3**, czyli docelowo 256×64, 512×128 albo 768×192 piksele CSS samej treści przy DPR 1 i 2. Helper mapuje każdy piksel na całkowity kwadrat N×N pikseli urządzenia, więc przy ułamkowym DPR rozmiar CSS może się nieznacznie zmienić. Do treści dochodzi ramka 2 pikseli urządzenia z każdej strony. Nie obowiązuje już bezwarunkowe 344×86 CSS.
+
+Ekran jest centrowany względem całej karty z symetrycznymi marginesami, a przyciski są przy prawej krawędzi pod HIDE. **Cała kolumna przycisków ma wysokość podglądu ×1**: np. 68 CSS przy DPR 1, 66 CSS przy DPR 2, niezależnie od aktualnego ×2/×3. Wąski panel przewija tylko obraz. Kolory należą do palety PNG: #16A1FE tekst, #0A436C obrys, #0C588E zaznaczenie, #020610 tło. To odwzorowanie cyfrowe, nie pomiar barwy fizycznego panelu.
+
+Skala jest zapamiętywana w przeglądarce; jej zmiana przerysowuje ostatnio zdekodowany obraz bez pobierania nowej klatki. HIDE/SHOW ukrywa/otwiera podgląd. MCU, UART/SPI, animacje i normalny cykl statusów nie są przyspieszane przez tę funkcję. Lupa systemowa, pulpit zdalny i chwilowe skalowanie gestem są poza kontrolą rastra aplikacji. [Rendery układu i tabela aktualizacji](UPDATE_2026-11-10.md).
+
+## 7. Rewizje a numer wydania
+
+| Warstwa | beta.20 |
+|---|---|
+| Dystrybucja | v1.0.0-beta.20; źródło `4828a9da` |
+| Interfejs hosta podglądu | NAV-EVENT-1 |
+| Pipeline przeglądarki | NAV-PIPELINE-2 |
+| Sterowanie i układ powiększenia | OLED-ZOOM-2 |
+| Tune | TUNE-PREPARE-1 |
+
+Numer dystrybucji nie oznacza zmiany wszystkich warstw. [PORT.json](../../PORT.json) jest źródłem identyfikatorów. Nie oczekuj OLED-ZOOM-2 w komunikacie MCU.

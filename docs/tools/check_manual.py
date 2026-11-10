@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[2]
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
             'TECHNICAL_REFERENCE.md', 'PRINT_LIMITS_AND_PLANNER.md',
-            'MACRO_REFERENCE.md', 'DOCUMENTATION_CHECK.md')
+            'MACRO_REFERENCE.md', 'DOCUMENTATION_CHECK.md',
+            'OLED_FUNCTIONS.md', 'UPDATE_2026-11-10.md')
 
 
 def sha(path):
@@ -30,7 +31,8 @@ def main():
         checks.append({'name': label, 'status': 'PASS' if condition else 'FAIL'})
         if not condition:
             errors.append(label)
-    paths = [ROOT/'README_PL.md'] + [ROOT/'docs/pl'/n for n in CHAPTERS]
+    paths = [ROOT/'README_PL.md', ROOT/'README.md'] + [ROOT/'docs/pl'/n for n in CHAPTERS]
+    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md')]
     for p in paths:
         check(p.is_file(), 'document:'+str(p.relative_to(ROOT)))
     links = 0
@@ -47,9 +49,9 @@ def main():
             links += 1
             check(dest.is_relative_to(ROOT) and dest.exists(), 'link:'+str(p.relative_to(ROOT))+':'+target)
     render = json.loads((ROOT/'docs/reports/OLED_RENDER_MANIFEST.json').read_text())
-    check(render['source_commit'] == 'd6ddf9c3bee58dc2209946a0073f8a708d964073', 'render-source-commit')
+    check(render['source_commit'] == '4828a9da9d5fd8b0b93eb2ac267732ee7e49d506', 'render-source-commit')
     check(render['physical_printer'] is False, 'render-is-demonstration-not-hardware')
-    check(len(render['screens']) == 43, '43-rendered-screen-states')
+    check(len(render['screens']) == 65, '65-rendered-screen-states')
     native_pixels = 0
     for s in render['screens']:
         small = ROOT/'docs/img/oled'/(s['id']+'.png')
@@ -94,11 +96,49 @@ def main():
     check('X rośnie w prawo, Y do góry' in guide and 'nieaktywny' in guide, 'mesh-orientation-and-inactive-preview-explicit')
     planner = (ROOT/'docs/pl/PRINT_LIMITS_AND_PLANNER.md').read_text()
     check('nie deklarowanym limitem M300' in planner and '111 mm/s' in planner, 'flow-example-not-hardware-claim')
+    # Every new illustration is tied to both a real bitmap and an operator description.
+    catalog = json.loads((ROOT/'docs/reports/OLED_FUNCTION_CATALOG.json').read_text())
+    entries = catalog['entries']
+    screen_ids = {item['id'] for item in render['screens']}
+    check(len(entries) == len(screen_ids) == 65, '65-illustrated-functions')
+    check({e['id'] for e in entries} == screen_ids, 'function-to-render-coverage')
+    illustrated = (ROOT/'docs/pl/OLED_FUNCTIONS.md').read_text()
+    for e in entries:
+        check(all(isinstance(e.get(k), str) and len(e[k]) > 3 for k in
+                  ('title','path','effect','operator','fluidd','icon','source')), 'function-fields:'+e['id'])
+        check(('id="'+e['id']+'"') in illustrated and (e['id']+'@3x.png') in illustrated,
+              'function-illustration:'+e['id'])
+        check((ROOT/'host/klippy/extras'/e['source']).is_file(), 'function-source:'+e['id'])
+    demo = json.loads((ROOT/'docs/reports/FLUIDD_OLED_DEMO.json').read_text())
+    check(demo['physical_printer'] is False, 'Fluidd-images-are-demonstrations')
+    check(len(demo['screens']) == 3, 'three-Fluidd-zoom-demonstrations')
+    for image in demo['screens']:
+        p = ROOT/image['file']
+        check(p.is_file() and sha(p) == image['sha256'], 'Fluidd-demo:'+image['file'])
+    source_baseline = json.loads((ROOT/'docs/reports/DOC_SOURCE_BASELINE.json').read_text())
+    for path, expected in source_baseline['files'].items():
+        p = ROOT/path
+        check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)
+    port = json.loads((ROOT/'PORT.json').read_text())
+    check(port['distribution_version'] == 'v1.0.0-beta.20', 'reference-release-beta20')
+    check(port['oled_zoom_revision'] == 'OLED-ZOOM-2', 'current-zoom-revision')
+    check(port['tune_frontend_revision'] == 'TUNE-PREPARE-1', 'current-Tune-revision')
+    for lang in ('pl','en'):
+        install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
+        check('releases/download/v1.0.0-beta.20/' in install, 'first-install-beta20:'+lang)
+    for name in ('README.md','README_PL.md'):
+        text = (ROOT/name).read_text()
+        check('releases/tag/v1.0.0-beta.20' in text, 'README-current-release:'+name)
+        check('OLED_FUNCTIONS.md' in text, 'README-illustrated-guide:'+name)
+    update = (ROOT/'docs/pl/UPDATE_2026-11-10.md').read_text()
+    check(all(t in update for t in ('#16A1FE','#0A436C','#0C588E','#020610','×1','×2','×3','HIDE','TUNE-PREPARE-1')), 'documented-current-UI')
+    check('nad heatmapą' in guide and 'ZORTRAX_HOME_ALL' in guide, 'current-Tune-order-and-home')
+    check('nie deklaruje' in (ROOT/'docs/pl/USER_GUIDE.md').read_text(), 'no-unimplemented-CI-auto-repair-claim')
     report = {'status':'PASS_DOCUMENTATION' if not errors else 'FAIL_DOCUMENTATION',
-              'reference_release':'v1.0.0-beta.17', 'documents':len(paths),
-              'local_link_references':links, 'oled_screen_states':43,'oled_png_files':86,
+              'reference_release':'v1.0.0-beta.20', 'documents':len(paths),
+              'local_link_references':links, 'oled_screen_states':65,'oled_png_files':130,
               'native_pixels_compared':native_pixels,'user_screenshots':3,
-              'config_macros':len(names),'checks_count':len(checks),'checks':checks,
+              'config_macros':len(names),'illustrated_functions':len(entries),'browser_demo_images':len(demo['screens']),'checks_count':len(checks),'checks':checks,
               'physical_printer_tested':False,'errors':errors}
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')

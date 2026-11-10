@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-beta.16 — first installation
+# Zortrax M300 Classic v1.0.0-beta.20 — first installation
 
 This guide starts with a printer that already has the compatible M300 SD
 bootloader, and a Raspberry Pi or Orange Pi without printer software.
@@ -91,11 +91,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.16/Zortrax_M300_Klipper_v1.0.0-beta.16.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.16/SHA256SUMS-v1.0.0-beta.16.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-beta.16.zip$' SHA256SUMS-v1.0.0-beta.16.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-beta.16.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-beta.16 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.20/Zortrax_M300_Klipper_v1.0.0-beta.20.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.20/SHA256SUMS-v1.0.0-beta.20.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-beta.20.zip$' SHA256SUMS-v1.0.0-beta.20.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-beta.20.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-beta.20 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -157,7 +157,7 @@ M105
 Expect Ready, matching 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`, print
 controller `0.13.16.29-UNIFIED-NATIVE-START`, zero heater targets and sensible
 ambient temperatures. Confirm the endstops/contact change when operated.
-The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.16/docs/en/HARDWARE_VARIANTS.md)
+The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.20/docs/en/HARDWARE_VARIANTS.md)
 must match the printer. An erased/unknown factory record is an error, not a
 reason to guess a Z scale.
 
@@ -181,7 +181,7 @@ START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_tempe
 END_PRINT
 ```
 
-See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.16/docs/pl/PRINT_CONTROL.md).
+See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.20/docs/pl/PRINT_CONTROL.md).
 
 ## Updates and acceptance scope
 
@@ -202,3 +202,7 @@ Upstream references: [KIAUH](https://dw-0.github.io/kiauh/setup/installation/),
 [Raspberry Pi serial setup](https://www.raspberrypi.com/documentation/computers/configuration.html#configure-uarts),
 [Armbian getting started](https://docs.armbian.com/User-Guide_Getting-Started/),
 [Moonraker installation](https://moonraker.readthedocs.io/en/latest/installation/).
+
+## Current beta.20 user interface
+
+See the [current illustrated manual](../pl/OLED_FUNCTIONS.md) and the [10 November update summary](FRONTEND_BETA20.md). The OLED is centered; ×1/×2/×3 stay at the right below HIDE and have the total height of ×1. Tune shows preparation before probing. All only homes; Calibrate uses BED_MESH. Updating beta.18–20 does not require re-flashing the unchanged MCU. Existing release archives remain immutable; these repository instructions are the current reference.

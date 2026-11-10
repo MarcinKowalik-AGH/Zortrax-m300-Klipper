@@ -1,0 +1,657 @@
+{
+  "reference_release": "v1.0.0-beta.20",
+  "source_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
+  "illustrated_functions": 65,
+  "entries": [
+    {
+      "id": "main_klipper",
+      "title": "Klipper — wejście do sterowania",
+      "path": "Menu główne → Klipper",
+      "effect": "Otwiera zestaw funkcji natywnych: wybór temperatur, grzanie, bazowanie, mesh, ręczne ruchy, wentylatory, PID i status druku. Samo wejście nie rozpoczyna procedury.",
+      "operator": "Obróć pokrętło, aby wskazać wiersz, i krótko naciśnij. Back wraca do statusu lub poprzedniego widoku. Czytaj etykietę, nie tylko symbol.",
+      "fluidd": "Sterowanie ruchem, Thermals, Tune i makra grupy Klipper.",
+      "icon": "Obrys drukarki z logo Klippera oznacza grupę funkcji, nie rozpoczęcie wydruku.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "main_zortrax",
+      "title": "Zortrax M300 — menu funkcji OEM",
+      "path": "Menu główne → Zortrax M300",
+      "effect": "Otwiera Models, Maintenance, Material, Settings oraz Information. Jest to gałąź obsługi charakterystycznej dla M300, a nie przełączenie z powrotem na fabryczny firmware.",
+      "operator": "Wybierz potrzebną grupę. Sam wybór tej gałęzi niczego nie nagrzewa ani nie przesuwa.",
+      "fluidd": "Makra grupy ZORTRAX M300.",
+      "icon": "Obrys drukarki ze znakiem Z identyfikuje gałąź Zortrax.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "zortrax_menu",
+      "title": "Pięć grup menu Zortrax",
+      "path": "Zortrax M300",
+      "effect": "Models obsługuje pliki, Maintenance czynności przy platformie i głowicy, Material filament, Settings preferencje, Information dane drukarki i pomoc.",
+      "operator": "Lista może przewijać się, ponieważ ekran nie mieści wszystkich pozycji jednocześnie. Zaznaczenie na renderze jest przykładowe.",
+      "fluidd": "Grupa ZORTRAX M300; konkretne odpowiedniki znajdują się przy funkcjach poniżej.",
+      "icon": "Klucz i śrubokręt dotyczą zaznaczonej pozycji Maintenance.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_home",
+      "title": "Home X — bazowanie",
+      "path": "Klipper → Home X",
+      "effect": "Wyznacza odniesienie osi X. Nie wykonuje celowo bazowania Y ani pomiaru mesh.",
+      "operator": "Zapewnij wolny tor ruchu i miejsce na wstępne odsunięcie Z. Nie uruchamiaj bazowania w pauzie wydruku, który ma zostać wznowiony.",
+      "fluidd": "`ZORTRAX_HOME_X`; przyciski bazowania w Fluidd. Dla XYZ także All w Tune.",
+      "icon": "Rama drukarki z układem XYZ wskazuje operację osi. Obraz jest jedną fazą animacji, nie potwierdzeniem ukończenia ruchu.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_home_y",
+      "title": "Home Y — bazowanie",
+      "path": "Klipper → Home Y",
+      "effect": "Wyznacza odniesienie osi Y. Nie wykonuje celowo bazowania X ani pomiaru mesh.",
+      "operator": "Zapewnij wolny tor ruchu i miejsce na wstępne odsunięcie Z. Nie uruchamiaj bazowania w pauzie wydruku, który ma zostać wznowiony.",
+      "fluidd": "`ZORTRAX_HOME_Y`; przyciski bazowania w Fluidd. Dla XYZ także All w Tune.",
+      "icon": "Rama drukarki z układem XYZ wskazuje operację osi. Obraz jest jedną fazą animacji, nie potwierdzeniem ukończenia ruchu.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_home_z",
+      "title": "Home Z — bazowanie",
+      "path": "Klipper → Home Z",
+      "effect": "Wyznacza odniesienie osi Z kontaktem dyszy z polem platformy; nie tworzy mapy nierówności.",
+      "operator": "Z wymaga wcześniej odniesionych X i Y, czystego styku oraz co najmniej 180°C na hotendzie; wyższy roboczy cel nie jest obniżany. Nadzoruj pierwszy kontakt.",
+      "fluidd": "`ZORTRAX_HOME_Z`; przyciski bazowania w Fluidd. Dla XYZ także All w Tune.",
+      "icon": "Rama drukarki z układem XYZ wskazuje operację osi. Obraz jest jedną fazą animacji, nie potwierdzeniem ukończenia ruchu.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_home_xy",
+      "title": "Home XY — bazowanie",
+      "path": "Klipper → Home XY",
+      "effect": "Bazowanie obu osi poziomych odbywa się w kolejności Y, potem X. Nie jest to pełny homing Z.",
+      "operator": "Zapewnij wolny tor ruchu i miejsce na wstępne odsunięcie Z. Nie uruchamiaj bazowania w pauzie wydruku, który ma zostać wznowiony.",
+      "fluidd": "`ZORTRAX_HOME_XY`; przyciski bazowania w Fluidd. Dla XYZ także All w Tune.",
+      "icon": "Rama drukarki z układem XYZ wskazuje operację osi. Obraz jest jedną fazą animacji, nie potwierdzeniem ukończenia ruchu.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_home_xyz",
+      "title": "Home XYZ — bazowanie",
+      "path": "Klipper → Home XYZ",
+      "effect": "Uruchamia wspólne bazowanie Y, X i kontaktowe Z. Pozostaje zwykłym bazowaniem, a nie nowym pomiarem 25 pozycji.",
+      "operator": "Zapewnij wolny tor i miejsce na odsunięcie platformy o 5 mm przed XY. Pełne XYZ obejmuje także grzanie wymagane przez kontaktowe Z.",
+      "fluidd": "`ZORTRAX_HOME_ALL`; przyciski bazowania w Fluidd. Dla XYZ także All w Tune.",
+      "icon": "Rama drukarki z układem XYZ wskazuje operację osi. Obraz jest jedną fazą animacji, nie potwierdzeniem ukończenia ruchu.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "maintenance_home_z",
+      "title": "Home Z w Maintenance",
+      "path": "Zortrax M300 → Maintenance → Home Z",
+      "effect": "Uruchamia tę samą chronioną procedurę Z co Home Z w Klipper. Nie jest inną, zimną wersją bazowania.",
+      "operator": "Najpierw odniesienie obu osi XY. Brak dopisku „180C” w etykiecie nie usuwa wymogu temperatury i poprawnego kontaktu.",
+      "fluidd": "`ZORTRAX_HOME_Z`.",
+      "icon": "Układ osi w obrysie drukarki; podczas bazowania prezentowana jest odpowiednia aktywność Z.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_temp_hotend",
+      "title": "Hotend TEMP — wybór wartości",
+      "path": "Klipper → Hotend TEMP",
+      "effect": "Otwiera listę wartości do późniejszego polecenia grzania. Wskazana liczba jest nastawą menu, nie pomiarem aktualnej temperatury.",
+      "operator": "Wybór wartości tylko zapisuje ją w stanie menu. Aby rozpocząć grzanie, użyj osobno Heat hotend albo Heat bed. Temperatura musi odpowiadać materiałowi i ograniczeniom konfiguracji.",
+      "fluidd": "W Thermals zmiana celu działa bezpośrednio; nie jest tym samym co samo otwarcie listy TEMP na OLED.",
+      "icon": "Dysza z falami ciepła oznacza hotend; platforma z falami ciepła — stół.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_temp_bed",
+      "title": "Bed TEMP — wybór wartości",
+      "path": "Klipper → Bed TEMP",
+      "effect": "Otwiera listę wartości do późniejszego polecenia grzania. Wskazana liczba jest nastawą menu, nie pomiarem aktualnej temperatury.",
+      "operator": "Wybór wartości tylko zapisuje ją w stanie menu. Aby rozpocząć grzanie, użyj osobno Heat hotend albo Heat bed. Temperatura musi odpowiadać materiałowi i ograniczeniom konfiguracji.",
+      "fluidd": "W Thermals zmiana celu działa bezpośrednio; nie jest tym samym co samo otwarcie listy TEMP na OLED.",
+      "icon": "Dysza z falami ciepła oznacza hotend; platforma z falami ciepła — stół.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "temperature_hotend",
+      "title": "Lista temperatur HOTEND",
+      "path": "Klipper → Hotend TEMP",
+      "effect": "Krótki klik na liczbie ustawia wartość używaną przez późniejsze Heat. Lista jest filtrowana limitami grzałki z konfiguracji; widoczne 200/60°C są przykładami.",
+      "operator": "Nie wybieraj temperatury tylko dlatego, że występuje na liście. Back rezygnuje z wyboru i wraca do menu. Sam wybór nie uruchamia grzania.",
+      "fluidd": "Docelowe temperatury w Thermals; odczyt aktualnej temperatury: `M105`.",
+      "icon": "Symbol informacji towarzyszy wyborowi nastawy. Nie oznacza trwającego grzania.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "temperature_bed",
+      "title": "Lista temperatur BED",
+      "path": "Klipper → Bed TEMP",
+      "effect": "Krótki klik na liczbie ustawia wartość używaną przez późniejsze Heat. Lista jest filtrowana limitami grzałki z konfiguracji; widoczne 200/60°C są przykładami.",
+      "operator": "Nie wybieraj temperatury tylko dlatego, że występuje na liście. Back rezygnuje z wyboru i wraca do menu. Sam wybór nie uruchamia grzania.",
+      "fluidd": "Docelowe temperatury w Thermals; odczyt aktualnej temperatury: `M105`.",
+      "icon": "Symbol informacji towarzyszy wyborowi nastawy. Nie oznacza trwającego grzania.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_heat_hotend",
+      "title": "Heat hotend — bezpośrednie grzanie",
+      "path": "Klipper → Heat hotend",
+      "effect": "Wysyła natywne ustawienie celu grzałki extruder na temperaturę wybraną wcześniej w menu. Nie bazuje i nie uruchamia druku.",
+      "operator": "Dobierz właściwy cel, obserwuj temperaturę i chłodzenie. To proste ustawienie grzania, a nie kreator OEM Heat the extruder ani Full platform preheating.",
+      "fluidd": "`SET_HEATER_TEMPERATURE HEATER=extruder TARGET=...` lub pole celu w Thermals.",
+      "icon": "Dysza/platforma z falami ciepła określa wybraną grzałkę.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_heat_bed",
+      "title": "Heat bed — bezpośrednie grzanie",
+      "path": "Klipper → Heat bed",
+      "effect": "Wysyła natywne ustawienie celu grzałki heater_bed na temperaturę wybraną wcześniej w menu. Nie bazuje i nie uruchamia druku.",
+      "operator": "Dobierz właściwy cel, obserwuj temperaturę i chłodzenie. To proste ustawienie grzania, a nie kreator OEM Heat the extruder ani Full platform preheating.",
+      "fluidd": "`SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=...` lub pole celu w Thermals.",
+      "icon": "Dysza/platforma z falami ciepła określa wybraną grzałkę.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_heaters_off",
+      "title": "Turn off heaters — wyłączenie celów grzałek",
+      "path": "Klipper → Turn off heaters",
+      "effect": "Wywołuje TURN_OFF_HEATERS. Nie jest to polecenie CANCEL_PRINT i nie należy go używać zamiast anulowania zadania.",
+      "operator": "Wyłączenie celu nie chłodzi urządzenia natychmiast. Wentylator hotendu może nadal pracować zgodnie z polityką temperatury. Unikaj ręcznego wyłączenia grzania w trwającym wydruku.",
+      "fluidd": "`TURN_OFF_HEATERS`; do przerwania zadania użyj CANCEL_PRINT.",
+      "icon": "Termometr i strzałka w dół oznaczają wyłączenie grzania/chłodzenie.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "maintenance_heat",
+      "title": "Heat the extruder — procedura OEM",
+      "path": "Zortrax M300 → Maintenance → Heat the extruder",
+      "effect": "Uruchamia wspólną procedurę ZORTRAX_HEAT z komunikatami dla operatora. Domyślny cel procedury to 260°C; nie myl go z przykładową nastawą 200°C w gałęzi Klipper.",
+      "operator": "Wykonuj tylko w odpowiednim stanie drukarki i z materiałem tolerującym temperaturę. Czytaj bieżące polecenia i potwierdzenia; nie pozostawiaj filamentu niepotrzebnie długo w gorącym hotendzie.",
+      "fluidd": "`ZORTRAX_HEAT`.",
+      "icon": "Dysza z falami ciepła wskazuje operację grzania hotendu.",
+      "source": "m300_native_maintenance.py"
+    },
+    {
+      "id": "maintenance_heat_bed",
+      "title": "Heat the platform — procedura stołu",
+      "path": "Zortrax M300 → Maintenance → Heat the platform",
+      "effect": "Uruchamia wspólną procedurę grzania platformy, dostępną także z makra ZORTRAX_HEAT_PLATFORM.",
+      "operator": "Dobierz temperaturę parametrem makra, gdy potrzebna jest inna niż domyślna. Nie utożsamiaj tego z przełącznikiem dodatkowego wygrzewania przed START_PRINT.",
+      "fluidd": "`ZORTRAX_HEAT_PLATFORM TEMP=...`.",
+      "icon": "Platforma z falami ciepła oznacza stół, nie dyszę.",
+      "source": "m300_native_maintenance.py"
+    },
+    {
+      "id": "maintenance_platform",
+      "title": "Move the platform up — ruch z przytrzymaniem",
+      "path": "Zortrax M300 → Maintenance → Move the platform up",
+      "effect": "Przesuwa platformę w stronę dyszy w kontrolowanej sesji przytrzymania przycisku. Zwolnienie przerywa ruch; obowiązują granice i kontrola styku.",
+      "operator": "Usuń przeszkody i nie wkładaj rąk w tor ruchu. To nie jest ten sam interfejs co pojedynczy krok ±1 mm w Move Z. Nie używaj do ręcznej zmiany pozycji w pauzie wydruku.",
+      "fluidd": "`ZORTRAX_PLATFORM_UP` otwiera własne sterowanie z parametrami; nie kopiuj czasu przytrzymania jako odległości.",
+      "icon": "Duża strzałka pokazuje fizyczny kierunek platformy. Dodatnie Z w konfiguracji oddala platformę od dyszy.",
+      "source": "m300_native_maintenance.py"
+    },
+    {
+      "id": "maintenance_platform_down",
+      "title": "Move the platform down — ruch z przytrzymaniem",
+      "path": "Zortrax M300 → Maintenance → Move the platform down",
+      "effect": "Przesuwa platformę od dyszy w kontrolowanej sesji przytrzymania przycisku. Zwolnienie przerywa ruch; obowiązują granice i kontrola styku.",
+      "operator": "Usuń przeszkody i nie wkładaj rąk w tor ruchu. To nie jest ten sam interfejs co pojedynczy krok ±1 mm w Move Z. Nie używaj do ręcznej zmiany pozycji w pauzie wydruku.",
+      "fluidd": "`ZORTRAX_PLATFORM_DOWN` otwiera własne sterowanie z parametrami; nie kopiuj czasu przytrzymania jako odległości.",
+      "icon": "Duża strzałka pokazuje fizyczny kierunek platformy. Dodatnie Z w konfiguracji oddala platformę od dyszy.",
+      "source": "m300_native_maintenance.py"
+    },
+    {
+      "id": "maintenance_level",
+      "title": "Autocalibration — mechaniczne ustawienie platformy",
+      "path": "Zortrax M300 → Maintenance → Autocalibration",
+      "effect": "Uruchamia kreator OEM M07, który mierzy odniesienia i prowadzi przez regulację śrub. Nie zastępuje 25-punktowego mesh.",
+      "operator": "Usuń model, oczyść dyszę i pola. Postępuj zgodnie z aktualnym ekranem; wymagane są potwierdzenia operatora. Nie stosuj wartości regulacji z przykładowych obrazów.",
+      "fluidd": "`ZORTRAX_LEVEL`.",
+      "icon": "Platforma z polami kontaktowymi oznacza autokalibrację; nie jest kolorowym wykresem nierówności.",
+      "source": "m300_calibration.py"
+    },
+    {
+      "id": "level_prepare",
+      "title": "M07 — przygotowanie",
+      "path": "Autocalibration → etap kreatora",
+      "effect": "Wyświetla ostrzeżenie i warunki przygotowania autokalibracji.",
+      "operator": "Potwierdź dopiero po usunięciu modelu i przygotowaniu platformy; uwzględnij rozgrzanie głowicy.",
+      "fluidd": "Okno procedury ZORTRAX_LEVEL we Fluidd.",
+      "icon": "Trójkąt ostrzegawczy: wymagana uwaga operatora.",
+      "source": "m300_leveling_oem.py"
+    },
+    {
+      "id": "level_tighten",
+      "title": "M07 — pozycja wyjściowa śrub",
+      "path": "Autocalibration → etap kreatora",
+      "effect": "Prosi o dokręcenie trzech pokręteł regulacyjnych zgodnie z procedurą.",
+      "operator": "Wykonaj czynność wskazaną na żywo i dopiero wtedy naciśnij przycisk. Nie traktuj obrazka jako polecenia dokręcenia podczas każdej innej operacji.",
+      "fluidd": "Okno procedury ZORTRAX_LEVEL we Fluidd.",
+      "icon": "Pokrętło/strzałka i rysunek platformy.",
+      "source": "m300_leveling_oem.py"
+    },
+    {
+      "id": "level_heating",
+      "title": "M07 — nagrzewanie",
+      "path": "Autocalibration → etap kreatora",
+      "effect": "Pokazuje etap nagrzewania ekstrudera w kreatorze.",
+      "operator": "Poczekaj na zmianę etapu; nie potwierdzaj starego okna z logu i nie dotykaj gorących części.",
+      "fluidd": "Okno procedury ZORTRAX_LEVEL we Fluidd.",
+      "icon": "Pochylona głowica wskazuje obsługę rozgrzewanej dyszy.",
+      "source": "m300_leveling_oem.py"
+    },
+    {
+      "id": "level_adjust",
+      "title": "M07 — regulacja wskazanej śruby",
+      "path": "Autocalibration → etap kreatora",
+      "effect": "Podaje narożnik, kierunek i przybliżony obrót potrzebny według bieżącego pomiaru.",
+      "operator": "Render pokazuje przykładowo tylną lewą śrubę i 0,50 obrotu. Nie przenoś tej wartości na swój stół; wykonaj tylko aktualne polecenie drukarki.",
+      "fluidd": "Okno procedury ZORTRAX_LEVEL we Fluidd.",
+      "icon": "Platforma z wyróżnionym narożnikiem i kierunkiem regulacji.",
+      "source": "m300_leveling_oem.py"
+    },
+    {
+      "id": "level_result",
+      "title": "M07 — wynik i zakończenie",
+      "path": "Autocalibration → etap kreatora",
+      "effect": "Prezentuje wynik autokalibracji i przejście dalej po potwierdzeniu.",
+      "operator": "Sprawdź bieżący wynik. Zakończenie M07 nie oznacza automatycznie utworzenia lub aktywacji profilu m300_pads.",
+      "fluidd": "Okno procedury ZORTRAX_LEVEL we Fluidd.",
+      "icon": "Liczby na platformie są przykładowymi odchyłkami tego widoku, nie wynikiem Twojej drukarki.",
+      "source": "m300_leveling_oem.py"
+    },
+    {
+      "id": "klipper_mesh",
+      "title": "Bed mesh — wejście do podmenu",
+      "path": "Klipper → Bed mesh (25 points)",
+      "effect": "Otwiera ekran przygotowania i stanu mesh. Uruchomienie jest oddzielną pozycją Measure 25 pad points.",
+      "operator": "Pole dyszy musi mieć kontakt z metalem. Po pomiarze utworzony profil jest nieaktywny do LOAD; SAVE_CONFIG zapisuje go trwale i restartuje Klippera. Nie myl podglądu z aktywną kompensacją.",
+      "fluidd": "`BED_MESH` lub Calibrate w Tune. All służy tylko bazowaniu; samo wejście ikoną Tune jest odczytowe.",
+      "icon": "Pięć pól i znaczniki pomiarowe symbolizują strefy kontaktu, nie regularną siatkę 5×5.",
+      "source": "m300_pad_mesh.py"
+    },
+    {
+      "id": "bed_mesh",
+      "title": "Bed mesh — uruchomienie pomiaru",
+      "path": "Klipper → Bed mesh (25 points) → Measure 25 pad points",
+      "effect": "Kliknięcie Measure 25 pad points uruchamia BED_MESH: przygotowanie temperatur i bazowania, 25 pozycji po trzy kontakty, interpolację oraz utworzenie profilu. Samo wejście do podmenu jeszcze nie mierzy.",
+      "operator": "Pole dyszy musi mieć kontakt z metalem. Po pomiarze utworzony profil jest nieaktywny do LOAD; SAVE_CONFIG zapisuje go trwale i restartuje Klippera. Nie myl podglądu z aktywną kompensacją.",
+      "fluidd": "`BED_MESH` lub Calibrate w Tune. All służy tylko bazowaniu; samo wejście ikoną Tune jest odczytowe.",
+      "icon": "Pięć pól i znaczniki pomiarowe symbolizują strefy kontaktu, nie regularną siatkę 5×5.",
+      "source": "m300_pad_mesh.py"
+    },
+    {
+      "id": "material_load",
+      "title": "Load the material — ładowanie",
+      "path": "Zortrax M300 → Material → Load the material",
+      "effect": "Uruchamia procedurę ładowania z nagrzewaniem, czynnościami operatora i podawaniem filamentu. Domyślna temperatura 240°C i długości wynikają z konfiguracji portu.",
+      "operator": "Włóż właściwy materiał w odpowiedniej fazie i sprawdź rzeczywisty wypływ. Nie wymuszaj podawania przy zatorze. Dane w renderze nie dobierają temperatury do Twojego filamentu.",
+      "fluidd": "`ZORTRAX_LOAD`.",
+      "icon": "Strzałka w kierunku głowicy oznacza podawanie materiału.",
+      "source": "m300_filament.py"
+    },
+    {
+      "id": "material_unload",
+      "title": "Unload the material — rozładowanie",
+      "path": "Zortrax M300 → Material → Unload the material",
+      "effect": "Uruchamia rozgrzanie i kontrolowane wycofanie materiału zgodnie z fazami procedury.",
+      "operator": "Nie wyciągaj na siłę zimnego filamentu. Wykonuj bieżące wskazania operatora. Wymianę podczas druku rozpoczynaj w pauzie przez Change the material, nie przez przypadkowe ręczne ruchy E.",
+      "fluidd": "`ZORTRAX_UNLOAD`.",
+      "icon": "Strzałka od głowicy oznacza wycofanie materiału.",
+      "source": "m300_filament.py"
+    },
+    {
+      "id": "move_axes",
+      "title": "Move axes — wybór osi",
+      "path": "Klipper → Move axes",
+      "effect": "Otwiera wybór X/Y/Z. Samo wejście nie wykonuje przejazdu.",
+      "operator": "Przed ruchem upewnij się, że oś ma poprawne odniesienie i nie ma przeszkód. Nie używaj podczas druku ani pauzy przeznaczonej do wznowienia.",
+      "fluidd": "Panel Tool w Fluidd; jednostki odległości i prędkości dobieraj świadomie.",
+      "icon": "Układ współrzędnych oznacza ruch ręczny.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "move_x",
+      "title": "Move X — kroki ręczne",
+      "path": "Klipper → Move axes → Move X",
+      "effect": "Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.",
+      "operator": "Sprawdź znak i wielkość kroku. Dla Z dodatni ruch oddala platformę od dyszy. Etykieta osi i znak wiersza są ważniejsze niż pojedyncza faza ikony. Obowiązują zabezpieczenia i granice konfiguracji.",
+      "fluidd": "Przyciski ruchu osi X w Tool; brak osobnego wymaganego makra.",
+      "icon": "Rysunek XYZ pokazuje kontekst osi; nie określa samodzielnie odległości.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "move_y",
+      "title": "Move Y — kroki ręczne",
+      "path": "Klipper → Move axes → Move Y",
+      "effect": "Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.",
+      "operator": "Sprawdź znak i wielkość kroku. Dla Z dodatni ruch oddala platformę od dyszy. Etykieta osi i znak wiersza są ważniejsze niż pojedyncza faza ikony. Obowiązują zabezpieczenia i granice konfiguracji.",
+      "fluidd": "Przyciski ruchu osi Y w Tool; brak osobnego wymaganego makra.",
+      "icon": "Rysunek XYZ pokazuje kontekst osi; nie określa samodzielnie odległości.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "move_z",
+      "title": "Move Z — kroki ręczne",
+      "path": "Klipper → Move axes → Move Z",
+      "effect": "Wybór wiersza wykonuje względny krok −10, −1, −0,1, +0,1, +1 albo +10 mm. Nie jest to bazowanie ani tryb nieprzerwanego ruchu.",
+      "operator": "Sprawdź znak i wielkość kroku. Dla Z dodatni ruch oddala platformę od dyszy. Etykieta osi i znak wiersza są ważniejsze niż pojedyncza faza ikony. Obowiązują zabezpieczenia i granice konfiguracji.",
+      "fluidd": "Przyciski ruchu osi Z w Tool; brak osobnego wymaganego makra.",
+      "icon": "Rysunek XYZ pokazuje kontekst osi; nie określa samodzielnie odległości.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_pid",
+      "title": "PID calibration — wejście",
+      "path": "Klipper → PID calibration",
+      "effect": "Otwiera listę kalibracji PID. Samo otwarcie nie włącza grzałek.",
+      "operator": "Wykonuj tylko przy bezczynnej drukarce, z poprawnie działającym chłodzeniem. PID powoduje cykle grzania. Cele z OLED są stałe dla tych pozycji; inne temperatury podaje się świadomie przez polecenia/makra. SAVE_CONFIG nigdy w trakcie druku.",
+      "fluidd": "PID_HOTEND / PID_BED / PID_SAVE.",
+      "icon": "Dysza/platforma oznacza kalibrowaną grzałkę; symbol układu przy zapisie nie oznacza wgrywania nowego firmware.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "pid",
+      "title": "Hotend PID 200C",
+      "path": "Klipper → PID calibration → Hotend PID 200C",
+      "effect": "Uruchamia PID_CALIBRATE dla extruder przy 200°C z tej pozycji menu.",
+      "operator": "Wykonuj tylko przy bezczynnej drukarce, z poprawnie działającym chłodzeniem. PID powoduje cykle grzania. Cele z OLED są stałe dla tych pozycji; inne temperatury podaje się świadomie przez polecenia/makra. SAVE_CONFIG nigdy w trakcie druku.",
+      "fluidd": "`PID_HOTEND` z odpowiednimi parametrami lub `PID_CALIBRATE HEATER=extruder TARGET=200`.",
+      "icon": "Dysza/platforma oznacza kalibrowaną grzałkę; symbol układu przy zapisie nie oznacza wgrywania nowego firmware.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "pid_bed",
+      "title": "Bed PID 60C",
+      "path": "Klipper → PID calibration → Bed PID 60C",
+      "effect": "Uruchamia PID_CALIBRATE dla heater_bed przy 60°C z tej pozycji menu.",
+      "operator": "Wykonuj tylko przy bezczynnej drukarce, z poprawnie działającym chłodzeniem. PID powoduje cykle grzania. Cele z OLED są stałe dla tych pozycji; inne temperatury podaje się świadomie przez polecenia/makra. SAVE_CONFIG nigdy w trakcie druku.",
+      "fluidd": "`PID_BED` lub `PID_CALIBRATE HEATER=heater_bed TARGET=60`.",
+      "icon": "Dysza/platforma oznacza kalibrowaną grzałkę; symbol układu przy zapisie nie oznacza wgrywania nowego firmware.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "pid_save",
+      "title": "Save calibration — zapis PID",
+      "path": "Klipper → PID calibration → Save calibration",
+      "effect": "Wywołuje SAVE_CONFIG, zapisując oczekujące wyniki kalibracji i restartując Klippera. To nie jest polecenie samego odczytu.",
+      "operator": "Wykonuj tylko przy bezczynnej drukarce, z poprawnie działającym chłodzeniem. PID powoduje cykle grzania. Cele z OLED są stałe dla tych pozycji; inne temperatury podaje się świadomie przez polecenia/makra. SAVE_CONFIG nigdy w trakcie druku.",
+      "fluidd": "`PID_SAVE` / `SAVE_CONFIG`.",
+      "icon": "Dysza/platforma oznacza kalibrowaną grzałkę; symbol układu przy zapisie nie oznacza wgrywania nowego firmware.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "klipper_fans",
+      "title": "Fans — stan i sterowanie nawiewem",
+      "path": "Klipper → Fans",
+      "effect": "Otwiera odczyt wentylatora modelu i automatycznego chłodzenia hotendu, z pozycjami prędkości nawiewu modelu.",
+      "operator": "Samo otwarcie jest odczytowe. Zmiana procentu dotyczy nawiewu modelu, a nie usunięcia termicznej ochrony hotendu.",
+      "fluidd": "`ZORTRAX_FANS`, sterowanie wentylatorem modelu w Fluidd.",
+      "icon": "Wirnik wskazuje wentylatory.",
+      "source": "m300_fans.py"
+    },
+    {
+      "id": "fan_controls",
+      "title": "Print speed — prędkość wentylatora modelu",
+      "path": "Klipper → Fans → Print speed",
+      "effect": "Ustawia nawiew modelu na jeden z poziomów 0/25/50/75/100%. W tym podmenu słowo speed dotyczy wentylatora, nie prędkości drukowania.",
+      "operator": "Chłodzenie hotendu jest automatyczne. Brak zweryfikowanego sygnału tachometru oznacza, że stan procentowy nie jest pomiarem RPM. 50% na rysunku to demonstracja zaznaczenia.",
+      "fluidd": "`M106` / `M107` lub pole nawiewu; `ZORTRAX_FANS` odczytuje stan.",
+      "icon": "Wirnik; etykieta Print speed rozstrzyga, który kanał jest regulowany.",
+      "source": "m300_fans.py"
+    },
+    {
+      "id": "maintenance_fan_test",
+      "title": "Fan test — test serwisowy",
+      "path": "Zortrax M300 → Maintenance → Fan test",
+      "effect": "Uruchamia interaktywny test górnego i dolnego wentylatora. Kontroler przejmuje sterowanie wyjściami na czas tej jawnej sesji.",
+      "operator": "Nie uruchamiaj podczas druku. Sprawdź fizycznie pracę wentylatorów i zakończ test. Polityka chłodzenia hotendu ma pierwszeństwo: żądanie OFF może nie wyłączyć gorącej głowicy.",
+      "fluidd": "`ZORTRAX_FAN_TEST_START`, `ZORTRAX_FAN_UPPER`, `ZORTRAX_FAN_LOWER`, `ZORTRAX_FAN_TEST_END`.",
+      "icon": "Wirnik oznacza uruchamiany test, nie potwierdzenie sprawnego chłodzenia.",
+      "source": "m300_native_fans.py"
+    },
+    {
+      "id": "models",
+      "title": "Models — źródło plików",
+      "path": "Zortrax M300 → Models",
+      "effect": "Pozwala wybrać oryginalną kartę SD albo pliki hosta. Dostępność SD zależy od zakwalifikowania jej obsługi, a nie samego obecnego w drukarce gniazda.",
+      "operator": "Sprawdź nazwę i zgodność pliku. Nie zakładaj obsługi każdego binarnego Z-code. Sam wybór źródła nie uruchamia druku; obowiązuje dalszy wybór/potwierdzenie.",
+      "fluidd": "Panel Jobs/pliki hosta; dla funkcji SD używaj dokumentowanych komend projektu.",
+      "icon": "Karta pamięci identyfikuje SD.",
+      "source": "m300_models.py"
+    },
+    {
+      "id": "models_host",
+      "title": "Host files — pliki na Orange Pi",
+      "path": "Zortrax M300 → Models → Host files",
+      "effect": "Przechodzi do katalogu modeli hosta obsługiwanego przez projekt. Plik nie jest automatycznie uruchamiany tylko przez wejście do listy.",
+      "operator": "Wybierz właściwe zadanie i czytaj potwierdzenie. Po zakończeniu wydruku ponowienie wymaga potwierdzenia usunięcia poprzedniego modelu.",
+      "fluidd": "Panel Jobs i przycisk wydruku; `ZORTRAX_REPRINT` dla dostępnego zakończonego zadania.",
+      "icon": "Bryła sześcienna oznacza model/plik hosta.",
+      "source": "m300_models.py"
+    },
+    {
+      "id": "print_details",
+      "title": "Print status — szczegóły zadania",
+      "path": "Klipper → Print status",
+      "effect": "Pokazuje stan zadania, nazwę pliku i czas. Przy aktywnym właścicielu m300_print_ui czynności pauzy i zatrzymania mają osobny kontekstowy ekran.",
+      "operator": "Nie myl napisu standby z błędem. Puste pole File w renderze wynika z danych demonstracyjnych. Odczyt nie rozpoczyna i nie wznawia zadania.",
+      "fluidd": "`PRINT_CONTROL_STATUS`, stan Jobs/drukarki.",
+      "icon": "Zegar wskazuje czas zadania.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "settings",
+      "title": "Settings — preferencje użytkownika",
+      "path": "Zortrax M300 → Settings",
+      "effect": "Otwiera światło, dźwięk, uśpienie, język, sortowanie modeli, dodatkowe wygrzewanie platformy oraz jasność OLED i LED.",
+      "operator": "Ustawienie kosmetyczne nie usuwa kontroli bezpieczeństwa. Zmiany przeprowadzaj poprzez wspólny interfejs zamiast edycji przypadkowych danych MCU.",
+      "fluidd": "`ZORTRAX_SETTINGS` oraz odpowiadające mu makra ustawień.",
+      "icon": "Koła zębate oznaczają preferencje, nie zmianę planera.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_light",
+      "title": "Light",
+      "path": "Zortrax M300 → Settings → Light",
+      "effect": "DYNAMIC: światło zależne od stanu; WHITE: białe; Disabled: wyłączone według polityki projektu.",
+      "operator": "Kolor stanu jest informacją pomocniczą, nie pomiarem temperatury. Obsługa błędów i zabezpieczeń pozostaje odrębna.",
+      "fluidd": "`ZORTRAX_LIGHT`.",
+      "icon": "Żarówka.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_buzzer",
+      "title": "Buzzer",
+      "path": "Zortrax M300 → Settings → Buzzer",
+      "effect": "Włącza albo wyłącza sygnalizację dźwiękową użytkownika.",
+      "operator": "Brak dźwięku nie jest potwierdzeniem braku błędu. Sprawdzaj OLED/Fluidd.",
+      "fluidd": "`ZORTRAX_BUZZER`.",
+      "icon": "Głośnik z falami.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_sleep",
+      "title": "Sleep mode",
+      "path": "Zortrax M300 → Settings → Sleep mode",
+      "effect": "Włącza albo wyłącza mechanizm bezczynności ekranu.",
+      "operator": "Czas wynika z konfiguracji display. Historyczna nazwa 15MIN w danych nie gwarantuje rzeczywistych 15 minut. Wybudzenie nie jest poleceniem ruchu.",
+      "fluidd": "`ZORTRAX_SLEEP_MODE`.",
+      "icon": "Księżyc.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_language",
+      "title": "Language",
+      "path": "Zortrax M300 → Settings → Language",
+      "effect": "W tej wersji udostępnia język English.",
+      "operator": "Polska instrukcja nie oznacza polskiej wersji wszystkich etykiet OLED. Nie dopisuj nieobsługiwanego języka do NVM.",
+      "fluidd": "`ZORTRAX_LANGUAGE`.",
+      "icon": "Dymek rozmowy.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_sort",
+      "title": "Models sorting",
+      "path": "Zortrax M300 → Settings → Models sorting",
+      "effect": "Zmienia kolejność prezentacji plików: data, nazwa, nazwa z rozróżnianiem wielkości liter albo wielkość pliku.",
+      "operator": "Nie zmienia zawartości pliku ani kolejki druku i nie usuwa modeli.",
+      "fluidd": "`ZORTRAX_MODELS_SORT`.",
+      "icon": "Strzałki kierunku sortowania.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "setting_preheat",
+      "title": "Full platform preheating",
+      "path": "Zortrax M300 → Settings → Full platform preheating",
+      "effect": "Zapisuje opcję dodatkowej stabilizacji stołu przy następnym START_PRINT; domyślny czas wynika z konfiguracji, w tym porcie 60 s.",
+      "operator": "Samo Enabled nie rozpoczyna grzania i nie zmienia już rozpoczętej sesji START. Nie jest to pomiar ani aktywacja mesh.",
+      "fluidd": "`ZORTRAX_FULL_PLATFORM_PREHEAT`.",
+      "icon": "Platforma z falami ciepła.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "settings_preheat",
+      "title": "Full platform preheating — wybór ustawienia",
+      "path": "Zortrax M300 → Settings → Full platform preheating",
+      "effect": "Otwiera Enabled/Disabled dla dodatkowej stabilizacji platformy przed drukiem. Ta pozycja nie ustawia bezpośrednio temperatury stołu.",
+      "operator": "Zmiana dotyczy kolejnego startu; wymagany cel i czas bierze kontroler druku. Nie utożsamiaj z Heat the platform.",
+      "fluidd": "`ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` albo `STATE=DISABLED`.",
+      "icon": "Koła zębate oznaczają jeszcze listę ustawień.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "oled_brightness",
+      "title": "OLED brightness",
+      "path": "Zortrax M300 → Settings → OLED brightness",
+      "effect": "Zmienia jasność oryginalnego wyświetlacza w 16 dostępnych poziomach. Ekran regulacji pokazuje podgląd poziomu i polecenia obsługi.",
+      "operator": "Obrót reguluje, klik zapisuje, przytrzymanie wraca zgodnie z ekranem. To jasność sprzętu; powiększenie ×1/×2/×3 we Fluidd jest niezależną funkcją przeglądarki.",
+      "fluidd": "Odpowiedni widok w `ZORTRAX_SETTINGS`.",
+      "icon": "Monitor lub żarówka oraz pasek poziomu jasności; ten pasek nie jest postępem druku.",
+      "source": "m300_settings_ui.py"
+    },
+    {
+      "id": "led_brightness",
+      "title": "LED brightness",
+      "path": "Zortrax M300 → Settings → LED brightness",
+      "effect": "Zmienia jasność oświetlenia drukarki w 16 dostępnych poziomach. Ekran regulacji pokazuje podgląd poziomu i polecenia obsługi.",
+      "operator": "Obrót reguluje, klik zapisuje, przytrzymanie wraca zgodnie z ekranem. To jasność sprzętu; powiększenie ×1/×2/×3 we Fluidd jest niezależną funkcją przeglądarki.",
+      "fluidd": "Odpowiedni widok w `ZORTRAX_SETTINGS`.",
+      "icon": "Monitor lub żarówka oraz pasek poziomu jasności; ten pasek nie jest postępem druku.",
+      "source": "m300_settings_ui.py"
+    },
+    {
+      "id": "information",
+      "title": "Information — dane drukarki i pomoc",
+      "path": "Zortrax M300 → Information",
+      "effect": "Udostępnia wersje, model/revizję sprzętu/numer seryjny i czas pracy oraz pomoc. Dane dostępne są według aktualnej identyfikacji i zapamiętanych liczników.",
+      "operator": "Wyświetlanie może odświeżyć dane informacyjne, ale nie jest aktualizacją MCU. Parametry DEMO w renderze nie identyfikują sprzętu użytkownika.",
+      "fluidd": "`ZORTRAX_INFORMATION` / `ZORTRAX_INFO`.",
+      "icon": "Litera i oznacza informacje.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "firmware",
+      "title": "Firmware version — wersje komponentów",
+      "path": "Zortrax M300 → Information → Firmware version",
+      "effect": "Pokazuje R16.12, wersję MCU, przypięty commit Klippera i odniesienie do OEM 1.3.1. Sam odczyt niczego nie wgrywa.",
+      "operator": "Numer beta dystrybucji jest oddzielny od rewizji MCU/hosta. Po zmianie samego Fluidd nie wszystkie te liczby rosną. Wersję beta sprawdzaj także w BUILD_PROVENANCE.json.",
+      "fluidd": "Plik BUILD_PROVENANCE.json na Orange Pi; `ZORTRAX_MCU_STATUS`.",
+      "icon": "Układ elektroniczny ze strzałką jest symbolem kategorii firmware, nie aktywnym procesem flashowania.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "printer_information",
+      "title": "Printer information — identyfikacja",
+      "path": "Zortrax M300 → Information → Printer information",
+      "effect": "Wyświetla model, wersję sprzętu, numer seryjny i sumę czasu według dostępnych danych fabrycznych oraz liczników portu.",
+      "operator": "DEMO-NOT-A-SERIAL i HW05 na obrazie są przykładami. Nie ustalaj na ich podstawie rewizji swojej osi Z. Brak danych wymaga diagnostyki, nie zgadywania.",
+      "fluidd": "`ZORTRAX_INFORMATION` / `ZORTRAX_HARDWARE_STATUS`.",
+      "icon": "Litera i oznacza odczyt danych.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "help",
+      "title": "Help — katalog komunikatów",
+      "path": "Zortrax M300 → Information → Help",
+      "effect": "Prowadzi do Errors i wskazuje adres dokumentacji projektu. Kody komunikatów mają opisy, a nie każdy komunikat jest krytycznym wyłączeniem.",
+      "operator": "Zapisz pełną treść i kod. Nie potwierdzaj alarmu bez ustalenia przyczyny. Adres projektu jest dzielony na krótkie wiersze z powodu szerokości ekranu.",
+      "fluidd": "`ZORTRAX_HELP` i katalog błędów w dokumentacji.",
+      "icon": "Znak zapytania to pomoc.",
+      "source": "m300_settings.py"
+    },
+    {
+      "id": "service_tests",
+      "title": "Service / Tests — narzędzia kontrolne",
+      "path": "Menu główne → Service / Tests",
+      "effect": "Zawiera odczyt diagnostyki i statusów, ale także wywołania testów materiału, kalibracji i przejazdów XY.",
+      "operator": "Nie traktuj całej gałęzi jako odczytowej. TEST XY wykonuje ruch, a materiał/kalibracja mogą nagrzewać. Używaj wyłącznie konkretnej opisanej funkcji przy bezczynnej maszynie.",
+      "fluidd": "Grupa TEST M300; `TEST_ZORTRAX_STATUS` jest odczytem, `TEST_ZORTRAX_XY` wykonuje test ruchu.",
+      "icon": "Narzędzia serwisowe, nie symbol gotowości produkcyjnej.",
+      "source": "m300_menu.py"
+    },
+    {
+      "id": "pause",
+      "title": "PAUSE MENU — wznowienie, wymiana, zatrzymanie",
+      "path": "Podczas natywnego wydruku → pauza",
+      "effect": "Resume the print wznawia zgodne zadanie; Change the material otwiera wymianę w pauzie; Stop the print przechodzi do jawnego potwierdzenia anulowania.",
+      "operator": "Nie wyłączaj silników, nie bazuj ponownie i nie przestawiaj osi ręcznie przed wznowieniem. Po wymianie filamentu może być wymagane potwierdzenie przepływu. Wybór Stop nie jest identyczny z RESUME.",
+      "fluidd": "`PAUSE`, `RESUME`, `ZORTRAX_CHANGE`, `CANCEL_PRINT` oraz przyciski Jobs.",
+      "icon": "Symbol informacji towarzyszy wyborowi czynności w pauzie.",
+      "source": "m300_print_ui.py"
+    },
+    {
+      "id": "cancel_confirmation",
+      "title": "STOP THE PRINT? — potwierdzenie anulowania",
+      "path": "Pauza → Stop the print",
+      "effect": "No pozostawia zadanie w pauzie; Yes, stop the print wywołuje CANCEL_PRINT. Anulowanie zamyka plik i usuwa stan pauzy, wyłącza cele grzałek, a parkowanie nie może blokować anulowania.",
+      "operator": "Po Yes nie jest to już zadanie do wznowienia. Wentylator hotendu może pracować do wystudzenia. M112 jest odrębnym awaryjnym zatrzymaniem, nie przyciskiem tego menu.",
+      "fluidd": "`CANCEL_PRINT`; przycisk Cancel we Fluidd.",
+      "icon": "Krzyżyk w okręgu oznacza zatrzymanie zadania.",
+      "source": "m300_print_ui.py"
+    },
+    {
+      "id": "no_models",
+      "title": "Notice #101 — brak modeli",
+      "path": "Models / powiadomienie katalogu",
+      "effect": "Informuje o braku modeli w odczytywanym źródle. Nie jest sam w sobie błędem planera ruchu.",
+      "operator": "Sprawdź wybrane źródło SD/Host files i obsługiwane pliki. Nie zaczynaj od resetowania MCU ani kasowania konfiguracji.",
+      "fluidd": "Panel Jobs; sprawdzenie kwalifikacji SD i listy plików.",
+      "icon": "Wykrzyknik oznacza komunikat; jego znaczenie wynika z tekstu i kodu.",
+      "source": "m300_settings_ui.py"
+    },
+    {
+      "id": "sleep",
+      "title": "Księżyc — ekran bezczynności",
+      "path": "Sleep mode / timeout wyświetlacza",
+      "effect": "Pokazuje przejście panelu w uśpienie zgodnie z polityką wyświetlacza.",
+      "operator": "Wybudzenie przywraca obsługę panelu; nie jest potwierdzeniem wykonania homingu ani gotowości termicznej. Żadna część tego obrazu nie steruje przeglądarkową skalą ×1/×2/×3.",
+      "fluidd": "`ZORTRAX_SCREEN` do odczytu; `ZORTRAX_SLEEP_MODE` do ustawienia preferencji.",
+      "icon": "Księżyc identyfikuje uśpienie.",
+      "source": "m300_display_oem.py"
+    },
+    {
+      "id": "status_ready",
+      "title": "Status Ready — temperatury i stan",
+      "path": "Ekran statusu Klippera",
+      "effect": "Pokazuje temperatury, nawiew, mnożnik prędkości i komunikat statusu. Wartości są bieżącymi obserwacjami w działającej drukarce; tutaj użyto stanu demonstracyjnego.",
+      "operator": "Ready nie potwierdza samodzielnie, że wszystkie osie zostały zbazowane albo mesh jest aktywny. Sprawdź wymagane stany przed procedurą.",
+      "fluidd": "Thermals, Tool, Jobs i status Klippera.",
+      "icon": "Symbole dyszy, platformy, wentylatora i czasu opisują odpowiednie pola.",
+      "source": "m300_klipper_status.py"
+    },
+    {
+      "id": "status_printing",
+      "title": "Status Printing — postęp zadania",
+      "path": "Ekran statusu w trakcie wydruku",
+      "effect": "Pokazuje temperatury, postęp, czas i komunikat. 42% oraz 200/60°C w renderze są wyłącznie przykładem.",
+      "operator": "Nie myl FEED 100% z maksymalnym przepływem filamentu. Szybkość wydruku nadal ograniczają przepływ, dynamika i konfiguracja. Sterowanie pauzą/zatrzymaniem korzysta ze wspólnego kontrolera druku.",
+      "fluidd": "Stan Jobs, wykresy i przyciski PAUSE/RESUME/CANCEL.",
+      "icon": "Pasek oraz procent opisują postęp, a nie pomiar nierówności stołu.",
+      "source": "m300_klipper_status.py"
+    }
+  ]
+}

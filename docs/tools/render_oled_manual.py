@@ -33,6 +33,7 @@ def main():
     from extras.m300_leveling_oem import describe, render
     from extras.m300_print_ui import frame_for, PAUSE_ROWS, STOP_ROWS
     from extras.m300_display_oem import sleep_wire, load_moon
+    from extras.m300_fans import M300Fans
     from PIL import Image
     import io
 
@@ -56,7 +57,12 @@ def main():
     m.generation, m.page, m.reason, m._busy = 1, 'main', '', False
     m._labels, m._temperature = {}, {'HOTEND': 200., 'BED': 60.}
     m._procedure_return, m.cycle = None, None
-    m.job = NS(board=NS(native_control=True))
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read(ROOT / 'host/config/m300_classic_base.cfg')
+    m.job = NS(board=NS(native_control=True),
+        hotend=NS(min_temp=cp.getfloat('extruder','min_temp'),max_temp=cp.getfloat('extruder','max_temp')),
+        bed=NS(min_temp=cp.getfloat('heater_bed','min_temp'),max_temp=cp.getfloat('heater_bed','max_temp')))
+    m._return_page = 'klipper'
     m.maintenance = NS(get_status=lambda now: {'sleep': False})
     m.t = lambda text: text
     settings = M300Settings.__new__(M300Settings)
@@ -86,6 +92,27 @@ def main():
         ('native_moves',1,'move_axes'), ('native_move_x',4,'move_x'),
         ('native_move_z',4,'move_z'), ('native_pid',1,'pid'),
         ('models',1,'models'), ('bed_mesh',2,'bed_mesh'), ('tests',1,'service_tests')]
+    # Extra beta.20 manual views use the same production menu paths, not sketches.
+    pages.extend([
+        ('klipper',1,'klipper_temp_hotend'), ('klipper',2,'klipper_temp_bed'),
+        ('klipper',3,'klipper_heat_hotend'), ('klipper',4,'klipper_heat_bed'),
+        ('klipper',5,'klipper_heaters_off'), ('klipper',7,'klipper_home_y'),
+        ('klipper',8,'klipper_home_z'), ('klipper',9,'klipper_home_xy'),
+        ('klipper',10,'klipper_home_xyz'), ('klipper',13,'klipper_fans'),
+        ('native_job',0,'print_details'), ('maintenance',8,'maintenance_heat_bed'),
+        ('maintenance',10,'maintenance_platform_down'), ('maintenance',11,'maintenance_fan_test'),
+        ('material',1,'material_unload'), ('native_move_y',4,'move_y'),
+        ('native_pid',2,'pid_bed'), ('native_pid',3,'pid_save'),
+        ('models',2,'models_host'), ('temperature_HOTEND',4,'temperature_hotend'),
+        ('temperature_BED',3,'temperature_bed'), ('fans',9,'fan_controls')])
+    fans = M300Fans.__new__(M300Fans)
+    fans.board, fans.ready, fans.test, fans.reason = m.job.board, True, None, ''
+    fans.get_status = lambda now: dict(state='READY', forced_cooling=False,
+        mcu_status_fresh=True, can_cancel=False, channels={
+            'print':dict(pin='PE13',effective_duty=0.,requested=0.),
+            'hotend':dict(pin='PE14',effective_duty=0.,requested=0.)})
+    objects['m300_fans'] = fans
+    objects['m300_print_ui'] = NS()  # native detail page is read-only with this owner
     menu_rows = {}
     for page, selection, name in pages:
         m.page=page
@@ -162,7 +189,7 @@ def main():
 
     report=ROOT/'docs/reports/OLED_RENDER_MANIFEST.json'
     report.parent.mkdir(parents=True,exist_ok=True)
-    report.write_text(json.dumps(dict(source_release='v1.0.0-beta.17',source_commit='d6ddf9c3bee58dc2209946a0073f8a708d964073',
+    report.write_text(json.dumps(dict(source_release='v1.0.0-beta.20',source_commit='4828a9da9d5fd8b0b93eb2ac267732ee7e49d506',
         method='Production menu rows, bitmap font, sprite selectors and pure renderers; illustrative in-memory state only',
         physical_printer=False, screens=records, menu_rows=menu_rows),ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(dict(status='PASS',screens=len(records),png_files=len(records)*2)))

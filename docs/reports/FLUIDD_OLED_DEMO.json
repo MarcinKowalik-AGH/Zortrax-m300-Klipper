@@ -1,0 +1,48 @@
+{
+  "reference_release": "v1.0.0-beta.20",
+  "source_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
+  "kind": "Isolated browser demonstration using production SFC stylesheet and compiled pixel helper; no live printer",
+  "physical_printer": false,
+  "browser": "Chromium 144.0.7559.96",
+  "component_sha256": "5c8cb03ae1e3a812603bbfa7348e0234b651c2378a1a6a19ea65c0b8f5a19656",
+  "pixel_helper_source_sha256": "3b561d3fb84921c0bb1373d33457203fe09cab34238061c255ad17344272ee82",
+  "source_image": "docs/img/oled/klipper_home_xyz.png",
+  "screens": [
+    {
+      "file": "docs/img/fluidd_oled_beta20_x1.png",
+      "sha256": "a87955d8fa5a63d85d74487c921397ad3e526b4119bea35100f42b9a9dae064d",
+      "layout": {
+        "dpr": 1,
+        "zoom": 1,
+        "width": 256,
+        "height": 64,
+        "cssWidth": 260,
+        "cssHeight": 68
+      }
+    },
+    {
+      "file": "docs/img/fluidd_oled_beta20_x2.png",
+      "sha256": "2263c8d82a85bd64da493898cc3424c357d376be98f74413164775b8eaa330cf",
+      "layout": {
+        "dpr": 1,
+        "zoom": 2,
+        "width": 512,
+        "height": 128,
+        "cssWidth": 516,
+        "cssHeight": 132
+      }
+    },
+    {
+      "file": "docs/img/fluidd_oled_beta20_x3.png",
+      "sha256": "53987b1d830aa2f7f4cdb0dbd93a41a41ae5f369f94482f9bb7b638cf9bded5a",
+      "layout": {
+        "dpr": 1,
+        "zoom": 3,
+        "width": 768,
+        "height": 192,
+        "cssWidth": 772,
+        "cssHeight": 196
+      }
+    }
+  ]
+}

@@ -1,60 +1,47 @@
-# Kontrola kompletności dokumentacji i pochodzenie materiałów
+# Kontrola dokumentacji beta.20 i pochodzenie ilustracji
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [OLED](OLED_MENU_REFERENCE.md)
+[Instrukcja główna](../../README_PL.md) · [Ilustrowane funkcje OLED](OLED_FUNCTIONS.md) · [Zmiany dzisiejsze](UPDATE_2026-11-10.md)
 
-Dokumentacja odnosi się do **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`, stan opisu 10.11.2026. Aktualizacja dokumentacji nie jest nowym wydaniem firmware i nie wymaga zmiany konfiguracji drukarki.
+Stan opisu: **10 listopada 2026, beta.20**, kod odniesienia `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Zmiana dokumentacji nie zmienia wykonawczego hosta, MCU, frontendu ani konfiguracji. Nie utworzono nowej bety tylko dla manuali.
 
-## Wykonanie uzgodnionego planu
+## Zakres wykonany
 
-| Wymaganie | Realizacja | Kontrola |
-|---|---|---|
-| Główna instrukcja i spis | [README_PL](../../README_PL.md) | Odnośniki do wszystkich rozdziałów |
-| Zakres Klippera i architektura | [OVERVIEW_PL](OVERVIEW_PL.md) | Podział odpowiedzialności, diagram Mermaid, stan i ograniczenia |
-| Pierwsza instalacja | [FIRST_INSTALL](FIRST_INSTALL.md) | Zachowana istniejąca procedura, uaktualniony wybór beta.17 |
-| Obsługa użytkownika | [USER_GUIDE](USER_GUIDE.md) | Start, filament, pauza, wznowienie, anulowanie, aktualizacja |
-| Rzeczywiste menu i obrazy | [OLED_MENU_REFERENCE](OLED_MENU_REFERENCE.md) | Wiersze pobrane z kodu, 43 ekrany × 2 rozdzielczości |
-| Trzy zrzuty użytkownika | Wprowadzenie / obsługa / mesh | Własne pliki repo, podpisy, historyczny panel oznaczony |
-| Planer i wydajność ekstruzji | [PRINT_LIMITS_AND_PLANNER](PRINT_LIMITS_AND_PLANNER.md) | Rozdzielenie limitów ruchu, suchego testu i przepływu |
-| Parametry oraz UART/SPI | [TECHNICAL_REFERENCE](TECHNICAL_REFERENCE.md) | Szablon vs efektywna konfiguracja, zgodność baud, skale Z |
-| Mapy temperatur z firmware | Rozdział techniczny | 205 par stołu i 2 punkty liniowego hotendu, granice interpretacji |
-| Leveling i mesh | [BED_MESH_AND_LEVELING](BED_MESH_AND_LEVELING.md) | M07 ≠ mesh, 25 pozycji, 61×61 resampling, zapis ≠ aktywacja |
-| Wszystkie makra konfiguracyjne | [MACRO_REFERENCE](MACRO_REFERENCE.md) | 39 nazw porównanych z sekcjami źródłowych CFG |
-| Ograniczenia i walidacja | Ten rozdział i przegląd | Brak deklaracji testu na sprzęcie lub pomiaru przepływu |
+| Wymaganie | Dokument lub materiał |
+|---|---|
+| Aktualna wersja na stronie głównej i w instrukcjach instalacji | README PL/EN, FIRST_INSTALL PL/EN i INSTALL EN wskazują opublikowaną beta.20 |
+| Dzisiejsze poprawki | UPDATE_2026-11-10: beta.18 Tune, beta.19 skalowanie, beta.20 układ i kolorystyka |
+| Instrukcja funkcji z obrazami | OLED_FUNCTIONS: 65 ilustrowanych pozycji/stadiów z działaniem, warunkami, opisem grafiki i odpowiednikiem Fluidd |
+| Rzeczywiste menu i bitmapy | OLED_MENU_REFERENCE oraz 65 obrazów 256×64 i 65 dokładnych powiększeń 3× |
+| Current UI po angielsku | FRONTEND_BETA20; historyczne sekcje w FLUIDD_M300 są wyraźnie oznaczone |
+| Instrukcja ×1/×2/×3 | Trzy demonstracje z rzeczywistego arkusza CSS beta.20 i helpera pikseli |
+| Poprawione rozróżnienia | TEMP nie grzeje; Heat uruchamia cel; All nie mierzy mesh; podgląd nie aktywuje kompensacji; PID SAVE restartuje |
+| Parametry, planer, mapy temperatur | Zachowane opisy źródeł, limitów, przepływu i 205 par charakterystyki stołu |
+| Aktualizacja i granice testów | Ready/bezczynność, zachowanie kalibracji, brak potrzeby wgrywania MCU dla tych zmian, jawne granice testów programowych |
 
-## Materiały fotograficzne
+## Trzy rodzaje obrazów
 
-Trzy zrzuty zostały dostarczone przez użytkownika z prośbą o umieszczenie w publicznej dokumentacji. Zachowano oryginalne pliki PNG, pełne wymiary, paletę i treść — bez kadrowania, przeskalowania ani odtwarzania tekstu. Sumy opublikowanych plików są identyczne z oryginałami. Nazwy oryginałów, sumy SHA-256 i opisy: [IMAGE_PROVENANCE.json](../reports/IMAGE_PROVENANCE.json).
+**Zrzuty użytkownika:** oryginalne PNG panelu Fluidd, makr i wyniku mesh pozostają niezmienione bajtowo. Ich sumy zapisuje [IMAGE_PROVENANCE.json](../reports/IMAGE_PROVENANCE.json). To obrazy wcześniejszego interfejsu; obraz makr jest historyczny, a stary mesh ma odmienną kolejność kart. Nie udajemy, że przedstawiają beta.20 po wszystkich zmianach.
 
-Aktualny interfejs jest na zrzucie z 10.11.2026. Makra z 08.11.2026 pokazują wcześniejszy stan grupowania, a nie wadę bieżącej beta.17. Zrzut mesh z 09.11.2026 jest przykładowym wynikiem użytkownika, nie plikiem kalibracji do pobrania i zastosowania w innej drukarce.
+**Rendery fizycznego OLED:** programowe wywołanie produkcyjnych metod rows(), selektorów grafik, fontu bitmapowego oraz rendererów menu/statusu/procedur. Użyto demonstracyjnych temperatur, stanu druku, rewizji sprzętu i zastępczego numeru seryjnego. Żaden render nie komunikuje się z MCU ani nie wydaje G-code. [Manifest 65 ekranów](../reports/OLED_RENDER_MANIFEST.json) zawiera SHA natywnej klatki i PNG. [Katalog funkcji](../reports/OLED_FUNCTION_CATALOG.json) wiąże wszystkie obrazy z opisami.
 
-## Rendery OLED
+**Demonstracje Fluidd:** izolowana przeglądarka z produkcyjnym CSS komponentu i skompilowaną funkcją pikseli. Są podpisane jako demonstracyjne, nie jako zrzuty aktywnej sesji drukarki. [Manifest demonstracji](../reports/FLUIDD_OLED_DEMO.json) wskazuje źródła, wersję przeglądarki i sumy trzech obrazów. Nie udostępniono plików fontów.
 
-43 obrazy natywne 256×64 i 43 podglądy 768×192 wykonano funkcjami projektu z przypiętego kodu. Przykładowe temperatury, stan zadania, rewizja HW05, licznik godzin i zastępczy numer seryjny są jawnie demonstracyjne. Nie zebrano nowych odczytów z drukarki. Manifest: [OLED_RENDER_MANIFEST.json](../reports/OLED_RENDER_MANIFEST.json).
-
-[Skrypt renderowania](../tools/render_oled_manual.py) odtwarza menu, czcionki i grafiki; [skrypt kontroli](../tools/check_manual.py) sprawdza pliki, odnośniki, nazwy makr, wymiary i identyczność skalowania nearest-neighbour oraz wymagane fakty z konfiguracji. Nie generowano obrazów OLED modelem obrazowym i nie próbowano sterować drukarką z dokumentacji.
-
-## Kontrole automatyczne
+## Odtwarzanie i kontrola
 
 ```bash
+python ci/prepare_upstream.py
+python docs/tools/render_oled_manual.py --klipper .ci/pristine
 python docs/tools/check_manual.py
 ```
 
-Raport: [DOCUMENTATION_VALIDATION.json](../reports/DOCUMENTATION_VALIDATION.json). Kontrola jest powtarzalna i kończy się błędem, gdy brakuje rozdziału, zrzutu, renderu, odnośnik lokalny jest błędny, nazwy makr odbiegają od źródeł albo podgląd nie jest dokładnym powiększeniem 3×. Raport dokumentacji nie zastępuje istniejących testów firmware.
+Do odtworzenia demonstracji Fluidd potrzebny jest skompilowany TypeScript helper i Chromium/Playwright. [Skrypt demonstracji](../tools/render_fluidd_oled_manual.py) przyjmuje --module oraz opcjonalnie --chromium-executable. Sam renderer OLED wymaga Pillow i Jinja2 zgodnie z zależnościami projektu.
 
-Oprogramowanie odniesienia beta.17 miało pełny udany [przebieg CI 42723306325](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/42723306325): 741 testów hosta, 111 testów frontendu, natywny Klippy FILEOUTPUT, kompilację ARM i 60 przypadków porównania pikseli w Chromium/Firefox. Nie są to nowe pomiary mechaniki, temperatury czy wydajności ekstrudera wykonane podczas pisania instrukcji.
+[Sprawdzenie dokumentacji](../tools/check_manual.py) kontroluje kompletność rozdziałów, lokalne odnośniki, obrazy i ich sumy, dokładne powiększenie 3×, zgodność wszystkich 39 makr, źródła 205 par mapy temperatury, 25/61×61 w mesh, bieżące rewizje i wszystkie 65 opisów. [Raport](../reports/DOCUMENTATION_VALIDATION.json) podaje rzeczywistą liczbę kontroli, nie stałą deklarację poprzedniego wydania.
 
-## Co sprawdzono merytorycznie, a czego nie należy wnioskować
+Plik [DOCUMENTATION_FILES.json](../reports/DOCUMENTATION_FILES.json) zawiera sumy publikowanych materiałów, a [DOC_SOURCE_BASELINE.json](../reports/DOC_SOURCE_BASELINE.json) sumy źródeł użytych do ilustracji i weryfikacji. Kontrola kończy się błędem, jeżeli źródło lub wymagany obraz nie pasuje; nie zmniejsza się wymagań tylko po to, żeby uzyskać PASS.
 
-- Parametry w tabelach porównano z plikami konfiguracji i odpowiednimi modułami. Efektywna konfiguracja istniejącej drukarki może różnić się od szablonu.
-- Rozdzielono procedury natywne od testów eksperymentalnych i kwalifikowanych funkcji SD/Z-code.
-- Usunięto nieprecyzyjne utożsamienie map temperatur z samymi celami grzania.
-- Nie podano niezmierzonego maksymalnego przepływu fabrycznego hotendu. Wyliczenia Q są oznaczone jako przykłady.
-- Nie stwierdzono, że kolorowy mesh jest aktywny; udokumentowano `AUTO` i brak profilu.
-- Nie obiecano uniwersalnej numeracji złącza DEBUG ani zalecanego 1500000 baud dla każdej instalacji.
-- Kod wykonawczy hosta, MCU, konfiguracja ruchu/grzania i frontend nie są zmieniane przez tę publikację dokumentacji.
+## Co rzeczywiście potwierdzono
 
-## Źródła pierwotne
+Release beta.20 ma udany [build 42798305380](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/42798305380): 741 testów hosta, 140 frontendu, 84 porównania pikseli, 54 testy geometrii w Chromium/Firefox, ARM, natywny Klippy i integralność pakietu. Użytkownik zaakceptował zgłoszony efekt wizualny beta.20. Jest to osobne od bieżącej walidacji dokumentacji.
 
-W każdym rozdziale odnośniki prowadzą do źródeł projektu lub dokumentacji producenta/Klippera. Podstawowe pliki: [konfiguracja sprzętu](../../host/config/m300_classic_base.cfg), [czujniki](../../host/config/m300_classic_sensors.cfg), [procedury](../../host/config/m300_classic_services.cfg), [makra](../../host/config/m300_operations.cfg), [menu](../../host/klippy/extras/m300_menu.py), [kontroler druku](../../host/klippy/extras/m300_print_control.py), [mesh](../../host/klippy/extras/m300_pad_mesh.py). Archiwalne audyty: [PROVENANCE](../en/PROVENANCE.md), [CONFIGURATION_AUDIT](../en/CONFIGURATION_AUDIT.md), [HARDWARE_VARIANTS](../en/HARDWARE_VARIANTS.md).
-
-Nie dołączono pełnego fabrycznego dumpu, prywatnych logów, poświadczeń ani numeru seryjnego użytkownika. Dokumentacja nie znosi konieczności testu odbiorczego na fizycznej maszynie po zmianie mechaniki lub elektroniki.
+Nie wykonano nowych pomiarów temperatur, przepływu, mechaniki ani dokładności kontaktowego Z na drukarce. Przykładowe 200/60°C, odchyłki, obroty śrub i czas druku na ilustracjach nie są nastawami do kopiowania. Nie zadeklarowano uniwersalnego maksymalnego przepływu ekstrudera ani gwarancji równego rastra po lupie systemowej/pulpicie zdalnym. Oryginalne tagi wydania i pliki ZIP pozostają niezmienione.

@@ -1,8 +1,8 @@
 # Instrukcja codziennej obsługi
 
-[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Parametry](TECHNICAL_REFERENCE.md)
+[Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.17**, commit `d6ddf9c3bee58dc2209946a0073f8a708d964073`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -26,9 +26,9 @@ Stan krańcówek i PC7 musi odpowiadać fizycznej sytuacji. Sam napis Ready nie 
 
 ## 2. Fluidd i makra
 
-![Aktualny panel Fluidd z podglądem oryginalnego OLED](../img/fluidd_overview.png)
+![Historyczny zrzut układu Fluidd z podglądem OLED](../img/fluidd_overview.png)
 
-*Aktualny zrzut użytkownika z 10.11.2026. Sterowanie osią znajduje się po lewej, temperatury i podgląd OLED po prawej. Poniżej są makra, konsola i pliki.*
+*Zrzut użytkownika z 10.11.2026 sprzed beta.20; nie przedstawia obecnego położenia przycisków skalowania. Sterowanie osią znajduje się po lewej, temperatury i podgląd OLED po prawej. Poniżej są makra, konsola i pliki.*
 
 Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. **TEST M300** to osobne czynności diagnostyczne — nie uruchamiaj ich w ciemno. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
 
@@ -37,9 +37,29 @@ Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawi
 
 ![Starszy panel makr przed poprawą grupowania](../img/macros_panel.png)
 
-To stan wcześniejszej wersji, nie oczekiwany wygląd beta.17. `ZORTRAX_HEAT_PLATFORM`, `ZORTRAX_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Najnowszy zrzut powyżej pokazuje poprawiony podział. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
+To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `ZORTRAX_HEAT_PLATFORM`, `ZORTRAX_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Zrzut powyżej pokazuje poprawiony podział makr, ale wcześniejszy układ OLED. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
 
 </details>
+
+## 2a. Podgląd OLED i przyciski ×1/×2/×3
+
+![Demonstracyjny układ beta.20: ×1](../img/fluidd_oled_beta20_x1.png)
+
+*Render demonstracyjny w Chromium, z rzeczywistym CSS komponentu beta.20 i bitmapą OLED projektu. Nie jest zdjęciem sesji użytkownika.*
+
+Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zmiana wielkości nie wysyła poleceń do drukarki i nie steruje menu. OLED pozostaje wycentrowany względem całej karty, a wysokość całej kolumny przycisków odpowiada ×1. Gdy ×2/×3 nie mieści się w karcie, przewijaj tylko obraz. Wybór jest zapamiętywany osobno w przeglądarce. Kwadratowe piksele mają pierwszeństwo przed zachowaniem dokładnej wielkości CSS przy ułamkowym powiększeniu strony.
+
+**HIDE/SHOW** dotyczy wyłącznie podglądu w Fluidd, nie wyłączenia fizycznego OLED. Po aktualizacji użyj Cmd+Shift+R. [Pełny opis powiększenia](UPDATE_2026-11-10.md) i [co robi każdy ekran OLED](OLED_FUNCTIONS.md).
+
+## 2b. Tune, All i Calibrate — trzy różne działania
+
+| Działanie | Wynik w beta.20 |
+|---|---|
+| Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
+| All w Tune | Wspólne ZORTRAX_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
+| Calibrate w Tune | BED_MESH z przygotowaniem grzania i bazowania; nie trzeba osobno wykonywać All |
+
+**Stały układ: schemat płyty/pól kontaktu nad heatmapą**, przed, podczas i po pomiarze. Jeżeli nie ma profilu, nie oczekuj kolorowej powierzchni; nie jest to powód do ponownego bazowania. [Pomiar, zapis i aktywacja](BED_MESH_AND_LEVELING.md).
 
 ## 3. Bazowanie i przygotowanie stołu
 
@@ -101,7 +121,7 @@ Nie wyłączaj silników, nie wykonuj bazowania i nie przestawiaj osi ręcznie p
 
 Zachowaj kopię konfiguracji. Przy Ready, bez wydruku i aktywnej procedury, użyj poleceń z [README](../../README_PL.md). Instalator nie aktualizuje firmware MCU samoczynnie. W razie komunikatu o nieznanych plikach przerwij, zachowaj raport i porównaj lokalne zmiany; nie obchodź kontroli sum.
 
-Dla beta.17: `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+Dla beta.20: `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ## 9. Rozpoznawanie problemów
 
@@ -116,3 +136,9 @@ Dla beta.17: `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE
 | Wentylator hotendu pracuje po CANCEL | Sprawdź temperaturę: to może być prawidłowe chłodzenie 50/45°C, nie pozostawiony wydruk |
 
 Logi przydatne do zgłoszenia: `klippy.log`, `moonraker.log`, statusy powyżej i identyfikator wydania. Przed publicznym udostępnieniem usuń dane sieciowe, sekrety i identyfikatory niepotrzebne do diagnozy.
+
+## 10. Komunikat o nieudanej kompilacji na GitHubie
+
+Nie uruchamiaj aktualizacji na podstawie samej informacji, że powstał commit lub PR. Sprawdź końcowy przebieg dla właściwego commita, gotowe wydanie i BUILD_PROVENANCE.json gałęzi orange-pi. Nieudany wcześniejszy przebieg testowy pozostaje w historii nawet po poprawieniu kodu. Ponowienie bez poprawki pomaga przy chwilowej awarii sieci, nie naprawia błędu programu lub testu.
+
+Publikacja wydania wymaga udanej budowy oraz kontroli paczki. Ta instrukcja **nie deklaruje stałego automatycznego naprawiania błędów** — funkcji tej nie dodają dzisiejsze zmiany frontendu. [Zakres weryfikacji](DOCUMENTATION_CHECK.md).
