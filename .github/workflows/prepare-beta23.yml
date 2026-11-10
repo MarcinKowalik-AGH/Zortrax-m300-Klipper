@@ -60,10 +60,9 @@ jobs:
           python ci/acceptance_register.py --check
           python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
           python docs/tools/check_manual.py --output docs/reports/DOCUMENTATION_BETA23_VALIDATION.json
-      - name: Commit reviewed operational scope and remove one-time importer
+      - name: Commit reviewed operational files; workflows are published separately
         run: |
           set -euo pipefail
-          rm .github/workflows/prepare-beta23.yml
           python - <<'PY'
           import hashlib,json,subprocess
           from pathlib import Path
@@ -80,10 +79,17 @@ jobs:
           data['files']['docs/reports/DOCUMENTATION_BETA23_VALIDATION.json']=hashlib.sha256(Path('docs/reports/DOCUMENTATION_BETA23_VALIDATION.json').read_bytes()).hexdigest()
           manifest.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
           PY
-          git add PORT.json README.md README_PL.md ci docs .github/workflows
+          # The Actions token intentionally lacks workflows permission. Never
+          # attempt to grant it extra authority or smuggle workflow edits.
+          # Authorized connector writes will publish these verified files.
+          mkdir -p "$RUNNER_TEMP/verified-workflows"
+          cp .github/workflows/build-m300.yml .github/workflows/retry-transient.yml "$RUNNER_TEMP/verified-workflows/"
+          git restore --source=HEAD -- .github/workflows
+          rm .github/workflows/retry-transient.yml
+          git add PORT.json README.md README_PL.md ci docs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Unify beta.23 Fluidd 4480 selection, four-line START docs, bounded CI retry and evidence-based acceptance ledger'
+          git commit -m 'Unify beta.23 Fluidd 4480 selection, four-line START docs, bounded CI policy and evidence-based acceptance ledger'
           git push origin HEAD:fix/beta23-installer-ci-acceptance
       - name: Preserve verification evidence
         if: always()
