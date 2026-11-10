@@ -1,0 +1,44 @@
+name: Orca M300 profile audit
+on:
+  push:
+    branches: ['feature/orca-m300-classic-0p20']
+    paths: ['orca/**', '.github/workflows/orca-profile-audit.yml']
+  pull_request:
+    paths: ['orca/**', '.github/workflows/orca-profile-audit.yml']
+permissions:
+  contents: read
+jobs:
+  slice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install graphical runtime dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgtk-3-0t64 libwebkit2gtk-4.1-0 libglu1-mesa libsecret-1-0 libgstreamer1.0-0 libgl1-mesa-dri
+      - name: Fetch pinned official OrcaSlicer 2.3.2
+        run: |
+          mkdir -p "$RUNNER_TEMP/orca"
+          cd "$RUNNER_TEMP/orca"
+          curl --fail --location --retry 3 -o Orca.AppImage 'https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.3.2/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.3.2.AppImage'
+          echo 'c64336ceec37d941766e675cbaaaf5124e184402bf18177fbf81ba5102734ad8  Orca.AppImage' | sha256sum -c -
+          chmod +x Orca.AppImage
+          ./Orca.AppImage --appimage-extract >/dev/null
+          xvfb-run -a "$RUNNER_TEMP/orca/squashfs-root/AppRun" --help > "$RUNNER_TEMP/orca/help.txt"
+          cat "$RUNNER_TEMP/orca/help.txt"
+      - name: Slice all catalog entries and inspect G-code
+        run: |
+          xvfb-run -a python3 orca/tests/audit_slice.py \
+            --orca "$RUNNER_TEMP/orca/squashfs-root/AppRun" \
+            --bundle orca/Zortrax_M300_Classic_0p20_18_filaments.orca_printer \
+            --out "$RUNNER_TEMP/orca-audit"
+      - name: Save audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m300-orca-2.3.2-audit
+          path: |
+            ${{ runner.temp }}/orca-audit
+            ${{ runner.temp }}/orca/help.txt
+          retention-days: 14
