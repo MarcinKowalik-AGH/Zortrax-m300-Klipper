@@ -1,0 +1,260 @@
+diff --git a/src/components/widgets/bedmesh/BedMeshControls.vue b/src/components/widgets/bedmesh/BedMeshControls.vue
+--- a/src/components/widgets/bedmesh/BedMeshControls.vue
++++ b/src/components/widgets/bedmesh/BedMeshControls.vue
+@@ -125,7 +125,7 @@
+                 block
+                 class="mb-2"
+                 :loading="hasWait($waits.onMeshCalibrate)"
+-                :disabled="printerBusy || !allHomed"
++                :disabled="!canCalibrate"
+                 v-on="on"
+                 @click="calibrate()"
+               >
+@@ -158,7 +158,8 @@
+             small
+             class="mb-2"
+             :loading="hasWait($waits.onHomeAll)"
+-            :disabled="printerBusy"
++            :title="m300HomeMessage($waits.onHomeAll)"
++            :disabled="!klippyReady || printerBusy || m300OperationBusy"
+             :color="(!allHomed) ? 'primary' : undefined"
+             @click="homeAll"
+           >
+@@ -359,8 +360,34 @@
+     return 'quad_gantry_level' in printerSettings
+   }
+ 
++  get m300PadMode (): boolean {
++    const printer = this.$typedState.printer.printer
++    return printer.m300_pad_mesh != null && printer.m300_motion?.normal_control === true
++  }
++
++  get m300OperationBusy (): boolean {
++    if (!this.m300PadMode) return false
++    const printer = this.$typedState.printer.printer
++    const pad = printer.m300_pad_mesh as { busy?: boolean } | undefined
++    return pad?.busy === true || printer.m300_motion?.busy === true ||
++      printer.m300_procedures?.busy === true
++  }
++
++  get canCalibrate (): boolean {
++    // M300 BED_MESH owns its safe heating/homing preparation. Other printers
++    // retain the upstream requirement to home first.
++    return this.klippyReady && !this.printerBusy && !this.m300OperationBusy &&
++      (this.m300PadMode || this.allHomed)
++  }
++
++  homeAll () {
++    if (!this.klippyReady || this.printerBusy || this.m300OperationBusy) return
++    this.sendGcode(this.m300PadMode ? 'ZORTRAX_HOME_ALL' : 'G28', this.$waits.onHomeAll)
++  }
++
+   calibrate () {
+-    this.sendGcode('BED_MESH_CALIBRATE', this.$waits.onMeshCalibrate)
++    if (!this.canCalibrate) return
++    this.sendGcode(this.m300PadMode ? 'BED_MESH' : 'BED_MESH_CALIBRATE', this.$waits.onMeshCalibrate)
+   }
+ 
+   async clearMesh () {
+diff --git a/src/components/widgets/bedmesh/M300PadMeshStatus.vue b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
+--- a/src/components/widgets/bedmesh/M300PadMeshStatus.vue
++++ b/src/components/widgets/bedmesh/M300PadMeshStatus.vue
+@@ -1,6 +1,6 @@
+ <template>
+   <collapsable-card
+-    v-if="status"
++    v-if="status || standaloneHoming"
+     title="M300 pad measurement"
+     icon="$bedMesh"
+     :lazy="false"
+@@ -8,13 +8,13 @@
+   >
+     <v-card-text>
+       <v-progress-linear
+-        v-if="status.busy"
+-        :value="100 * status.points_measured / status.total_points"
+-        :indeterminate="!!status.phase && status.phase !== 'PROBING'"
++        v-if="standaloneHoming || (status && status.busy)"
++        :value="status ? 100 * status.points_measured / status.total_points : 0"
++        :indeterminate="!!standaloneHoming || (!!status && !!status.phase && status.phase !== 'PROBING')"
+         class="mb-3"
+       />
+       <v-alert
+-        :type="error || status.state === 'FAILED' ? 'error' : accepted ? 'success' : 'info'"
++        :type="error || (status && status.state === 'FAILED') ? 'error' : !standaloneHoming && accepted ? 'success' : 'info'"
+         text
+       >
+         <template v-if="error">
+@@ -24,7 +24,13 @@
+             {{ error.action }}
+           </div>
+         </template>
+-        <template v-else-if="status.busy">
++        <template v-else-if="standaloneHoming">
++          <div data-m300-homing>{{ standaloneHoming.message }}</div>
++          <div>Homing only — no new mesh measurement.</div>
++          <div>Nozzle actual: {{ actualTemperature('extruder') }} °C. Nozzle target: {{ targetTemperature('extruder') }} °C.</div>
++          <div>Bed actual: {{ actualTemperature('heater_bed') }} °C. Bed target: {{ targetTemperature('heater_bed') }} °C.</div>
++        </template>
++        <template v-else-if="status && status.busy">
+           <template v-if="preparationMessage">
+             {{ preparationMessage }}
+           </template>
+@@ -40,10 +46,16 @@
+           Profile {{ profileName }} created.
+           {{ active ? 'Compensation is active.' : 'Compensation remains inactive until loaded.' }}
+         </template>
++        <template v-else-if="status && status.state === 'IDLE'">
++          <div data-m300-idle>Contact plan ready: 25 positions on five pads.</div>
++          <div>All homes the axes. Calibrate starts BED_MESH, including heating and homing.</div>
++          <div>Opening Tune does not start a measurement or enable compensation.</div>
++          <div v-if="savedPreview">Saved profile {{ savedPreview.name }} is available for preview (not active).</div>
++        </template>
+         <template v-else>
+           No new mesh profile was created.
+         </template>
+-        <div v-if="!error && status.last_error">
++        <div v-if="!error && !standaloneHoming && status && status.last_error">
+           {{ status.last_error }}
+         </div>
+       </v-alert>
+@@ -54,7 +66,7 @@
+       >
+         Acknowledge
+       </app-btn>
+-      <template v-if="status.last_attempt">
++      <template v-if="!standaloneHoming && status && status.last_attempt">
+         <p>
+           Measured range: {{ status.last_attempt.span_mm.toFixed(4) }} mm.
+           Allowed range: {{ status.last_attempt.limit_mm.toFixed(4) }} mm.
+@@ -72,7 +84,7 @@
+         </v-simple-table>
+       </template>
+       <app-btn
+-        v-if="accepted"
++        v-if="accepted && !standaloneHoming"
+         :disabled="!klippyReady || printerBusy"
+         class="mt-3"
+         @click="save"
+@@ -86,7 +98,7 @@
+ <script lang="ts">
+ import { Component, Mixins } from 'vue-property-decorator'
+ import StateMixin from '@/mixins/state'
+-import { hasBedMeshMatrix, isM300PadMeshAccepted, readM300PadMesh } from '@/util/m300-pad-mesh'
++import { hasBedMeshMatrix, isM300PadMeshAccepted, m300PadMeshPreview, readM300PadMesh } from '@/util/m300-pad-mesh'
+ import { padMeshError } from '@/util/m300-feedback'
+ 
+ @Component
+@@ -99,6 +111,21 @@
+ 
+   get accepted () {
+     return isM300PadMeshAccepted(this.status)
++  }
++
++  get standaloneHoming () {
++    // A mesh-owned home already has its own progress/targets below. Do not
++    // show two procedures or label an ordinary Home All as calibration.
++    return this.status?.busy ? undefined : this.m300Homing
++  }
++
++  get savedPreview () {
++    return m300PadMeshPreview(this.$typedState.printer.printer)
++  }
++
++  targetTemperature (name: 'extruder' | 'heater_bed') {
++    const value = this.$typedState.printer.printer[name]?.target
++    return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(1) : '—'
+   }
+ 
+   actualTemperature (name: 'extruder' | 'heater_bed') {
+diff --git a/src/util/m300-pad-mesh.spec.ts b/src/util/m300-pad-mesh.spec.ts
+--- a/src/util/m300-pad-mesh.spec.ts
++++ b/src/util/m300-pad-mesh.spec.ts
+@@ -355,7 +355,7 @@
+     expect(m300PadMeshPreview(source)).toBeUndefined()
+   })
+ 
+-  it('places the native colored chart first after saving and shows min/max/range without loading compensation', () => {
++  it('keeps the contact plan above the native colored chart after saving without loading compensation', () => {
+     const source = printer('COMPLETE')
+     source.m300_pad_mesh = {
+       ...status(),
+@@ -395,7 +395,7 @@
+       }
+     })
+     expect(tune.findAll('[data-test]').wrappers.map(node => node.attributes('data-test')))
+-      .toEqual(['native-chart', 'contact-map'])
++      .toEqual(['contact-map', 'native-chart'])
+     const chart = shallowMount(BedMeshCard, {
+       propsData: { fullscreen: true },
+       mocks,
+diff --git a/src/util/m300-pad-mesh.ts b/src/util/m300-pad-mesh.ts
+--- a/src/util/m300-pad-mesh.ts
++++ b/src/util/m300-pad-mesh.ts
+@@ -8,7 +8,7 @@
+ }
+ 
+ export interface M300PadMesh {
+-  run_id: string;
++  run_id: string | null;
+   state: string;
+   phase?: string;
+   targets?: { hotend: number; bed: number } | null;
+@@ -23,11 +23,16 @@
+ export function readM300PadMesh (value: unknown): M300PadMesh | undefined {
+   if (typeof value !== 'object' || value === null || Array.isArray(value)) return
+   const status = value as M300PadMesh | undefined
+-  if (!status || typeof status.run_id !== 'string' || !/^[a-f0-9]{24}$/.test(status.run_id) ||
+-      !['PROBING', 'COMPLETE', 'FAILED'].includes(status.state) ||
++  if (!status || !['IDLE', 'PROBING', 'COMPLETE', 'FAILED'].includes(status.state) ||
+       status.busy !== (status.state === 'PROBING') || status.total_points !== 25 ||
+       !Number.isInteger(status.points_measured) || status.points_measured < 0 || status.points_measured > 25 ||
+       typeof status.last_error !== 'string') return
++  // A freshly connected host has geometry but no measurement token. Treat
++  // this as preparation, never as a successful or saveable measurement.
++  if (status.state === 'IDLE') {
++    if (status.run_id !== null || status.phase !== 'IDLE' || status.points_measured !== 0 ||
++        status.last_attempt !== null || status.result !== null) return
++  } else if (typeof status.run_id !== 'string' || !/^[a-f0-9]{24}$/.test(status.run_id)) return
+   if (status.phase !== undefined && !['IDLE', 'PREPARING', 'CLEARANCE', 'HEATING', 'HOMING', 'STABILIZING',
+     'PROBING', 'COMPLETE', 'FAILED'].includes(status.phase)) return
+   if (status.targets !== undefined && status.targets !== null &&
+diff --git a/src/views/Tune.vue b/src/views/Tune.vue
+--- a/src/views/Tune.vue
++++ b/src/views/Tune.vue
+@@ -8,12 +8,9 @@
+       cols="12"
+       md="8"
+     >
+-      <m300-pad-contact-map v-if="!meshChartFirst" />
+-      <bed-mesh-card
+-        fullscreen
+-        :class="{ 'mb-2 mb-md-4': meshChartFirst }"
+-      />
+-      <m300-pad-contact-map v-if="meshChartFirst" />
++      <!-- Keep one map instance, in a stable place, before/during/after a run. -->
++      <m300-pad-contact-map />
++      <bed-mesh-card fullscreen />
+     </v-col>
+     <v-col
+       cols="12"
+@@ -48,7 +45,6 @@
+ <script lang="ts">
+ import { Component, Mixins } from 'vue-property-decorator'
+ import StateMixin from '@/mixins/state'
+-import { hasBedMeshMatrix, m300PadMeshPreview } from '@/util/m300-pad-mesh'
+ 
+ import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
+ import BedMeshControls from '@/components/widgets/bedmesh/BedMeshControls.vue'
+@@ -70,11 +66,6 @@
+   }
+ })
+ export default class Tune extends Mixins(StateMixin) {
+-  get meshChartFirst (): boolean {
+-    const printer = this.$typedState.printer.printer
+-    return hasBedMeshMatrix(printer.bed_mesh?.mesh_matrix) || !!m300PadMeshPreview(printer)
+-  }
+-
+   get supportsBedMesh (): boolean {
+     return this.$typedGetters['mesh/getSupportsBedMesh']
+   }
