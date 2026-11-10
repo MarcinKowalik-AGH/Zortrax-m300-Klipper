@@ -1,6 +1,8 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.16
+# Zortrax M300 Classic — Klipper v1.0.0-beta.17
 
-[Download v1.0.0-beta.16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.16) ·
+> **Complete illustrated Polish manual:** [start here](README_PL.md) · [OLED menu and 43 rendered screens](docs/pl/OLED_MENU_REFERENCE.md) · [technical reference](docs/pl/TECHNICAL_REFERENCE.md) · [documentation verification](docs/pl/DOCUMENTATION_CHECK.md). Documentation baseline: beta.17; runtime code is unchanged.
+
+[Download v1.0.0-beta.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.17) ·
 [First installation (EN)](docs/en/FIRST_INSTALL.md) ·
 [Pierwsza instalacja (PL)](docs/pl/FIRST_INSTALL.md)
 
