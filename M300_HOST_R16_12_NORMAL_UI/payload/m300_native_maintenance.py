@@ -4,6 +4,7 @@
 The MCU stops the native Z move on a local button release. The host reconciles
 the halted position using Klipper's native probe-move position accounting.
 """
+from .m300_temperature_policy import target_limit
 import math
 
 from .m300_maintenance import M300Maintenance, other_service
@@ -190,7 +191,7 @@ class M300NativeMaintenance(M300Maintenance):
         heater=self.hotend if operation=='HOTEND' else self.bed
         value=(260. if operation=='HOTEND' else 60.) if value is None else value
         if (type(value) not in (float,int) or not math.isfinite(value)
-                or not heater.min_temp<=value<=heater.max_temp or value<=0.):
+                or not heater.min_temp<=value<=target_limit(heater) or value<=0.):
             raise self._error('temperature outside native heater limits')
         self._begin(operation,'HEATING')
         self.target=float(value)

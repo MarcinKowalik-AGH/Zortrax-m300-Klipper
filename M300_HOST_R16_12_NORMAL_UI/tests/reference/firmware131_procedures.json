@@ -1,0 +1,1110 @@
+{
+  "source_sha256": "11e2ea439d33436418bbeb51579cc7c12ef0a329019829bcf7e5eccbfc863b75",
+  "verified_instructions": 27982,
+  "method": "Recovered OEM instructions with declared physical/UI boundary models",
+  "material": [
+    {
+      "operation": "LOAD",
+      "accept": true,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 240,
+          "ready": 238
+        },
+        {
+          "kind": "dialog",
+          "text_id": 20,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 22,
+          "confirmation": false
+        },
+        {
+          "kind": "transport",
+          "requested_pulses": 124800
+        },
+        {
+          "kind": "target",
+          "value": 0
+        },
+        {
+          "kind": "menu",
+          "node": "0x200007b0"
+        }
+      ],
+      "requested_pulses": [
+        124800
+      ],
+      "terminal_menu": "0x200007b0",
+      "instructions": 15611,
+      "motor_boundary_accelerated": true
+    },
+    {
+      "operation": "LOAD",
+      "accept": false,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 240,
+          "ready": 238
+        },
+        {
+          "kind": "dialog",
+          "text_id": 20,
+          "confirmation": true
+        },
+        {
+          "kind": "target",
+          "value": 0
+        },
+        {
+          "kind": "menu",
+          "node": "0x200007b0"
+        }
+      ],
+      "requested_pulses": [],
+      "terminal_menu": "0x200007b0",
+      "instructions": 28,
+      "motor_boundary_accelerated": true
+    },
+    {
+      "operation": "UNLOAD",
+      "accept": true,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 240,
+          "ready": 238
+        },
+        {
+          "kind": "dialog",
+          "text_id": 21,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 19,
+          "confirmation": false
+        },
+        {
+          "kind": "transport",
+          "requested_pulses": -105600
+        },
+        {
+          "kind": "menu",
+          "node": "0x200007b0"
+        }
+      ],
+      "requested_pulses": [
+        -105600
+      ],
+      "terminal_menu": "0x200007b0",
+      "instructions": 649,
+      "motor_boundary_accelerated": true
+    },
+    {
+      "operation": "UNLOAD",
+      "accept": false,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 240,
+          "ready": 238
+        },
+        {
+          "kind": "dialog",
+          "text_id": 21,
+          "confirmation": true
+        },
+        {
+          "kind": "target",
+          "value": 0
+        },
+        {
+          "kind": "menu",
+          "node": "0x200007b0"
+        },
+        {
+          "kind": "menu",
+          "node": "0x200007b0"
+        }
+      ],
+      "requested_pulses": [],
+      "terminal_menu": "0x200007b0",
+      "instructions": 36,
+      "motor_boundary_accelerated": true
+    },
+    {
+      "operation": "CHANGE",
+      "accept": true,
+      "events": [
+        {
+          "kind": "dialog",
+          "text_id": 19,
+          "confirmation": false
+        },
+        {
+          "kind": "transport",
+          "requested_pulses": -105600
+        },
+        {
+          "kind": "dialog",
+          "text_id": 20,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 22,
+          "confirmation": false
+        },
+        {
+          "kind": "transport",
+          "requested_pulses": 144000
+        },
+        {
+          "kind": "menu",
+          "node": "0x20000c78"
+        }
+      ],
+      "requested_pulses": [
+        -105600,
+        144000
+      ],
+      "terminal_menu": "0x20000c78",
+      "instructions": 13108,
+      "motor_boundary_accelerated": true
+    }
+  ],
+  "z_references": [
+    {
+      "revision": 4,
+      "steps_per_mm": 800,
+      "events": [
+        {
+          "iteration": 1,
+          "contact_raw": 1500,
+          "release_raw": 1501
+        },
+        {
+          "iteration": 2,
+          "contact_raw": 1520,
+          "release_raw": 1521
+        },
+        {
+          "iteration": 3,
+          "contact_raw": 1480,
+          "release_raw": 1481
+        },
+        {
+          "iteration": 4,
+          "contact_raw": 1510,
+          "release_raw": 1511
+        },
+        {
+          "iteration": 5,
+          "contact_raw": 1490,
+          "release_raw": 1491
+        }
+      ],
+      "result_raw": 1491,
+      "averaging": false
+    },
+    {
+      "revision": 5,
+      "steps_per_mm": 400,
+      "events": [
+        {
+          "iteration": 1,
+          "contact_raw": 1500,
+          "release_raw": 1501
+        },
+        {
+          "iteration": 2,
+          "contact_raw": 1520,
+          "release_raw": 1521
+        },
+        {
+          "iteration": 3,
+          "contact_raw": 1480,
+          "release_raw": 1481
+        },
+        {
+          "iteration": 4,
+          "contact_raw": 1510,
+          "release_raw": 1511
+        },
+        {
+          "iteration": 5,
+          "contact_raw": 1490,
+          "release_raw": 1491
+        }
+      ],
+      "result_raw": 1491,
+      "averaging": false
+    }
+  ],
+  "wizard": [
+    {
+      "converge": true,
+      "pad_error": false,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 260,
+          "ready": 258
+        },
+        {
+          "kind": "dialog",
+          "text_id": 124,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 108,
+          "confirmation": false
+        },
+        {
+          "kind": "home",
+          "axis": "Y"
+        },
+        {
+          "kind": "home",
+          "axis": "X"
+        },
+        {
+          "kind": "dialog",
+          "text_id": 128,
+          "confirmation": false
+        },
+        {
+          "kind": "center_contact"
+        },
+        {
+          "kind": "dialog",
+          "text_id": 125,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 108,
+          "confirmation": false
+        },
+        {
+          "kind": "dialog",
+          "text_id": 127,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 0,
+          "raw": 160
+        },
+        {
+          "kind": "dialog",
+          "text_id": 127,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 1,
+          "raw": 0
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 160
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 160
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801b9e4",
+          "delta_mm": -0.20000000298023224,
+          "turns": 0.5
+        },
+        {
+          "kind": "dialog",
+          "text_id": 127,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 1,
+          "raw": 160
+        },
+        {
+          "kind": "probe",
+          "point": 0,
+          "raw": 160
+        },
+        {
+          "kind": "probe",
+          "point": 2,
+          "raw": 160
+        },
+        {
+          "kind": "target",
+          "value": 0
+        },
+        {
+          "kind": "diagram",
+          "raw": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "menu",
+          "node": "0x0"
+        }
+      ]
+    },
+    {
+      "converge": false,
+      "pad_error": false,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 260,
+          "ready": 258
+        },
+        {
+          "kind": "dialog",
+          "text_id": 124,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 108,
+          "confirmation": false
+        },
+        {
+          "kind": "home",
+          "axis": "Y"
+        },
+        {
+          "kind": "home",
+          "axis": "X"
+        },
+        {
+          "kind": "dialog",
+          "text_id": 128,
+          "confirmation": false
+        },
+        {
+          "kind": "center_contact"
+        },
+        {
+          "kind": "dialog",
+          "text_id": 125,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 108,
+          "confirmation": false
+        },
+        {
+          "kind": "dialog",
+          "text_id": 127,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 0,
+          "raw": 160
+        },
+        {
+          "kind": "dialog",
+          "text_id": 127,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 1,
+          "raw": 0
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "dialog",
+          "text_id": 126,
+          "confirmation": false
+        },
+        {
+          "kind": "probe",
+          "point": 3,
+          "raw": 20
+        },
+        {
+          "kind": "probe",
+          "point": 4,
+          "raw": 0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba0c",
+          "delta_mm": -0.4000000059604645,
+          "turns": 1.0
+        },
+        {
+          "kind": "instruction",
+          "table": "0x801ba34",
+          "delta_mm": -0.3499999940395355,
+          "turns": 0.75
+        },
+        {
+          "kind": "failure",
+          "error": 41
+        }
+      ]
+    },
+    {
+      "converge": true,
+      "pad_error": true,
+      "events": [
+        {
+          "kind": "heat",
+          "target": 260,
+          "ready": 258
+        },
+        {
+          "kind": "dialog",
+          "text_id": 124,
+          "confirmation": true
+        },
+        {
+          "kind": "dialog",
+          "text_id": 108,
+          "confirmation": false
+        },
+        {
+          "kind": "home",
+          "axis": "Y"
+        },
+        {
+          "kind": "home",
+          "axis": "X"
+        },
+        {
+          "kind": "dialog",
+          "text_id": 128,
+          "confirmation": false
+        },
+        {
+          "kind": "center_contact"
+        },
+        {
+          "kind": "failure",
+          "error": 42
+        }
+      ]
+    }
+  ],
+  "xy_offsets": [
+    {
+      "seed": 0,
+      "xy": [
+        2,
+        -1
+      ]
+    },
+    {
+      "seed": 1,
+      "xy": [
+        -1,
+        0
+      ]
+    },
+    {
+      "seed": 42,
+      "xy": [
+        3,
+        -2
+      ]
+    },
+    {
+      "seed": 1000,
+      "xy": [
+        1,
+        3
+      ]
+    },
+    {
+      "seed": 2147483647,
+      "xy": [
+        0,
+        3
+      ]
+    },
+    {
+      "seed": 4294967295,
+      "xy": [
+        1,
+        2
+      ]
+    }
+  ]
+}

@@ -1,0 +1,366 @@
+# M300 in Fluidd — current beta.20 and historical implementation notes
+
+**Current reference:** [beta.20 user-interface guide](FRONTEND_BETA20.md) · [65 illustrated OLED functions](../pl/OLED_FUNCTIONS.md). This page retains explicitly historical notes; 344×86, 50%-width and ACK-only mirroring below are not the current UI.
+
+
+## Pixel-color-matched, centered OLED and pinned 1×-height zoom controls (beta.20)
+
+The display is centered relative to the complete Temperature card using equal
+40 px left/right gutters. The ×1/×2/×3 control column stays beneath HIDE
+at the far-right card edge, even when the magnified OLED scrolls horizontally.
+Its total height equals that of the ×1 preview (e.g. 68 CSS px at DPR1 or
+66 CSS px at DPR2), regardless of selected zoom. Colors use the exact original
+16-level OLED palette: foreground #16A1FE, border #0A436C, selected #0C588E
+and background #020610. No host/MCU change or additional image decode.
+See [beta.20 notes](RELEASE_v1.0.0-beta.20.md).
+
+## Cyan OLED ×1 / ×2 / ×3 preview controls (beta.19)
+
+Three compact OLED-style controls sit to the right of the live display in the
+Temperature card. The current selection is highlighted and persisted as a browser
+preference. The magnified source image can scroll horizontally without moving
+the controls. Choosing ×1, ×2 or ×3 repaints the last decoded PNG; the event-driven
+navigation channel, normal status cadence, animations and the physical OLED are
+unchanged. Pixels are always integer device-pixel squares; at ordinary DPR 1/2
+source content targets 256×64, 512×128 or 768×192 CSS pixels, with a small border.
+At fractional DPR the dimensions snap to the nearest square device-pixel block.
+[Beta.19 notes](../pl/RELEASE_v1.0.0-beta.19.md).
+
+<details>
+<summary>Historical beta.11–14 implementation notes — superseded; not current dimensions or API behavior</summary>
+
+## Fixed-height OLED preview regardless of window width (beta.14)
+
+The preview remains in the Temperature card, immediately beneath
+the temperature plot. In the usual two-column desktop layout it
+occupies approximately half the card's width. The actual CSS
+display size is now **344 × 86 px**, matching the original OLED
+256 × 64 aspect ratio (4:1). It no longer uses `width: 50%` and
+`height: auto`, which previously shrank the image vertically
+when the Fluidd dashboard column became narrower.
+
+The preview's containing element permits horizontal scrolling
+(`overflow-x: auto`) on narrow layouts; neither the image nor the
+offline placeholder scales, warps, or clips. This ensures a
+constant 86 px display height on both desktop and mobile.
+The physical 256 × 64 bitmap, canvas paint loop and all animated
+sprites stay exactly as in beta.13.
+
+Only the Fluidd component CSS and its layout contract changed.
+There is no new WebSocket traffic, additional MCU command,
+change to RLE/DMA/SPI/UART/ACK, or altered printer procedure.
+
+## Responsive OLED preview with preserved animation (beta.13)
+
+The browser's normal Klipper object subscription is delivered by Moonraker
+roughly every 250 ms. Beta.12 still depended on that subscription for
+the preview, even though host rendering and the SPI transport were faster
+under encoder activity. Beta.13 provides a separate **read-only**
+`printer.objects.query` over the existing authenticated Fluidd WebSocket:
+`objects: { m300_oled: ['oled_preview'] }`. It never opens another
+connection, introduces an unauthenticated route or issues printer commands.
+
+Only **one request can be in flight**; the next request follows the prior
+response plus a short bounded delay, so it cannot accumulate requests
+when the host is busy. Polling is paused while the preview is collapsed,
+Fluidd is disconnected or the browser tab is hidden. The regular
+subscription remains available as a safe fallback.
+
+The view now paints complete 256×64 PNG frames to a Canvas instead of
+replacing a live `img.src`. The previous successfully decoded frame stays
+visible until the next image is fully decoded and drawn. This prevents
+temporary black gaps in the animated region during rapid knob changes.
+A sequence check rejects older subscription frames when a newer direct
+query has already arrived. Host regression tests validate that
+animated OEM and Cartesian icons remain present in every rendered frame
+before encoding.
+
+The 50%-width centered layout and 16-level image quality are unchanged.
+The effective frame rate depends on Klipper render updates and network
+latency; periodic 500ms sprite animations are not artificially accelerated.
+This is still a read-only host-rendered preview, not an OLED pixel readback
+or a confirmation that a physical menu choice is visible/acknowledged.
+The original RLE/PackBits, DMA, UART, SPI, encoder receipts, buzzer,
+homing and error policies are unchanged.
+
+## Faster half-width host-rendered OLED preview (beta.12)
+
+The OLED M300 section remains directly beneath the Temperature chart, but
+the preview image and its offline placeholder now use **50% of the graph
+width**, centered, at 4:1 proportions.
+
+To reduce the visible delay during fast knob rotations, Fluidd displays
+the **latest host-rendered `m300_oled._render_wire`** instead of waiting
+for `stream.previous` (a complete OLED ACK). The existing Moonraker
+status subscription publishes the latest image without a backlog; a
+125 ms minimum interval allows faster updates, and PNG uses zlib level 1.
+With the existing Moonraker status cadence this typically means up to
+about 4 frames/s rather than the previous ACK-limited 2 frames/s.
+There is no extra UI thread, request to the MCU, frame render or
+hardware communication. The physical panel keeps all original RLE,
+DMA/SPI/UART and ACK behavior.
+
+**Important distinction:** this is a preview of the image Klipper is
+presently requesting, not a verified copy of the pixels already shown on
+the physical OLED. It may be slightly ahead during DMA transfer; on
+disconnect the cached image is suppressed. The image is read-only and
+cannot acknowledge menu choices.
+
+## Live, read-only mirror of the OLED beneath the Temperature chart (beta.11)
+
+The existing **Temperature** card in the right dashboard column now includes
+an OLED M300 section immediately below its chart. The image scales to the
+card's full content width in the exact 4:1 aspect ratio of the hardware
+SSD1322 (256×64 pixels), with `Show`/`Hide` controls.
+
+The Klipper `m300_oled` object's new `oled_preview` status field contains
+a compact 4-bit palette PNG of **`stream.previous`, the last frame fully
+acknowledged by the native OLED transport**. The 16 brightness levels are
+preserved exactly. The host encodes only changed acknowledged frames,
+no more than twice per second. The existing Moonraker object subscription
+delivers this field to Fluidd; no new web port, MCU command, display query,
+OLED render loop, GPIO operation or motor/heater action is required.
+PNG encoding uses only Python's standard library. The browser shows the
+existing image, without any encoder input controls.
+
+If the Klipper/MCU transport is unavailable, the preview refuses to show a
+possibly stale image and explains that the MCU's independent waiting/error
+screen cannot be mirrored. This is **not an optical readback** of the panel.
+The MCU may display its own fallback page even while Klipper is offline.
+
+The mirror does **not** replace or alter the already validated 4bpp
+OLED transport, RLE/PackBits, SPI DMA and ACK recovery; it observes the
+completed frame after ACK and sends a small PNG to the browser over the
+existing Moonraker connection.
+
+
+
+
+</details>
+
+## Homing macros shared with the native OLED
+
+`ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`,
+`ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` are grouped under
+**ZORTRAX M300** by the existing Moonraker/Fluidd macro manager.
+Each calls `ZORTRAX_PROCEDURE_START` with `HOME_X/Y/XY/Z/ALL` and
+therefore invokes the **same** protected native G28 implementation and
+session status displayed by OLED Home X/Y/XY/Z/XYZ.
+
+Individual X/Y reference is supported before the other axis has been
+homed. Doing X and then Y, or Y and then X, establishes both homed axes;
+only then is Home Z permitted. Full Home XYZ homes Y, X and Z in order.
+X/Y clearance and the Z thermal/contact guard have not been relaxed.
+After an OLED click finishes, the cursor returns to the previous Home row,
+not to Back. A rejected operation does not create a false success status.
+
+
+**ZORTRAX_LEVEL** is the single standard Autocalibration macro. It opens the
+same review as the physical OLED. Stock Fluidd shows the five readings as
+text. The M300 build renders those readings in the same prompt as a platform
+diagram. Point 4 is rear left, 3 rear right, 2 center, 1 front left and 0
+front right. Continue and Cancel remain normal Fluidd buttons and keep their
+original shared procedure actions.
+
+Printer information in the M300 build uses compact text rows for the model,
+hardware version, serial number and printing time.
+
+The OLED's native Klipper status keeps the original three upper rows. Its
+bottom status strip uses a 5x7 font, with up to two 42-character lines for
+the complete native message (for example, a Bed Mesh phase). This changes
+only the existing bottom 16 pixels. Longer messages end with an ellipsis;
+no scrolling timer, new display transport or encoder polling is added.
+
+**Home X**, **Home Y**, **Home Z**, **Home XY** and **Home XYZ** appear in that
+order in both the Klipper and Maintenance OLED menus. Independent X/Y actions
+call native `G28 X` / `G28 Y`. The existing Fluidd macros
+`ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` continue to
+call `G28 X Y`, `G28 Z` and `G28`. The `Home Z` label no longer includes
+`(180C)`; the actual 180°C minimum and XY prerequisite are unchanged.
+On completion the OLED returns to its invoking screen, cursor and history;
+external homing from native Klipper status returns to that status screen.
+Fluidd's standard X, Y, XY,
+Z and All home buttons show the matching busy state and phase text as a
+tooltip, including starts from OLED and macros. Homing does not open a modal
+dialog. OLED uses distinct four-frame XY, Z and ALL homing symbols, both
+on the selected menu entry and during the matching native procedure.
+Print start and Autocalibration keep their own procedure screens.
+See [the symbol inventory and draft sheet](UI_SYMBOLS.md).
+
+The dedicated OLED/LED brightness dialogs show the live physical encoder
+preview from `m300_settings.brightness` using the normal status subscription.
+Save stores the displayed preview; releasing the web slider saves as well.
+Remote saves align the open OLED slider and keep Back usable. Stale dialogs
+from navigation or restart are still rejected. No per-step console refresh
+or additional MCU polling is needed.
+
+## Native pad mesh in Tune
+
+**Beta.18–20:** direct Tune entry presents IDLE preparation without G-code. All uses ZORTRAX_HOME_ALL; Calibrate uses BED_MESH. The contact-area drawing always precedes the heatmap. See [current guide](FRONTEND_BETA20.md).
+
+
+`BED_MESH` is the visible Klipper macro, including the matching OLED action.
+The installer renames the previous `ZORTRAX_BED_MESH` macro and its Fluidd
+preferences while preserving custom arguments, geometry and saved profiles.
+The native `BED_MESH_CALIBRATE` entry still uses the same 25 contact positions.
+
+After `SAVE_CONFIG` restarts Klipper, Tune previews the saved `m300_pads`
+profile in the native colored 3D chart, with minimum, maximum and range in mm.
+The native chart appears first once a mesh is available; the contact-area
+drawing remains below it. During probing the contact-area drawing is first.
+This preview does not load compensation or send a motion/heater command.
+The native inactive-mesh placeholder `[[]]` is treated as empty, just like
+`[]`. A valid saved profile therefore remains visible after calibration and
+after `SAVE_CONFIG`, with its original colored native surface and range.
+`BED_MESH_PROFILE LOAD=m300_pads` or the native profile's Load button enables
+the saved compensation and displays the active native chart.
+
+At that point the contact-area drawing can display corrections interpolated
+from the saved native grid. These are explicitly labeled as saved mesh values;
+they are not presented as original three-tap measurements, which are session
+data. Failed or unfinished runs do not borrow an earlier profile's heights.
+
+The `TEST M300` macro category is optional service diagnostics, not part of
+printing or Bed Mesh. Status macros read diagnostics; XY test macros perform
+deliberate test movements. Other diagnostic entries exercise OLED transport
+or shared service procedures. They never run automatically and can be hidden
+in Fluidd's macro settings without disabling ordinary printer functions.
+
+## Platform heating macros
+
+| Macro | Effect | Fluidd category |
+| --- | --- | --- |
+| `ZORTRAX_HEAT_PLATFORM TEMP=60` | Starts bed heating now, with shared OLED/Fluidd progress; confirm after heating to switch the bed heater off. | ZORTRAX M300 |
+| `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` | Saves a setting for print start; adds the configured stabilization interval after temperatures settle. The default extra interval is 60 seconds. It does not start heating by itself. | ZORTRAX M300 |
+| `START_PRINT`, `END_PRINT` | Native print preparation and completion. | Klipper |
+
+The grouping migration uses both raw configuration and accessed settings.
+For an M300, the UI also supplies these defaults when a new macro has no
+valid category in older preferences. Explicit valid custom categories,
+visibility, aliases and colors are preserved by this UI fallback. Reload
+Fluidd after installing its new build so an existing browser session reads
+the updated preferences and code.
+
+Revision `0.13.16.20-PAD-CONTACT-MAP` adds a top view above the native mesh
+chart. It shows the five configured contact areas, all 25 planned points,
+completed/current point colors and an animated live nozzle marker. Native
+X0/Y0 is at the bottom left, with X increasing rightwards and Y upwards.
+Measured fields can be rectangular and individually offset, including rear
+right Y262 versus rear left Y260. Geometry is supplied by `m300_pad_mesh`
+status; the UI does not substitute hardcoded pad coordinates.
+
+Each contact area shows its completed native contact heights: four values
+outside the corners and one at the interior sample. Heights are the native
+median of three taps, in the unshifted homing frame, not interpolated values
+or the five-point pad median. They appear as each location completes and
+remain available after an aborted run. A changed preview does not reuse
+old heights. Axis, head and height-label positions use the same display-only
+Y inversion; no physical coordinate or move is changed.
+
+The map is available during an idle geometry preview as well as a live run.
+It reads `motion_report.live_position` from the existing subscription and
+shows the nozzle after XY homing. Stale/unhomed or non-finite positions are
+hidden, and out-of-travel plans receive a warning. The graphic never sends
+G-code or increases polling. Reduced-motion settings disable smooth marker
+transitions and the current-point pulse.
+
+The five new macro fields `FRONT_LEFT_BOUNDS`, `FRONT_RIGHT_BOUNDS`,
+`CENTER_BOUNDS`, `REAR_LEFT_BOUNDS`, `REAR_RIGHT_BOUNDS` use
+`X_MIN,Y_MIN,X_MAX,Y_MAX`. They directly define each pad's contact corners;
+the separate configured interior sample is retained. See the exact
+[measured rectangles and configuration](LEVELING.md#measured-contact-rectangles).
+
+The M300 pad adapter reports the current probing run through the existing
+Moonraker object subscription. A new live run opens **Tune** once, preserving
+the printer query parameter. It does not reopen Tune after manual navigation,
+on geometry-only previews, on preflight refusals or for an old completed run.
+No G-code or additional polling is sent to navigate. A new owned nonfatal
+mesh error also opens this panel once, including after a browser reconnect.
+Its shared error code, cause, remedy and acknowledgement appear in that one
+panel, without an additional error dialog. Duplicate nonfatal error toasts
+are hidden only when their exact cause is already owned by a valid shared
+error view. Unrelated errors and native fatal/shutdown notices remain visible.
+
+Revision `0.13.16.17-PAD-PREPARE` includes the preparation in that live run:
+Tune shows simultaneous heating, native homing, temperature stabilization and
+then the 25-point progress. Nozzle/bed targets are displayed. The nozzle uses
+260 °C as the default mesh target and retains a hotter working temperature;
+an explicit `HOTEND_TEMP` remains supported with a 180 °C floor. Ordinary
+G28 keeps its independent 180 °C minimum. A previously off
+bed defaults to 60 °C. `HOTEND_TEMP` and `BED_TEMP` are editable macro fields.
+`PREVIEW=1` still never heats or homes. The panel displays both native actual
+temperatures and the measurement targets for nozzle and bed, through the
+existing subscription. No firmware flash is required.
+
+Bed Mesh belongs to the Klipper OLED submenu and Fluidd macro group. The
+`BED_MESH` macro forwards parameters to the native `BED_MESH_CALIBRATE`
+adapter; it does not add an OEM Zortrax menu procedure. Flat-frame K/Z marks use the
+same 50×50 geometry as the activity icons, without the former triangular roof.
+
+Revision `0.13.16.18-PAD-OLED` binds this same live run to the physical panel.
+Fluidd quick-button, parameter-form and console starts all open the Bed mesh
+OLED page, with its four-frame 500 ms five-pad animation and phase/point text.
+Internal homing keeps the parent measurement view. Successful completion restores
+the prior OLED screen/cursor/history, manual navigation is respected, and failure
+stays visible until Back. These updates never open a Fluidd prompt over Tune.
+
+The macro name is a quick button with no parameters. The expanded form's
+**Send** submits its filled values. To match the console example, fill widths
+50/50 mm, `EDGE_MARGIN=16` and `BED_TEMP=60`; empty fields use the printer's
+configuration/current geometry (margin 5 mm by default). References now occupy
+separate Jinja lines, allowing stock Fluidd to discover all editable fields.
+Both `EDGE_MARGIN=0` and `TRAVEL_MARGIN=0` are preserved by Send and supported
+by pad revision `0.13.16.19-PAD-ZERO-MARGIN`. The first controls inset from
+physical metal; the second controls inset from native travel limits. Correct
+the pad centers for the real home-to-metal offset before measuring; see
+[home inside metal](LEVELING.md#measured-contact-rectangles).
+
+Tune shows progress through 25 positions, five pad medians/spreads and the
+measured range versus its configured limit. A failed attempt retains its
+diagnostics and error, without a Save button or a newly generated map. On
+success, an inactive native profile can be previewed in the chart with an
+explicit interpolated-grid label. This read-only preview never sends
+`BED_MESH_PROFILE LOAD` and never replaces an active native mesh. The current
+accepted run offers **Save configuration** while idle; it sends the normal
+`SAVE_CONFIG`, which restarts Klipper. Geometry and physical probing limits
+remain unchanged. See [pad mesh](LEVELING.md#optional-klipper-pad-mesh).
+
+## Build
+
+The patch applies to [Fluidd v1.37.7](https://github.com/fluidd-core/fluidd/tree/b2edab5bc690f5265a5aa1e56ae3f67669053fd4).
+From the M300 repository on a workstation with Node 24, pnpm, standard
+shell utilities, Git and zip:
+
+```bash
+bash ci/build_fluidd.sh
+```
+
+The build verifies the exact upstream commit, applies the published patch,
+tests the SVG, fallback, home-button status and pad-mesh navigation/results,
+runs type checks and produces
+`dist/fluidd/M300_FLUIDD_1_37_7_R16_12.zip` with `SHA256SUMS`.
+Corresponding source is the pinned Fluidd commit plus
+[`m300-leveling.patch`](../../frontend/fluidd/m300-leveling.patch)
+under the Fluidd GPL-3.0 license. The patch and license are included in the ZIP.
+
+## Install the web files
+
+The standard `orange-pi` installer installs this compiled Fluidd together
+with the host update and preserves the existing `config.json`. Pull
+`orange-pi` and run `install-orange-pi.py` as described in [Install](INSTALL.md).
+The steps below are for a custom web-root deployment only.
+
+1. On the Orange Pi, identify the actual web root of your existing Fluidd
+   server block (for nginx, inspect `sudo nginx -T` and the matching
+   `listen` and `root` directives). Keep the current root as a rollback copy.
+2. Extract the ZIP beside the existing site. Set the same server block's
+   `root` to the absolute path of the extracted `fluidd-m300` directory.
+   If you customized `config.json`, copy it from the old site into the new
+   web root. Keep the existing Moonraker routes and printer address.
+3. Check `sudo nginx -t`, reload nginx and open the same Fluidd URL. If
+   Fluidd is installed as a PWA, reload the site after its update. Roll back
+   by restoring the original root path and reloading nginx.
+
+The diagram is limited to complete M300 leveling results. Incomplete reports
+use the text rendering. The site neither interprets HTML from G-code nor
+makes extra requests to the printer.

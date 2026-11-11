@@ -1,0 +1,274 @@
+"""Meaning, animation lifecycle and non-overlapping native OLED composition."""
+import copy
+import json
+from pathlib import Path
+import tempfile
+from types import SimpleNamespace as NS
+import unittest
+
+from payload.m300_activity_graphics import ActivityGraphics, fault_symbol, menu_symbol, procedure_symbol
+from payload.m300_cartesian_graphics import CartesianGraphics
+from payload.m300_klipper_logo import LOGO_PIXELS, _replace_k, SLATE, ACCENT, BRIGHT
+from payload.m300_oem_graphics import OEMGraphics
+from payload.m300_settings_ui import brightness_frame
+from payload.m300_settings import PAGES
+from test_display import renderer
+from test_settings_information import session
+from test_print_context import printing, pause, acknowledged
+
+
+def pixel(wire, x, y):
+    return (wire[y*128+x//2] >> (0 if x%2 else 4)) & 15
+
+
+def right_icon(wire):
+    return bytes((pixel(wire, 200+x, 7+y)<<4) | pixel(wire, 201+x, 7+y)
+                 for y in range(50) for x in range(0, 50, 2))
+
+
+class ActivityGraphicsTests(unittest.TestCase):
+    def test_project_marks_animate_at_existing_cadence_without_control_io(self):
+        with session() as h:
+            h.menu.page='main'
+            _,rows=h.menu.rows(h.now)
+            for index,key in ((0,'project-klipper'),(1,'project-zortrax')):
+                frames=[h.ui.get_oem_sprite('m04',rows,index,frame*.5) for frame in range(4)]
+                self.assertEqual(h.ui.last_sprite,key)
+                self.assertEqual({(w,height,len(raw)) for w,height,raw in frames},{(50,50,1250)})
+                # The top carriage bounces: its outbound and inbound
+                # middle location is intentionally identical. The old
+                # under-platform marker was the only fourth-frame difference.
+                self.assertEqual(len({raw for _,_,raw in frames}),
+                                 3 if key == 'project-klipper' else 4)
+                for _,_,raw in frames:
+                    tones={(value >> 4) for value in raw} | {(value & 15) for value in raw}
+                    self.assertLessEqual(tones, {0,SLATE,ACCENT,BRIGHT})
+                self.assertEqual(h.ui.get_oem_sprite('m04',rows,index,2.),frames[0])
+            self.assertFalse(any(event[0] in ('heat','move','fan') for event in h.events))
+
+    def test_official_klipper_logo_replaces_k_only_in_its_selected_menu_icon(self):
+        with session() as h:
+            h.menu.page='main'
+            _,rows=h.menu.rows(h.now)
+            actual=h.ui.get_oem_sprite('m04',rows,0,0.)
+            stock=h.ui.oem_sprites.project.get('project-klipper',0.)
+            self.assertEqual((actual[0],actual[1],len(actual[2])),(50,50,1250))
+            self.assertNotEqual(actual[2],stock[2])
+            mask={(x,y):tone for x,y,tone in LOGO_PIXELS}
+            self.assertGreater(len(mask),180)
+            self.assertLess(len(mask),320)
+            self.assertEqual(set(mask.values()), {SLATE,ACCENT,BRIGHT})
+            for y in range(15,42):
+                for x in range(10,41):
+                    value=(actual[2][y*25+x//2] >> (0 if x%2 else 4)) & 15
+                    self.assertEqual(value,mask.get((x,y),0),
+                                     'unexpected logo/legacy K at %d,%d' % (x,y))
+            # Complete lowercase wordmark is below the V and not cut off.
+            self.assertTrue(all(any(xy[1]>=34 and xy[0]==x for xy in mask)
+                                for x in (12,14,20,28,30,36)))
+            for y in range(0,13):
+                self.assertEqual(actual[2][y*25:(y+1)*25],stock[2][y*25:(y+1)*25])
+            # The older bank included an animated 3px line at y44. The
+            # platform now stays static, while the top toolhead still moves.
+            def px(raw,x,y):
+                return (raw[y*25+x//2] >> (0 if x%2 else 4)) & 15
+            for clock in (0.,.5,1.,1.5):
+                item=h.ui.get_oem_sprite('m04',rows,0,clock)[2]
+                self.assertTrue(all(px(item,x,y)==0 for x in range(10,41)
+                                    for y in (44,45)))
+                self.assertTrue(all(px(item,x,y)==15 for y in (42,43) for x in range(8,43)))
+            self.assertNotEqual(h.ui.get_oem_sprite('m04',rows,0,0.)[2][:25*14],
+                                h.ui.get_oem_sprite('m04',rows,0,.5)[2][:25*14])
+            self.assertEqual(_replace_k.cache_info().maxsize,4)
+            svg=(Path(__file__).resolve().parents[1] / 'docs/assets/menu-symbols'
+                 / 'klipper-official-mark-50.svg').read_text()
+            self.assertIn('Klipper firmware official',svg)
+            self.assertIn('Klipper3d/klipper',svg)
+            new_svg=(Path(__file__).resolve().parents[1] / 'docs/assets/menu-symbols'
+                     / 'klipper-full-logo-50x50.svg').read_text()
+            self.assertIn('Klipper complete logo',new_svg)
+            self.assertIn('three brightness',new_svg)
+            self.assertFalse(any(e[0] in ('move','heat','fan') for e in h.events))
+
+    def test_cartesian_axes_blink_only_selected_axes(self):
+        graphics = CartesianGraphics()
+        samples = {'X': (35,31), 'Y': (18,36), 'Z': (25,23)}
+        for name, selected in (('home_x','X'), ('home_y','Y'), ('home_z','Z'),
+                               ('home_xy','XY'), ('home_xyz','XYZ'),
+                               ('move_x','X'), ('move_y','Y'), ('move_z','Z')):
+            with self.subTest(name=name):
+                frames=[graphics.get('cartesian:'+name, i*.5) for i in range(4)]
+                self.assertEqual({(w,h,len(raw)) for w,h,raw in frames}, {(50,50,1250)})
+                self.assertEqual(len(set(raw for _,_,raw in frames)),4)
+                for axis,(x,y) in samples.items():
+                    def value(raw):
+                        return (raw[y*25+x//2] >> (0 if x%2 else 4)) & 15
+                    self.assertEqual(value(frames[0][2]),15 if axis in selected else 9)
+                    self.assertEqual(value(frames[1][2]),3 if axis in selected else 9)
+                self.assertTrue(all(((frames[0][2][y*25+x//2] >>
+                    (0 if x%2 else 4)) & 15)==0 for y in (47,48,49) for x in range(50)))
+        self.assertIsNone(graphics.get('cartesian:invalid'))
+        self.assertLessEqual(CartesianGraphics.frame.cache_info().currsize,36)
+
+    def test_cartesian_oem_thickness_brightness_and_footprint(self):
+        graphics = CartesianGraphics()
+        frame = graphics.get('cartesian:home_x',0.)[2]
+        def level(x,y):
+            return (frame[y*25+x//2] >> (0 if x%2 else 4)) & 15
+        # Native 2px strokes, full OEM white on the 50x50 canvas.
+        for x,y in ((4,20),(5,20),(44,20),(45,20),
+                    (12,4),(12,5),(12,45),(12,46)):
+            self.assertEqual(level(x,y),15,(x,y))
+        self.assertTrue(all(level(x,y)==0 for x in range(50)
+                            for y in (47,48,49)))
+        # Each frame has exactly 1250 bytes; host RGB text/electronics
+        # never change the 4bpp grayscale contract.
+        for i in range(4):
+            self.assertEqual(len(graphics.get('cartesian:home_x',i*.5)[2]),1250)
+
+    def test_move_axis_pages_animate_in_parent_and_selected_axis(self):
+        with session() as h:
+            h.menu.page='native_moves'
+            _, rows=h.menu.rows(h.now)
+            for axis in 'XYZ':
+                choice=next(i for i,(label,action) in enumerate(rows)
+                            if label=='Move '+axis)
+                first=h.ui.get_oem_sprite('m04',rows,choice,0.)
+                second=h.ui.get_oem_sprite('m04',rows,choice,.5)
+                self.assertEqual(h.ui.last_sprite, 'cartesian:move_'+axis.lower())
+                self.assertNotEqual(first,second)
+                h.menu.page='native_move_'+axis.lower()
+                _,sub=h.menu.rows(h.now)
+                self.assertNotEqual(h.ui.get_oem_sprite('m04',sub,0,0.),
+                                    h.ui.get_oem_sprite('m04',sub,0,.5))
+                h.menu.page='native_moves'
+            self.assertFalse(any(event[0] in ('move','heat','fan') for event in h.events))
+
+    def test_all_native_frames_decode_and_cache_stays_bounded(self):
+        graphics=ActivityGraphics()
+        for name in graphics.spec['symbols']:
+            frames=[graphics.get('activity:'+name, n*.5)[2] for n in range(4)]
+            self.assertEqual(len(set(frames)),4,name)
+            self.assertEqual(graphics.get('activity:'+name, 2.)[2],frames[0])
+        self.assertLessEqual(graphics._frame.cache_info().currsize,32)
+        self.assertEqual(graphics.get('activity:unknown'),None)
+
+    def test_corrupt_runtime_frame_is_rejected(self):
+        spec=copy.deepcopy(ActivityGraphics().spec)
+        spec['symbols']['heat_bed']['frames'][0]['sha256']='0'*64
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'sprites.json';path.write_text(json.dumps(spec))
+            with self.assertRaisesRegex(ValueError,'integrity'):
+                ActivityGraphics(path).get('activity:heat_bed')
+
+    def test_menu_command_previews_match_operations_and_are_static(self):
+        cases={'ZORTRAX_HEAT':'heat_nozzle','M109 S240':'heat_nozzle',
+               'M190 S60':'heat_bed','TURN_OFF_HEATERS':'cooling',
+               'BED_MESH':'bed_mesh','ZORTRAX_FAN_LOWER':'fan_lower',
+               'ZORTRAX_FAN_TEST_START':'fan_upper','SAVE_CONFIG':'firmware_update'}
+        for command, name in cases.items():
+            choice=menu_symbol('klipper','m04',[('',('native_gcode',command))])
+            self.assertEqual((choice.key,choice.animated),('activity:'+name,False))
+
+    def test_fault_icons_explain_reported_failures_without_creating_a_fault(self):
+        cases={'filament jam':'filament_jam','filament runout':'filament_runout',
+               'heater_bed overtemperature':'bed_overheat','hotend overtemperature':'hotend_overheat',
+               'temperature sensor fault':'sensor_fault','heating timed out':'heating_failed',
+               'No trigger on probe after full movement':'probe_contact_fault',
+               'platform connector fault':'platform_connector','M112 emergency stop':'emergency_stop',
+               'MCU disconnected':'connection_lost'}
+        for reason, name in cases.items():
+            status=dict(state='FAULT',reason=reason)
+            before=dict(status)
+            self.assertEqual(fault_symbol(status).key,'activity:'+name)
+            self.assertEqual(status,before)
+        self.assertIsNone(fault_symbol(dict(state='IDLE',reason='filament jam',filament_runout=True)))
+        self.assertIsNone(fault_symbol(dict(state='FAULT',reason='nozzle temperature changed')))
+        self.assertIsNone(fault_symbol(dict(state='FAULT',reason='resource busy',filament_runout=None)))
+
+    def test_procedure_heating_cleaning_and_terminal_states_are_distinct(self):
+        self.assertEqual(procedure_symbol('m300_maintenance',dict(state='HEATING',operation='HOTEND')).key,'activity:heat_nozzle')
+        self.assertEqual(procedure_symbol('m300_thermal',dict(state='HEATING',heater='heater_bed')).key,'activity:heat_bed')
+        self.assertEqual(procedure_symbol('m300_job',dict(state='WAIT_CLEAN',can_confirm_resume_clean=True)).key,'activity:clean_nozzle')
+        self.assertEqual(procedure_symbol('m300_thermal',dict(state='COOLING')).key,'activity:cooling')
+        self.assertIsNone(procedure_symbol('m300_maintenance',dict(state='COMPLETE',operation='HOTEND')))
+        self.assertEqual(procedure_symbol('m300_thermal',dict(state='FAULT',reason='unclassified failure')),
+                         ('0x0801be48',False))
+
+    def test_all_settings_and_information_pages_have_a_rendered_icon(self):
+        with session() as h:
+            for page in PAGES:
+                with self.subTest(page=page):
+                    h.menu.page=page
+                    _,rows=h.menu.rows(h.now)
+                    icon=h.ui.get_oem_sprite('m04',rows,0,h.now)
+                    self.assertIsNotNone(icon)
+                    self.assertEqual(icon[1],50)
+                    h.oled.selection=0;h.oled._render(h.now)
+                    expected=icon[2][:43*25]+bytes(7*25) if page in (
+                        'setting_oled_brightness','setting_led_brightness') else icon[2]
+                    self.assertEqual(right_icon(h.oled._render_wire),expected)
+
+    def test_brightness_keeps_sixteen_segments_and_clear_space_before_the_icon(self):
+        sprite=OEMGraphics().get('activity:oled_brightness')
+        for level in range(1,17):
+            wire=brightness_frame('OLED brightness',level,False,renderer.Frame,sprite)
+            for segment in range(16):
+                self.assertEqual(pixel(wire,20+segment*10,57),15 if segment<level else 0)
+            self.assertTrue(all(pixel(wire,x,y)==0 for x in range(174,200) for y in range(55,64)))
+            self.assertEqual(right_icon(wire),sprite[2][:43*25]+bytes(7*25))
+
+    def test_fan_only_animates_for_the_selected_enabled_channel(self):
+        with session() as h:
+            h.run('ZORTRAX_FAN_TEST_START');h.p._tick(h.now)
+            h.oled.selection=1
+            h.oled._render(h.now);before=h.oled._render_wire
+            h.oled._render(h.now+.5)
+            self.assertEqual(before,h.oled._render_wire)
+            h.action('TOGGLE_UPPER');h.p._tick(h.now)
+            h.oled._render(h.now);before=h.oled._render_wire
+            h.oled._render(h.now+.5)
+            self.assertNotEqual(before,h.oled._render_wire)
+            self.assertEqual(h.ui.last_sprite,'activity:fan_upper')
+            self.assertEqual(right_icon(h.oled._render_wire),h.ui.oem_sprites.get('activity:fan_upper',h.now+.5)[2])
+            h.oled.selection=2;h.oled._render(h.now)
+            self.assertEqual(h.ui.last_sprite,'activity:fan_lower')
+
+    def test_mesh_menu_uses_the_existing_macro_and_busy_snapshot(self):
+        with session() as h:
+            status=dict(state='IDLE',busy=False,result=None)
+            h.objects['m300_pad_mesh']=NS(get_status=lambda now:dict(status))
+            h.menu.page='klipper'
+            self.assertIn(('Bed mesh (25 points)',('page','bed_mesh')),h.menu.rows(h.now)[1])
+            h.menu.page='bed_mesh';_,rows=h.menu.rows(h.now)
+            self.assertIn(('Measure 25 pad points',('native_gcode','BED_MESH')),rows)
+            status.update(state='PROBING',busy=True)
+            _,rows=h.menu.rows(h.now)
+            self.assertFalse(any(action and action[0]=='native_gcode' for _,action in rows))
+            self.assertNotEqual(h.ui.get_oem_sprite('m04',rows,0,h.now),h.ui.get_oem_sprite('m04',rows,0,h.now+.5))
+            self.assertEqual(status['state'],'PROBING')
+
+    def test_file_work_only_animates_while_its_owner_is_busy(self):
+        self.assertFalse(menu_symbol('browser','m04',browser=dict(source='sd',busy=False)).animated)
+        self.assertEqual(menu_symbol('preview','m04',browser=dict(busy=True)).key,'activity:file_convert')
+        self.assertTrue(menu_symbol('browser','m04',sd=dict(busy=True)).animated)
+
+    def test_native_completed_print_uses_check_and_pause_keeps_information_symbol(self):
+        with printing() as h:
+            pause(h);acknowledged(h)
+            self.assertEqual(right_icon(h.oled._render_wire),h.ui.oem_sprites.get('0x0801dc08')[2])
+            h.sd.print_stats.state='complete';h.sd.current_file=None;h.sd.work_timer=None
+            h.objects['toolhead'].check_busy=lambda now:(0,1,True)
+            acknowledged(h)
+            self.assertEqual(right_icon(h.oled._render_wire),h.ui.oem_sprites.get('0x0801c024')[2])
+
+    def test_probe_error_notice_keeps_its_own_graphic_and_text_area(self):
+        with session() as h:
+            h.oled.message=('Probe error','No trigger on probe after full movement')
+            h.oled._render(h.now)
+            self.assertEqual(h.ui.last_sprite,'activity:probe_contact_fault')
+            self.assertEqual(right_icon(h.oled._render_wire),h.ui.oem_sprites.get(h.ui.last_sprite,h.now)[2])
+
+
+if __name__=='__main__':
+    unittest.main()

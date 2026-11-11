@@ -5,6 +5,7 @@ No PID mathematics, new ADC/GPIO owners, motion, automatic ARM, or automatic
 SAVE_CONFIG. Native PID runs cooperatively outside the G-code mutex so Stop
 and the shared operator view remain usable during the native temperature wait.
 """
+from .m300_temperature_policy import target_limit
 import json
 import math
 
@@ -192,7 +193,7 @@ class M300Thermal:
         self.native_require()  # Fresh acknowledged native MCU ARM, unchanged.
         if heater not in NAMES or type(target) not in (int, float) or not math.isfinite(target):
             raise self._error('finite target and a known heater are required')
-        cap = 60. if check else self.heaters[heater].max_temp - 5.
+        cap = 60. if check else min(target_limit(self.heaters[heater]), self.heaters[heater].max_temp - 5.)
         if not 30. <= target <= min(cap, self.heaters[heater].max_temp - 5.):
             raise self._error('target outside bounded test/native limits')
         temps = self._temperatures(self.reactor.monotonic())

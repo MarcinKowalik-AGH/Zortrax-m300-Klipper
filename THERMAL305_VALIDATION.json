@@ -1,0 +1,51 @@
+{
+  "revision": "M300-305-105-R1",
+  "operating_target_max": {
+    "extruder": 305,
+    "heater_bed": 105
+  },
+  "sensor_shutdown_limits": {
+    "extruder": 310,
+    "heater_bed": 120
+  },
+  "independent_mcu_adc_guard": {
+    "hot_max": 1941,
+    "bed_min": 1741,
+    "bed_max": 3941
+  },
+  "mcu_changed": false,
+  "sensor_conversion_changed": false,
+  "normal_native_operation": true,
+  "hardware_acceptance": {
+    "source": "user statement in conversation",
+    "date": "2026-11-11",
+    "result": "user confirms305/105 and normal operation",
+    "assistant_performed_hardware_test": false,
+    "all_materials_qualified": false
+  },
+  "installed_on_printer_by_this_work": false,
+  "software_tests": 768,
+  "software_result": "PASS",
+  "workflow_run_id": "43072164421",
+  "tested_commit": "b1f8efcdb24c4368fb75aee7909320987fb60284",
+  "git_deployment_parent": "7c59b7763b690c14cc4f77a838cf82066f842bb7",
+  "git_publication_run_id": "43075178211",
+  "deployment_tests": {
+    "previous_payload_upgrade": "PASS",
+    "read_only_plan": "PASS",
+    "included_heater_config": "PASS",
+    "pid_rotation_distance_uart_preserved": "PASS",
+    "save_config_preserved": "PASS",
+    "idempotent_apply": "PASS",
+    "exact_rollback": "PASS",
+    "hardware_access": false
+  },
+  "retained_files_sha256": {
+    "M300_FLUIDD_1_37_7_R16_12.zip": "6fcf87f4d7e9b302885e82afa4dd1ddfcfdb3197a32cb0f3dcb2ec9c231f9dbd",
+    "MCU/M300APP.M3B": "9ff9671a68e57f3857972f3acd4d95acc3ab1a146d96939bae5b33a4c7cc067e",
+    "MCU/M300_R14_19_SD.zip": "7ea9c7ffe9bc2f21e1996f1746ff9f9debf17dfda92aed038ed0632ec9e2eefd",
+    "install-orange-pi.py": "2d65a6e3af840ac71f3d878490ab05c26de45460b7b06697c10d4981412b451d"
+  },
+  "host_package_sha256": "22b34f3d41e4c9213dc5d841d12882bf40759dea1faa33c4ccca5010c910713c",
+  "software_regression_repeated": 768
+}
