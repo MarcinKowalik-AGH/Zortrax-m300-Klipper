@@ -107,12 +107,19 @@ def main():
             '--root', host_tree, '--output', ROOT / '.ci/installed-r153', '--baseline', 'r153'])
         run('real_installer_organized_migration', [sys.executable, ROOT / 'ci/validate_install.py',
             '--root', host_tree, '--output', ROOT / '.ci/installed-organized', '--organize-config'])
+        run('real_installer_qualified_first_print_z', [sys.executable, ROOT / 'ci/validate_install.py',
+            '--root', host_tree, '--output', ROOT / '.ci/installed-qualified-first-print',
+            '--organize-config', '--qualified-first-print-z'])
         run('native_host_reconnect_policy', [sys.executable, ROOT / 'ci/validate_host_reconnect.py',
             '--root', host_tree, '--package', host])
         fixture = ROOT / '.ci/installed-organized/printer.cfg'
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/fileoutput'])
+        run('actual_qualified_first_print_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
+            '--root', host_tree, '--config', ROOT / '.ci/installed-qualified-first-print/printer.cfg',
+            '--dictionary', args.dictionary.resolve(), '--case', 'native_models_zcode_mesh',
+            '--output', ROOT / '.ci/qualified-first-print-fileoutput'])
         run('actual_first_install_fileoutput', [sys.executable, ROOT/'ci/validate_fresh_install.py',
             '--root',host_tree,'--dictionary',args.dictionary.resolve(),
             '--output',ROOT/'.ci/first-install-fileoutput'])
