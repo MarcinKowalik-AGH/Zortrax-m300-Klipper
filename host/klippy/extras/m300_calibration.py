@@ -5,6 +5,7 @@ Uses the existing [probe] MCU endstop and pinned native HomingMove. It creates
 no GPIO/ADC owner, emits no raw steps, and never makes an unknown Z 'homed'.
 All XYZ must already be known. Contact results are observations, not offsets.
 """
+from .m300_temperature_policy import target_limit
 import copy
 import json
 import logging
@@ -418,7 +419,7 @@ class M300Calibration:
             self._guard()
             self._geometry()
             self.target = finite(self.procedure_temperature if temperature is None else temperature,
-                                 'temperature', self.hotend.min_extrude_temp, self.hotend.max_temp)
+                                 'temperature', self.hotend.min_extrude_temp, target_limit(self.hotend))
             queued, current, empty = self.toolhead.check_busy(self.reactor.monotonic())
             if not empty or queued > current:
                 raise self._error('calibration requires an empty motion queue')

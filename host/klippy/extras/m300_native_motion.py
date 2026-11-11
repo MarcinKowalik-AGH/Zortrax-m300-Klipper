@@ -4,6 +4,7 @@
 M300 Z preheat, contact location, five reference updates and clearance are adapted.
 G0/G1, motion limits, step generation and endstop stopping remain native.
 """
+from .m300_temperature_policy import target_limit
 import json
 import logging
 import math
@@ -61,7 +62,7 @@ class M300NativeMotion:
         self.toolhead = self.printer.lookup_object('toolhead')
         self.heaters = self.printer.lookup_object('heaters')
         self.hotend = self.heaters.lookup_heater('extruder')
-        if not self.hotend.min_temp < self.z_home_hotend_target < self.hotend.max_temp:
+        if not self.hotend.min_temp < self.z_home_hotend_target < target_limit(self.hotend):
             raise self.config.error('M300 Z homing temperature outside native heater limits')
         kin = self.toolhead.get_kinematics()
         if not hasattr(kin, 'rails') or len(kin.rails) != 3:

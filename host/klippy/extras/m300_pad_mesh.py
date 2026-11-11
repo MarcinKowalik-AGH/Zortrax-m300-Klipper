@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Native Klipper probing and compensation for the five Classic M300 pads."""
+from .m300_temperature_policy import target_limit
 import json
 import math
 import os
@@ -432,7 +433,7 @@ class M300PadMesh:
             raise self._error(str(exc))
         for name in ('hotend','bed'):
             heater = getattr(self.job,name)
-            if not heater.min_temp <= self.targets[name] <= heater.max_temp:
+            if not heater.min_temp <= self.targets[name] <= target_limit(heater):
                 raise self._error('requested temperature outside native heater limits: ' + name)
         # A reference made before a significant temperature change must be
         # renewed after the bed and nozzle settle, even if XYZ still says homed.

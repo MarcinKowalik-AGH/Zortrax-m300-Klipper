@@ -1,0 +1,1181 @@
+[
+  {
+    "name": "Z-ASA Pro @Zortrax M300",
+    "label": "Z-ASA_Pro__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143799,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=255 BED_TEMP=105 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S100"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-ESD @Zortrax M300",
+    "label": "Z-ESD__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 144436,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=245 BED_TEMP=85 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.8,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1.8 F2100 ; retract",
+        "G1 E-1.8 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1.8 F2100 ;  ; unretract",
+        "G1 E1.8 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.97,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S80"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-FLEX @Zortrax M300",
+    "label": "Z-FLEX__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 144336,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=225 BED_TEMP=65 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 2.5,
+      "retraction_speed_mm_s": 25.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-2.5 F1500 ; retract",
+        "G1 E-2.5 F1500 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E2.5 F2100 ;  ; unretract",
+        "G1 E2.5 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 1.0,
+      "max_volumetric_speed": 4.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S60"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-GLASS @Zortrax M300",
+    "label": "Z-GLASS__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143950,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=245 BED_TEMP=85 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.97,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S80"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-HIPS @Zortrax M300",
+    "label": "Z-HIPS__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143847,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=235 BED_TEMP=95 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S90"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-NYLON @Zortrax M300",
+    "label": "Z-NYLON__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143822,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=260 BED_TEMP=95 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 2.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-2 F2100 ; retract",
+        "G1 E-2 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E2 F2100 ;  ; unretract",
+        "G1 E2 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S90"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PCABS @Zortrax M300",
+    "label": "Z-PCABS__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143849,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=265 BED_TEMP=105 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.94,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S105"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PETG @Zortrax M300",
+    "label": "Z-PETG__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 144003,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=240 BED_TEMP=85 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 2.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-2 F2100 ; retract",
+        "G1 E-2 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E2 F2100 ;  ; unretract",
+        "G1 E2 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.97,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S80"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PHA @Zortrax M300",
+    "label": "Z-PHA__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143945,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=205 BED_TEMP=60 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.98,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S55"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PLA Pro @Zortrax M300",
+    "label": "Z-PLA_Pro__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 144405,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=215 BED_TEMP=65 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.5,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1.5 F2100 ; retract",
+        "G1 E-1.5 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1.5 F2100 ;  ; unretract",
+        "G1 E1.5 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.98,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S60"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PLA @Zortrax M300",
+    "label": "Z-PLA__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143990,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=225 BED_TEMP=55 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.98,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M104 S220",
+        "M140 S55"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M104",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-SEMIFLEX @Zortrax M300",
+    "label": "Z-SEMIFLEX__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143490,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=235 BED_TEMP=60 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 0.2,
+      "retraction_speed_mm_s": 10.0,
+      "deretraction_speed_mm_s": 10.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-.2 F600 ; retract",
+        "G1 E-.2 F600 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E.2 ;  ; unretract",
+        "G1 E.2 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 1.0,
+      "max_volumetric_speed": 2.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S60"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-SUPPORT Plus @Zortrax M300",
+    "label": "Z-SUPPORT_Plus__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143817,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=245 BED_TEMP=80 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 4.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S80"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-SUPPORT Premium @Zortrax M300",
+    "label": "Z-SUPPORT_Premium__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143821,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=255 BED_TEMP=95 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S90"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-SUPPORT @Zortrax M300",
+    "label": "Z-SUPPORT__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143812,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=240 BED_TEMP=50 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S50"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-ULTRAT Plus @Zortrax M300",
+    "label": "Z-ULTRAT_Plus__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143977,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=255 BED_TEMP=80 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.926,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M104 S250",
+        "M140 S80"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M104",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-ULTRAT @Zortrax M300",
+    "label": "Z-ULTRAT__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 143962,
+    "status": "PASS",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=260 BED_TEMP=105 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.926,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S100"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PEEK @Zortrax M300",
+    "label": "Z-PEEK__Zortrax_M300",
+    "returncode": 0,
+    "gcode_bytes": 144899,
+    "status": "UNSUPPORTED_CATALOG_ONLY",
+    "expected_pressure_advance": 0.0,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=380 BED_TEMP=0 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.0,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1 F2100 ; retract",
+        "G1 E-1 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1 F2100 ;  ; unretract",
+        "G1 E1 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.95,
+      "max_volumetric_speed": 1.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [],
+      "pre_start_commands": [
+        "M73 P0 R9",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  },
+  {
+    "name": "Z-PLA Pro @Zortrax M300",
+    "label": "CALIBRATION_ONLY_PA_0035",
+    "returncode": 0,
+    "gcode_bytes": 144413,
+    "status": "PASS",
+    "expected_pressure_advance": 0.035,
+    "pa_commands": [
+      "SET_PRESSURE_ADVANCE ADVANCE=0",
+      "SET_PRESSURE_ADVANCE ADVANCE=0.035"
+    ],
+    "details": {
+      "errors": [],
+      "start": "START_PRINT EXTRUDER_TEMP=215 BED_TEMP=65 MESH=AUTO",
+      "end": [
+        "END_PRINT"
+      ],
+      "retraction_mm": 1.5,
+      "retraction_speed_mm_s": 35.0,
+      "deretraction_speed_mm_s": 35.0,
+      "retractions": 109,
+      "unretractions": 108,
+      "retract_examples": [
+        "G1 E-1.5 F2100 ; retract",
+        "G1 E-1.5 F2100 ; retract"
+      ],
+      "unretract_examples": [
+        "G1 E1.5 F2100 ;  ; unretract",
+        "G1 E1.5 F2100 ;  ; unretract"
+      ],
+      "z_hop_mm": 0.4,
+      "verified_hops": 108,
+      "positive_xy_extrusions": 1577,
+      "flow_ratio": 0.98,
+      "max_volumetric_speed": 8.0,
+      "max_emitted_acceleration": 700.0,
+      "old_accel_to_decel": false,
+      "temperature_commands": [
+        "M140 S60"
+      ],
+      "pre_start_commands": [
+        "M73 P0 R6",
+        "G90",
+        "M83",
+        "SET_PRESSURE_ADVANCE ADVANCE=0"
+      ],
+      "command_names": [
+        "END_PRINT",
+        "G1",
+        "G21",
+        "G90",
+        "G92",
+        "M106",
+        "M140",
+        "M73",
+        "M83",
+        "SET_PRESSURE_ADVANCE",
+        "SET_VELOCITY_LIMIT",
+        "START_PRINT"
+      ]
+    }
+  }
+]

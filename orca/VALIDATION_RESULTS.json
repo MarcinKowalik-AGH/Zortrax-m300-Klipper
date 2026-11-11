@@ -1,47 +1,21 @@
 {
-  "orca_version": "2.3.2",
-  "profile_revision": "R2",
-  "source_sha256": "b696611f54e3805a35304b78a781d7392bb4f170dd4722e251af1cb4b28ce32f",
-  "bundle_sha256": "e1e0407a3ff23c8a2d82ba9db7a7122a65df7ac6ec400473601024e402c57363",
-  "materials": 18,
-  "pass_count": 17,
-  "fail_count": 0,
+  "revision": "R3",
+  "orca": "2.3.2",
+  "bundle_sha256": "3b60cd1ec9d324d5c2ed5a2aec7ced13560d13eff56734167bede1655e4333a4",
+  "material_pass": 17,
+  "material_fail": 0,
   "unsupported_catalog_count": 1,
-  "gui_import_test": "NOT RUN",
-  "physical_print_test": "NOT RUN",
+  "pa_propagation_test": "PASS",
+  "host_unit_tests": 756,
   "metadata_adapter": [
     "type",
     "from=system"
   ],
-  "schema_fields": {
-    "printer": [
-      144
-    ],
-    "process": [
-      334
-    ],
-    "filament": [
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123,
-      123
-    ]
-  },
-  "zip_crc": "PASS",
-  "tested_commit": "9c7f9013ddfaf86a11cd7ec4ff69d9cc6034486e",
-  "workflow_run_id": "42923979192"
+  "gui_test": false,
+  "physical_test": false,
+  "nozzle_temperature_offset": 0,
+  "bed_target_max": 105,
+  "hotend_sensor_limit_increased": false,
+  "tested_commit": "0dcae6d4a298bc20b4d1eae871f94855d29ff613",
+  "workflow_run_id": "42979432959"
 }

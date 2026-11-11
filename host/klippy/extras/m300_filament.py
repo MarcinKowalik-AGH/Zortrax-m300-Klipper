@@ -5,6 +5,7 @@ No automatic ARM, physical calibration, second GPIO/ADC owner, or job Resume.
 Only one acknowledged E segment may be outstanding. Native motion permissions
 are consumed before entering a possibly yielding call, never a global bypass.
 """
+from .m300_temperature_policy import target_limit
 import copy
 import json
 import logging
@@ -145,7 +146,7 @@ class M300Filament:
         self._bind()
         if self.segment_length > self.toolhead.get_extruder().max_e_dist:
             raise self.config.error('M300 filament segment_length exceeds native max_extrude_only_distance')
-        if self.standby_temperature > self.hotend.max_temp:
+        if self.standby_temperature > target_limit(self.hotend):
             raise self.config.error('M300 filament standby_temperature exceeds native heater limit')
         for mode in ('LOAD', 'UNLOAD', 'CHANGE'):
             try:
@@ -272,7 +273,7 @@ class M300Filament:
 
     def _validate_temperature(self, target):
         if (isinstance(target, bool) or not isinstance(target, (int, float))
-                or not math.isfinite(target) or not self.hotend.min_extrude_temp <= target <= self.hotend.max_temp):
+                or not math.isfinite(target) or not self.hotend.min_extrude_temp <= target <= target_limit(self.hotend)):
             raise self._error('TEMP must be finite and within native extrusion/heater limits')
         return float(target)
 

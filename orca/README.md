@@ -1,3 +1,5 @@
+> R3: bed target <=105C; current hotend safety limit unchanged; M83 retained; per-filament PA is explicit zero pending measurement. See [Micro Swiss R3](MICROSWISS_R3_PL.md). This is not a physical calibration.
+
 > Aktualny pakiet: **R2**, sprawdzony w silniku OrcaSlicer 2.3.2: 17 profili PASS G-code, PEEK tylko katalog. [Wyniki i ograniczenia](ORCA_RUNTIME_AUDIT_R2.md). Zastap poprzedni preset po imporcie. Nie wykonano testu GUI ani fizycznego wydruku.
 
 # Zortrax M300 — OrcaSlicer 0,20 mm
