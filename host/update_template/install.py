@@ -43,7 +43,7 @@ NAMES += ('m300_models.py', 'm300_sd.py', 'm300_fat.py', 'm300_binary.py',
           'm300_zcode.py', 'm300_job_sd.py')
 NAMES += ('m300_print_ui.py', 'm300_print_hold.py', 'm300_print_control.py', 'm300_job_state.py', 'm300_resources.py')
 NAMES += ('m300_activity_graphics.py', 'm300_cartesian_graphics.py', 'm300_klipper_logo.py', 'm300_activity_sprites.json')
-NAMES += ('m300_menu_sprites.json',)
+NAMES += ('m300_menu_sprites.json', 'm300_temperature_policy.py')
 NAMES += ('m300_errors.py', 'm300_error_codes.py', 'm300_error_codes.json')
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
 
@@ -128,7 +128,7 @@ def already_included(config, settings):
     return included
 
 
-def plan(root, config, *, organize_config=False):
+def plan(root, config, *, organize_config=False, thermal_305105=False):
     root, config = root.resolve(), config.resolve()
     check_api(root)
     if not config.is_file():
@@ -211,6 +211,9 @@ def plan(root, config, *, organize_config=False):
             unused = not any(p.name == 'fluidd.cfg' for p in tree)
             updated, _ = profile.organize_moonraker(moonraker.read_text(), fluidd_config_unused=unused)
             desired[moonraker] = updated.encode()
+    import m300_thermal_config
+    if thermal_305105:
+        m300_thermal_config.apply_to_plan(desired, config, tree)
     return [(p, p.read_bytes() if p.exists() else None, data)
             for p, data in desired.items()
             if not p.exists() or p.read_bytes() != data]
@@ -337,9 +340,12 @@ def main():
             print(json.dumps({'status': 'ROLLED_BACK_R16',
                               'files': rollback(args.rollback, root, config)}))
             return
-        changes = plan(root, config, organize_config=args.organize_config)
+        changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True)
         result = {'status': 'PLAN_M300_R16_12' if changes else 'ALREADY_M300_R16_12',
-                  'host_update': 'R16.12',
+                  'host_update': 'R16.12 + M300-305-105-R1',
+                  'target_limits': {'extruder': 305, 'heater_bed': 105},
+                  'sensor_shutdown_limits': {'extruder': 310, 'heater_bed': 120},
+                  'hardware_validation': 'USER_REPORTED_2026-11-11',
                   'organize_config': args.organize_config,
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],

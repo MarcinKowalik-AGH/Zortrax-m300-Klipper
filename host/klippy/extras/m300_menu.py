@@ -4,6 +4,7 @@
 Each confirmation holds the identity/token that was displayed. Rendering may
 update observations, but cannot silently grant consent to a new job or phase.
 """
+from .m300_temperature_policy import target_limit
 import json
 import logging
 import os
@@ -709,10 +710,10 @@ class M300Menu:
         if self.page.startswith('temperature_'):
             kind = self.page[12:]
             heater = self.job.hotend if kind == 'HOTEND' else self.job.bed
-            candidates = range(170, 301, 10) if kind == 'HOTEND' else range(40, 121, 10)
+            candidates = sorted(set([*range(170, 301, 10), 305])) if kind == 'HOTEND' else sorted(set([*range(40, 121, 10), 105]))
             return 'Select ' + kind + ' TEMP', [(self.t('Back'), ('page', self._return_page))] + [
                 ('%d°C' % value, ('temp', kind, value, self._return_page))
-                for value in candidates if heater.min_temp <= value <= heater.max_temp]
+                for value in candidates if heater.min_temp <= value <= target_limit(heater)]
         if self.page == 'calibration':
             status = self._service('m300_calibration').get_status(now)
             token, phase = self._cal_view

@@ -1,0 +1,31 @@
+{
+  "revision": "M300-305-105-R1",
+  "operating_target_max": {
+    "extruder": 305,
+    "heater_bed": 105
+  },
+  "sensor_shutdown_limits": {
+    "extruder": 310,
+    "heater_bed": 120
+  },
+  "independent_mcu_adc_guard": {
+    "hot_max": 1941,
+    "bed_min": 1741,
+    "bed_max": 3941
+  },
+  "mcu_changed": false,
+  "sensor_conversion_changed": false,
+  "normal_native_operation": true,
+  "hardware_acceptance": {
+    "source": "user statement in conversation",
+    "date": "2026-11-11",
+    "result": "user confirms305/105 and normal operation",
+    "assistant_performed_hardware_test": false,
+    "all_materials_qualified": false
+  },
+  "installed_on_printer_by_this_work": false,
+  "software_tests": 768,
+  "software_result": "PASS",
+  "workflow_run_id": "43072164421",
+  "tested_commit": "b1f8efcdb24c4368fb75aee7909320987fb60284"
+}

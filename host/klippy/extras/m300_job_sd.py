@@ -12,6 +12,7 @@ is not a proof of all transformed XYZ trajectories; native kinematics still
 enforces machine bounds. M04 adds qualified binary compilation and physical
 SD imports, fully checked before publication to the same M02 owner.
 """
+from .m300_temperature_policy import target_limit
 import hashlib
 import io
 import logging
@@ -498,7 +499,7 @@ class JobSD:
         executor = self.v_sd.executor
         try:
             heaters = self.printer.lookup_object('heaters')
-            limits = {name: (heater.min_temp, heater.max_temp) for name, heater in
+            limits = {name: (heater.min_temp, target_limit(heater)) for name, heater in
                       (('hotend', heaters.lookup_heater('extruder')),
                        ('bed', heaters.lookup_heater('heater_bed')))}
             dialect = Dialect(limits, supplied, self.max_line_bytes, self.max_dwell_ms, self.max_accel)
@@ -616,7 +617,7 @@ class JobSD:
         executor = self.v_sd.executor
         try:
             heaters = self.printer.lookup_object('heaters')
-            limits = {name: (heater.min_temp, heater.max_temp) for name, heater in
+            limits = {name: (heater.min_temp, target_limit(heater)) for name, heater in
                       (('hotend', heaters.lookup_heater('extruder')),
                        ('bed', heaters.lookup_heater('heater_bed')))}
             before = None

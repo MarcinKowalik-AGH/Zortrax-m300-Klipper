@@ -5,6 +5,7 @@ No new opcode execution path or SPI driver. M02 owns the sole immutable file
 snapshot and all heating/printing. M04 owns binary compilation and SPI1; M13
 adds a testable user-level policy plus source-proof validation at that boundary.
 """
+from .m300_temperature_policy import target_limit
 import hashlib
 import json
 import os
@@ -54,7 +55,7 @@ class M300ZCodePolicy:
 
     def _limits(self):
         heaters=self.printer.lookup_object('heaters')
-        return {name:(heater.min_temp,heater.max_temp) for name,heater in
+        return {name:(heater.min_temp,target_limit(heater)) for name,heater in
                 (('hotend',heaters.lookup_heater('extruder')),
                  ('bed',heaters.lookup_heater('heater_bed')))}
 
