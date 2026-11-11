@@ -190,12 +190,15 @@ def main():
         if not cases:raise ValueError('Unknown FILEOUTPUT case: '+args.case)
     shutil.copy2(Path(__file__).with_name('m300_ci_early_status.py'),
                  args.root/'klippy/extras/m300_ci_early_status.py')
+    shutil.copy2(Path(__file__).with_name('m300_ci_thermal_bindings.py'),
+                 args.root/'klippy/extras/m300_ci_thermal_bindings.py')
     for name,script,synthetic,error in cases:
         dest=args.output/name
         dest.mkdir(exist_ok=True)
         (dest/'gcodes').mkdir(exist_ok=True)
         cp=configparser.RawConfigParser()
         cp.read_string(base)
+        cp.add_section('m300_ci_thermal_bindings')
         if name=='native_early_moonraker_status':cp.add_section('m300_ci_early_status')
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
             assert cp.getfloat(section, 'step_pulse_duration') == .000002
@@ -290,6 +293,16 @@ def main():
         report_line=next(line.split('M300_NATIVE ',1)[1] for line in text.splitlines() if 'M300_NATIVE ' in line)
         bindings=json.loads(report_line)
         expected=dict(EXPECTED)
+        # The M300 target guard is deliberate; still require its exact native
+        # Heater backends, checked in-process without sending heater commands.
+        thermal = next(json.loads(line.split('M300_CI_THERMAL_BINDINGS ',1)[1])
+                       for line in text.splitlines() if 'M300_CI_THERMAL_BINDINGS ' in line)
+        assert thermal['PASS'] and not thermal['targets_changed'], (name, thermal)
+        for heater in ('extruder', 'heater_bed'):
+            for method in ('set_temp', 'alter_target'):
+                key=heater+'.'+method
+                assert key in thermal['native_backends'], (name, key, thermal)
+                expected[key]='extras.m300_temperature_policy.M300TemperaturePolicy._connect.<locals>.guarded'
         if cp.has_section('m300_print_control'):
             for key in ('G0','G1','SAVE_CONFIG','PID_CALIBRATE','PAUSE','RESUME'):
                 expected[key+':native_backend']=EXPECTED[key]

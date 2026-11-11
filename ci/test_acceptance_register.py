@@ -8,13 +8,14 @@ class AcceptanceTests(unittest.TestCase):
     def setUp(self):
         self.data=json.loads((m.ROOT/'docs/reports/HARDWARE_ACCEPTANCE.json').read_text())
     def test_valid_and_markdown_exact(self):
-        self.assertEqual(m.validate(self.data),19)
+        self.assertEqual(m.validate(self.data),21)
         self.assertEqual(m.render(self.data),(m.ROOT/'docs/pl/ACCEPTANCE_REGISTER.md').read_text())
     def test_confirmed_needs_user_evidence(self):
         d=deepcopy(self.data);d['features'][0]['events'][0]['evidence']={'kind':'ci_pass','quote':'741 tests'}
         with self.assertRaises(AssertionError):m.validate(d)
     def test_unknown_cannot_become_pass_without_evidence(self):
-        d=deepcopy(self.data);d['features'][-1]['events'][-1]['status']='CONFIRMED_HARDWARE'
+        d=deepcopy(self.data);pending=next(f for f in d['features'] if f['id']=='FIRST_LAYER')
+        pending['events'][-1]['status']='CONFIRMED_HARDWARE'
         with self.assertRaises(AssertionError):m.validate(d)
     def test_duplicate_id_rejected(self):
         d=deepcopy(self.data);d['features'].append(deepcopy(d['features'][0]))
