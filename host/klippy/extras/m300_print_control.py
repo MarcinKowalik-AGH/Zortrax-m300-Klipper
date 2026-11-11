@@ -4,6 +4,7 @@
 The native pause object owns PAUSE_STATE and the native SD object owns its
 worker/file position. No new feeder, kinematics, heater PWM or MCU driver.
 """
+from .m300_temperature_policy import target_limit
 from collections import deque
 import copy
 import json
@@ -381,7 +382,7 @@ class M300PrintControl:
         for name,heater in (('hotend',self.hotend),('bed',self.bed)):
             target=self.context['targets'][name]
             if (not math.isfinite(target) or target < 0. or
-                    target and not heater.min_temp <= target <= heater.max_temp):
+                    target and not heater.min_temp <= target <= target_limit(heater)):
                 raise self._error('saved print temperature is outside heater limits')
         saved_hotend=self.context['targets']['hotend']
         if (saved_hotend and saved_hotend < self.hotend.min_extrude_temp
@@ -530,7 +531,7 @@ class M300PrintControl:
         if fan is not None:self.gcode.run_script_from_command('M107')
 
     def _temperature_target(self,gcmd,key,heater,default,minimum=0.):
-        value=gcmd.get_float(key,default,minval=minimum,maxval=heater.max_temp)
+        value=gcmd.get_float(key,default,minval=minimum,maxval=target_limit(heater))
         if not math.isfinite(value) or value and value < heater.min_temp:
             raise self._error('invalid '+key)
         return value

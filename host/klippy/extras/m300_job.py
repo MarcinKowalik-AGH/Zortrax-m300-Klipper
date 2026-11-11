@@ -7,6 +7,7 @@ Temperature waits and ordinary park/return sequences advance from reactor ticks.
 Native contact homing is optional and separately qualified; its cancellation
 uses shutdown because native homing cannot be safely resumed halfway through.
 """
+from .m300_temperature_policy import target_limit
 from collections import deque
 import copy
 import json
@@ -182,7 +183,7 @@ class M300Job:
         for pair in (self.park_xy, self.home_xy):
             if not all(minimum[i] <= pair[i] <= maximum[i] for i in (0, 1)):
                 raise self.config.error('M300 job park/home XY outside configured axis limits')
-        if self.standby_temp > self.hotend.max_temp:
+        if self.standby_temp > target_limit(self.hotend):
             raise self.config.error('M300 standby temperature exceeds native hotend limit')
         if self.retract_mm > self.toolhead.get_extruder().max_e_dist:
             raise self.config.error('M300 pause_retract exceeds native max_extrude_only_distance')
@@ -338,7 +339,7 @@ class M300Job:
         for key, heater in (('hotend', self.hotend), ('bed', self.bed)):
             value = targets[key]
             if (not isinstance(value, (int, float)) or not math.isfinite(value)
-                    or value < 0. or value > heater.max_temp
+                    or value < 0. or value > target_limit(heater)
                     or (value != 0. and value < heater.min_temp)):
                 raise self._error('target outside native heater limits: ' + key)
         if targets['hotend'] < self.hotend.min_extrude_temp:

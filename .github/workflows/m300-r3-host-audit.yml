@@ -1,0 +1,61 @@
+name: M300 R3 host thermal-policy audit
+on:
+  push:
+    branches: ['feature/m300-microswiss-thermal-pa-r3', main]
+    paths: ['host/**', 'ci/project.py', 'PORT.json', '.github/workflows/m300-r3-host-audit.yml']
+  pull_request:
+    branches: [main]
+    paths: ['host/**', 'ci/project.py', 'PORT.json', '.github/workflows/m300-r3-host-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: m300-host-r3-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Stage existing host sources only
+        run: |
+          python -m pip install jinja2 pillow
+          PYTHONPATH=ci python - <<'PY'
+          from project import ROOT,stage_host_update
+          stage_host_update(ROOT/'.ci/r3-host')
+          PY
+      - name: Verify integrity and all host regression tests
+        run: |
+          set -euo pipefail
+          mkdir -p dist/r3-host
+          cd .ci/r3-host
+          python VERIFY.py
+          python -m unittest discover -s tests -v > ../../dist/r3-host/host-tests.log 2>&1
+          tail -5 ../../dist/r3-host/host-tests.log
+          cd ../..
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          text=Path('dist/r3-host/host-tests.log').read_text()
+          expected=json.loads(Path('PORT.json').read_text())['self_contained_host_tests']
+          found=re.search(r'Ran (\d+) tests',text)
+          assert found and int(found[1])==expected
+          assert not Path('orca').exists()
+          assert not Path('tools/apply_m300_r3.py').exists()
+          report={'status':'PASS','host_tests':expected,'orca_dependency':False,'hardware_test':False}
+          Path('dist/r3-host/summary.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report))
+          PY
+      - name: Retain host-only evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300-R3-host-only-audit
+          path: dist/r3-host
+          retention-days: 14
