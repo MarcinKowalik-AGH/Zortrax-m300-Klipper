@@ -1,5 +1,7 @@
 # Zortrax M300 Classic — Klipper, Orange Pi i oryginalny OLED
 
+> **Beta.24 — pierwszy wydruk:** jawny profil egzemplarza -0,5/6,5 i rzeczywiste odsunięcie PC7 2 mm. Mesh, purge i wcześniejsza polityka temperatur pozostają. [Instrukcja i źródło ustaleń](docs/pl/RELEASE_v1.0.0-beta.24.md). Bez wgrywania MCU.
+
 > **Beta.23 — porządki operacyjne:** [instalator 4480 i ograniczone retry CI](docs/pl/INSTALLATION_AND_CI.md), [aktualny START 2Y + 2X](docs/pl/PRINT_CONTROL.md), [wspólny rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md), [opis wydania](docs/pl/RELEASE_v1.0.0-beta.23.md). Firmware MCU, ruch i wygląd beta.22 pozostają bez zmian.
 
 > **Beta.22 — ostre ikony OLED:** przywrócone 24 dodatkowe ikony oraz wyostrzone 37 zestawów OEM, bez nadpisywania oryginalnych zasobów. [Aktualizacja na porcie 4480 i porównanie wariantów](docs/pl/RELEASE_v1.0.0-beta.22.md). Nie trzeba wgrywać MCU.
@@ -8,7 +10,7 @@
 
 **Pełna instrukcja użytkownika i opis techniczny portu.** Stan dokumentacji: 10 listopada 2026; oprogramowanie odniesienia: **v1.0.0-beta.20**. Projekt dotyczy klasycznego M300 ze sterownikiem STM32F103, nie modeli Plus, Dual ani Inventure.
 
-[Gotowa beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
+[Gotowa beta.24](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.24) · [README po angielsku](README.md) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Kontrola kompletności dokumentacji](docs/pl/DOCUMENTATION_CHECK.md)
 
 ![Fluidd: ruch, temperatury, podgląd OLED, makra i konsola](docs/img/fluidd_overview.png)
 

@@ -63,6 +63,8 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
             text+=f"\n**{e['date']} · {e['version']} · {STATUSES[e['status']]}**\n\n{e['result']}\n"
             if e['evidence'].get('quote'):
                 text+='\nZapis użytkownika / treść przesłanego zrzutu: „'+e['evidence']['quote']+'”.\n'
+            if e['evidence'].get('artifact'):
+                text+='\nMateriał źródłowy: `'+e['evidence']['artifact']+'`.\n'
             text+='\nPodstawa wersji: `'+e['version_basis']+'`.\n'
     text+='''
 ## Jak aktualizować

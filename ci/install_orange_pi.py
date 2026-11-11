@@ -292,6 +292,8 @@ def main():
     parser.add_argument('--fluidd-root', type=Path, help='Override nginx web root detection')
     parser.add_argument('--organize-config', action='store_true',
                         help='Organize current configuration, retaining hardware values and saved PID')
+    parser.add_argument('--qualified-first-print-z', action='store_true',
+                        help='Explicitly apply the mechanically qualified 2026-11-11 M300 Z profile')
     parser.add_argument('--repair-startup',action='store_true',
                         help='Repair the verified R29 early-status crash while Shutdown; no MCU reset')
     args = parser.parse_args()
@@ -306,6 +308,8 @@ def main():
         host_args = ('--root', info['klipper_path'], '--config', info['config_file'])
         if args.organize_config:
             host_args += ('--organize-config',)
+        if args.qualified_first_print_z:
+            host_args += ('--qualified-first-print-z',)
         plan = json.loads(run(sys.executable, 'install.py', *host_args, cwd=host, capture=True))
         run('sudo', '-v')
         if args.repair_startup:

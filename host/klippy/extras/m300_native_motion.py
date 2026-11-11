@@ -26,7 +26,7 @@ class M300NativeMotion:
             'z_home_heat_timeout', 600., minval=60., maxval=1800.)
         self.z_home_temperature_tolerance = config.getfloat(
             'z_home_temperature_tolerance', 5., minval=.5, maxval=5.)
-        self.clearance = config.getfloat('z_contact_clearance', 5., above=0.)
+        self.clearance = config.getfloat('z_contact_clearance', 5., minval=2.)
         self.lift_speed = config.getfloat('z_lift_speed', 5., above=0.)
         if not all(math.isfinite(v) for v in (*self.home_xy, self.travel_speed,
                                               self.z_home_hotend_target, self.z_home_heat_timeout,
@@ -168,12 +168,12 @@ class M300NativeMotion:
         signature = (tuple(position),not unhomed)
         if not active and getattr(self,'_xy_clearance_position',None) == signature:
             # Reuse only the unchanged, electrically open position just
-            # prepared by a parent wizard; never accumulate another 5 mm.
+            # prepared by a parent wizard; never accumulate another retreat.
             return dict(commanded_distance_mm=0.,clearance_reused=True,
                         physical_contact_checked=True,pc7_open=True)
         self._xy_clearance_position = None
         lower,upper = rail.get_range()
-        clearance = max(5.,self.clearance)
+        clearance = self.clearance
         start = max(lower,position[2]) if unhomed else position[2]
         target = (start+clearance if unhomed or active else
                   max(start,self.precision.probe.get_offsets()[2]+clearance))
@@ -247,7 +247,7 @@ class M300NativeMotion:
                 % check['pass_number'])
         lower, upper = self.toolhead.get_kinematics().rails[2].get_range()
         start = self.toolhead.get_position()[2]
-        distance = max(5., self.clearance)
+        distance = self.clearance
         target = start + distance
         if (not math.isfinite(start) or not math.isfinite(target)
                 or not lower <= start < target <= upper):
@@ -459,7 +459,7 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.23-NATIVE-Z-RELEASE', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.24-QUALIFIED-Z-CLEARANCE', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'operation': self.operator_homing,
@@ -476,7 +476,7 @@ class M300NativeMotion:
                 'z_home_temperature_tolerance_c': self.z_home_temperature_tolerance,
                 'homing_speed_mm_s': self.homing_speeds,
                 'z_contact_clearance_mm': self.clearance,
-                'z_initial_clearance_mm': max(5.,self.clearance),
+                'z_initial_clearance_mm': self.clearance,
                 'z_steps_per_mm': hardware['effective_z_steps_per_mm'],
                 'hardware_revision': hardware['hardware_revision'],
                 'native_G28': 'extras.homing.PrinterHoming.cmd_G28',

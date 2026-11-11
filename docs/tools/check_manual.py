@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-beta.23'
+CURRENT_RELEASE = 'v1.0.0-beta.24'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
@@ -26,7 +26,7 @@ def sha(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=ROOT/'docs/reports/DOCUMENTATION_BETA23_VALIDATION.json')
+    parser.add_argument('--output', type=Path, default=ROOT/'.ci/reports/DOCUMENTATION_BETA24_VALIDATION.json')
     args = parser.parse_args()
     errors = []
     checks = []
@@ -124,13 +124,13 @@ def main():
         p = ROOT/path
         check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)
     port = json.loads((ROOT/'PORT.json').read_text())
-    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-beta23')
+    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-beta24')
     check(port['mcu_release'] == '0.13.14.19-TONED-OLED-UART8', 'current-MCU-release')
     check(port['oled_zoom_revision'] == 'OLED-ZOOM-2', 'current-zoom-revision')
     check(port['tune_frontend_revision'] == 'TUNE-PREPARE-1', 'current-Tune-revision')
     for lang in ('pl','en'):
         install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-beta23:'+lang)
+        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-beta24:'+lang)
         supplement = (ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md')).read_text()
         check('0.13.14.19-TONED-OLED-UART8' in supplement and 'M300_R14_19_SD.zip' in supplement,
               'current-MCU-update-instructions:'+lang)

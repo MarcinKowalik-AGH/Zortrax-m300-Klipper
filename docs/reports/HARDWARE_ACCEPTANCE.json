@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-10",
+  "updated": "2026-11-11",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -137,6 +137,20 @@
             "quote": "Profile m300_pads created. Compensation remains inactive until loaded.",
             "date": "2026-11-10"
           }
+        },
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "user_note_controller_revision_not_release_readback",
+          "test": "Odczyt m300_pads i GET_POSITION przy X3/Y10",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Notatka: siatka 61×61, min=-0,4497, max=0,0965; lokalna korekcja -0,369086 mm.",
+          "problem": "Nie jest to nowy pomiar w CI ani odbiór pierwszej warstwy.",
+          "evidence": {
+            "kind": "user_test_log",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": ""
+          }
         }
       ]
     },
@@ -209,6 +223,34 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "user_note_controller_revision_not_release_readback",
+          "test": "Pierwszy start po homingu, aktywny mesh",
+          "status": "FAILED_HARDWARE",
+          "result": "Ruch purge X3/Y10/Z0,28 odrzucony: po korekcji Z=-0,089086 przy position_min=0.",
+          "problem": "",
+          "evidence": {
+            "kind": "user_test_log",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": "Move out of range: 3.000 10.000 -0.089 [0.000]"
+          }
+        },
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "user_note_controller_revision_not_release_readback",
+          "test": "Ponowny start po korekcie -0,5 / 6,5",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Użytkownik potwierdził nagrzanie, homing i rozpoczęcie druku.",
+          "problem": "Nie potwierdza ukończenia Benchy, jakości pierwszej warstwy ani osobnej obserwacji wszystkich czterech linii.",
+          "evidence": {
+            "kind": "user_test_log",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": "po zapisaniu tych nastaw drukarka rozpoczęła druk"
+          }
         }
       ]
     },
@@ -262,6 +304,20 @@
           "problem": "",
           "evidence": {
             "kind": "no_hardware_confirmation"
+          }
+        },
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "user_note_controller_revision_not_release_readback",
+          "test": "CANCEL_PRINT po nieudanym starcie",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Głowica zaparkowała; STATUS Ready, PRINT_CONTROL_STATUS IDLE i busy=false.",
+          "problem": "Pozostałe fazy anulowania i RESUME wymagają osobnego testu.",
+          "evidence": {
+            "kind": "user_test_log",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": "CANCEL_PRINT zadziałał: głowica zaparkowała"
           }
         }
       ]
@@ -370,6 +426,46 @@
           "problem": "",
           "evidence": {
             "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "FIRST_PRINT_Z_PROFILE",
+      "function": "Kwalifikowany wariant Z pierwszego wydruku",
+      "events": [
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "user_note_controller_revision_not_release_readback",
+          "test": "Nastawy istniejącego egzemplarza",
+          "status": "CONFIGURATION_CONFIRMED",
+          "result": "position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1.",
+          "problem": "Nie jest globalnym standardem dla innych egzemplarzy.",
+          "evidence": {
+            "kind": "user_test_log",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC7_CLEARANCE_2",
+      "function": "Rzeczywiste odsunięcie PC7 2 mm w homingu",
+      "events": [
+        {
+          "date": "2026-11-11",
+          "version": "0.13.16.38 / test 11.11.2026",
+          "version_basis": "explicit_user_message_after_attached_note",
+          "test": "Deklarowane zmniejszenie odsunięcia PC7",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm.",
+          "problem": "Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje.",
+          "evidence": {
+            "kind": "user_message",
+            "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
+            "quote": "zmniejszyłem też przy homingu odsunięcie stołu żeby rozłaczyć kontakt z 5 na 2 bo to wystarcza"
           }
         }
       ]

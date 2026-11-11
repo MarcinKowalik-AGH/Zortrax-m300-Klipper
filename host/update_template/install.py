@@ -128,7 +128,7 @@ def already_included(config, settings):
     return included
 
 
-def plan(root, config, *, organize_config=False, thermal_305105=False):
+def plan(root, config, *, organize_config=False, thermal_305105=False, qualified_first_print_z=False):
     root, config = root.resolve(), config.resolve()
     check_api(root)
     if not config.is_file():
@@ -155,6 +155,9 @@ def plan(root, config, *, organize_config=False, thermal_305105=False):
     validate_settings(settings_data)
     desired[settings] = settings_data
     tree = profile.read_tree(config)
+    if qualified_first_print_z:
+        import m300_first_print_config
+        m300_first_print_config.validate_tree(tree)
     test_config = (HERE / 'payload/m300_tests.cfg').read_text()
     stock_xy = dict(profile.blocks(test_config)[1])['gcode_macro TEST_ZORTRAX_XY']
     for path, text in tree.items():
@@ -214,6 +217,8 @@ def plan(root, config, *, organize_config=False, thermal_305105=False):
     import m300_thermal_config
     if thermal_305105:
         m300_thermal_config.apply_to_plan(desired, config, tree)
+    if qualified_first_print_z:
+        m300_first_print_config.apply_to_plan(desired, config, tree)
     return [(p, p.read_bytes() if p.exists() else None, data)
             for p, data in desired.items()
             if not p.exists() or p.read_bytes() != data]
@@ -330,6 +335,8 @@ def main():
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--organize-config', action='store_true',
                         help='Separate thermal tables and procedure settings; preserve hardware values and PID')
+    parser.add_argument('--qualified-first-print-z', action='store_true',
+                        help='Apply user-qualified -0.5/6.5 M07 geometry and 2 mm contact clearance; requires verified mechanical space')
     parser.add_argument('--rollback', type=Path)
     args = parser.parse_args()
     try:
@@ -340,13 +347,15 @@ def main():
             print(json.dumps({'status': 'ROLLED_BACK_R16',
                               'files': rollback(args.rollback, root, config)}))
             return
-        changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True)
+        changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True,
+                       qualified_first_print_z=args.qualified_first_print_z)
         result = {'status': 'PLAN_M300_R16_12' if changes else 'ALREADY_M300_R16_12',
                   'host_update': 'R16.12 + M300-305-105-R1',
                   'target_limits': {'extruder': 305, 'heater_bed': 105},
                   'sensor_shutdown_limits': {'extruder': 310, 'heater_bed': 120},
                   'hardware_validation': 'USER_REPORTED_2026-11-11',
                   'organize_config': args.organize_config,
+                  'qualified_first_print_z': args.qualified_first_print_z,
                   'root': str(root), 'config': str(config),
                   'files_changed': len(changes), 'files': [str(p) for p, _, _ in changes],
                   'MCU_changed': False, 'factory_Z_requires_MCU_R14_5': True,

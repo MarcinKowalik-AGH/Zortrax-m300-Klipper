@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-beta.23 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-beta.24 — instalacja od początku
 
 > **Instalator beta.23:** przykłady dotyczą portu 4480. Nowa instalacja KIAUH pozostająca na 80 wymaga `--port 80` lub jednoznacznego wykrycia; instalator nie zmienia nginx. Po sukcesie zapisuje port/katalog obok printer.cfg. [Szczegóły](INSTALLATION_AND_CI.md).
 
@@ -99,11 +99,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.23/Zortrax_M300_Klipper_v1.0.0-beta.23.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.23/SHA256SUMS-v1.0.0-beta.23.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-beta.23.zip$' SHA256SUMS-v1.0.0-beta.23.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-beta.23.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-beta.23 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.24/Zortrax_M300_Klipper_v1.0.0-beta.24.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-beta.24/SHA256SUMS-v1.0.0-beta.24.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-beta.24.zip$' SHA256SUMS-v1.0.0-beta.24.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-beta.24.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-beta.24 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -168,7 +168,7 @@ M105
 Oczekiwane: Ready, zgodne 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`,
 kontroler druku `0.13.16.29-UNIFIED-NATIVE-START`, cele temperatur 0°C i poprawne
 odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
-[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.23/docs/en/HARDWARE_VARIANTS.md)
+[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.24/docs/en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.
 
@@ -193,11 +193,11 @@ Procedura końcowa:
 END_PRINT
 ```
 
-[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.23/docs/pl/PRINT_CONTROL.md).
+[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-beta.24/docs/pl/PRINT_CONTROL.md).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Tag i pliki `v1.0.0-beta.23` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
+Tag i pliki `v1.0.0-beta.24` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
 późniejszych aktualizacji projektu. Po tej pierwszej instalacji można ją
 sklonować i używać zwykłego instalatora `install-orange-pi.py --port 4480`
 (beta.23 preferuje 4480 i ponownie sprawdza zapisany port/katalog). Nie aktualizuj portu przyciskiem

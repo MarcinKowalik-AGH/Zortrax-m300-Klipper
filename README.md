@@ -1,4 +1,6 @@
-# Zortrax M300 Classic — Klipper v1.0.0-beta.23
+# Zortrax M300 Classic — Klipper v1.0.0-beta.24
+
+> **Beta.24 — qualified first-print Z:** opt-in -0.5/6.5 geometry and effective 2 mm PC7 clearance; preserve mesh, purge and existing temperature policy. [Instructions](docs/en/RELEASE_v1.0.0-beta.24.md). No MCU flash.
 
 > **Beta.23 operational completion:** [installer 4480 and bounded CI retry](docs/pl/INSTALLATION_AND_CI.md), [current four-line START](docs/pl/PRINT_CONTROL.md), [hardware acceptance ledger](docs/pl/ACCEPTANCE_REGISTER.md), [release notes](docs/en/RELEASE_v1.0.0-beta.23.md). No MCU, motion or beta.22 artwork changes.
 
@@ -8,7 +10,7 @@
 
 **Current user and technical documentation, updated 10 November 2026.** This port targets the original **M300 Classic with STM32F103**, not M300 Plus, M300 Dual or Inventure. The historical illustration reference is `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`; current firmware and artwork are described in the beta.21 supplement.
 
-[Download beta.21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23) · [Polski — pełna instrukcja](README_PL.md) · [First installation](docs/en/FIRST_INSTALL.md) · [Existing installation](docs/en/INSTALL.md)
+[Download beta.24](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.24) · [Polski — pełna instrukcja](README_PL.md) · [First installation](docs/en/FIRST_INSTALL.md) · [Existing installation](docs/en/INSTALL.md)
 
 ## Start with the illustrated instructions
 

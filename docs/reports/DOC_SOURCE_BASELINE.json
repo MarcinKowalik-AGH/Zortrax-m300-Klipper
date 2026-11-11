@@ -3,7 +3,7 @@
   "source_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
   "source_artifact_sha256": "bb18c92ffbf0746a5394fa3468002fc5c2d04e33b0a7f06f67db96d6b5bd186f",
   "files": {
-    "host/klippy/extras/m300_menu.py": "35215369ffd90a779ca0053f0e0213116adfea080f7b20d404f54928ab3861f1",
+    "host/klippy/extras/m300_menu.py": "d07c335225fab0db1fd7a6040dd57661710beedbfcb109289bb4e76c86e8b313",
     "host/klippy/extras/m300_settings.py": "2f22cd24bec7175580ead150143525f018f3fb27fb0f73e22f78d13145da9e29",
     "host/klippy/extras/m300_settings_ui.py": "926f3ba2a1d3600548aab7b77b8d72b927d4a37c5418e088cee0c1995c10841f",
     "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
@@ -15,19 +15,21 @@
     "host/klippy/extras/m300_display_oem.py": "8b2b90b9215881163b17b9c7fef1942a216f5bdd4dd23c9613d1f1a32181904f",
     "host/klippy/extras/m300_klipper_status.py": "c64d656be7aeac2440ec10017da2cb044fae3129fed309b6441d91dab0bd3968",
     "host/klippy/extras/m300_fans.py": "19ac4ae2e167f226a9f20f6492cabb1ca91a84fcd6ec6b687ae051543dee0862",
-    "host/klippy/extras/m300_pad_mesh.py": "7228bd71884f36452d739e257c868ea51aafe9d0edec1b341f1678180eece8f7",
-    "host/klippy/extras/m300_print_control.py": "81fc389a15780df2f83edbca8f6cd317169cd3e6465f690c03a646f3853b6149",
+    "host/klippy/extras/m300_pad_mesh.py": "d7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836",
+    "host/klippy/extras/m300_print_control.py": "d8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933",
     "host/config/m300_display.cfg": "27c51c31f653ea192fdb0919a51fd4daf8c2d74d50bc42e765cd40ff64ae9f00",
     "host/config/m300_classic_services.cfg": "f199715dd59536b5c701e145a0c5c2b1adf6ef4936f9f05a2454e7eee26461f4",
     "host/config/m300_tests.cfg": "dd2e4f066f18315af67ee38190a8b812cfb7b4dcad681937bc8210e478836071",
     "host/config/klipper_calibration.cfg": "df3bfaaa68343822f8d648eb671593cd27be141d6101a73640bfd9eb777fc6e7",
-    "host/config/m300_classic_base.cfg": "1d264f8769d3f3366e0be6ed4fcb6f170e658ce0d4c606cdcb7225d4fce824e8",
+    "host/config/m300_classic_base.cfg": "1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a",
     "host/config/m300_operations.cfg": "def615b957bf380bf1ac4f990241c1b7a1810347372f60fbd243745966ebcfeb",
     "host/config/m300_classic_sensors.cfg": "78b0ae33c7c1563f76192e2a3f46bfab93003b54a61ee3e1f660191f800fcbfa",
     "frontend/fluidd/navigation/M300OledPreview.vue": "5c8cb03ae1e3a812603bbfa7348e0234b651c2378a1a6a19ea65c0b8f5a19656",
     "frontend/fluidd/navigation/m300-oled-pixels.ts": "3b561d3fb84921c0bb1373d33457203fe09cab34238061c255ad17344272ee82",
-    "frontend/fluidd/m300-tune.patch": "2915dee165733453ba72249c1109cecee373cfbb71c4204ce5a4997c84ace6e7"
+    "frontend/fluidd/m300-tune.patch": "2915dee165733453ba72249c1109cecee373cfbb71c4204ce5a4997c84ace6e7",
+    "host/klippy/extras/m300_native_motion.py": "8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e"
   },
-  "current_fact_source_commit": "29d326d20bc07656789f2be64a8101996fcb7538",
-  "note_beta23": "Current factual sources rechecked against beta.22; 65-image beta.20 visual manifests remain unchanged."
+  "current_fact_source_commit": "b8f76f0839508858462af234007e76b78d7e6293",
+  "note_beta23": "Current factual sources rechecked against beta.22; 65-image beta.20 visual manifests remain unchanged.",
+  "note_beta24": "Retain beta.20 illustration hashes; current source hashes include pre-existing M300305/105 changes and qualified clearance update, not a new visual/hardware claim."
 }

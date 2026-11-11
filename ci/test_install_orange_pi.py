@@ -79,6 +79,34 @@ class OrangePiInstallerTest(unittest.TestCase):
                         installer.apply_host(Path('/package/host'),(),{'status':'PLAN_M300_R16_12'})
                 run.assert_not_called()
 
+    def test_qualified_geometry_flag_reaches_host_plan(self):
+        self.check_geometry_flag(True)
+
+    def test_normal_update_does_not_select_qualified_geometry(self):
+        self.check_geometry_flag(False)
+
+    def check_geometry_flag(self, enabled):
+        import sys
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as folder:
+            package=Path(folder);(package/'SHA256SUMS').write_text('')
+            info=dict(state='ready',klipper_path='/home/klipper/klipper',
+                      config_file='/home/klipper/printer_data/config/printer.cfg')
+            arguments=['install-orange-pi.py','--port','4480']
+            if enabled:arguments.append('--qualified-first-print-z')
+            seen=[]
+            def run(*args,**kw):
+                if 'install.py' in args:
+                    seen.append(args)
+                    self.assertEqual('--qualified-first-print-z' in args,enabled)
+                    raise ValueError('test preflight stopped before any deployment')
+                return ''
+            with patch.object(installer,'PACKAGE',package),patch.object(installer.os,'geteuid',return_value=1000),\
+                 patch.object(installer,'require_idle',return_value=info),patch.object(installer,'run',side_effect=run),\
+                 patch.object(sys,'argv',arguments),patch('sys.stderr'):
+                with self.assertRaises(SystemExit):installer.main()
+            self.assertEqual(len(seen),1)
+
     def test_nginx_port_selects_fluidd(self):
         config = '''
             http {
