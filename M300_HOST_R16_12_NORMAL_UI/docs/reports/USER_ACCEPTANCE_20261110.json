@@ -1,8 +1,0 @@
-{
-  "reference_release": "v1.0.0-beta.20",
-  "date": "2026-11-10",
-  "statement": "jest ok",
-  "scope": "User accepted the requested OLED preview appearance after beta.20; not an independent hardware measurement",
-  "source": "This project conversation; user asked to update manuals after confirming the UI",
-  "physical_measurement_performed_by_assistant": false
-}

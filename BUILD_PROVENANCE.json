@@ -2,9 +2,9 @@
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "mcu_release": "0.13.14.19-TONED-OLED-UART8",
-  "host_update": "R16.12 + M300-305-105-R1",
-  "github_commit": "b8f76f0839508858462af234007e76b78d7e6293",
-  "github_run_id": "43075178211",
+  "host_update": "R16.12",
+  "github_commit": "89c04d4f1c6a82b19f239b156958451e4d7fc764",
+  "github_run_id": "43120785642",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -17,33 +17,5 @@
   "release_stage": "VERIFIED",
   "hotend_cooling_on_temperature": 50,
   "hotend_cooling_off_temperature": 45,
-  "distribution_version": "v1.0.0-beta.23+thermal305.1",
-  "prior_distribution_provenance": {
-    "github_commit": "aee1204f0ba741ca09cf569d6ed3ff2f31ec8ecc",
-    "github_run_id": "42895826425",
-    "distribution_version": "v1.0.0-beta.23",
-    "mcu_release": "0.13.14.19-TONED-OLED-UART8",
-    "host_update": "R16.12"
-  },
-  "host_source_run_id": "43072164421",
-  "host_package_sha256": "22b34f3d41e4c9213dc5d841d12882bf40759dea1faa33c4ccca5010c910713c",
-  "operating_target_max": {
-    "extruder": 305,
-    "heater_bed": 105
-  },
-  "sensor_shutdown_limits": {
-    "extruder": 310,
-    "heater_bed": 120
-  },
-  "hardware_acceptance": {
-    "source": "user statement in conversation",
-    "date": "2026-11-11",
-    "result": "user confirms305/105 and normal operation",
-    "assistant_performed_hardware_test": false,
-    "all_materials_qualified": false
-  },
-  "mcu_changed": false,
-  "fluidd_changed": false,
-  "installer_changed": false,
-  "installed_on_printer": false
+  "distribution_version": "v1.0.0-beta.24"
 }

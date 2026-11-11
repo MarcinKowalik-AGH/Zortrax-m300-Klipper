@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
-<title>Klipper firmware official V/nozzle mark adapted for M300 OLED</title>
-<desc>Monochrome reduction of official Klipper paths 2 and 35. Source: Klipper3d/klipper docs/img/klipper.svg GPL-3.0.</desc>
-<rect width="50" height="50" fill="black"/>
-<g transform="translate(10 14) scale(.042 .060) translate(-30 -34)" fill="white">
-<path d="m 30,34 v 140 l 260,255 115,-5 h 80 L 730,174 V 34 H 720 L 385,374 40,34 Z"/>
-<path d="M 259,424 H 360 V 359 L 30,34 H 90 L 385,324 670,34 h 60 L 410,359 v 84.99783 C 410,449 405,454 400,454 H 259 c -12,0 -14,-10 -14,-15 0,-5 2,-15 14,-15 z"/>
-</g></svg>
