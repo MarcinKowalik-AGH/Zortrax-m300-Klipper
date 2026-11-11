@@ -1,0 +1,76 @@
+name: Publish thermal305 host to orange-pi Git
+on:
+  push:
+    branches: [deploy/orange-pi-305105]
+    paths: ['ci/publish_thermal_git.py', '.github/workflows/publish-thermal-orange-pi.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: m300-thermal305-git-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: '43072164421'
+      SOURCE_TEST_SHA: b1f8efcdb24c4368fb75aee7909320987fb60284
+      EXPECTED_DEPLOYMENT: 7c59b7763b690c14cc4f77a838cf82066f842bb7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/checkout@v4
+        with:
+          ref: orange-pi
+          path: deployment
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify source run and retrieve the already-tested host
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C deployment rev-parse HEAD)" = "$EXPECTED_DEPLOYMENT"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source-run.json"
+          jq -e --arg sha "$SOURCE_TEST_SHA" '.head_sha==$sha and .conclusion=="success" and .status=="completed" and .path==".github/workflows/thermal-305105.yml"' "$RUNNER_TEMP/source-run.json"
+          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name M300_HOST_305_105_R1 --dir "$RUNNER_TEMP/verified-host"
+          (cd "$RUNNER_TEMP/verified-host" && sha256sum -c --quiet SHA256SUMS)
+          python -m pip install jinja2 pillow
+      - name: Repeat768 tests and test actual prior-deployment upgrade/rollback
+        run: |
+          python source/ci/publish_thermal_git.py --source source --deployment deployment --artifact "$RUNNER_TEMP/verified-host"
+      - name: Fast-forward the existing orange-pi branch (never force)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd deployment
+          git fetch origin orange-pi
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_DEPLOYMENT"
+          git diff --exit-code -- MCU M300_FLUIDD_1_37_7_R16_12.zip install-orange-pi.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M300_HOST_R16_12_NORMAL_UI BUILD_PROVENANCE.json THERMAL305_VALIDATION.json README.md SHA256SUMS
+          git commit -m 'Deploy verified M300305/105 host to orange-pi; preserve MCU,Fluidd and installer'
+          git push origin HEAD:orange-pi
+          published=$(git rev-parse HEAD)
+          test "$(git ls-remote origin refs/heads/orange-pi | cut -f1)" = "$published"
+          printf '## Published to orange-pi\n\nCommit `%s`. 768 host tests plus previous-deployment upgrade/rollback PASS. MCU, Fluidd and installer unchanged. No printer accessed.\n' "$published" >> "$GITHUB_STEP_SUMMARY"
+      - name: Save publication evidence (no user download required)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_ORANGE_PI_305105_PUBLICATION
+          path: |
+            deployment/BUILD_PROVENANCE.json
+            deployment/THERMAL305_VALIDATION.json
+            deployment/README.md
+            deployment/SHA256SUMS
+            ${{ runner.temp }}/verified-host/RETEST_HOST.log
+          retention-days: 14
