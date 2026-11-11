@@ -1,0 +1,80 @@
+name: M300 normal operation305-105
+on:
+  push:
+    branches: [main, feature/thermal-305-105-r1]
+    paths: ['tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py','.github/workflows/thermal-305105.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: thermal305-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply reviewed host policy and305/105 update
+        run: |
+          git fetch origin b173c37335e45394bce51828f2988e614825b370
+          python tools/build_305105.py
+          git diff --exit-code b5a74756e6076d779bae5e160d364f2d97980cb4 -- mcu frontend
+          python -m pip install jinja2 pillow
+          PYTHONPATH=ci python - <<'PY'
+          from project import ROOT,stage_host_update
+          stage_host_update(ROOT/'.ci/thermal305')
+          PY
+      - name: Run package integrity and complete host regression
+        run: |
+          mkdir -p dist/thermal305
+          cd .ci/thermal305
+          python VERIFY.py
+          python -m unittest discover -s tests -v > ../../dist/thermal305/HOST_TESTS.log 2>&1
+          tail -5 ../../dist/thermal305/HOST_TESTS.log
+          grep -q 'Ran 768 tests' ../../dist/thermal305/HOST_TESTS.log
+      - name: Package tested host and record qualification source
+        run: |
+          python - <<'PY'
+          import json,os,shutil,zipfile,hashlib
+          from pathlib import Path
+          out=Path('dist/thermal305');source=Path('.ci/thermal305')
+          result=json.loads(Path('docs/en/THERMAL305_ACCEPTANCE.json').read_text())
+          result.update(software_tests=768,software_result='PASS',workflow_run_id=os.environ['GITHUB_RUN_ID'],tested_commit=os.environ['GITHUB_SHA'])
+          Path('docs/en/THERMAL305_VALIDATION.json').write_text(json.dumps(result,indent=2)+'\n')
+          (out/'VALIDATION.json').write_text(json.dumps(result,indent=2)+'\n')
+          shutil.copy2('docs/en/THERMAL305_INSTALL_PL.md',out/'INSTRUKCJA_PL.md')
+          with zipfile.ZipFile(out/'M300_HOST_305_105_R1.zip','w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in source.rglob('*'):
+                  if p.is_file() and '__pycache__' not in p.parts and p.suffix not in ('.pyc','.ttf','.otf','.woff','.woff2'):
+                      z.write(p,p.relative_to(source))
+          (out/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(out.iterdir()) if p.is_file() and p.name!='SHA256SUMS'))
+          PY
+      - name: Publish validated candidate only to its feature branch
+        env:
+          TARGET_BRANCH: feature/thermal-305-105-r1
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/$TARGET_BRANCH" ]; then exit 0; fi
+          git fetch origin "$TARGET_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add host PORT.json docs/en/THERMAL305_*
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish768-test M300305/105 host; preserve MCU and normal native printing'
+            git push origin "HEAD:$TARGET_BRANCH"
+          fi
+      - name: Keep tested installer and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_HOST_305_105_R1
+          path: dist/thermal305
+          retention-days: 14
