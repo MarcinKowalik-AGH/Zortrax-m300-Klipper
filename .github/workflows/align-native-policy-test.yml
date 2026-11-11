@@ -1,0 +1,43 @@
+name: Align native policy acceptance test
+on:
+  push:
+    branches: [fix/first-print-qualified-z-20261111]
+    paths: ['.github/workflows/align-native-policy-test.yml']
+permissions:
+  contents: read
+jobs:
+  align:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/first-print-qualified-z-20261111
+      - name: Apply and checksum the narrow native-test correction
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p=Path('ci/validate_native_process.py')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=='0cda2be58f73918740fdabf477202fc53bfb55ea9159b18b45ffb11057de05a7'
+          s=p.read_text()
+          a='    for name,script,synthetic,error in cases:\n'
+          assert s.count(a)==1
+          s=s.replace(a,"    shutil.copy2(Path(__file__).with_name('m300_ci_thermal_bindings.py'),\n                 args.root/'klippy/extras/m300_ci_thermal_bindings.py')\n"+a)
+          a='        cp.read_string(base)\n'
+          assert s.count(a)==1
+          s=s.replace(a,a+"        cp.add_section('m300_ci_thermal_bindings')\n")
+          a='        expected=dict(EXPECTED)\n'
+          assert s.count(a)==1
+          s=s.replace(a,a+"        # The M300 target guard is deliberate; still require its exact native\n        # Heater backends, checked in-process without sending heater commands.\n        thermal = next(json.loads(line.split('M300_CI_THERMAL_BINDINGS ',1)[1])\n                       for line in text.splitlines() if 'M300_CI_THERMAL_BINDINGS ' in line)\n        assert thermal['PASS'] and not thermal['targets_changed'], (name, thermal)\n        for heater in ('extruder', 'heater_bed'):\n            for method in ('set_temp', 'alter_target'):\n                key=heater+'.'+method\n                assert key in thermal['native_backends'], (name, key, thermal)\n                expected[key]='extras.m300_temperature_policy.M300TemperaturePolicy._connect.<locals>.guarded'\n")
+          assert hashlib.sha256(s.encode()).hexdigest()=='a9a60c61aaec17bb7920423407bf0befacd1ede59f9b68aaa198bbc9bc8a1848'
+          compile(s,str(p),'exec');p.write_text(s)
+          PY
+          git diff --check
+          git add ci/validate_native_process.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Verify guarded heater ownership and exact native delegates in actual Klippy tests'
+          git push origin HEAD:fix/first-print-qualified-z-20261111
