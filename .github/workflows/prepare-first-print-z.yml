@@ -1,0 +1,26 @@
+name: Prepare first-print Z correction sources
+on:
+  push:
+    branches: [fix/first-print-qualified-z-20261111]
+    paths: ['.github/workflows/prepare-first-print-z.yml']
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b8f76f0839508858462af234007e76b78d7e6293
+          persist-credentials: false
+      - name: Export the exact reviewed source, without credentials or git data
+        run: |
+          git archive --format=zip --output="$RUNNER_TEMP/M300_SOURCE_FIRST_PRINT.zip" HEAD
+          sha256sum "$RUNNER_TEMP/M300_SOURCE_FIRST_PRINT.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_SOURCE_FIRST_PRINT
+          path: ${{ runner.temp }}/M300_SOURCE_FIRST_PRINT.zip
+          if-no-files-found: error
+          retention-days: 7
