@@ -48,7 +48,7 @@ class OrangePiInstallerTest(unittest.TestCase):
         with patch.object(installer,'require_idle',return_value=dict(state='shutdown')) as idle:
             with patch.object(installer,'run') as run:
                 installer.apply_host(Path('/package/host'),('--root','/my/klipper','--config','/my/printer.cfg'),
-                    dict(status='PLAN_M300_R16_12'),repair_startup=True)
+                    dict(status='PLAN_M300_HOST'),repair_startup=True)
         idle.assert_called_once_with(repair_startup=True)
         calls=[c.args for c in run.call_args_list]
         self.assertEqual(calls[0],('sudo','systemctl','stop','klipper.service'))
@@ -76,7 +76,7 @@ class OrangePiInstallerTest(unittest.TestCase):
                 with patch.object(installer,'printer',side_effect=[{'state':'ready'},
                         {'status':{'print_stats':{'state':state}}}]):
                     with self.assertRaisesRegex(ValueError,'idle'):
-                        installer.apply_host(Path('/package/host'),(),{'status':'PLAN_M300_R16_12'})
+                        installer.apply_host(Path('/package/host'),(),{'status':'PLAN_M300_HOST'})
                 run.assert_not_called()
 
     def test_qualified_geometry_flag_reaches_host_plan(self):
@@ -133,7 +133,7 @@ class OrangePiInstallerTest(unittest.TestCase):
 
     def test_installed_host_skips_service_restart(self):
         with patch.object(installer, 'run') as run:
-            installer.apply_host(Path('/package/host'), (), {'status': 'ALREADY_M300_R16_12'})
+            installer.apply_host(Path('/package/host'), (), {'status': 'ALREADY_M300_HOST'})
         run.assert_not_called()
 
     def test_web_update_preserves_config_and_backup_and_is_idempotent(self):

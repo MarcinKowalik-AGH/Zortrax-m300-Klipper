@@ -10,6 +10,7 @@ import logging
 import os
 import stat
 import textwrap
+from .m300_release import VERSION
 
 
 def sort_entries(entries, mode):
@@ -72,7 +73,7 @@ def host_entries(root, relative, sort_mode='NAME'):
 
 class M300Menu:
     HOMING_UI_ABI = 1  # R15.5 motion startup contract retained.
-    MENU_REVISION = "0.13.16.36-SPLIT-HOME-UI"
+    MENU_REVISION = VERSION
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
@@ -167,6 +168,8 @@ class M300Menu:
         self.reason = ''
 
     def _navigate(self, page, remember=True, *, refresh_information=True):
+        if page == 'tests' and getattr(self.job.board, 'native_control', False):
+            page = 'main'
         if self.page == 'fan_test' and page != 'fan_test':
             fans = self.printer.lookup_object('m300_fans', None)
             if fans is not None and fans.test is not None:
@@ -368,8 +371,7 @@ class M300Menu:
         if native and self.page == 'main':
             return 'M300', self._notice([
                 ('Klipper', ('page', 'klipper')),
-                ('Zortrax M300', ('page', 'zortrax')),
-                ('Service / Tests', ('page', 'tests'))])
+                ('Zortrax M300', ('page', 'zortrax'))])
         if native and self.page == 'zortrax':
             return 'Zortrax M300', self._notice([(self.t('Back'), ('page', 'main')),
                 (self.t('Models'), ('page', 'models')),
@@ -389,7 +391,8 @@ class M300Menu:
                 (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
                 (self.t('Move the platform down'), ('platform_hold',1)),
-                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START'))])
+                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START')),
+                ('Current procedure', ('native_gcode', 'ZORTRAX_PROCEDURE'))])
         if native and self.page == 'fan_test':
             return self._service('m300_procedures').rows(now)
         if native:
@@ -413,17 +416,6 @@ class M300Menu:
             return self.t('Material'), self._notice([(self.t('Back'), ('page', 'zortrax')),
                 (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
                 (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))])
-        if native and self.page == 'tests':
-            return 'Service / Tests', self._notice(back + [
-                ('Diagnostics', ('page', 'diagnostics')),
-                ('TEST: material procedures', ('page', 'material')),
-                ('TEST: platform calibration', ('cal_start',)),
-                ('TEST: calibration status', ('cal_refresh',)),
-                ('TEST: OEM print / SD', ('page', 'models')),
-                ('Current test procedure', ('page', 'procedure')),
-                ('Read test status', ('native_gcode', 'TEST_ZORTRAX_STATUS')),
-                ('TEST XY 50 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=50')),
-                ('TEST XY 60 mm/s', ('native_gcode', 'TEST_ZORTRAX_XY SPEED=60'))])
         if native and self.page == 'native_pid':
             stats = self.printer.lookup_object('print_stats', None)
             busy = stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')
@@ -460,17 +452,12 @@ class M300Menu:
                 ('Job', ('oled', 'job')),
                 ('Diagnostics', ('page', 'diagnostics')),
                 (self.t('Sleep'), ('confirm_sleep',))]
-            if native:
-                rows = [row for row in rows if row[1] != ('confirm_sleep',)]
-                rows = [(('Job' if row[0] == 'Job' else
-                          'Diagnostics' if row[0] == 'Diagnostics' else row[0]), row[1])
-                        for row in rows]
             if not native and self.printer.lookup_object('m300_procedures', None) is not None:
                 rows.insert(0, ('Current procedure', ('page', 'procedure')))
             cycle = self.cycle.get_status(now) if self.cycle is not None else {}
             if cycle.get('can_confirm_resume_clean'):
                 rows.insert(1, ('Nozzle clean: confirm', ('cycle_clean', cycle.get('job_token'))))
-            return ('M300' if native else 'M300 / M08 LAB'), self._notice(rows)
+            return 'M300', self._notice(rows)
         if self.page == 'procedure':
             service = self.printer.lookup_object('m300_procedures', None)
             if service is None:
@@ -742,10 +729,6 @@ class M300Menu:
             labels = {'language': 'Language', 'light_mode': 'Light', 'sound': 'Buzzer',
                       'sleep_mode': 'Sleep Mode', 'sleep_light': 'Sleep light',
                       'sort_mode': 'Models sorting', 'full_platform_preheat': 'Full platform preheating'}
-            if native:
-                labels.pop('language', None)
-                labels.pop('sleep_mode', None)
-                labels.pop('sleep_light', None)
             return self.t('Settings'), self._notice(back + [
                 (self.t(label) + ': ' + str(self.nvm.get_setting(key, '?')), ('setting', key))
                 for key, label in labels.items()])

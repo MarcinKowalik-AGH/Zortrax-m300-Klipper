@@ -2,12 +2,12 @@
 # Publish only an immutable, successful main-branch build; never rebuild assets.
 set -euo pipefail
 tag=$(jq -er .distribution_version PORT.json)
-[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]
+[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(beta|rc)\.[0-9]+$ ]]
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
 test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
 
-# Later development commits keep an existing beta immutable. A new version in
+# Later development commits keep an existing release immutable. A new version in
 # PORT.json is required for a new release; existing assets are never replaced.
 if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
     echo "Release $tag is already published; leaving its tag and assets unchanged."
@@ -27,9 +27,9 @@ if [[ -n "$existing" && "$existing" != "$SOURCE_SHA" ]]; then
     exit 1
 fi
 name="Zortrax_M300_Klipper_$tag"
-work=$(mktemp -d "$RUNNER_TEMP/m300-beta.XXXXXX")
+work=$(mktemp -d "$RUNNER_TEMP/m300-release.XXXXXX")
 gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" \
-    --name M300_R16_12_FULL_ORANGE_PI --dir "$work/$name"
+    --name M300_ORANGE_PI --dir "$work/$name"
 (
     cd "$work/$name"
     jq -e --arg sha "$SOURCE_SHA" --arg run "$SOURCE_RUN" --arg tag "$tag" '
@@ -60,7 +60,7 @@ gh release create "$tag" "$work/$name.zip" "$work/SHA256SUMS-$tag.txt" \
 
 previous=$(jq -r '.supersedes_version // empty' PORT.json)
 if [[ -n "$previous" ]]; then
-    [[ "$previous" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]
+    [[ "$previous" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(beta|rc)\.[0-9]+$ ]]
     gh release view "$previous" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$work/previous-notes.md"
     {
         printf '> Superseded by [%s](https://github.com/%s/releases/tag/%s).\n' "$tag" "$GITHUB_REPOSITORY" "$tag"

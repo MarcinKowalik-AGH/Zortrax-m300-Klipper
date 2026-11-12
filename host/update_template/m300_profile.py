@@ -246,14 +246,14 @@ def convert_text(text, stock_xy=None):
                            + r'[ \t]+VALUE=\{params\.' + param
                            + r"\s*\|\s*default\([^\r\n{}]*\)\}[ \t]*$")
             command = ("ZORTRAX_UI_SETTING NAME=%s {%% if '%s' in params %%}"
-                       "VALUE={params['%s']}{%% endif %%}") % (key, param, param)
+                       "VALUE={params.%s}{%% endif %%}") % (key, param, param)
             block = re.sub(old_command, lambda match: match[1] + command,
                            block, flags=re.MULTILINE)
         elif section == 'gcode_macro ZORTRAX_LANGUAGE':
             block = re.sub(r'^(\s*ZORTRAX_UI_SETTING NAME=language) VALUE=EN[ \t]*$',
                            r'\1', block, flags=re.MULTILINE)
         elif section == 'gcode_macro ZORTRAX_INFORMATION':
-            block = block.replace('REFRESH={params.REFRESH|', "REFRESH={params['REFRESH']|")
+            block = block.replace('REFRESH={params.REFRESH|', "REFRESH={params.REFRESH|")
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'
@@ -265,7 +265,7 @@ def convert_text(text, stock_xy=None):
                      '{% if params.TEMP is defined %}TEMP={params.TEMP|float}{% endif %}\n\n')
         elif section in ('gcode_macro ZORTRAX_PLATFORM_UP', 'gcode_macro ZORTRAX_PLATFORM_DOWN'):
             block = re.sub(r'SPEED=\{params\.SPEED\s*\|\s*default\(1\)\s*\|\s*float\}',
-                           "{% if 'SPEED' in params %}SPEED={params['SPEED']|float}{% endif %}", block)
+                           "{% if 'SPEED' in params %}SPEED={params.SPEED|float}{% endif %}", block)
         elif section in ('gcode_macro ZORTRAX_LOAD', 'gcode_macro ZORTRAX_UNLOAD'):
             # Existing wrappers live in included files on installed R16.x.
             # Update the TEMP default while preserving their other commands.

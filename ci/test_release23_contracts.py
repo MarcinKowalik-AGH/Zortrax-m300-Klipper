@@ -34,7 +34,7 @@ class ReleaseContracts(unittest.TestCase):
 
     def test_publishing_still_requires_build_success(self):
         build=(ROOT/'.github/workflows/build-m300.yml').read_text()
-        publish=(ROOT/'.github/workflows/publish-beta.yml').read_text()
+        publish=(ROOT/'.github/workflows/publish-release.yml').read_text()
         self.assertIn('needs: build',build)
         self.assertIn("github.event.workflow_run.conclusion == 'success'",publish)
         self.assertNotIn('continue-on-error',build)
@@ -53,13 +53,13 @@ class ReleaseContracts(unittest.TestCase):
                     self.assertIn('--port 4480',line,path)
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-            self.assertIn('releases/download/v1.0.0-beta.24/',text)
+            self.assertIn('releases/download/v1.0.0-rc.1/',text)
 
     def test_version_and_no_mcu_bump(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['distribution_version'],'v1.0.0-beta.24')
+        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.1')
         self.assertEqual(meta['mcu_release'],'0.13.14.19-TONED-OLED-UART8')
-        self.assertEqual(meta['self_contained_host_tests'],794)
+        self.assertEqual(meta['self_contained_host_tests'],812)
         self.assertEqual(meta['print_control_revision'],'0.13.16.38-PRINT-DRAIN-XY-PURGE')
 
 if __name__=='__main__':unittest.main(verbosity=2)

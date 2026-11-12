@@ -1,5 +1,7 @@
 # OLED — ilustrowana instrukcja funkcji
 
+> **RC1:** bieżące makra i nawigację opisuje [spójność interfejsu RC1](RC1_UI.md). Menu główne ma tylko Klipper i Zortrax M300. Ekrany poniżej zachowano jako podpisany wzorzec beta.20; pozycja Service / Tests na starszych ilustracjach nie występuje w RC1.
+
 [Instrukcja główna](../../README_PL.md) · [Pełne drzewo menu](OLED_MENU_REFERENCE.md) · [Obsługa drukarki](USER_GUIDE.md) · [Dzisiejsze zmiany](UPDATE_2026-11-10.md)
 
 **Stan: beta.20, 10 listopada 2026.** Każda ilustracja jest wykonana przez rzeczywisty renderer projektu na kontrolowanym stanie demonstracyjnym. To nie fotografia wyświetlacza i nie bieżący odczyt drukarki. Źródło ma 256×64 piksele; ilustracje poniżej są dokładnym powiększeniem 3×. Numery i wartości pomiarowe są przykładami, nie nastawami do przepisania.

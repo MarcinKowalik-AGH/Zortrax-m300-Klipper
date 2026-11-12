@@ -1406,11 +1406,11 @@ index 337c205..c599487 100644
  import type { GetterTree } from 'vuex'
  import type { Macro, MacroCategory, MacrosState } from './types'
  import type { RootState } from '../types'
-+import { m300MacroDefaultCategory } from '@/util/m300-macro-category'
++import { m300MacroDefaultCategory, m300MacroHidden } from '@/util/m300-macro-category'
 
  export const MACRO_DEFAULTS = {
    alias: '',
-@@ -51,6 +52,16 @@ export const getters = {
+@@ -51,6 +52,20 @@ export const getters = {
            }
          }
 
@@ -1422,6 +1422,10 @@ index 337c205..c599487 100644
 +            macro.categoryId = category.id
 +            macro.category = category
 +          }
++        }
++        // RC1 excludes old laboratory shortcuts even with cached preferences.
++        if (m300MacroHidden(name, rootState.printer.printer.m300_mcu?.model)) {
++          macro.visible = false
 +        }
 +
          return macro

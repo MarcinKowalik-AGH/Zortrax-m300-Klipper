@@ -49,8 +49,8 @@ def verify(package):
         if target.is_symlink() or not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != digest:
             raise ValueError('Release checksum mismatch: '+name)
         expected[name] = digest
-    for name in ('KLIPPER_HOST/klippy/klippy.py', 'M300_HOST_R16_12_NORMAL_UI/install.py',
-                 'M300_FLUIDD_1_37_7_R16_12.zip', 'FIRST_INSTALL/requirements-m300.txt',
+    for name in ('KLIPPER_HOST/klippy/klippy.py', 'M300_HOST/install.py',
+                 'M300_FLUIDD.zip', 'FIRST_INSTALL/requirements-m300.txt',
                  'FIRST_INSTALL/m300_classic_base.cfg', 'FIRST_INSTALL/m300_classic_services.cfg',
                  'FIRST_INSTALL/m300_classic_sensors.cfg'):
         if name not in expected:
@@ -96,7 +96,7 @@ def refuse_existing(config, root):
 
 
 def render_config(package, dest, data, serial, baud, machine):
-    host = package/'M300_HOST_R16_12_NORMAL_UI'
+    host = package/'M300_HOST'
     replacements = {'@DATA@':str(data), '@SERIAL@':str(serial), '@BAUD@':str(baud), '@MACHINE@':machine}
     files = {'printer.cfg':'m300_classic_base.cfg',
              'm300_services.cfg':'m300_classic_services.cfg',
@@ -164,7 +164,7 @@ def install(package, root, data, python, serial, baud, web_root, *, execute=run)
         dest = stage/'config';dest.mkdir()
         render_config(package,dest,data,serial,baud,'M300_CLASSIC_'+stamp)
         # Refuse incomplete/foreign host payloads before touching the active tree.
-        updater = module('m300_first_update',package/'M300_HOST_R16_12_NORMAL_UI/install.py')
+        updater = module('m300_first_update',package/'M300_HOST/install.py')
         updater.verify();updater.check_api(source)
         # The normal installer also validates all APIs and hashes during future upgrades.
         execute(python,'-m','pip','install','-r',package/'FIRST_INSTALL/requirements-m300.txt')
@@ -185,7 +185,7 @@ def install(package, root, data, python, serial, baud, web_root, *, execute=run)
                 updater.atomic_write(target,path.read_bytes());installed.append(target)
             updater.atomic_write(moon,updated_moon.encode())
             deploy = module('m300_first_deploy',package/'install-orange-pi.py')
-            archive=package/'M300_FLUIDD_1_37_7_R16_12.zip'
+            archive=package/'M300_FLUIDD.zip'
             with zipfile.ZipFile(archive) as bundle:
                 for name in bundle.namelist():
                     if Path(name).is_absolute() or '..' in Path(name).parts:

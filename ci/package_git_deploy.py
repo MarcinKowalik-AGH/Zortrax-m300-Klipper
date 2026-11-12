@@ -10,8 +10,8 @@ import sys
 from project import digest, manifest
 
 
-HOST = 'M300_HOST_R16_12_NORMAL_UI'
-FLUIDD = 'M300_FLUIDD_1_37_7_R16_12.zip'
+HOST = 'M300_HOST'
+FLUIDD = 'M300_FLUIDD.zip'
 
 
 def package(release, output, commit):
@@ -27,15 +27,16 @@ def package(release, output, commit):
     subprocess.run([sys.executable, '-B', 'VERIFY.py'], cwd=output / HOST, check=True)
 
     (output / 'MCU').mkdir()
-    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_R14_19_SD.zip',
+    for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_SD.zip',
                  'install-orange-pi.py', 'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
     (output / 'README.md').write_text(
-        '# M300 Classic Orange Pi deployment\n\n'
+        '# M300 Classic ' + provenance['distribution_version'] + ' — Orange Pi\n\n'
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
-        'Run `python3 install-orange-pi.py` as the Klipper user while idle.\n'
-        'The MCU image is for separate SD flashing.\n\n'
+        'Run `python3 install-orange-pi.py --port 4480` as the Klipper user while idle and Ready.\n'
+        'RC1 preserves qualified Z, mesh and PID. No MCU flashing is needed when upgrading from beta.24.\n'
+        'The MCU image is for a separate first-install or verified firmware update only.\n\n'
         'Source commit: `' + commit + '`\n')
     files = sorted(path for path in output.rglob('*') if path.is_file())
     (output / 'SHA256SUMS').write_text(''.join(

@@ -172,13 +172,13 @@ Pause menu and Fluidd exact reprint. Re-run
 ## Rollback and MCU
 
 For a host rollback, stop Klipper, enter the included
-`M300_HOST_R16_12_NORMAL_UI` directory, run
+`M300_HOST` directory, run
 `python3 install.py --rollback /EXACT/PATH/RECEIPT.json`, then start Klipper.
 The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_19_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. A printer already running

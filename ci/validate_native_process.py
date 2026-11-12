@@ -198,6 +198,8 @@ def main():
         (dest/'gcodes').mkdir(exist_ok=True)
         cp=configparser.RawConfigParser()
         cp.read_string(base)
+        if 'TEST_ZORTRAX_XY' in script:
+            cp.read(Path(__file__).resolve().parents[1]/'host/update_template/legacy/m300_tests.cfg')
         cp.add_section('m300_ci_thermal_bindings')
         if name=='native_early_moonraker_status':cp.add_section('m300_ci_early_status')
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):

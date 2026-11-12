@@ -262,9 +262,9 @@ def deploy_web(source, root, build_id, *, execute=run):
 
 
 def apply_host(host, args, plan, *,repair_startup=False):
-    if plan['status'] == 'ALREADY_M300_R16_12':
+    if plan['status'] == 'ALREADY_M300_HOST':
         return
-    if plan['status'] != 'PLAN_M300_R16_12':
+    if plan['status'] != 'PLAN_M300_HOST':
         raise ValueError('Unexpected host install plan')
     require_idle(repair_startup=repair_startup)
     run('sudo', 'systemctl', 'stop', 'klipper.service')
@@ -304,7 +304,7 @@ def main():
     try:
         run('sha256sum', '-c', '--quiet', 'SHA256SUMS', cwd=PACKAGE)
         info = require_idle(repair_startup=args.repair_startup)
-        host = PACKAGE / 'M300_HOST_R16_12_NORMAL_UI'
+        host = PACKAGE / 'M300_HOST'
         host_args = ('--root', info['klipper_path'], '--config', info['config_file'])
         if args.organize_config:
             host_args += ('--organize-config',)
@@ -325,7 +325,7 @@ def main():
         root, fluidd_port, selection = select_fluidd(config, args.port, args.fluidd_root, saved)
         print(json.dumps(dict(status='FLUIDD_ENDPOINT_SELECTED', fluidd_port=fluidd_port,
                               fluidd_root=str(root), source=selection)))
-        archive = PACKAGE / 'M300_FLUIDD_1_37_7_R16_12.zip'
+        archive = PACKAGE / 'M300_FLUIDD.zip'
         build_id = hashlib.sha256(archive.read_bytes()).hexdigest()
         with tempfile.TemporaryDirectory(prefix='m300-fluidd-') as temp:
             with ZipFile(archive) as bundle:
@@ -341,7 +341,7 @@ def main():
             run('sudo', 'systemctl', 'restart', 'moonraker.service')
             wait_ready()
         receipt = save_install_state(config_dir, root, fluidd_port)
-        print(json.dumps({'status': 'INSTALLED_M300_R16_12_FULL', 'fluidd_root': str(root),
+        print(json.dumps({'status': 'INSTALLED_M300_HOST', 'fluidd_root': str(root),
                           'fluidd_port': fluidd_port, 'selection': selection,
                           'install_state': str(receipt),
                           'fluidd_backup': str(backup) if backup else None, 'mcu_flashed': False}))

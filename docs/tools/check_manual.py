@@ -10,14 +10,14 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-beta.24'
+CURRENT_RELEASE = 'v1.0.0-rc.1'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
             'TECHNICAL_REFERENCE.md', 'PRINT_LIMITS_AND_PLANNER.md',
             'MACRO_REFERENCE.md', 'DOCUMENTATION_CHECK.md',
             'OLED_FUNCTIONS.md', 'UPDATE_2026-11-10.md', 'PRINT_CONTROL.md',
-            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md')
+            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md', 'RC1_UI.md', 'CODE_REVIEW_RC1.md')
 
 
 def sha(path):
@@ -26,7 +26,7 @@ def sha(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=ROOT/'.ci/reports/DOCUMENTATION_BETA24_VALIDATION.json')
+    parser.add_argument('--output', type=Path, default=ROOT/'.ci/reports/DOCUMENTATION_RC1_VALIDATION.json')
     args = parser.parse_args()
     errors = []
     checks = []
@@ -81,7 +81,7 @@ def main():
     for p in (ROOT/'host/config').glob('*.cfg'):
         names.update(re.findall(r'^\[gcode_macro ([^\]]+)\]',p.read_text(),re.M))
     documented = set(re.findall(r'\[`([A-Z0-9_]+)`\]\(../../host/config/',(ROOT/'docs/pl/MACRO_REFERENCE.md').read_text()))
-    check(names == documented and len(names) == 39, 'all-39-config-macros-covered')
+    check(names == documented and len(names) == 41, 'all-41-config-macros-covered')
     catalog = json.loads((ROOT/'docs/reports/MACRO_MANIFEST.json').read_text())
     check({m['name'] for m in catalog['macros']} == names, 'macro-manifest-matches-source')
     cfg = configparser.ConfigParser(interpolation=None)
@@ -124,15 +124,15 @@ def main():
         p = ROOT/path
         check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)
     port = json.loads((ROOT/'PORT.json').read_text())
-    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-beta24')
+    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-rc1')
     check(port['mcu_release'] == '0.13.14.19-TONED-OLED-UART8', 'current-MCU-release')
     check(port['oled_zoom_revision'] == 'OLED-ZOOM-2', 'current-zoom-revision')
     check(port['tune_frontend_revision'] == 'TUNE-PREPARE-1', 'current-Tune-revision')
     for lang in ('pl','en'):
         install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-beta24:'+lang)
+        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-rc1:'+lang)
         supplement = (ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md')).read_text()
-        check('0.13.14.19-TONED-OLED-UART8' in supplement and 'M300_R14_19_SD.zip' in supplement,
+        check('0.13.14.19-TONED-OLED-UART8' in supplement and 'M300_SD.zip' in supplement,
               'current-MCU-update-instructions:'+lang)
         check('beta.20' in supplement, 'historical-illustration-baseline-disclosed:'+lang)
     for name in ('README.md','README_PL.md'):
