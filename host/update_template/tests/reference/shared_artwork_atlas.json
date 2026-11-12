@@ -1,0 +1,1128 @@
+{
+  "model": "M300_CLASSIC",
+  "status": "ADAPTED_SOURCE_CATALOG_NOT_OEM_PARITY",
+  "stock_structures": [
+    {
+      "ram_address": "0x20000628",
+      "source_en": "Main menu",
+      "translations": {
+        "en": "Main menu",
+        "pl": "Menu główne",
+        "fr": "Menu principal",
+        "de": "Hauptmenü",
+        "es": "Menú principal"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "main",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000648",
+      "source_en": "Models",
+      "translations": {
+        "en": "Models",
+        "pl": "Modele",
+        "fr": "Modèles",
+        "de": "Modelle",
+        "es": "Modelos"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "models",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_models_build_directory_view",
+      "source_parent": "0x20000628",
+      "source_flags": "0x9"
+    },
+    {
+      "ram_address": "0x20000680",
+      "source_en": "Maintenance",
+      "translations": {
+        "en": "Maintenance",
+        "pl": "Konserwacja",
+        "fr": "Maintenance",
+        "de": "Wartung",
+        "es": "Mantenimiento"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000628",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200006a0",
+      "source_en": "Autocalibration",
+      "translations": {
+        "en": "Autocalibration",
+        "pl": "Autopoziomowanie",
+        "fr": "Calibration hauteur platforme.",
+        "de": "Automatisches Nivellieren",
+        "es": "Autonivelación"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_autocalibration",
+      "source_parent": "0x20000680",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200006c0",
+      "source_en": "Heat the extruder",
+      "translations": {
+        "en": "Heat the extruder",
+        "pl": "Nagrzej extruder",
+        "fr": "Chauffez l’extrudeur",
+        "de": "Extruder vorheizen",
+        "es": "Calentar extrusora"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_heat_hotend",
+      "source_parent": "0x20000680",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200006e0",
+      "source_en": "Heat the platform",
+      "translations": {
+        "en": "Heat the platform",
+        "pl": "Nagrzej platformę",
+        "fr": "Préchauffez le plateau",
+        "de": "Plattform vorheizen",
+        "es": "Caliente la plataforma"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_heat_bed",
+      "source_parent": "0x20000680",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000700",
+      "source_en": "Move the platform up",
+      "translations": {
+        "en": "Move the platform up",
+        "pl": "Podnieś platformę",
+        "fr": "Monter le plateau",
+        "de": "Plattform heben",
+        "es": "Elevar plataforma"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000680",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000720",
+      "source_en": "Move the platform down",
+      "translations": {
+        "en": "Move the platform down",
+        "pl": "Opuść platformę",
+        "fr": "Descendre le plateau",
+        "de": "Plattform senken",
+        "es": "Bajar plataforma"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000680",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000748",
+      "source_en": "Fan test",
+      "translations": {
+        "en": "Fan test",
+        "pl": "Test wentylatorów",
+        "fr": "Test de ventilateur",
+        "de": "Lüftertest",
+        "es": "Test de ventilador"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "maintenance",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_fan_test_enter",
+      "source_parent": "0x20000680",
+      "source_flags": "0x19"
+    },
+    {
+      "ram_address": "0x20000768",
+      "source_en": "Toggle upper fan",
+      "translations": {
+        "en": "Toggle upper fan",
+        "pl": "Przełącz górny wentylator",
+        "fr": "Actionner ventilateur du haut",
+        "de": "Oberventilator umschalten",
+        "es": "Ventilador arriba conmutar"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_fan_test_toggle_1",
+      "source_parent": "0x20000748",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000788",
+      "source_en": "Toggle lower fan",
+      "translations": {
+        "en": "Toggle lower fan",
+        "pl": "Przełącz dolny wentylator",
+        "fr": "Actionner ventilateur du bas",
+        "de": "Unterventilator umschalten",
+        "es": "Ventilador abajo conmutar"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_fan_test_toggle_0",
+      "source_parent": "0x20000748",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200007b0",
+      "source_en": "Material",
+      "translations": {
+        "en": "Material",
+        "pl": "Materiał",
+        "fr": "Matériau",
+        "de": "Material",
+        "es": "Material"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "material",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000628",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200007d0",
+      "source_en": "Unload the material",
+      "translations": {
+        "en": "Unload the material",
+        "pl": "Wysuń materiał",
+        "fr": "Extraire le filament",
+        "de": "Material ausfahren",
+        "es": "Retirar material"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "material",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_filament_unload",
+      "source_parent": "0x200007b0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200007f0",
+      "source_en": "Load the material",
+      "translations": {
+        "en": "Load the material",
+        "pl": "Załaduj materiał",
+        "fr": "Charger le filament",
+        "de": "Material laden",
+        "es": "Cargar material"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "material",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_filament_load",
+      "source_parent": "0x200007b0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000828",
+      "source_en": "Settings",
+      "translations": {
+        "en": "Settings",
+        "pl": "Ustawienia",
+        "fr": "Réglages",
+        "de": "Einstellungen",
+        "es": "Ajustes"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000628",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x2000085c",
+      "source_en": "Light",
+      "translations": {
+        "en": "Light",
+        "pl": "Oświetlenie",
+        "fr": "Éclairage",
+        "de": "Beleuchtung",
+        "es": "Iluminación"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x2000087c",
+      "source_en": "Dynamic lights",
+      "translations": {
+        "en": "Dynamic lights",
+        "pl": "Oświetlenie dynamiczne",
+        "fr": "Éclairage dynamique",
+        "de": "Dynamische Beleuchtung",
+        "es": "Iluminación dinámica"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_lights_dynamic",
+      "source_parent": "0x2000085c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x2000089c",
+      "source_en": "White light",
+      "translations": {
+        "en": "White light",
+        "pl": "Światło białe",
+        "fr": "Eclairage blanc",
+        "de": "Weißes Licht",
+        "es": "Luz blanca"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_lights_white",
+      "source_parent": "0x2000085c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200008bc",
+      "source_en": "Disable lights",
+      "translations": {
+        "en": "Disable lights",
+        "pl": "Wyłącz oświetlenie",
+        "fr": "Pas d'éclairage",
+        "de": "Beleuchtung ausschalten",
+        "es": "Apagar iluminación"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_lights_disable",
+      "source_parent": "0x2000085c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200008dc",
+      "source_en": "Turn lights on (sleep mode)",
+      "translations": {
+        "en": "Turn lights on (sleep mode)",
+        "pl": "Włącz światło (tryb uśpienia)",
+        "fr": "Allumez la lumière (mode veille)",
+        "de": "Machen Sie das Licht auf (Ruhemodus)",
+        "es": "Conecte la luz (modo standby)"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_sleep_lights_on",
+      "source_parent": "0x2000085c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200008fc",
+      "source_en": "Turn lights off (sleep mode)",
+      "translations": {
+        "en": "Turn lights off (sleep mode)",
+        "pl": "Wyłącz światło (tryb uśpienia)",
+        "fr": "Éteignez la lumière (mode veille)",
+        "de": "Schalten Sie das Licht (Ruhemodus)",
+        "es": "Apagar la luz (modo standby)"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_sleep_lights_off",
+      "source_parent": "0x2000085c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000924",
+      "source_en": "Buzzer",
+      "translations": {
+        "en": "Buzzer",
+        "pl": "Dźwięk",
+        "fr": "Son",
+        "de": "Ton",
+        "es": "Sonido"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000944",
+      "source_en": "Enable buzzer",
+      "translations": {
+        "en": "Enable buzzer",
+        "pl": "Włącz dźwięk",
+        "fr": "Activer le son",
+        "de": "Ton einschalten",
+        "es": "Activar sonido"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_buzzer_enable",
+      "source_parent": "0x20000924",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000964",
+      "source_en": "Disable buzzer",
+      "translations": {
+        "en": "Disable buzzer",
+        "pl": "Wyłącz dźwięk",
+        "fr": "Desactiver le son",
+        "de": "Ton ausschalten",
+        "es": "Desactivar sonido"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_buzzer_disable",
+      "source_parent": "0x20000924",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x2000098c",
+      "source_en": "Sleep Mode",
+      "translations": {
+        "en": "Sleep Mode",
+        "pl": "Tryb uśpienia",
+        "fr": "Mode veille",
+        "de": "Ruhemodus",
+        "es": "Modo standby"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200009ac",
+      "source_en": "Enable Sleep Mode",
+      "translations": {
+        "en": "Enable Sleep Mode",
+        "pl": "Włącz tryb uśpienia",
+        "fr": "Activer le mode veille",
+        "de": "Ruhemodus einschalten",
+        "es": "Activar modo standby"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_sleep_enable",
+      "source_parent": "0x2000098c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x200009cc",
+      "source_en": "Disable Sleep Mode",
+      "translations": {
+        "en": "Disable Sleep Mode",
+        "pl": "Wyłącz tryb uśpienia",
+        "fr": "Désactiver le mode veille",
+        "de": "Ruhemodus ausschalten",
+        "es": "Desactivar modo standby"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_sleep_disable",
+      "source_parent": "0x2000098c",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000a00",
+      "source_en": "Language",
+      "translations": {
+        "en": "Language",
+        "pl": "Język",
+        "fr": "Langue",
+        "de": "Sprache",
+        "es": "Idioma"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000a20",
+      "source_en": "English",
+      "translations": {
+        "en": "English",
+        "pl": "English",
+        "fr": "English",
+        "de": "English",
+        "es": "English"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_language_english",
+      "source_parent": "0x20000a00",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000a40",
+      "source_en": "Polski",
+      "translations": {
+        "en": "Polski",
+        "pl": "Polski",
+        "fr": "Polski",
+        "de": "Polski",
+        "es": "Polski"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_language_polish",
+      "source_parent": "0x20000a00",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000a60",
+      "source_en": "Français",
+      "translations": {
+        "en": "Français",
+        "pl": "Français",
+        "fr": "Français",
+        "de": "Français",
+        "es": "Français"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_language_french",
+      "source_parent": "0x20000a00",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000a80",
+      "source_en": "Español",
+      "translations": {
+        "en": "Español",
+        "pl": "Español",
+        "fr": "Español",
+        "de": "Español",
+        "es": "Español"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_language_spanish",
+      "source_parent": "0x20000a00",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000aa0",
+      "source_en": "Deutsch",
+      "translations": {
+        "en": "Deutsch",
+        "pl": "Deutsch",
+        "fr": "Deutsch",
+        "de": "Deutsch",
+        "es": "Deutsch"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_language_german",
+      "source_parent": "0x20000a00",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000ad0",
+      "source_en": "Models sorting",
+      "translations": {
+        "en": "Models sorting",
+        "pl": "Sortowanie modeli",
+        "fr": "Triage de modèles",
+        "de": "Sortieren von Modellen",
+        "es": "Clasificación de los modelos"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000af0",
+      "source_en": "Date/time",
+      "translations": {
+        "en": "Date/time",
+        "pl": "Data/czas",
+        "fr": "Date/temps",
+        "de": "Datum/Zeit",
+        "es": "Fecha/tiempo"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_sort_option_0",
+      "source_parent": "0x20000ad0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000b10",
+      "source_en": "File name",
+      "translations": {
+        "en": "File name",
+        "pl": "Nazwa pliku",
+        "fr": "Nom de fichier",
+        "de": "Dateiname",
+        "es": "Nombre del archivo"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_sort_option_1",
+      "source_parent": "0x20000ad0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000b30",
+      "source_en": "File name (case sensitive)",
+      "translations": {
+        "en": "File name (case sensitive)",
+        "pl": "Nazwa pliku (uwzględniaj wielkośc liter)",
+        "fr": "Nom de fichier (respecter la casse)",
+        "de": "Dateiname (Buchstabengröße zu berücksichtigen)",
+        "es": "Nombre del archivo (con el tamaño de los tipos)"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_sort_option_2",
+      "source_parent": "0x20000ad0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000b50",
+      "source_en": "File size",
+      "translations": {
+        "en": "File size",
+        "pl": "Rozmiar pliku",
+        "fr": "Taille de fichier",
+        "de": "Dateigröße",
+        "es": "Tamaño del archivo"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_sort_option_3",
+      "source_parent": "0x20000ad0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000b78",
+      "source_en": "(Enabled)",
+      "translations": {
+        "en": "(Enabled)",
+        "pl": "(Włączony)",
+        "fr": "(Activé)",
+        "de": "(Eingeschaltet)",
+        "es": "(Habilitado)"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_full_bed_preheat_enable",
+      "source_parent": "0x20000bb8",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000b98",
+      "source_en": "(Disabled)",
+      "translations": {
+        "en": "(Disabled)",
+        "pl": "(Wyłączony)",
+        "fr": "(Désactivé)",
+        "de": "(Ausgeschaltet)",
+        "es": "(Discapaz)"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_full_bed_preheat_disable",
+      "source_parent": "0x20000bb8",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000bb8",
+      "source_en": "Full platform preheating",
+      "translations": {
+        "en": "Full platform preheating",
+        "pl": "Pelne rozgrzanie platformy",
+        "fr": "Préchauffage Intégral de la Plateforme",
+        "de": "Plattform vollständig vorheizen",
+        "es": "Precalentamiento de plataforma completa"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "settings",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000828",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000be4",
+      "source_en": "Information",
+      "translations": {
+        "en": "Information",
+        "pl": "Informacje",
+        "fr": "Informations",
+        "de": "Informationen",
+        "es": "Información"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "information",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000628",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000c04",
+      "source_en": "Firmware version",
+      "translations": {
+        "en": "Firmware version",
+        "pl": "Wersja firmware",
+        "fr": "Version du firmware",
+        "de": "Firmware-Version",
+        "es": "Versión de firmaware"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "information",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_firmware_version_screen",
+      "source_parent": "0x20000be4",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000c24",
+      "source_en": "Printer information",
+      "translations": {
+        "en": "Printer information",
+        "pl": "Informacje o drukarce",
+        "fr": "Informations imprimante",
+        "de": "Druckerinformationen",
+        "es": "Información sobre impresora"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "information",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_printer_information_screen",
+      "source_parent": "0x20000be4",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000c44",
+      "source_en": "Help",
+      "translations": {
+        "en": "Help",
+        "pl": "Pomoc",
+        "fr": "Aide",
+        "de": "Hilfe",
+        "es": "Ayuda"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "help",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_help_screen",
+      "source_parent": "0x20000be4",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000c78",
+      "source_en": "--- UNUSED ---",
+      "translations": {
+        "en": "--- UNUSED ---",
+        "pl": "--- UNUSED ---",
+        "fr": "---UNUSED---",
+        "de": "---UNUSED---",
+        "es": "---UNUSED---"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000c98",
+      "source_en": "WARNING: Hot printhead",
+      "translations": {
+        "en": "WARNING: Hot printhead",
+        "pl": "UWAGA: Gorąca głowica",
+        "fr": "AVERTISSEMENT: Extrudeur\nchaud",
+        "de": "WARNUNG: Heißer Kopf",
+        "es": "ADVERTENCIA: Cabezal caliente"
+      },
+      "historical_parity": "NOT_REPRODUCED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000c78",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000cb8",
+      "source_en": "[null / spacer]",
+      "translations": {
+        "en": "[null / spacer]",
+        "pl": "[pusta pozycja / separator]",
+        "fr": "[null / spacer]",
+        "de": "[null / spacer]",
+        "es": "[null / spacer]"
+      },
+      "historical_parity": "UNUSED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000c78",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000cd8",
+      "source_en": "Resume the print",
+      "translations": {
+        "en": "Resume the print",
+        "pl": "Kontynuuj druk",
+        "fr": "Continuer l’impression",
+        "de": "Druckvorgang fortsetzen",
+        "es": "Continuar impresión"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "main",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_pause_resume_accept",
+      "source_parent": "0x20000c78",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000cf8",
+      "source_en": "Change the material",
+      "translations": {
+        "en": "Change the material",
+        "pl": "Zmień materiał",
+        "fr": "Changer le matériau",
+        "de": "Material ändern",
+        "es": "Cambiar de material"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "material",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_filament_change_during_pause",
+      "source_parent": "0x20000c78",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000d2c",
+      "source_en": "Stop the print",
+      "translations": {
+        "en": "Stop the print",
+        "pl": "Zatrzymaj druk",
+        "fr": "Arrêter l’impression",
+        "de": "Druckvorgang stoppen",
+        "es": "Parar impresión"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "main",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000d4c",
+      "source_en": "Are you sure you want to cancel\nthe print?",
+      "translations": {
+        "en": "Are you sure you want to cancel\nthe print?",
+        "pl": "Czy na pewno chcesz przerwać\ndruk?",
+        "fr": "Vous-êtes sûr d’arrêter\nl’impression?",
+        "de": "Möchten Sie den Druckvorgang\nstoppen?",
+        "es": "¿Está seguro de que quiere parar\nla impresión?"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000d6c",
+      "source_en": "No",
+      "translations": {
+        "en": "No",
+        "pl": "Nie",
+        "fr": "Non",
+        "de": "Nein",
+        "es": "No"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_stop_cancel_return_to_pause",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000d8c",
+      "source_en": "Yes",
+      "translations": {
+        "en": "Yes",
+        "pl": "Tak",
+        "fr": "Oui",
+        "de": "Ja",
+        "es": "Sí"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_pause_stop_accept",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000db0",
+      "source_en": "",
+      "translations": {
+        "en": "",
+        "pl": "",
+        "fr": "",
+        "de": "",
+        "es": ""
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x20000648",
+      "source_flags": "0x11"
+    },
+    {
+      "ram_address": "0x20000dd0",
+      "source_en": "Print:",
+      "translations": {
+        "en": "Print:",
+        "pl": "Drukuj:",
+        "fr": "Imprimer:",
+        "de": "Drucken:",
+        "es": "Imprimir:"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": "models",
+      "action_policy": "NAVIGATION_ONLY",
+      "source_callback": "menu_start_print_and_repeat",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000e00",
+      "source_en": "Cancel",
+      "translations": {
+        "en": "Cancel",
+        "pl": "Anuluj",
+        "fr": "Annuler",
+        "de": "Abbrechen",
+        "es": "Anular"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000e20",
+      "source_en": "Do you want to cancel?",
+      "translations": {
+        "en": "Do you want to cancel?",
+        "pl": "Czy chcesz przerwać?",
+        "fr": "Voulez-vous interrompre ?",
+        "de": "Abbrechen?",
+        "es": "¿Está seguro de que quiere\ninterrumpir?"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000e40",
+      "source_en": "[null / spacer]",
+      "translations": {
+        "en": "[null / spacer]",
+        "pl": "[pusta pozycja / separator]",
+        "fr": "[null / spacer]",
+        "de": "[null / spacer]",
+        "es": "[null / spacer]"
+      },
+      "historical_parity": "UNUSED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000e60",
+      "source_en": "No",
+      "translations": {
+        "en": "No",
+        "pl": "Nie",
+        "fr": "Non",
+        "de": "Nein",
+        "es": "No"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "cancel_answer_no_continue",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000e80",
+      "source_en": "Yes",
+      "translations": {
+        "en": "Yes",
+        "pl": "Tak",
+        "fr": "Oui",
+        "de": "Ja",
+        "es": "Sí"
+      },
+      "historical_parity": "ADAPTED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "cancel_answer_yes_abort",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000eb0",
+      "source_en": "",
+      "translations": {
+        "en": "",
+        "pl": "",
+        "fr": "",
+        "de": "",
+        "es": ""
+      },
+      "historical_parity": "UNUSED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000ed0",
+      "source_en": "",
+      "translations": {
+        "en": "",
+        "pl": "",
+        "fr": "",
+        "de": "",
+        "es": ""
+      },
+      "historical_parity": "UNUSED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000ef0",
+      "source_en": "",
+      "translations": {
+        "en": "",
+        "pl": "",
+        "fr": "",
+        "de": "",
+        "es": ""
+      },
+      "historical_parity": "UNUSED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": null,
+      "source_parent": "0x0",
+      "source_flags": "0x4"
+    },
+    {
+      "ram_address": "0x20000f10",
+      "source_en": "Yes",
+      "translations": {
+        "en": "Yes",
+        "pl": "Tak",
+        "fr": "Oui",
+        "de": "Ja",
+        "es": "Sí"
+      },
+      "historical_parity": "NOT_REPRODUCED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_dialog_answer_yes",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    },
+    {
+      "ram_address": "0x20000f30",
+      "source_en": "No",
+      "translations": {
+        "en": "No",
+        "pl": "Nie",
+        "fr": "Non",
+        "de": "Nein",
+        "es": "No"
+      },
+      "historical_parity": "NOT_REPRODUCED",
+      "safe_navigation_page": null,
+      "action_policy": "INFORMATION_ONLY",
+      "source_callback": "menu_dialog_answer_no",
+      "source_parent": "0x0",
+      "source_flags": "0x1"
+    }
+  ]
+}

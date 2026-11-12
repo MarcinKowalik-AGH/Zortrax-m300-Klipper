@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.0'
+EXPECTED = '1.0.1'
 
 
 def require(condition, message):
@@ -42,7 +42,7 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
     binary = None
     if binary_path is not None:
         binary = Path(binary_path).read_bytes()
-        require(b'1.0.0\0' in binary, 'Compiled MCU image lacks numeric release')
+        require(b'1.0.1\0' in binary, 'Compiled MCU image lacks numeric release')
         require(b'TONED-OLED-UART8' not in binary,
                 'Old development suffix remains in actual MCU image')
     info = None

@@ -1,0 +1,18 @@
+{
+  "status": "PASS_UNIFIED_OLED_ARTWORK",
+  "style": "OEM_NATIVE_TONES_V1",
+  "activity_symbols": 24,
+  "activity_frames": 96,
+  "oem_descriptors": 37,
+  "oem_frames": 61,
+  "real_c_rendered_frames": 124,
+  "real_c_compared_icon_pixels": 310000,
+  "host_png_roundtrips": 96,
+  "autonomous_png_roundtrips": 124,
+  "original_oem_file_unchanged": true,
+  "native_silhouettes_unchanged": true,
+  "outside_halo_pixels": 0,
+  "legacy_sharp_option_has_no_pixel_effect": true,
+  "mcu_subset_matches_host": true,
+  "physical_printer_tested": false
+}

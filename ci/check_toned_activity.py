@@ -61,14 +61,9 @@ def main():
             x,y=levels(old),levels(raw)
             assert {0,15}<=set(y) and any(0<v<15 for v in y)
             assert {v for v in y} <= set(range(16))
-            # Never erase/dim the original high-contrast signal.
-            assert all(v==15 for u,v in zip(x,y) if u==15)
-            for i,(u,v) in enumerate(zip(x,y)):
-                if not u and v:
-                    assert v<=6
-                    px,py=i%50,i//50
-                    assert any(x[qy*50+qx] for qy in range(max(0,py-1),min(50,py+2))
-                               for qx in range(max(0,px-1),min(50,px+2)))
+            # Native-grid bevel: never add glow outside the approved silhouette.
+            assert all(bool(u) == bool(v) for u,v in zip(x,y))
+            assert set(y) <= {0,4,8,11,14,15}
             all_frames.append(dict(symbol=name,frame=index,levels=sorted(set(y)),
                                    before=packets(old,transport),after=packets(raw,transport)))
         assert len(set(frame_hashes))==4
@@ -83,7 +78,7 @@ def main():
     assert rom<=16000,rom
     assert 'static uint8_t local_row[128];' in (mcu/'m300_oled_local.inc').read_text()
     report=dict(status='PASS_OLED_TONES',symbols=24,frames=len(all_frames),
-                native_icon_bytes=1250,frame_ms=500,original_bright_pixels_preserved=True,
+                native_icon_bytes=1250,frame_ms=500,native_silhouettes_preserved=True, outside_halo_pixels=0,
                 rle_lossless_all_frames=True,mcu_icon_rom_bytes=rom,
                 mcu_scanline_sram_bytes=128,physical_hardware_tested=False,results=all_frames)
     args.output.parent.mkdir(parents=True,exist_ok=True)

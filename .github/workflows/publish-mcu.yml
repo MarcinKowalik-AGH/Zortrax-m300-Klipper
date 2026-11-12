@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: m300-mcu-v1.0.0
+  group: m300-mcu-release
   cancel-in-progress: false
 
 jobs:

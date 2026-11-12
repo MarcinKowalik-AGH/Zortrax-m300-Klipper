@@ -11,7 +11,7 @@ import os
 from collections import deque
 
 from .m300_ui_m11_state import MenuHistory, LANGS, atlas_summary, require_rows, clean_label
-from .m300_oem_graphics import HOMING_HOURGLASS, OEMGraphics, choose_icon
+from .m300_oem_graphics import HOMING_HOURGLASS, OEMGraphics, choose_icon, ICON_STYLE
 from .m300_ui_labels import english_label
 from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
@@ -38,8 +38,9 @@ class M300MenuUI:
         self.scroll_interval = config.getfloat('scroll_interval', .20,minval=.10,maxval=2.)
         self.row_pixels = config.getint('row_pixels', 216,minval=60,maxval=228)
         self.oem_graphics_enabled = config.getboolean('oem_graphics', True)
-        self.sharp_icons = config.getboolean('sharp_icons', True)
-        self.oem_sprites = (OEMGraphics(sharp=self.sharp_icons)
+        # Consume legacy configuration; artwork no longer has divergent modes.
+        self.legacy_sharp_icons = config.getboolean('sharp_icons', False)
+        self.oem_sprites = (OEMGraphics()
                             if self.oem_graphics_enabled else None)
         self.last_sprite = None
         self._leveling_frames = deque(maxlen=16)
@@ -395,8 +396,8 @@ class M300MenuUI:
                 'menu_reverse':self.oled.menu_reverse,
                 'procedure_view':'m300_procedures',
                 'oem_graphics_enabled':self.oem_graphics_enabled,
-                'icon_style':('SHARP-HOST-1' if getattr(self.oem_sprites, 'sharp', False)
-                              else 'SOURCE-TONES'),
+                'icon_style':ICON_STYLE,
+                'legacy_sharp_icons_ignored':self.legacy_sharp_icons,
                 'oem_sprite_count':len(self.oem_sprites.frames) if self.oem_sprites else 0,
                 'oem_frame_cache':len(self.oem_sprites.cache) if self.oem_sprites else 0,
                 'oem_descriptor':self.last_sprite}
