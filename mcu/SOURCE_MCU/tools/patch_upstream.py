@@ -16,7 +16,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-1.0.0"
+VERSION = "M300_CLASSIC-1.0.1"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "scripts/buildcommands.py": "b67abb120a4d283af722dd1fc28c1317836510cc426cda4d917ad2548c645b44",
@@ -418,7 +418,7 @@ ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
     anchor = "    return version + extra\n"
     f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
     if fixed:
-        if fixed != "1.0.0":
+        if fixed != "1.0.1":
             error("Unsupported M300 firmware version")
         return fixed
     return version + extra

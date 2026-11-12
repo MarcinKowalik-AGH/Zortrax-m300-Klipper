@@ -8,7 +8,7 @@
     "host/klippy/extras/m300_settings_ui.py": "926f3ba2a1d3600548aab7b77b8d72b927d4a37c5418e088cee0c1995c10841f",
     "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
     "host/klippy/extras/m300_oled_preview.py": "8bde30a5f94f8aabef8eee8ff7e89ed6ca2285131dccf59327360ff6a9781de7",
-    "host/klippy/extras/m300_oem_graphics.py": "5a57d7148c5aba1e936fd13e09454a954ef40e9362152bd2b49c3b229e22591e",
+    "host/klippy/extras/m300_oem_graphics.py": "a86e6483e2f96e82f91183f3a1f4e8e6a14bd7438466b9c831f5cebe074e45d1",
     "host/klippy/extras/m300_activity_graphics.py": "66fd8d138f8f6154640c2c6f2e49cd2c71f067370842abd12c1e15deaf447f5b",
     "host/klippy/extras/m300_leveling_oem.py": "b540bffda306139926cd88cc209217943d1b2abe68b5679315daefa5e910d423",
     "host/klippy/extras/m300_print_ui.py": "973063079c476c0186c233a60125b767cf4e305bfc21da73f4175d1a749c8cc0",
@@ -34,5 +34,10 @@
   "note_beta24": "Retain beta.20 illustration hashes; current source hashes include pre-existing M300305/105 changes and qualified clearance update, not a new visual/hardware claim.",
   "current_reference_release": "v1.0.0-rc.2",
   "note_rc1": "Current controls audited; historical beta.20 rendered images remain separately labeled.",
-  "note_rc2": "Exact legacy XY recognition added to installer; current runtime and historical images otherwise unchanged."
+  "note_rc2": "Exact legacy XY recognition added to installer; current runtime and historical images otherwise unchanged.",
+  "current_artwork_review": {
+    "base_commit": "c5935fb8e9dff24ea7fc474ed3369d12171216a0",
+    "style": "OEM_NATIVE_TONES_V1",
+    "physical_printer_tested": false
+  }
 }

@@ -1,17 +1,17 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.2
+# Zortrax M300 Classic — Klipper 1.0.0-rc.3
 
-**Second release candidate for the classic M300**, using its original controller,
+**Third release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.2) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.3) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
 Native Klipper motion and print control; original temperature conversions;
 contact Z homing and platform autocalibration; saved pad-mesh compensation;
 material loading/unloading/change; protected cooling and OEM error reporting;
-OLED menu with original artwork and sharp host icons; low-latency Fluidd OLED
+OLED menu with original artwork and unified shaded icons; low-latency Fluidd OLED
 preview with integer square pixels and ×1/×2/×3 controls. Print START loads the
 selected mesh after homing and primes with two Y and two X lines.
 
@@ -20,7 +20,7 @@ entries have direct macros, including OLED and LED brightness. Lab shortcuts
 are removed from the normal UI; OEM fan service, PID and read-only diagnostics
 remain. [Macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Print control](docs/pl/PRINT_CONTROL.md).
 
-**RC2:** remove the exact legacy `TEST_ZORTRAX_XY` variant reported on 12 November without deleting custom macro bodies. [RC2 notes and update policy](docs/en/RELEASE_v1.0.0-rc.2.md).
+**RC3:** one native shaded raster for 24 added icons across host, MCU and Fluidd. No blur, halo or threshold. Original OEM frames retain their original grayscale. [Artwork and verification](docs/en/RELEASE_v1.0.0-rc.3.md).
 
 ## Existing Orange Pi installation
 
@@ -35,8 +35,7 @@ The installer validates/persists the existing Fluidd endpoint, preserves operato
 configuration, mesh, PID and qualified Z settings, and refuses unknown runtime
 edits. Do not bypass checksums or force-reset local work. Refresh Fluidd after
 installation. RC1 uses clean package names: M300_HOST, M300_FLUIDD.zip and
-MCU/M300_SD.zip. This host update **does not require reflashing the MCU**. Earlier MCU R14.18/R14.19 remain compatible; the separately built, numeric [MCU 1.0.0](docs/en/MCU_FIRMWARE_1.0.0.md) has a [firmware-only SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.0). Information shows
-a concise number without hiding the full identity from diagnostics.
+MCU/M300_SD.zip. For complete visual consistency, separately flash [MCU 1.0.1](docs/en/MCU_FIRMWARE_1.0.1.md) from the [firmware-only ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.1). The host installer never flashes the MCU. Older applications remain protocol-compatible but retain old autonomous graphics. Information shows concise versions; ABI diagnostics remain available.
 
 ## Qualification and limits
 

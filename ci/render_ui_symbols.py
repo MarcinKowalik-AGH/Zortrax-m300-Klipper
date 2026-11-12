@@ -246,98 +246,28 @@ def mcu_header(images):
 
 
 def raster_exports():
-    import cairosvg
-    from PIL import Image
-    from tone_activity import toned_image
-    bank = dict(format='M300_PROJECT_SYMBOLS_4BPP_V1', width=50, height=50,
-                packing='row-major, left pixel in high nibble', frame_ms=FRAME_MS,
-                foreground=15, background=0, symbols={})
-    images = {}
-    for name, _, _ in SYMBOLS:
-        frames = []
-        for frame in range(FRAME_COUNT):
-            png = cairosvg.svg2png(bytestring=frame_svg(name, frame).encode())
-            # Preserve the approved native binary geometry, then add tonal edges.
-            image = Image.open(io.BytesIO(png)).convert('L').point(lambda p: 255 if p >= 128 else 0)
-            image = toned_image(image)
-            frames.append(image)
-        images[name] = frames
-        data = [packed_4bpp(frame) for frame in frames]
-        bank['symbols'][name] = dict(frames=[b.hex() for b in data],
-                                    sha256=[hashlib.sha256(b).hexdigest() for b in data])
-    (OUT/'native_frames.json').write_text(json.dumps(bank, indent=2)+'\n')
-    runtime = dict(format='M300_ACTIVITY_SPRITES_V1', symbols={})
-    for name, _, _ in SYMBOLS:
-        record = bank['symbols'][name]
-        runtime['symbols'][name] = dict(width=50, height=50, frame_ms=FRAME_MS,
-            frames=[dict(sha256=checksum, zlib_b64=base64.b64encode(
-                zlib.compress(bytes.fromhex(raw), 9)).decode())
-                for raw, checksum in zip(record['frames'], record['sha256'])])
-    HOST_FRAMES.write_text(json.dumps(runtime, indent=2)+'\n')
-    MCU_FRAMES.write_text(mcu_header(images))
-    for prefix, symbols in (('preview', SYMBOLS[:12]), ('preview_additional', SYMBOLS[12:])):
-        sheets = []
-        for frame in range(FRAME_COUNT):
-            # Use the exact native pixel frames at integer 3x scaling.
-            svg = sheet_svg(symbols, frame, 'First 12 symbols' if prefix=='preview' else '12 additional symbols')
-            sheet = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode()))).convert('RGB')
-            for index, (name, _, _) in enumerate(symbols):
-                x, y = 32+(index%4)*272+49, 126+(index//4)*257+16
-                icon = images[name][frame].convert('RGB').resize((150, 150), Image.Resampling.NEAREST)
-                sheet.paste(icon, (x, y))
-            sheets.append(sheet)
-        sheets[0].save(OUT/(prefix+'.png'))
-        sheets[0].save(OUT/(prefix+'.gif'), save_all=True, append_images=sheets[1:],
-                       duration=FRAME_MS, loop=0, disposal=2, optimize=False)
-    # One download contains the individual animations, exact PNG frames and SVGs.
-    with zipfile.ZipFile(OUT/'M300_ACTIVITY_SYMBOLS_24.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
-        def put(name, data):
-            entry = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
-            entry.compress_type = zipfile.ZIP_DEFLATED
-            entry.external_attr = 0o644 << 16
-            archive.writestr(entry, data)
-        for name, _, _ in SYMBOLS:
-            put('svg/'+name+'.svg', (OUT/(name+'.svg')).read_bytes())
-            frames = images[name]
-            gif = io.BytesIO()
-            frames[0].save(gif, format='GIF', save_all=True, append_images=frames[1:],
-                           duration=FRAME_MS, loop=0, disposal=2, optimize=False)
-            put('gif/'+name+'.gif', gif.getvalue())
-            for index, image in enumerate(frames):
-                png = io.BytesIO()
-                image.save(png, format='PNG')
-                put('frames/%s_%d.png' % (name, index), png.getvalue())
-        for filename in ('catalog.json', 'native_frames.json'):
-            put(filename, (OUT/filename).read_bytes())
-    print('Rendered 96 native frames, 24 GIFs, two animated sheets and MCU wait data')
+    # The native master is authoritative. Do not rasterize/blur the legacy
+    # SVG geometry: it exists only as a silhouette/design reference.
+    from export_activity_artwork import derived, visuals
+    raw, files = derived()
+    files.update(visuals(raw))
+    for path, data in files.items():
+        path.write_bytes(data)
+    print('Exported exact common native master; no resampling')
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--raster', action='store_true')
+    parser.add_argument('--raster', action='store_true', help='Also export review PNG/GIF/SVG files')
     args = parser.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
-    manifest = []
-    for name, title, concept in SYMBOLS:
-        frames = []
-        for index in range(4):
-            values = ';'.join('1' if x == index else '0' for x in (0, 1, 2, 3, 0))
-            frames.append('<g opacity="%d">%s<animate attributeName="opacity" values="%s" keyTimes="0;.25;.5;.75;1" dur="2s" repeatCount="indefinite" calcMode="discrete"/></g>'
-                          % (int(index == 0), drawing(name, index), values))
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50" height="50" color="white"><title>%s — project symbol</title><rect width="50" height="50" fill="black"/>%s</svg>\n' % (html.escape(title), ''.join(frames))
-        (OUT / (name + '.svg')).write_text(svg)
-        manifest.append(dict(id=name, title=title, concept=concept, width=50, height=50,
-                             frames=FRAME_COUNT, frame_ms=FRAME_MS,
-                             runtime_enabled=True,
-                             runtime_target=('MCU local waiting screen' if name=='waiting_klipper' else
-                                'MCU local screen and reported host disconnection' if name=='connection_lost' else 'Conditional host OLED'),
-                             origin='New project design; not an extracted OEM asset'))
-    (OUT / 'catalog.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    (OUT/'preview.svg').write_text(sheet_svg(SYMBOLS[:12], subtitle='First 12 symbols'))
-    (OUT/'preview_additional.svg').write_text(sheet_svg(SYMBOLS[12:], subtitle='12 additional symbols'))
+    from export_activity_artwork import derived
     if args.raster:
         raster_exports()
-    print('Generated 24 animated project symbols')
+    else:
+        _, files = derived()
+        for path, data in files.items():
+            path.write_bytes(data)
+    print('Exported the shared native master; legacy SVG design geometry is not rasterized')
 
 
 if __name__ == '__main__':
