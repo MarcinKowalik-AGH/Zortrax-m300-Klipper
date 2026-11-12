@@ -35,8 +35,7 @@ The installer validates/persists the existing Fluidd endpoint, preserves operato
 configuration, mesh, PID and qualified Z settings, and refuses unknown runtime
 edits. Do not bypass checksums or force-reset local work. Refresh Fluidd after
 installation. RC1 uses clean package names: M300_HOST, M300_FLUIDD.zip and
-MCU/M300_SD.zip. This host update does **not** require reflashing the MCU; its
-real compatible firmware is still 0.13.14.19-TONED-OLED-UART8. Information shows
+MCU/M300_SD.zip. This host update **does not require reflashing the MCU**. Earlier MCU R14.18/R14.19 remain compatible; the separately built, numeric [MCU 1.0.0](docs/en/MCU_FIRMWARE_1.0.0.md) has a [firmware-only SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.0). Information shows
 a concise number without hiding the full identity from diagnostics.
 
 ## Qualification and limits
