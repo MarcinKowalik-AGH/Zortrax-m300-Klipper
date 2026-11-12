@@ -6,23 +6,91 @@ on:
 permissions:
   contents: read
 jobs:
-  export:
+  prepare:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 89c04d4f1c6a82b19f239b156958451e4d7fc764
-          persist-credentials: false
-      - name: Export exact source and file manifest
-        run: |
-          mkdir -p "$RUNNER_TEMP/rc1-source"
-          git archive --format=tar HEAD | gzip -n > "$RUNNER_TEMP/rc1-source/source.tar.gz"
-          git rev-parse HEAD > "$RUNNER_TEMP/rc1-source/SOURCE_COMMIT"
-          sha256sum "$RUNNER_TEMP/rc1-source/source.tar.gz"
-      - uses: actions/upload-artifact@v4
+          ref: release/rc1-ui-consistency
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
         with:
-          name: M300_RC1_SOURCE_BASE
-          path: ${{ runner.temp }}/rc1-source/
-          retention-days: 7
-          if-no-files-found: error
+          python-version: '3.12'
+      - name: Apply only the reviewed and hash-checked source patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/3bbc9f1ac1778e03310e73aad3804e61454dc22e --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/rc1.zip"
+          echo 'f7fa8b211177fe049b587daaf4a38b10f029ae0c2c9c40d4927dc78bd65fc7f6  '"$RUNNER_TEMP/rc1.zip" | sha256sum -c -
+          python - <<'PY'
+          import os,stat,subprocess,zipfile
+          from pathlib import Path
+          dest=Path(os.environ['RUNNER_TEMP'])/'rc1-patch';dest.mkdir()
+          with zipfile.ZipFile(Path(os.environ['RUNNER_TEMP'])/'rc1.zip') as z:
+              assert len(z.infolist())==61
+              assert sum(x.file_size for x in z.infolist())<1500000
+              for item in z.infolist():
+                  p=Path(item.filename)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert not stat.S_ISLNK(item.external_attr >> 16)
+                  assert item.filename in ('MANIFEST.json','apply_repository.py') or item.filename.startswith('payload/')
+                  target=dest/p;target.parent.mkdir(parents=True,exist_ok=True)
+                  target.write_bytes(z.read(item.filename))
+          subprocess.run(['python',str(dest/'apply_repository.py')],check=True)
+          PY
+      - name: Run host regressions, migration checks, documentation and RC contracts
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'ci')
+          from project import stage_host_update
+          stage_host_update('.ci/rc1-host')
+          PY
+          (cd .ci/rc1-host && python -m unittest discover -s tests)
+          python ci/test_fluidd_selection.py
+          python ci/test_retry_failed_workflow.py
+          python ci/test_install_orange_pi.py
+          python ci/test_acceptance_register.py
+          python ci/test_release23_contracts.py
+          python ci/test_rc1_contracts.py
+          python ci/acceptance_register.py --check
+          python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_RC1_VALIDATION.json
+          git diff --check
+      - name: Publish only non-workflow source changes to the isolated branch
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          report=json.loads(Path('docs/reports/RC1_REVIEW.json').read_text())
+          for path,expected in report['protected_sha256'].items():
+              assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==expected,path
+          assert not subprocess.check_output(['git','diff','--','.github/workflows','mcu'],text=True)
+          for directory in ('host','ci','mcu'):
+              for p in Path(directory).rglob('*.py'):
+                  compile(p.read_bytes(),str(p),'exec')
+          PY
+          git add PORT.json README.md README_PL.md ci docs host frontend tools
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Prepare RC1 unified OLED/settings macros, remove stock lab UI and simplify release packaging'
+          git push origin HEAD:release/rc1-ui-consistency
+      - name: Preserve review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC1_PREPARATION_REPORTS
+          path: |
+            .ci/reports/DOCUMENTATION_RC1_VALIDATION.json
+            docs/reports/RC1_REVIEW.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
