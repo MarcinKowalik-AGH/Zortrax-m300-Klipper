@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.1
+# Zortrax M300 Classic — Klipper 1.0.0-rc.2
 
-**Pierwszy kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**Drugi kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC1](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.1) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.2) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -19,6 +19,8 @@ W RC1 ustawienia OLED i makra Fluidd prowadzą do tych samych funkcji. Dodano
 bezpośrednie skróty jasności OLED i LED. Usunięto laboratoryjne menu Service /
 Tests i zbędne przyciski testowe. Rzeczywisty test wentylatorów OEM, PID i odczyt
 diagnostyki pozostają. [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [Procedury druku](docs/pl/PRINT_CONTROL.md).
+
+**RC2:** instalator rozpoznaje dodatkowy starszy wariant `TEST_ZORTRAX_XY` zgłoszony 12 listopada. Usuwa tylko dokładnie rozpoznaną definicję. [Opis RC2 i aktualizacji systemu](docs/pl/RELEASE_v1.0.0-rc.2.md).
 
 ## Aktualizacja Orange Pi
 

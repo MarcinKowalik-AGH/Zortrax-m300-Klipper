@@ -1,10 +1,10 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.1
+# Zortrax M300 Classic — Klipper 1.0.0-rc.2
 
-**First release candidate for the classic M300**, using its original controller,
+**Second release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC1](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.1) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.2) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -19,6 +19,8 @@ OLED, Fluidd macros and native commands share the same owners. All eight Setting
 entries have direct macros, including OLED and LED brightness. Lab shortcuts
 are removed from the normal UI; OEM fan service, PID and read-only diagnostics
 remain. [Macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Print control](docs/pl/PRINT_CONTROL.md).
+
+**RC2:** remove the exact legacy `TEST_ZORTRAX_XY` variant reported on 12 November without deleting custom macro bodies. [RC2 notes and update policy](docs/en/RELEASE_v1.0.0-rc.2.md).
 
 ## Existing Orange Pi installation
 

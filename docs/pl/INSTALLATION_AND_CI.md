@@ -82,3 +82,7 @@ sieci ani nie wywołują testowych restartów drukarki.
 
 Podstawa API: [ponawianie nieudanych zadań](https://docs.github.com/en/rest/actions/workflow-runs#re-run-failed-jobs-from-a-workflow-run),
 [zasady workflow_run](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run).
+
+## Uzupełnienie RC2: aktualizacje Moonrakera i systemu
+
+[Ocena dokładnego commita Moonrakera i pakietów zgłoszonych 12 listopada](RELEASE_v1.0.0-rc.2.md) rozdziela aktualizację portu M300, Moonrakera i sprzętowej części Armbiana. Nie używaj Update All. Samo `klipper {}` ze skróconego odczytu nie potwierdza aktualności repozytorium.

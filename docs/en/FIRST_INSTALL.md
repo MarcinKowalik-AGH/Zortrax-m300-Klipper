@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.1 — first installation
+# Zortrax M300 Classic v1.0.0-rc.2 — first installation
 
 > **Beta.23 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
 
@@ -93,11 +93,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.1/Zortrax_M300_Klipper_v1.0.0-rc.1.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.1/SHA256SUMS-v1.0.0-rc.1.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.1.zip$' SHA256SUMS-v1.0.0-rc.1.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.1.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.1 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.2/Zortrax_M300_Klipper_v1.0.0-rc.2.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.2/SHA256SUMS-v1.0.0-rc.2.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.2.zip$' SHA256SUMS-v1.0.0-rc.2.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.2.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.2 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -159,7 +159,7 @@ M105
 Expect Ready, matching 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`, print
 controller `0.13.16.29-UNIFIED-NATIVE-START`, zero heater targets and sensible
 ambient temperatures. Confirm the endstops/contact change when operated.
-The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.1/docs/en/HARDWARE_VARIANTS.md)
+The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.2/docs/en/HARDWARE_VARIANTS.md)
 must match the printer. An erased/unknown factory record is an error, not a
 reason to guess a Z scale.
 
@@ -183,7 +183,7 @@ START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_tempe
 END_PRINT
 ```
 
-See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.1/docs/pl/PRINT_CONTROL.md).
+See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.2/docs/pl/PRINT_CONTROL.md).
 
 ## Updates and acceptance scope
 
