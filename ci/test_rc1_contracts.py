@@ -21,6 +21,11 @@ class Rc1Contracts(unittest.TestCase):
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)
         self.assertIn('mcu_release=',source)  # genuine machine identity still returned
+        labels=(ROOT/'host/klippy/extras/m300_ui_labels.py').read_text()
+        self.assertIn("'Etap: P01 LAB': 'Host '+VERSION",labels)
+        self.assertIn("'M10 OLED link': 'OLED link'",labels)
+        self.assertIn("'LAB: hardware still unqualified': 'Hardware acceptance pending'",labels)
+        self.assertNotIn("'Host UI: R7 Fans'",labels)
 
     def test_protected_motion_thermal_mesh_and_pixel_sources_unchanged(self):
         report=json.loads((ROOT/'docs/reports/RC1_REVIEW.json').read_text())
