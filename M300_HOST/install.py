@@ -352,7 +352,7 @@ def main():
         changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True,
                        qualified_first_print_z=args.qualified_first_print_z)
         result = {'status': 'PLAN_M300_HOST' if changes else 'ALREADY_M300_HOST',
-                  'host_update': '1.0.0-rc.2',
+                  'host_update': '1.0.0-rc.3',
                   'target_limits': {'extruder': 305, 'heater_bed': 105},
                   'sensor_shutdown_limits': {'extruder': 310, 'heater_bed': 120},
                   'hardware_validation': 'USER_REPORTED_2026-11-11',
