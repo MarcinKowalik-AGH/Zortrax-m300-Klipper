@@ -1,0 +1,27 @@
+name: Prepare RC2 review
+on:
+  push:
+    branches: [fix/rc2-legacy-xy-update-policy]
+    paths: ['.github/workflows/prepare-rc2.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ef61d295dc69308870a28a01a43f45ba77c16422
+          persist-credentials: false
+      - name: Export reviewed baseline
+        run: |
+          mkdir -p "$RUNNER_TEMP/rc2-source"
+          git archive --format=tar.gz HEAD > "$RUNNER_TEMP/rc2-source/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/rc2-source/SOURCE_COMMIT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC2_SOURCE_BASE
+          path: ${{ runner.temp }}/rc2-source/
+          retention-days: 7
+          if-no-files-found: error
