@@ -16,9 +16,10 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-0.13.14.19-TONED-OLED-UART8"
+VERSION = "M300_CLASSIC-1.0.0"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
+    "scripts/buildcommands.py": "b67abb120a4d283af722dd1fc28c1317836510cc426cda4d917ad2548c645b44",
     "src/sched.c": "61c00658d8bb829f1e0344adf3e47939deea7f972381e8928e228fd168fab94b",
     "src/adccmds.c": "708e25a6ba5dfe93b1556c7bca0c7113676b84cca1a46f31c2d6e669b998a04d",
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",
@@ -410,6 +411,18 @@ ASSERT(_data_flash + SIZEOF(.data) <= 0x0803a000, "M300 image overlaps stock dat
 ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
 #endif
 '''
+    # The ordinary Klipper MCU dictionary uses ?-timestamp-hostname in an
+    # exported source archive. Override only the M300 build, while keeping
+    # the upstream behavior for builds without M300_FIRMWARE_VERSION.
+    key = "scripts/buildcommands.py"
+    anchor = "    return version + extra\n"
+    f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
+    if fixed:
+        if fixed != "1.0.0":
+            error("Unsupported M300 firmware version")
+        return fixed
+    return version + extra
+''', key + ":clean-mcu-version")
     return f
 
 

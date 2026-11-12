@@ -165,9 +165,7 @@ QUERY_PROBE
 M105
 ```
 
-Oczekiwane: Ready, zgodne 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`,
-kontroler druku `0.13.16.29-UNIFIED-NATIVE-START`, cele temperatur 0°C i poprawne
-odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
+Oczekiwane: Ready, zgodne 750000 baud, MCU `1.0.0` po wgraniu osobnego\nwydania firmware (na już działających drukarkach starsze identyfikatory\nR14.18/R14.19 pozostają zgodne), cele temperatur 0°C i poprawne\nodczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
 [Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.2/docs/en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.

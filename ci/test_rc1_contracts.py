@@ -16,7 +16,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(meta['distribution_version'],VERSION)
         self.assertEqual(meta['public_host_version'],VERSION[1:])
         self.assertEqual(meta['menu_revision'],VERSION[1:])
-        self.assertEqual(meta['mcu_release'],'0.13.14.19-TONED-OLED-UART8')
+        self.assertEqual(meta['mcu_release'],'1.0.0')
         self.assertIn('m300_release.py',meta['host_update_files'])
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)

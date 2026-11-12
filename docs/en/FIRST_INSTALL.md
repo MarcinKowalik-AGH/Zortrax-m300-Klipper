@@ -156,9 +156,7 @@ QUERY_PROBE
 M105
 ```
 
-Expect Ready, matching 750000 baud, MCU `0.13.14.18-OEM-ERRORS-UART8`, print
-controller `0.13.16.29-UNIFIED-NATIVE-START`, zero heater targets and sensible
-ambient temperatures. Confirm the endstops/contact change when operated.
+Expect Ready, matching 750000 baud, MCU `1.0.0` when installing the separate\nMCU firmware release (older R14.18/R14.19 identifiers remain valid on existing\nprinters), zero heater targets and sensible ambient temperatures. Confirm the endstops/contact change when operated.
 The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.2/docs/en/HARDWARE_VARIANTS.md)
 must match the printer. An erased/unknown factory record is an error, not a
 reason to guess a Z scale.
