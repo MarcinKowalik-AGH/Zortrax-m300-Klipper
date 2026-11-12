@@ -6,22 +6,120 @@ on:
 permissions:
   contents: read
 jobs:
-  export:
+  prepare:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 12
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c5935fb8e9dff24ea7fc474ed3369d12171216a0
-          persist-credentials: false
-      - name: Export the exact reviewed baseline
-        run: |
-          mkdir -p "$RUNNER_TEMP/export"
-          git rev-parse HEAD > "$RUNNER_TEMP/export/SOURCE_COMMIT"
-          git archive --format=tar.gz HEAD > "$RUNNER_TEMP/export/source.tar.gz"
-      - uses: actions/upload-artifact@v4
+          ref: fix/rc3-unified-oled-artwork
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
         with:
-          name: M300_RC3_SOURCE_BASE
-          path: ${{ runner.temp }}/export/
-          retention-days: 7
-          if-no-files-found: error
+          python-version: '3.12'
+      - name: Apply only the reviewed checksum-pinned patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/492fb0fcbb4802130b0e9d7dd3d6dc798ca5acd0 --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/artwork.zip"
+          echo '34f399b0d11bcdd6e9079ed729fb532c3c8ce8189f219f3c6fd05834ed9954fa  '"$RUNNER_TEMP/artwork.zip" | sha256sum -c -
+          python - <<'PY'
+          import hashlib,json,os,stat,subprocess,zipfile
+          from pathlib import Path
+          base='c5935fb8e9dff24ea7fc474ed3369d12171216a0'
+          changed=subprocess.check_output(['git','diff','--name-only',base],text=True).splitlines()
+          assert changed==['.github/workflows/prepare-rc3-artwork.yml'],changed
+          sha=lambda data:hashlib.sha256(data).hexdigest()
+          with zipfile.ZipFile(Path(os.environ['RUNNER_TEMP'])/'artwork.zip') as z:
+              assert len(z.infolist())==74
+              assert sum(i.file_size for i in z.infolist())<3000000
+              for i in z.infolist():
+                  path=Path(i.filename)
+                  assert not path.is_absolute() and '..' not in path.parts
+                  assert not stat.S_ISLNK(i.external_attr >> 16)
+              manifest=json.loads(z.read('manifest.json'))
+              assert manifest['base_commit']==base and len(manifest['files'])==74
+              seen=set()
+              for item in manifest['files']:
+                  name=item['path'];p=Path(name)
+                  assert name not in seen;seen.add(name)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert name in ('PORT.json','README.md','README_PL.md') or name.startswith(('ci/','docs/','host/','mcu/'))
+                  assert not p.is_symlink()
+                  before=sha(p.read_bytes()) if p.exists() else None
+                  assert before==item['before'],('Changed base',name)
+                  if item['after'] is None:
+                      assert name=='ci/check_sharp_icons.py'
+                      p.unlink()
+                  else:
+                      data=z.read('payload/'+name)
+                      assert sha(data)==item['after'],name
+                      p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+          PY
+      - name: Validate shared pixels, migration and all host regressions
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
+          python ci/design_activity_artwork.py --check
+          python ci/export_activity_artwork.py --check
+          python ci/generate_error_catalog.py --check
+          python ci/check_shared_artwork.py
+          python ci/check_toned_activity.py
+          python ci/check_ui_symbols.py -v
+          python ci/test_install_orange_pi.py
+          python ci/test_rc1_contracts.py
+          python ci/test_release23_contracts.py
+          python ci/acceptance_register.py --check
+          python - <<'PY'
+          import sys,subprocess
+          from pathlib import Path
+          sys.path.insert(0,'ci')
+          from project import stage_host_update
+          host=stage_host_update(Path('.ci/rc3-host-tests').resolve())
+          subprocess.run([sys.executable,'-m','unittest','discover','-s','tests','-v'],cwd=host,check=True)
+          PY
+          python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_RC3_VALIDATION.json
+      - name: Commit verified artwork and reports without workflow writes
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          for root in ('ci','host','mcu'):
+              for p in Path(root).rglob('*.py'):
+                  if '__pycache__' not in p.parts:compile(p.read_text(),str(p),'exec')
+          for name in ('OLED_UNIFIED.json','DOCUMENTATION_RC3_VALIDATION.json'):
+              source=Path('.ci/reports')/name
+              target=Path('docs/reports')/name
+              target.write_bytes(source.read_bytes())
+          manifest=Path('docs/reports/DOCUMENTATION_FILES.json')
+          data=json.loads(manifest.read_text())
+          for name in data['files']:
+              data['files'][name]=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+          for name in ('OLED_UNIFIED.json','DOCUMENTATION_RC3_VALIDATION.json'):
+              path='docs/reports/'+name
+              data['files'][path]=hashlib.sha256(Path(path).read_bytes()).hexdigest()
+          manifest.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add PORT.json README.md README_PL.md ci docs host mcu
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Unify RC3 and MCU 1.0.1 native artwork: one 4bpp master, original OEM tones, exact C/host/PNG parity'
+          git push origin HEAD:fix/rc3-unified-oled-artwork
+      - name: Preserve review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC3_ARTWORK_VERIFICATION
+          path: |
+            .ci/reports/OLED_UNIFIED.json
+            .ci/reports/OLED_TONES.json
+            .ci/reports/DOCUMENTATION_RC3_VALIDATION.json
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 14
