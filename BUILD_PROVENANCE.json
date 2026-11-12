@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "0.13.14.19-TONED-OLED-UART8",
+  "mcu_release": "1.0.0",
   "host_update": "R16.12",
-  "github_commit": "21f54f44188864e8c96cb9791f4459bc9a515280",
-  "github_run_id": "43300854357",
+  "github_commit": "c5935fb8e9dff24ea7fc474ed3369d12171216a0",
+  "github_run_id": "43316302126",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,

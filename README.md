@@ -5,4 +5,4 @@ Run `python3 install-orange-pi.py --port 4480` as the Klipper user while idle an
 RC1 preserves qualified Z, mesh and PID. No MCU flashing is needed when upgrading from beta.24.
 The MCU image is for a separate first-install or verified firmware update only.
 
-Source commit: `21f54f44188864e8c96cb9791f4459bc9a515280`
+Source commit: `c5935fb8e9dff24ea7fc474ed3369d12171216a0`
