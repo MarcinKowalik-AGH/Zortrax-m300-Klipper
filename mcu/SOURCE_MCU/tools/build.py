@@ -20,7 +20,7 @@ PIN = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0'
 APP_START = 0x08008000
 NVM_START = 0x0803A000
-MCU_RELEASE = '0.13.14.19-TONED-OLED-UART8'
+MCU_RELEASE = '1.0.0'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_uart_query',
@@ -113,6 +113,8 @@ def validate(work, output, env, log):
     if msp != 0x20005000 or not reset & 1 or not APP_START <= (reset & ~1) < APP_START + len(data):
         raise ValueError('Invalid application vector table')
     dictionary = json.loads((work / 'out/klipper.dict').read_text())
+    if dictionary.get('version') != MCU_RELEASE:
+        raise ValueError('MCU build dictionary version is not the clean numeric release')
     constants = dictionary['config']
     for key, expected in {'M300_ABI': 1, 'M300_MODEL': 'M300_CLASSIC',
                           'M300_FACTORY_ABI': 1, 'M300_FACTORY_HW_ADDRESS': 0x0803f848,
@@ -206,6 +208,7 @@ def main():
     args = ap.parse_args()
     if not 1 <= args.jobs <= 32: raise ValueError('jobs must be 1..32')
     env = os.environ.copy()
+    env['M300_FIRMWARE_VERSION'] = MCU_RELEASE
     if args.toolchain_dir:
         env['PATH'] = str(args.toolchain_dir.resolve()) + os.pathsep + env.get('PATH', '')
     for name in ['arm-none-eabi-gcc', 'arm-none-eabi-cpp', 'arm-none-eabi-objcopy',
