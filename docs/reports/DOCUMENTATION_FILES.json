@@ -160,7 +160,7 @@
     "docs/pl/UPDATE_2026-11-10.md": "ab17899ce410288b3d498ae3b2453d5be128078ccf6a708b354a3d05b4438c1a",
     "docs/pl/USER_GUIDE.md": "6a37953bd82b80551d344d27d01e192411bc2be2c611e2e6de742d89a7c538f3",
     "docs/reports/DOCUMENTATION_VALIDATION.json": "da22a4b104a8d69ed111621c2ffac121f8d500afd3aa9d215823e2d91ffd0ac5",
-    "docs/reports/DOC_SOURCE_BASELINE.json": "0b6e304f456f6d583de465cbfd33e5f4c3e489fb5cf8a677b8b0784dbb971b61",
+    "docs/reports/DOC_SOURCE_BASELINE.json": "c74806f26980ac794bb7c6124e7f8c77bdc2aec5f60c74d67e24b145cf7bd03a",
     "docs/reports/FLUIDD_OLED_DEMO.json": "977baba8688c7ad71916428d7c9145b857c76e6e9ebc8d665644044074fa4e1d",
     "docs/reports/IMAGE_PROVENANCE.json": "2143d755f7409c14907c869f2620bc0490b3df4b53ca5ef5d7003cda8336db15",
     "docs/reports/MACRO_MANIFEST.json": "60e26c0d8454a708f0442303ffd1897a2031a80cee9739ed43f5cc0ae00fdeb6",
@@ -182,7 +182,7 @@
     "docs/reports/RC1_REVIEW.json": "0408abd8e094dc8184ecc7cddc32c0cedcb30db1a205819f5dd5b10397b98d78",
     "docs/en/RC1_UI.md": "f095779cacdedb3053036f040ad95d386dbd66a1c94cddd3d5a335b636507ce1",
     "docs/pl/RC1_UI.md": "285be867be9ce989d22cfa1566bdb154a4ad4e5185577d068ea9b8fd555036a6",
-    "docs/pl/CODE_REVIEW_RC1.md": "7104b83e3ff221ba07e7a12205c4781493503bc5992bfcd09755b4509c27a398",
+    "docs/pl/CODE_REVIEW_RC1.md": "b327de5f00e978e1369b61106fd5c5f41298170278e87de189a2371ac440c77a",
     "docs/pl/RELEASE_v1.0.0-rc.1.md": "f3a1f8576d90ac2edddf05865aba1e384c6dae498cf44916f1202c7cc1aa27b4",
     "docs/en/RELEASE_v1.0.0-rc.1.md": "9ab3302b9befc776dbe89f110ca003b389f836d90a0214b3746724035084be70"
   }

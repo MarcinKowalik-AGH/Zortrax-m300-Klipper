@@ -35,6 +35,6 @@ nieprawidłowych poziomów jasności, braku ruchu/grzania po zmianie jasności,
 ukrywania starych preferencji, migracji oraz regresji całego hosta i frontend.
 Udana kompilacja nie zmienia wpisów „oczekuje na test” w odbiorze sprzętowym.
 
-Zachowano 794 istniejące regresje hosta i dodano 18 przypadków RC1 (łącznie
-812). Dodatkowe testy kontraktów sprawdzają zgodność paczek, publikatora,
+Zachowano 794 istniejące regresje hosta i dodano 19 przypadków RC1 (łącznie
+813). Dodatkowe testy kontraktów sprawdzają zgodność paczek, publikatora,
 katalogu makr i niezmienność chronionych źródeł ruchu oraz zabezpieczeń.

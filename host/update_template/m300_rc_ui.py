@@ -17,7 +17,8 @@ def command_hash(block):
     _, commands = profile.gcode_body(block)
     # Only ordinary wrapper options may be replaced. Variables or extra
     # commands mean this is an operator-owned macro, not a stock definition.
-    options = set(re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M))
+    options = {key.strip().lower() for key in re.findall(
+        r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M)}
     if options - {'description', 'gcode'}:
         return None
     return hashlib.sha256('\n'.join(commands).encode()).hexdigest()

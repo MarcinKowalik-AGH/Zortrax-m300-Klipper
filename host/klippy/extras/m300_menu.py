@@ -599,7 +599,8 @@ class M300Menu:
                     ('Move axes', ('page', 'native_moves')),
                     ('Fans', ('page', 'fans')),
                     ('PID calibration', ('page', 'native_pid')),
-                    ('Print status', ('page', 'native_job'))]
+                    ('Print status', ('page', 'native_job')),
+                    ('Diagnostics', ('page', 'diagnostics'))]
                 if self.printer.lookup_object('m300_pad_mesh', None) is not None:
                     rows.insert(11, ('Bed mesh (25 points)', ('page', 'bed_mesh')))
                 return 'Klipper', self._notice(rows)

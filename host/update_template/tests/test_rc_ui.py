@@ -92,6 +92,8 @@ class PublicSettingsTests(unittest.TestCase):
         self.assertIn(('Current procedure',('native_gcode','ZORTRAX_PROCEDURE')),rows)
         self.assertFalse(hidden_test('ZORTRAX_FAN_TEST_START'))
         self.assertFalse(hidden_test('ZORTRAX_PROCEDURE'))
+        menu.page='klipper'
+        self.assertIn(('Diagnostics',('page','diagnostics')),menu.rows(1)[1])
 
     def test_public_firmware_label_is_clean_but_unknown_identity_not_faked(self):
         self.assertEqual(VERSION,'1.0.0-rc.1')
@@ -123,6 +125,18 @@ class RcMigrationTests(unittest.TestCase):
         self.assertEqual(install.plan(h.root,h.config),[])
         install.rollback(receipt,h.root,h.config)
         self.assertEqual(p.read_text(),before);self.assertEqual(h.config.read_text(),oldroot)
+
+    def test_equals_style_stock_macro_is_removed_on_the_first_organized_pass(self):
+        h=self.setup_install()
+        text=('[mcu]\nserial: /dev/ttyS1\n[m300_mcu]\nnative_control: True\n'
+    '[gcode_macro ZORTRAX_OLED_PERF]\ndescription = Reset OLED samples\n'
+    'gcode = \n\tZORTRAX_OLED_PERF_RESET\n')
+        h.config.write_text(text)
+        receipt=install.apply(h.root,h.config,install.plan(h.root,h.config,organize_config=True))
+        self.assertNotIn('[gcode_macro ZORTRAX_OLED_PERF]',h.config.read_text())
+        self.assertEqual(install.plan(h.root,h.config,organize_config=True),[])
+        install.rollback(receipt,h.root,h.config)
+        self.assertEqual(h.config.read_text(),text)
 
     def test_custom_test_body_and_include_are_retained(self):
         h=self.setup_install();p=h.config.parent/'m300_tests.cfg'
