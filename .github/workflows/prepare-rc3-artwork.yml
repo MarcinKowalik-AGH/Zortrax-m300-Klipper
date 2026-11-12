@@ -60,6 +60,13 @@ jobs:
                       data=z.read('payload/'+name)
                       assert sha(data)==item['after'],name
                       p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+          # Reproduce the one reviewed correction found on a clean runner:
+          # create the fixture package here instead of requiring a previous CI step.
+          p=Path('ci/check_shared_artwork.py');s=p.read_text()
+          old="    package=ROOT/'.ci/host-update'\n"
+          new="    from project import stage_host_update\n    package=stage_host_update(ROOT/'.ci/artwork-host')\n"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,new))
           PY
       - name: Validate shared pixels, migration and all host regressions
         run: |
