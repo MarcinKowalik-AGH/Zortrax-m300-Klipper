@@ -75,6 +75,9 @@ jobs:
           set -euo pipefail
           python mcu/SOURCE_MCU/tools/build.py --archive mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip --work .ci/arm-build --output dist/mcu --jobs 4
 
+      - name: Verify the compiled numeric MCU identity and signed application bounds
+        run: python ci/test_mcu_version.py --dictionary dist/mcu/klipper.dict --binary dist/mcu/klipper.bin
+
       - name: Validate host, startup, guards, cooling and actual Klippy FILEOUTPUT
         run: python ci/run_checks.py --dictionary dist/mcu/klipper.dict
 
