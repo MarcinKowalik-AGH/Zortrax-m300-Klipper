@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Stan instrukcji: beta.24, ustalenia testu z 11 listopada 2026.** Kontroler druku pozostaje
+**Stan instrukcji: RC1, z zachowaniem ustaleń testu z 11 listopada 2026.** Kontroler druku pozostaje
 `0.13.16.38-PRINT-DRAIN-XY-PURGE`; niniejsza aktualizacja porządkuje opis,
 nie zmienia ruchów drukarki. [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) są źródłem parametrów.

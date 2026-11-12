@@ -1,6 +1,6 @@
 # Settings and Information
 
-> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+> RC1 interface: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 OLED menu button audio has two fixed pulse lengths: normal entry and other
 selection/exit clicks are 35 ms, while an explicitly visible **Back** or
@@ -25,6 +25,10 @@ updates the open OLED cursor. A remote change invalidates old physical click
 receipts. Back remains valid after saving; leaving and reopening a dialog,
 restart and shutdown still expire the old view. Reading the preview writes
 neither NVM nor UART commands.
+
+RC1 adds direct `ZORTRAX_OLED_BRIGHTNESS LEVEL=8` and
+`ZORTRAX_LED_BRIGHTNESS LEVEL=8` shortcuts. Omit LEVEL to open the shared
+control. Only integers 1..16 are accepted; no rounding or separate settings store.
 
 In Fluidd, the setting macros open button dialogs when called without
 arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`

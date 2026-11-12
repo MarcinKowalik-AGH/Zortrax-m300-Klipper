@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -30,7 +30,7 @@ Stan krańcówek i PC7 musi odpowiadać fizycznej sytuacji. Sam napis Ready nie 
 
 *Zrzut użytkownika z 10.11.2026 sprzed beta.20; nie przedstawia obecnego położenia przycisków skalowania. Sterowanie osią znajduje się po lewej, temperatury i podgląd OLED po prawej. Poniżej są makra, konsola i pliki.*
 
-Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. **TEST M300** to osobne czynności diagnostyczne — nie uruchamiaj ich w ciemno. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
+Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. Laboratoryjna grupa **TEST M300** nie jest częścią RC1. Odczyty daje `ZORTRAX_DIAGNOSTICS`; OEM-owy test wentylatorów pozostaje w Maintenance. Jasność otwierają `ZORTRAX_OLED_BRIGHTNESS` i `ZORTRAX_LED_BRIGHTNESS`. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
 
 <details>
 <summary>Historyczny panel z 08.11.2026 — dlaczego część makr była „Uncategorized”</summary>
@@ -53,7 +53,7 @@ Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zm
 
 ## 2b. Tune, All i Calibrate — trzy różne działania
 
-| Działanie | Wynik w beta.20 |
+| Działanie | Zachowanie zachowane w RC1 |
 |---|---|
 | Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
 | All w Tune | Wspólne ZORTRAX_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
@@ -65,7 +65,7 @@ Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zm
 
 `ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` i `ZORTRAX_HOME_ALL` uruchamiają wspólną logikę z OLED. Przy wspólnym XY kolejność jest **Y, następnie X**. Z wymaga odniesienia XY, odpowiedniej temperatury dyszy oraz sprawnego kontaktu PC7. Samo wybranie Home Z w menu nie usuwa wymogu wstępnego grzania.
 
-Procedury zapewniają odsunięcie platformy od dyszy o 5 mm przed ruchem XY, zgodnie z bieżącym stanem osi i kontaktem. Nie zastępuje to sprawdzenia, czy fizycznie jest miejsce na ruch. Z pozytywnym przyrostem Z platforma oddala się od dyszy. Po bazowaniu pozostaje bezpieczny odstęp.
+Homing respektuje `z_contact_clearance`: domyślnie 5 mm, a na zakwalifikowanym egzemplarzu 2 mm; PC7 musi zostać rozwarty przed ruchem XY. Niezależna wysokość przejazdów M07 `safe_z` pozostaje 5 mm. Nie zastępuje to sprawdzenia, czy fizycznie jest miejsce na ruch. Z pozytywnym przyrostem Z platforma oddala się od dyszy. Po bazowaniu pozostaje bezpieczny odstęp.
 
 Ordinary Z używa pięciu kolejnych kontaktów/zwolnień; końcowe odniesienie pochodzi z piątej krawędzi zwolnienia, nie ze średniej. M07 ma inną sekwencję. Nie zastępuj jej przypadkowym `samples: 5`. [Szczegóły](BED_MESH_AND_LEVELING.md).
 
@@ -121,7 +121,7 @@ Nie wyłączaj silników, nie wykonuj bazowania i nie przestawiaj osi ręcznie p
 
 Zachowaj kopię konfiguracji. Przy Ready, bez wydruku i aktywnej procedury, użyj poleceń z [README](../../README_PL.md). Instalator nie aktualizuje firmware MCU samoczynnie. W razie komunikatu o nieznanych plikach przerwij, zachowaj raport i porównaj lokalne zmiany; nie obchodź kontroli sum.
 
-Dla beta.20: `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ## 9. Rozpoznawanie problemów
 

@@ -1,18 +1,18 @@
-# Kontrola dokumentacji beta.20 i pochodzenie ilustracji
+# Kontrola dokumentacji RC1 i pochodzenie ilustracji
 
 [Instrukcja główna](../../README_PL.md) · [Ilustrowane funkcje OLED](OLED_FUNCTIONS.md) · [Zmiany dzisiejsze](UPDATE_2026-11-10.md)
 
-Stan opisu: **10 listopada 2026, beta.20**, kod odniesienia `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Zmiana dokumentacji nie zmienia wykonawczego hosta, MCU, frontendu ani konfiguracji. Nie utworzono nowej bety tylko dla manuali.
+Bieżący opis dotyczy **RC1**. Ilustracje z beta.20 zachowują pierwotny kod odniesienia `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`; nie są przedstawiane jako nowe zrzuty RC1. Aktualne menu, makra i różnice opisuje [RC1_UI](RC1_UI.md).
 
 ## Zakres wykonany
 
 | Wymaganie | Dokument lub materiał |
 |---|---|
-| Aktualna wersja na stronie głównej i w instrukcjach instalacji | README PL/EN, FIRST_INSTALL PL/EN i INSTALL EN wskazują opublikowaną beta.20 |
+| Aktualna wersja na stronie głównej i w instrukcjach instalacji | README PL/EN, FIRST_INSTALL PL/EN i INSTALL EN wskazują wydanie RC1 |
 | Dzisiejsze poprawki | UPDATE_2026-11-10: beta.18 Tune, beta.19 skalowanie, beta.20 układ i kolorystyka |
 | Instrukcja funkcji z obrazami | OLED_FUNCTIONS: 65 ilustrowanych pozycji/stadiów z działaniem, warunkami, opisem grafiki i odpowiednikiem Fluidd |
 | Rzeczywiste menu i bitmapy | OLED_MENU_REFERENCE oraz 65 obrazów 256×64 i 65 dokładnych powiększeń 3× |
-| Current UI po angielsku | FRONTEND_BETA20; historyczne sekcje w FLUIDD_M300 są wyraźnie oznaczone |
+| Current UI po angielsku | RC1_UI; historyczny FRONTEND_BETA20; historyczne sekcje w FLUIDD_M300 są wyraźnie oznaczone |
 | Instrukcja ×1/×2/×3 | Trzy demonstracje z rzeczywistego arkusza CSS beta.20 i helpera pikseli |
 | Poprawione rozróżnienia | TEMP nie grzeje; Heat uruchamia cel; All nie mierzy mesh; podgląd nie aktywuje kompensacji; PID SAVE restartuje |
 | Parametry, planer, mapy temperatur | Zachowane opisy źródeł, limitów, przepływu i 205 par charakterystyki stołu |
@@ -30,17 +30,19 @@ Stan opisu: **10 listopada 2026, beta.20**, kod odniesienia `4828a9da9d5fd8b0b93
 
 ```bash
 python ci/prepare_upstream.py
-python docs/tools/render_oled_manual.py --klipper .ci/pristine
+
+# Historyczne rendery odtwarzaj na ich wskazanym commicie beta.20.
+# Nie zastępuj manifestu beta.20 bieżącymi renderami RC1.
 python docs/tools/check_manual.py
 ```
 
 Do odtworzenia demonstracji Fluidd potrzebny jest skompilowany TypeScript helper i Chromium/Playwright. [Skrypt demonstracji](../tools/render_fluidd_oled_manual.py) przyjmuje --module oraz opcjonalnie --chromium-executable. Sam renderer OLED wymaga Pillow i Jinja2 zgodnie z zależnościami projektu.
 
-[Sprawdzenie dokumentacji](../tools/check_manual.py) kontroluje kompletność rozdziałów, lokalne odnośniki, obrazy i ich sumy, dokładne powiększenie 3×, zgodność wszystkich 39 makr, źródła 205 par mapy temperatury, 25/61×61 w mesh, bieżące rewizje i wszystkie 65 opisów. [Raport](../reports/DOCUMENTATION_VALIDATION.json) podaje rzeczywistą liczbę kontroli, nie stałą deklarację poprzedniego wydania.
+[Sprawdzenie dokumentacji](../tools/check_manual.py) kontroluje kompletność rozdziałów, lokalne odnośniki, obrazy i ich sumy, dokładne powiększenie 3×, zgodność wszystkich 41 makr, źródła 205 par mapy temperatury, 25/61×61 w mesh, bieżące rewizje i wszystkie 65 opisów. [Raport RC1](../reports/DOCUMENTATION_RC1_VALIDATION.json) podaje rzeczywistą liczbę kontroli, nie stałą deklarację poprzedniego wydania.
 
 Plik [DOCUMENTATION_FILES.json](../reports/DOCUMENTATION_FILES.json) zawiera sumy publikowanych materiałów, a [DOC_SOURCE_BASELINE.json](../reports/DOC_SOURCE_BASELINE.json) sumy źródeł użytych do ilustracji i weryfikacji. Kontrola kończy się błędem, jeżeli źródło lub wymagany obraz nie pasuje; nie zmniejsza się wymagań tylko po to, żeby uzyskać PASS.
 
-## Co rzeczywiście potwierdzono
+## Co rzeczywiście potwierdzono — historyczna baza ilustracji
 
 Release beta.20 ma udany [build 42798305380](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/42798305380): 741 testów hosta, 140 frontendu, 84 porównania pikseli, 54 testy geometrii w Chromium/Firefox, ARM, natywny Klippy i integralność pakietu. Użytkownik zaakceptował zgłoszony efekt wizualny beta.20. Jest to osobne od bieżącej walidacji dokumentacji.
 

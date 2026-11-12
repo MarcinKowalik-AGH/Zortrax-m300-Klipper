@@ -3,7 +3,7 @@
   "reference_release": "v1.0.0-rc.1",
   "visual_baseline_release": "v1.0.0-beta.20",
   "documents": 28,
-  "local_link_references": 695,
+  "local_link_references": 692,
   "oled_screen_states": 65,
   "oled_png_files": 130,
   "native_pixels_compared": 1064960,
@@ -11,7 +11,7 @@
   "config_macros": 41,
   "illustrated_functions": 65,
   "browser_demo_images": 3,
-  "checks_count": 1278,
+  "checks_count": 1275,
   "checks": [
     {
       "name": "document:README_PL.md",
@@ -1650,6 +1650,10 @@
       "status": "PASS"
     },
     {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
       "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/IMAGE_PROVENANCE.json",
       "status": "PASS"
     },
@@ -1674,7 +1678,7 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/DOCUMENTATION_VALIDATION.json",
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/DOCUMENTATION_RC1_VALIDATION.json",
       "status": "PASS"
     },
     {
@@ -2750,7 +2754,7 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/en/INSTALL.md:FRONTEND_BETA20.md",
+      "name": "link:docs/en/INSTALL.md:RC1_UI.md",
       "status": "PASS"
     },
     {
@@ -2834,15 +2838,11 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/en/FEATURES.md:FRONTEND_BETA20.md",
+      "name": "link:docs/en/FEATURES.md:RC1_UI.md",
       "status": "PASS"
     },
     {
       "name": "link:docs/en/FEATURES.md:../pl/OLED_FUNCTIONS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "link:docs/en/FEATURES.md:../pl/OLED_MENU_REFERENCE.md",
       "status": "PASS"
     },
     {
@@ -2862,15 +2862,11 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/en/LEVELING.md:FRONTEND_BETA20.md",
+      "name": "link:docs/en/LEVELING.md:RC1_UI.md",
       "status": "PASS"
     },
     {
       "name": "link:docs/en/LEVELING.md:../pl/OLED_FUNCTIONS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "link:docs/en/LEVELING.md:../pl/OLED_MENU_REFERENCE.md",
       "status": "PASS"
     },
     {
@@ -2894,15 +2890,11 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/en/SETTINGS_INFORMATION.md:FRONTEND_BETA20.md",
+      "name": "link:docs/en/SETTINGS_INFORMATION.md:RC1_UI.md",
       "status": "PASS"
     },
     {
       "name": "link:docs/en/SETTINGS_INFORMATION.md:../pl/OLED_FUNCTIONS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "link:docs/en/SETTINGS_INFORMATION.md:../pl/OLED_MENU_REFERENCE.md",
       "status": "PASS"
     },
     {
@@ -2914,15 +2906,11 @@
       "status": "PASS"
     },
     {
-      "name": "link:docs/en/UI_SYMBOLS.md:FRONTEND_BETA20.md",
+      "name": "link:docs/en/UI_SYMBOLS.md:RC1_UI.md",
       "status": "PASS"
     },
     {
       "name": "link:docs/en/UI_SYMBOLS.md:../pl/OLED_FUNCTIONS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "link:docs/en/UI_SYMBOLS.md:../pl/OLED_MENU_REFERENCE.md",
       "status": "PASS"
     },
     {

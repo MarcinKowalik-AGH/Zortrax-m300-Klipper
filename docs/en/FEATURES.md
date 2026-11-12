@@ -1,6 +1,6 @@
-# R16.9 features and acceptance boundaries
+# RC1 features and acceptance boundaries
 
-> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+> RC1 interface: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 [Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
@@ -28,12 +28,12 @@ This extends the earlier acceptance inventory below; hardware acceptance remains
 | Legacy OEM job engine | Separate M02 workflow | Diagnostic configuration |
 
 The first display remains the native Klipper status screen. The main groups
-are Klipper, Zortrax M300 and Service / Tests. The Zortrax menu groups
+are Klipper and Zortrax M300; the laboratory Service / Tests route has been removed. The Zortrax menu groups
 Models, Maintenance, Material, Settings and Information in that order.
 OLED menu lists use the same original font as Settings. The cursor points
 left on Back, and Back in the main menu returns to the Klipper status screen.
 Change is available from paused Print status. Fluidd
-keeps Klipper / ZORTRAX M300 / TEST M300 categories and unrelated user settings.
+keeps Klipper / ZORTRAX M300 categories and unrelated user settings. Stock lab shortcuts are removed, custom lab definitions are preserved but hidden. Brightness and current-procedure shortcuts use the existing owners.
 
 Existing 2 µs STEP, native XY profile, Z limits, E rotation distance, PID,
 sensor includes, acceleration and corner choices are preserved by the upgrade.
