@@ -415,7 +415,7 @@ ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
     # exported source archive. Override only the M300 build, while keeping
     # the upstream behavior for builds without M300_FIRMWARE_VERSION.
     key = "scripts/buildcommands.py"
-    anchor = "    return version + extra\\n"
+    anchor = "    return version + extra\n"
     f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
     if fixed:
         if fixed != "1.0.0":
