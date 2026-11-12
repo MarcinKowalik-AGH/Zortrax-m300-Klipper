@@ -1,5 +1,7 @@
 # Menu OLED — struktura, funkcje i rendery z kodu
 
+> **RC1:** bieżące makra i nawigację opisuje [spójność interfejsu RC1](RC1_UI.md). Menu główne ma tylko Klipper i Zortrax M300. Ekrany poniżej zachowano jako podpisany wzorzec beta.20; pozycja Service / Tests na starszych ilustracjach nie występuje w RC1.
+
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
 > Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.

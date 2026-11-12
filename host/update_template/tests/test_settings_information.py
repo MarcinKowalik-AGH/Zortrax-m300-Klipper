@@ -281,7 +281,8 @@ class SettingsTreeTests(unittest.TestCase):
         with session() as h:
             original = h.nvm.ui_snapshot()
             for macro, choices in cases:
-                self.assertNotRegex(templates()[macro], r'params\.\w+')
+                # Optional parameters are discoverable by Fluidd; bare clicks still open choices.
+                self.assertIn('ZORTRAX_UI_SETTING NAME=', templates()[macro])
                 h.lines.clear()
                 h.run(macro)
                 labels = [line.split('prompt_button ', 1)[1].split('|', 1)[0].removesuffix(' <')
@@ -687,7 +688,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'R16.12');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.1');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

@@ -1,23 +1,20 @@
-# M300 host R16.12
+# M300 Classic host update — RC1
 
-Native print controller `0.13.16.29`: shared Start/End, X300 Y305 pause park,
-bed hold, 600 s nozzle standby / 1800 s nozzle OFF and confirmed M600.
-See [workflow and audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md). MCU flashing is not required.
+This folder contains the verified M300 host overlay, production configuration,
+installer and its developer regression tests. On Orange Pi prefer the top-level
+install-orange-pi.py wrapper, run as the Klipper account only while idle and
+Ready. It checks printer state, applies this package and updates Fluidd groups.
+The default local endpoint is Fluidd port 4480; it is validated and persisted.
 
-English test update for an installed native M300 Classic host with MCU R14.5 or R14.6.
-R16.10 adds contextual OLED printing, pause and completion screens.
-Hold the knob for 10 seconds to pause or reprint an eligible completed copy.
-The pause menu uses the existing native controls and material change procedure.
-[Print contexts](docs/en/PRINT_CONTEXT.md) · [Procedure inventory](docs/en/PROCEDURE_INVENTORY.md)
+The internal install.py defaults to a read-only plan. --apply performs a checked
+atomic update with a rollback receipt. Existing mesh, PID, UART, qualified Z
+and user macros are preserved. Unknown runtime edits are refused. Stock lab
+macros are retired only when their recognized bodies match, never by deleting
+all names containing TEST. Developer tests remain under tests/ and legacy/.
 
-Run `python3 VERIFY.py`, the 702 self-contained tests and `install.py` to
-inspect the plan. Stop Klipper before applying, then start it and update the
-Fluidd groups with `python3 setup_fluidd.py --apply`. Keep the rollback
-receipt.
-
-[Install on Orange Pi](docs/en/INSTALL.md) ·
-[Settings and Information](docs/en/SETTINGS_INFORMATION.md) ·
-[Maintenance and Material](docs/en/MAINTENANCE_MATERIAL.md) ·
-[Validation](docs/en/PRINT_CONTEXT.md)
-
-G-code and converted Z-code share Start/End and AUTO saved-mesh selection. Maintenance adds Heat the platform; Settings adds persistent Full platform preheating. Use `python3 check-zcode.py --limits actual-limits.json file.zcode` for read-only whole-file preflight. Real Z-Suite corpus and physical printing remain separate acceptance evidence.
+Public controls include ZORTRAX_OLED_BRIGHTNESS and ZORTRAX_LED_BRIGHTNESS,
+LEVEL=1..16. Without a value they open the same choice as the OLED Settings
+menu. No new movement or heater authority is granted by these shortcuts.
+M300_SD.zip is the compatible MCU image packaged separately; this host change
+does not require flashing it. Consult docs/en/RC1_UI.md in the source repository
+and the release's first-install instructions before working on a blank host.

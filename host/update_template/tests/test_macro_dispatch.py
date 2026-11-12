@@ -28,7 +28,7 @@ def dispatcher():
 
 def templates():
     cp=configparser.RawConfigParser()
-    cp.read([ROOT/'payload/m300_tests.cfg',ROOT/'payload/m300_operations.cfg'])
+    cp.read([ROOT/'payload/m300_operations.cfg'])
     return {name[12:]:cp.get(name,'gcode') for name in cp.sections() if name.startswith('gcode_macro ')}
 
 
@@ -88,7 +88,8 @@ class MacroDispatchTests(unittest.TestCase):
         g.register_command('G1',lambda cmd:moves.append(cmd.get_command_parameters()))
         toolhead=NS(homed_axes='xyz',axis_minimum=NS(x=0.,y=0.),axis_maximum=NS(x=300.,y=300.))
         def fail(message):raise RuntimeError(message)
-        template = ENV.from_string(templates()['TEST_ZORTRAX_XY'])
+        cp = configparser.RawConfigParser(); cp.read(ROOT/'legacy/m300_tests.cfg')
+        template = ENV.from_string(cp.get('gcode_macro TEST_ZORTRAX_XY', 'gcode'))
         context = dict(printer=NS(toolhead=toolhead, print_stats=NS(state='standby'),
                                   gcode_move=NS(speed_factor=1.5)), action_raise_error=fail)
         with self.assertRaisesRegex(RuntimeError, 'at most 60'):
@@ -116,7 +117,7 @@ class MacroDispatchTests(unittest.TestCase):
 
     def test_status_button_dispatches_every_diagnostic_command(self):
         g,printer,output=dispatcher();calls=[]
-        script=templates()['TEST_ZORTRAX_STATUS']
+        script=templates()['ZORTRAX_DIAGNOSTICS']
         names=[line.strip() for line in script.splitlines() if line.strip()]
         for name in names:g.register_command(name,lambda cmd:calls.append(cmd.get_command()))
         g.run_script_from_command(script)
@@ -135,7 +136,7 @@ class MacroDispatchTests(unittest.TestCase):
         after,assigned=merge_groups(before,['TEST_ZORTRAX_STATUS','ZORTRAX_LEVEL'])
         self.assertEqual(after['stored'][0]['name'],'TEST_ZORTRAX_STATUS')
         self.assertFalse(after['stored'][0]['visible']);self.assertEqual(after['stored'][0]['color'],'red')
-        self.assertEqual(assigned['TEST_ZORTRAX_STATUS'],'TEST M300')
+        self.assertNotIn('TEST_ZORTRAX_STATUS', assigned)
         self.assertEqual(assigned['ZORTRAX_LEVEL'],'ZORTRAX M300')
         self.assertEqual([row['name'] for row in after['stored']], ['TEST_ZORTRAX_STATUS', 'ZORTRAX_LEVEL'])
         self.assertEqual(len(before['stored']),3)

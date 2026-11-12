@@ -17,7 +17,7 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler, urlopen
 
 MAX_ATTEMPTS = 3  # initial attempt plus at most TWO automated reruns
 MAX_LOG_BYTES = 4 * 1024 * 1024
-WORKFLOWS = {'.github/workflows/build-m300.yml', '.github/workflows/publish-beta.yml'}
+WORKFLOWS = {'.github/workflows/build-m300.yml', '.github/workflows/publish-release.yml'}
 NETWORK_STEPS = {
     'Set up job', 'Checkout M300 sources', 'Run actions/checkout@v4',
     'Select Python 3.12', 'Install GNU ARM and native test compiler',

@@ -338,7 +338,7 @@ bash ci/build_fluidd.sh
 The build verifies the exact upstream commit, applies the published patch,
 tests the SVG, fallback, home-button status and pad-mesh navigation/results,
 runs type checks and produces
-`dist/fluidd/M300_FLUIDD_1_37_7_R16_12.zip` with `SHA256SUMS`.
+`dist/fluidd/M300_FLUIDD.zip` with `SHA256SUMS`.
 Corresponding source is the pinned Fluidd commit plus
 [`m300-leveling.patch`](../../frontend/fluidd/m300-leveling.patch)
 under the Fluidd GPL-3.0 license. The patch and license are included in the ZIP.

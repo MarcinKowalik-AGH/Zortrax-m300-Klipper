@@ -1,4 +1,4 @@
-name: M300 R16.12 full Orange Pi build
+name: M300 build and verification
 
 on:
   push:
@@ -45,6 +45,7 @@ jobs:
           python ci/test_retry_failed_workflow.py
           python ci/test_acceptance_register.py
           python ci/test_release23_contracts.py
+          python ci/test_rc1_contracts.py
           python ci/acceptance_register.py --check
 
       - name: Install GNU ARM and native test compiler
@@ -98,7 +99,7 @@ jobs:
         run: bash ci/build_fluidd.sh
 
       - name: Validate current instructions and historical OLED illustrations
-        run: python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_BETA23_VALIDATION.json
+        run: python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_RC1_VALIDATION.json
 
       - name: Assemble the complete Orange Pi artifact
         shell: bash
@@ -111,7 +112,7 @@ jobs:
       - name: Upload the ready-to-install package
         uses: actions/upload-artifact@v4
         with:
-          name: M300_R16_12_FULL_ORANGE_PI
+          name: M300_ORANGE_PI
           path: dist/release/
           if-no-files-found: error
           retention-days: 30
@@ -145,7 +146,7 @@ jobs:
       - name: Retrieve the verified build
         uses: actions/download-artifact@v4
         with:
-          name: M300_R16_12_FULL_ORANGE_PI
+          name: M300_ORANGE_PI
           path: dist/action-release
 
       - name: Publish the compact Git deployment

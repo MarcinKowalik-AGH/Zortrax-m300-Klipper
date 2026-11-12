@@ -1,8 +1,8 @@
-name: Publish versioned M300 beta
+name: Publish M300 release
 
 on:
   workflow_run:
-    workflows: ['M300 R16.12 full Orange Pi build']
+    workflows: ['M300 build and verification']
     types: [completed]
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: m300-versioned-beta-release
+  group: m300-versioned-release
   cancel-in-progress: false
 
 jobs:
@@ -31,4 +31,4 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
       - name: Publish one immutable prerelease from the successful build
-        run: bash ci/publish_beta_release.sh
+        run: bash ci/publish_release.sh

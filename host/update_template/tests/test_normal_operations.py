@@ -518,7 +518,7 @@ class GroupTests(unittest.TestCase):
                      'ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP','ZORTRAX_PLATFORM_DOWN'):
             self.assertEqual(category(name), 'ZORTRAX M300')
         for name in ('ZORTRAX_PRINT', 'TEST_M300_XY'):
-            self.assertEqual(category(name), 'TEST M300')
+            self.assertIsNone(category(name))
         self.assertIsNone(category('MY_OTHER_PRINTER_MACRO'))
 
     def test_merge_preserves_unrelated_and_hidden_macro_preferences(self):
@@ -530,7 +530,7 @@ class GroupTests(unittest.TestCase):
         self.assertEqual(after['stored'][1], before['stored'][1])
         self.assertFalse(after['stored'][0]['visible'])
         self.assertEqual(after['stored'][0]['color'], 'red')
-        self.assertEqual(merge_groups(after, list(assigned))[0], after)
+        self.assertEqual(merge_groups(after, ['PID_SAVE', 'TEST_M300_XY', 'ZORTRAX_STATUS'])[0], after)
 
     def test_duplicate_macro_or_category_is_rejected(self):
         for before in ({'stored': [{'name': 'PID_SAVE'}, {'name': 'pid_save'}]},
@@ -540,11 +540,11 @@ class GroupTests(unittest.TestCase):
 
 
 class NormalMenuTests(unittest.TestCase):
-    def test_root_has_three_groups_and_tests_are_separate(self):
+    def test_root_has_two_production_groups_without_tests(self):
         menu, _ = menu_fixture()
         menu.page = 'main'
         self.assertEqual([label for label, _ in menu.rows(1.)[1]],
-                         ['Klipper', 'Zortrax M300', 'Service / Tests'])
+                         ['Klipper', 'Zortrax M300'])
         menu.page = 'klipper'
         rows = menu.rows(1.)[1]
         self.assertEqual(rows[0][0], 'Back')

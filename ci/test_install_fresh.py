@@ -31,13 +31,13 @@ class FirstInstallTest(unittest.TestCase):
         for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
             shutil.copy2(ROOT/'host/config'/name,first/name)
         (first/'requirements-m300.txt').write_text('cffi==2.1.1\n')
-        stage_host_update(self.package/'M300_HOST_R16_12_NORMAL_UI')
+        stage_host_update(self.package/'M300_HOST')
         (self.package/'BUILD_PROVENANCE.json').write_text(json.dumps(dict(
             model='M300_CLASSIC',release_stage='VERIFIED',github_commit='a'*40)))
         shutil.copy2(ROOT/'ci/install_orange_pi.py',self.package/'install-orange-pi.py')
         self.web=self.base/'web';self.web.mkdir();(self.web/'index.html').write_text('<title>fluidd</title>old')
         (self.web/'config.json').write_text('{"custom":true}')
-        with zipfile.ZipFile(self.package/'M300_FLUIDD_1_37_7_R16_12.zip','w') as z:
+        with zipfile.ZipFile(self.package/'M300_FLUIDD.zip','w') as z:
             z.writestr('fluidd-m300/index.html','<title>fluidd</title>new')
 
     def tearDown(self):self.temp.cleanup()

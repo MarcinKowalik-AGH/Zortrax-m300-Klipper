@@ -1,0 +1,31 @@
+{
+  "release": "v1.0.0-rc.1",
+  "base_commit": "89c04d4f1c6a82b19f239b156958451e4d7fc764",
+  "protected_sha256": {
+    "host/klippy/extras/m300_native_motion.py": "8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e",
+    "host/klippy/extras/m300_native_z.py": "64970ca46eba13240c9184061d1e64c7d71c99928287fd241edafccee417e089",
+    "host/klippy/extras/m300_calibration.py": "922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf",
+    "host/klippy/extras/m300_pad_mesh.py": "d7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836",
+    "host/klippy/extras/m300_native_service.py": "40f12fab2334dfef5e99cdfe1dffc09c4392c143b4bf3454867144237c908b15",
+    "host/klippy/extras/m300_print_control.py": "d8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933",
+    "host/klippy/extras/m300_temperature_policy.py": "b036c30f6a62d2e9a0874de282205561351a6627bddf5238848a68a496257728",
+    "host/klippy/extras/m300_native_fans.py": "841143eba02d3354f3213b314921281d51a0bc7639c6abc3c313d1fdab3a1579",
+    "host/klippy/extras/m300_oled.py": "0d486bf479dc4bb079c5528bad0232fe3ce0f63e6ffa3a31cd0a2434f4e05ac3",
+    "host/klippy/extras/m300_oled_transport.py": "2703aa3e0627f40a0327de61faadb558956a067af76d22ed4d52e46afe3a5b55",
+    "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
+    "host/config/m300_classic_base.cfg": "1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a",
+    "host/config/m300_classic_services.cfg": "f199715dd59536b5c701e145a0c5c2b1adf6ef4936f9f05a2454e7eee26461f4",
+    "host/config/m300_classic_sensors.cfg": "78b0ae33c7c1563f76192e2a3f46bfab93003b54a61ee3e1f660191f800fcbfa"
+  },
+  "physical_tests_performed": false,
+  "review_scope": [
+    "OLED/Fluidd/settings and command dispatch",
+    "known-value config migration and rollback",
+    "release packaging and dead staging code"
+  ],
+  "retained": [
+    "native safety owners",
+    "MCU firmware identity and ABI markers",
+    "historical evidence and regression fixtures"
+  ]
+}

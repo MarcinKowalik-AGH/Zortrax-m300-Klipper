@@ -2,7 +2,7 @@ name: Retry recognized transient M300 failures
 
 on:
   workflow_run:
-    workflows: ['M300 R16.12 full Orange Pi build', 'Publish versioned M300 beta']
+    workflows: ['M300 build and verification', 'Publish M300 release']
     types: [completed]
 
 permissions:

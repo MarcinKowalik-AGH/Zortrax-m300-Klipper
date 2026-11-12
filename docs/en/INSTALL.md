@@ -1,15 +1,15 @@
 # Install the main Orange Pi release
 
-> **Beta.23 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
+> **RC1 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-beta.23 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-beta.23).
+[v1.0.0-rc.1 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.1).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-The main package pairs the native R16.12 host with MCU R14.19 for M300 Classic.
+The RC1 package pairs host 1.0.0-rc.1 with the unchanged MCU R14.19 application for M300 Classic.
 The host installer also accepts supported installations running earlier MCU revisions.
 Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
 baseline uses 750,000 baud. The installer preserves the configured baud.
@@ -136,7 +136,7 @@ ZORTRAX_INFO REFRESH=0
 QUERY_PROBE
 ```
 
-Confirm Ready, the real HW05/Z400 identity, normal native control, host R16.12,
+Confirm Ready, the real HW05/Z400 identity, normal native control, host 1.0.0-rc.1,
 fan/maintenance/procedure revisions and an open PC7 contact with clearance.
 Motion reports the native rail speeds and a fault phase. Calibration still
 reports its four independent movement speeds. The packaged
@@ -172,13 +172,13 @@ Pause menu and Fluidd exact reprint. Re-run
 ## Rollback and MCU
 
 For a host rollback, stop Klipper, enter the included
-`M300_HOST_R16_12_NORMAL_UI` directory, run
+`M300_HOST` directory, run
 `python3 install.py --rollback /EXACT/PATH/RECEIPT.json`, then start Klipper.
 The receipt restores exact prior host/config bytes and protects later edits.
 For the frontend, restore the saved web directory to the reported
 `fluidd_root` and reload nginx.
 
-The included `MCU/M300APP.M3B` and `MCU/M300_R14_19_SD.zip` contain the
+The included `MCU/M300APP.M3B` and `MCU/M300_SD.zip` contain the
 compiled M300 Classic application for the existing M300 SD/bootloader procedure.
 The application starts at 0x08008000. Flashing is a separate operation.
 BUILD_PROVENANCE.json identifies the tested source. A printer already running
@@ -242,6 +242,6 @@ Offset 1 models one alignment of the DMA slot. The test writes to a scratch
 buffer in SRAM. The numbers measure fill time only. `ZORTRAX_OLED_STATUS`
 reports complete frame timings, which also include the host and serial link.
 
-## Current beta.20 user interface
+## RC1 user interface
 
-See the [current illustrated manual](../pl/OLED_FUNCTIONS.md) and the [10 November update summary](FRONTEND_BETA20.md). The OLED is centered; ×1/×2/×3 stay at the right below HIDE and have the total height of ×1. Tune shows preparation before probing. All only homes; Calibrate uses BED_MESH. Updating beta.18–20 does not require re-flashing the unchanged MCU. Existing release archives remain immutable; these repository instructions are the current reference.
+See the [current illustrated manual](../pl/OLED_FUNCTIONS.md) and the [current RC1 interface reference](RC1_UI.md). The OLED is centered; ×1/×2/×3 stay at the right below HIDE and have the total height of ×1. Tune shows preparation before probing. All only homes; Calibrate uses BED_MESH. Updating beta.18–20 does not require re-flashing the unchanged MCU. Existing release archives remain immutable; these repository instructions are the current reference.

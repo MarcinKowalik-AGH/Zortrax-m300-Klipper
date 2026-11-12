@@ -1,6 +1,6 @@
 {
-  "release": "v1.0.0-beta.17",
-  "count": 39,
+  "release": "v1.0.0-rc.1",
+  "count": 41,
   "macros": [
     {
       "name": "BED_MESH",
@@ -72,22 +72,11 @@
       ]
     },
     {
-      "name": "TEST_ZORTRAX_STATUS",
-      "source": "host/config/m300_tests.cfg",
-      "parameters": []
-    },
-    {
-      "name": "TEST_ZORTRAX_XY",
-      "source": "host/config/m300_tests.cfg",
-      "parameters": [
-        "LOOPS",
-        "SPEED"
-      ]
-    },
-    {
       "name": "ZORTRAX_BUZZER",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "STATE"
+      ]
     },
     {
       "name": "ZORTRAX_CHANGE",
@@ -95,6 +84,11 @@
       "parameters": [
         "TEMP"
       ]
+    },
+    {
+      "name": "ZORTRAX_DIAGNOSTICS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
     },
     {
       "name": "ZORTRAX_FANS",
@@ -124,7 +118,9 @@
     {
       "name": "ZORTRAX_FULL_PLATFORM_PREHEAT",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "STATE"
+      ]
     },
     {
       "name": "ZORTRAX_HEAT",
@@ -173,12 +169,21 @@
     {
       "name": "ZORTRAX_INFORMATION",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "REFRESH"
+      ]
     },
     {
       "name": "ZORTRAX_LANGUAGE",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
+    },
+    {
+      "name": "ZORTRAX_LED_BRIGHTNESS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "LEVEL"
+      ]
     },
     {
       "name": "ZORTRAX_LEVEL",
@@ -190,7 +195,9 @@
     {
       "name": "ZORTRAX_LIGHT",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "MODE"
+      ]
     },
     {
       "name": "ZORTRAX_LOAD",
@@ -202,21 +209,37 @@
     {
       "name": "ZORTRAX_MODELS_SORT",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "MODE"
+      ]
+    },
+    {
+      "name": "ZORTRAX_OLED_BRIGHTNESS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "LEVEL"
+      ]
     },
     {
       "name": "ZORTRAX_PLATFORM_DOWN",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
-        "DISTANCE"
+        "DISTANCE",
+        "SPEED"
       ]
     },
     {
       "name": "ZORTRAX_PLATFORM_UP",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
-        "DISTANCE"
+        "DISTANCE",
+        "SPEED"
       ]
+    },
+    {
+      "name": "ZORTRAX_PROCEDURE",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
     },
     {
       "name": "ZORTRAX_REPRINT",
@@ -236,7 +259,9 @@
     {
       "name": "ZORTRAX_SLEEP_MODE",
       "source": "host/config/m300_operations.cfg",
-      "parameters": []
+      "parameters": [
+        "STATE"
+      ]
     },
     {
       "name": "ZORTRAX_STATUS",

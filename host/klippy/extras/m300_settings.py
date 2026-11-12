@@ -15,7 +15,7 @@ import urllib.request
 from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS, COSMETIC_SETTINGS
 
 PROJECT_URL = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
-HOST_VERSION = 'R16.12'
+from .m300_release import VERSION as HOST_VERSION, display_mcu_version
 UPSTREAM = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 SETTINGS = (
     ('light_mode','Light',(('DYNAMIC','Dynamic'),('WHITE','White'),('DISABLE','Disabled'))),
@@ -184,7 +184,7 @@ class M300Settings:
         info=self.information(now)
         if page=='info_firmware':
             title='Firmware version'
-            lines=['Host '+info['host_version'],'MCU '+str(info['mcu_release'] or info['mcu_version'] or 'Unavailable'),
+            lines=['Host '+info['host_version'],'MCU '+display_mcu_version(info['mcu_release'] or info['mcu_version']),
                    'Klipper '+UPSTREAM[:12],'OEM reference 1.3.1']
         elif page=='info_printer':
             # Stock 1.3.1, menu_printer_information_screen (0x080154D8).

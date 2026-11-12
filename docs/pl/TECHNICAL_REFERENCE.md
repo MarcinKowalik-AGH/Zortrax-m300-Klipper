@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co jest parametrem fabrycznym, a co ustawieniem portu
@@ -133,9 +133,9 @@ Skala jest zapamiętywana w przeglądarce; jej zmiana przerysowuje ostatnio zdek
 
 ## 7. Rewizje a numer wydania
 
-| Warstwa | beta.20 |
+| Warstwa | RC1 |
 |---|---|
-| Dystrybucja | v1.0.0-beta.20; źródło `4828a9da` |
+| Dystrybucja / publiczny host | v1.0.0-rc.1 / 1.0.0-rc.1 |
 | Interfejs hosta podglądu | NAV-EVENT-1 |
 | Pipeline przeglądarki | NAV-PIPELINE-2 |
 | Sterowanie i układ powiększenia | OLED-ZOOM-2 |

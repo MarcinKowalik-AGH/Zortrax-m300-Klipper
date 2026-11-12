@@ -1,6 +1,6 @@
-# Autocalibration and Z reference — R16.12
+# Autocalibration and Z reference — RC1
 
-> Current UI documentation (beta.20, 10 November 2026): [interface guide](FRONTEND_BETA20.md), [illustrated OLED functions](../pl/OLED_FUNCTIONS.md), [complete menu reference](../pl/OLED_MENU_REFERENCE.md). Source-specific implementation notes below remain relevant unless marked historical.
+> RC1 interface: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 [Maintenance / Material](MAINTENANCE_MATERIAL.md) · [Validation](VALIDATION_R16_7.md)
 

@@ -2,12 +2,12 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan kodu **v1.0.0-beta.20**, commit `4828a9da9d5fd8b0b93eb2ac267732ee7e49d506`. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.1**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 39 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w beta.20. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 41 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w RC1. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -52,9 +52,11 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | [`PID_HOTEND`](../../host/config/klipper_calibration.cfg) | PID | Natywna kalibracja PID hotendu, zapis osobno. | TARGET=200. |
 | [`PID_BED`](../../host/config/klipper_calibration.cfg) | PID | Natywna kalibracja PID stołu, zapis osobno. | TARGET=60. |
 | [`PID_SAVE`](../../host/config/klipper_calibration.cfg) | PID | SAVE_CONFIG — zapis uzyskanej kalibracji i restart Klippera. | Wyłącznie bezczynna drukarka. |
-| [`TEST_ZORTRAX_STATUS`](../../host/config/m300_tests.cfg) | Testy | Odczytuje konfigurację, sprzęt, OLED i wentylatory. | Odczyt bez ruchu/grzania. |
-| [`TEST_ZORTRAX_XY`](../../host/config/m300_tests.cfg) | Testy | Testowe przejazdy XY; nie jest testem przepływu ani zwykłym bazowaniem. | SPEED=50 mm/s (maks. 60), LOOPS=1 (zakres 1…10); wymaga bezpiecznych warunków. |
 
+| [`ZORTRAX_OLED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności fizycznego OLED co w Settings. | LEVEL=1…16; brak parametru otwiera wybór, nie zmienia wartości. |
+| [`ZORTRAX_LED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności oświetlenia drukarki co w Settings. | LEVEL=1…16; brak parametru otwiera wybór. |
+| [`ZORTRAX_DIAGNOSTICS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt konfiguracji, sprzętu, OLED i chłodzenia. | Bez ruchu, grzania i resetowania statystyk. |
+| [`ZORTRAX_PROCEDURE`](../../host/config/m300_operations.cfg) | Serwis | Powrót do bieżącej procedury i jej aktualnych potwierdzeń. | Tylko prezentacja; potwierdzenia nadal sprawdzają tożsamość sesji/fazy. |
 
 ## 3. Parametry makra BED_MESH
 
@@ -82,7 +84,7 @@ Bezpieczna kontrola geometrii bez ruchu: `BED_MESH PREVIEW=1`. Nie publikujemy p
 | `ZORTRAX_MOTION_STATUS` | Natywny ruch i stan bazowania |
 | `ZORTRAX_HARDWARE_STATUS`, `ZORTRAX_CONFIG_STATUS` | Odczyty konfiguracji i dostępnego sprzętu |
 | `ZORTRAX_OLED_STATUS` | Transport i podgląd, w tym NAV-EVENT-1 oraz liczniki zdarzeń |
-| `ZORTRAX_OLED_PERF` | Odczyt dostępnych statystyk wydajności OLED; nie jest zmianą zegara SPI |
+| `ZORTRAX_OLED_STATUS` / `ZORTRAX_OLED_PERF_RESET` | Diagnostyka konsolowa; stary przycisk ZORTRAX_OLED_PERF usunięto z panelu. |
 | `ZORTRAX_DISPLAY_STATUS` | Bezczynność/wybudzenie/jasność warstwy wyświetlacza |
 | `ZORTRAX_FANS_STATUS` | Żądania wentylatorów i stan polityki chłodzenia |
 | `ZORTRAX_UI_SHOW`, `ZORTRAX_UI_SETTING` | Wspólne menu i ustawienia; zwykle wywoływane przez makra |
@@ -105,3 +107,7 @@ Aktualny pełny zrzut w [instrukcji użytkownika](USER_GUIDE.md) pokazuje grupy 
 ## 5. Gdzie zobaczyć funkcję na OLED i w Tune
 
 [Ilustrowana instrukcja funkcji](OLED_FUNCTIONS.md) wiąże każdą z 65 ilustracji z działaniem i właściwym poleceniem Fluidd. Home XYZ i All w Tune używają ZORTRAX_HOME_ALL; Calibrate w Tune używa BED_MESH. Powiększenie ×1/×2/×3 oraz HIDE/SHOW nie są makrami i nie wysyłają poleceń ruchu ani temperatury. Sama lista TEMP w gałęzi Klipper nie jest tym samym co wykonanie Heat.
+
+## RC1: panel produkcyjny
+
+Laboratoryjne TEST_ZORTRAX_XY/STATUS, ZORTRAX_PRINT i ZORTRAX_OLED_PERF nie są przyciskami użytkowymi. Znane fabryczne definicje są wycofywane z aktywnej konfiguracji z kopią w potwierdzeniu instalatora. Własna zmodyfikowana definicja pozostaje nietknięta, ale jest ukryta we Fluidd. ZORTRAX_PROCEDURE nie jest testem: otwiera aktywną procedurę i należy do ZORTRAX M300. OEM Fan test oraz PID pozostają właściwymi funkcjami serwisowymi.

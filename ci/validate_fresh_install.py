@@ -19,7 +19,7 @@ package=args.output/'package';package.mkdir(exist_ok=True)
 first=package/'FIRST_INSTALL';first.mkdir(exist_ok=True)
 for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
     shutil.copy2(ROOT/'host/config'/name,first/name)
-stage_host_update(package/'M300_HOST_R16_12_NORMAL_UI')
+stage_host_update(package/'M300_HOST')
 config=args.output/'config';config.mkdir(exist_ok=True)
 data=args.output/'data';(data/'gcodes').mkdir(parents=True,exist_ok=True)
 (data/'config').mkdir(exist_ok=True)

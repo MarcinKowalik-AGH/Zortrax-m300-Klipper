@@ -30,7 +30,7 @@ class InstallerTests(unittest.TestCase):
         path.write_text(macros)
         receipt = install.apply(self.root, self.config, install.plan(self.root, self.config))
         self.assertIn('M118 Retain custom command', path.read_text())
-        self.assertNotRegex(path.read_text(), r'params\.(MODE|STATE|REFRESH)\b')
+        self.assertRegex(path.read_text(), r'params\.(MODE|STATE)\b')
         self.assertEqual(install.plan(self.root, self.config), [])
         install.rollback(receipt, self.root, self.config)
         self.assertEqual(path.read_text(), macros)
@@ -137,7 +137,7 @@ class InstallerTests(unittest.TestCase):
 
     def test_plan_is_read_only_and_places_include_before_save_config(self):
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + 5)
+        self.assertEqual(len(changes), len(install.NAMES) + len(install.CONFIG_FILES) + 2)
         self.assertEqual(self.config.read_bytes(), self.original)
         after = next(new for p, _, new in changes if p == self.config)
         self.assertLess(after.index(b'[include'), after.index(b'#*# <--- SAVE_CONFIG'))
@@ -148,7 +148,7 @@ class InstallerTests(unittest.TestCase):
         receipt = install.apply(self.root, self.config, changes)
         self.assertEqual(install.plan(self.root, self.config), [])
         self.assertEqual(install.rollback(receipt, self.root, self.config),
-                         len(install.NAMES) + 5)
+                         len(install.NAMES) + len(install.CONFIG_FILES) + 2)
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse((self.config.parent / 'm300_display.cfg').exists())
 
@@ -290,12 +290,12 @@ class InstallerTests(unittest.TestCase):
         self.config.write_text('[include m300_display.cfg]\n' + self.original.decode())
         saved = self.config.read_bytes()
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + 4)
+        self.assertEqual(len(changes), len(install.NAMES) + len(install.CONFIG_FILES) + 1)
         receipt = install.apply(self.root, self.config, changes)
         self.assertEqual(install.plan(self.root, self.config), [])
         self.assertEqual(install.profile.split_saved(self.config.read_text())[1],
                          install.profile.split_saved(saved.decode())[1])
-        self.assertIn('[include m300_tests.cfg]', self.config.read_text())
+        self.assertNotIn('[include m300_tests.cfg]', self.config.read_text())
         install.rollback(receipt, self.root, self.config)
         self.assertEqual(self.config.read_bytes(), saved)
         for name in ('m300_display.py', 'm300_display_stream.py'):
@@ -326,7 +326,7 @@ class InstallerTests(unittest.TestCase):
     def test_wildcard_include_does_not_get_duplicate_explicit_include(self):
         self.config.write_text('[include *.cfg]\n')
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + 4)
+        self.assertEqual(len(changes), len(install.NAMES) + len(install.CONFIG_FILES) + 1)
         self.assertFalse(any(p == self.config for p, _, _ in changes))
 
     def test_included_inline_section_refuses_duplicate(self):

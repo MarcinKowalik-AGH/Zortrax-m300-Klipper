@@ -13,16 +13,21 @@ import uuid
 from install import atomic_write
 from m300_profile import MACRO_RENAMES, RETIRED_LEVEL_MACROS
 
-GROUPS = ('Klipper', 'ZORTRAX M300', 'TEST M300')
-TEST_NAMES = {'ZORTRAX_PRINT', 'ZORTRAX_PROCEDURE', 'ZORTRAX_OLED_PERF',
+GROUPS = ('Klipper', 'ZORTRAX M300')
+TEST_NAMES = {'ZORTRAX_PRINT', 'ZORTRAX_OLED_PERF',
               'ZORTRAX_TEST_PRINT_FAN', 'ZORTRAX_TEST_HOTEND_FAN',
               'PID_ARM', 'PID_HEAT_CHECK', 'PID_STOP'}
 
 
+def hidden_test(name):
+    name = name.upper()
+    return name in TEST_NAMES or name.startswith(('TEST_M300_', 'TEST_ZORTRAX_', 'ZORTRAX_TEST_'))
+
+
 def category(name):
     name = name.upper()
-    if name in TEST_NAMES or name.startswith(('TEST_M300_', 'TEST_ZORTRAX_', 'ZORTRAX_TEST_')):
-        return 'TEST M300'
+    if hidden_test(name):
+        return None
     if name.startswith('PID_') or name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'ZORTRAX_PAD_MESH_STATUS',
                                           'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE',
                                           'PAUSE', 'RESUME', 'CANCEL_PRINT',
@@ -84,6 +89,24 @@ def merge_groups(before, names):
                 rows[0]['categoryId'] = cid
             else:
                 stored.append({'name': name, 'categoryId': cid, 'visible': True})
+    # Lab macros cannot reappear through stale browser preferences. Preserve
+    # custom bodies on disk and their other display options, but hide them.
+    stored[:] = [m for m in stored if not (hidden_test(m['name']) and m['name'].upper() not in available)]
+    test_ids = {c['id'] for c in categories if c['name'] == 'TEST M300'}
+    for name in names:
+        if not hidden_test(name):
+            continue
+        rows = [m for m in stored if m['name'].upper() == name.upper()]
+        if len(rows) > 1:
+            raise ValueError('Duplicate Fluidd macro: ' + name)
+        if not rows:
+            stored.append({'name': name, 'visible': False, 'categoryId': '0'})
+        else:
+            rows[0]['visible'] = False
+            if rows[0].get('categoryId') in test_ids:
+                rows[0]['categoryId'] = '0'
+    used = {m.get('categoryId') for m in stored}
+    categories[:] = [c for c in categories if c['id'] not in test_ids or c['id'] in used]
     return after, assignments
 
 

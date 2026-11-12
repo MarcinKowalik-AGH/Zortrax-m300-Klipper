@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Stan instrukcji: beta.24, ustalenia testu z 11 listopada 2026.** Kontroler druku pozostaje
+**Stan instrukcji: RC1, z zachowaniem ustaleń testu z 11 listopada 2026.** Kontroler druku pozostaje
 `0.13.16.38-PRINT-DRAIN-XY-PURGE`; niniejsza aktualizacja porządkuje opis,
 nie zmienia ruchów drukarki. [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) są źródłem parametrów.
@@ -119,6 +119,6 @@ Nie przypisujemy tu nowych wyników testów sprzętowych.
 ## Ujemne Z po transformacji mesh — kwalifikowany egzemplarz
 
 Dla zgłoszonego pierwszego startu Z0,28 po korekcji -0,369086 dawało -0,089086 mm.
-[Dodatek beta.24](RELEASE_v1.0.0-beta.24.md) opisuje jawny profil position_min=-0,5,
+[Dodatek beta.24](RELEASE_v1.0.0-rc.1.md) opisuje jawny profil position_min=-0,5,
 safe_z=5, approach_distance=6,5 oraz homing clearance=2. Nie usuwa mesh i nie
 przenosi purge. Zwykła aktualizacja nie narzuca ujemnego zakresu innym drukarkom.

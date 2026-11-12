@@ -50,12 +50,12 @@ def main():
     (mcu / 'M300APP.M3B').write_bytes(packed)
     container = m3b.inspect(packed)
     (mcu / 'M3B_REPORT.json').write_text(json.dumps(container, indent=2) + '\n')
-    with zipfile.ZipFile(mcu / 'M300_R14_19_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(mcu / 'M300_SD.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.write(mcu / 'M300APP.M3B', 'M300APP.M3B')
     stage = stage_host_update(ROOT / '.ci/release-host-update')
-    host = release / 'M300_HOST_R16_12_NORMAL_UI'
+    host = release / 'M300_HOST'
     shutil.copytree(stage, host, ignore=shutil.ignore_patterns(OWNER, '__pycache__', '*.pyc'))
-    with zipfile.ZipFile(release / 'M300_HOST_R16_12_NORMAL_UI.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(release / 'M300_HOST.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(host.rglob('*')):
             if path.is_file():
                 archive.write(path, str(path.relative_to(release)))
@@ -101,11 +101,11 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'Use R14.19 MCU with the English-only R16.12 host; see INSTALL_EN.md.\n'
+        'M300 Classic RC1 host; compatible MCU 0.13.14.19. See INSTALL_EN.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     if args.fluidd:
-        frontend = args.fluidd / 'M300_FLUIDD_1_37_7_R16_12.zip'
+        frontend = args.fluidd / 'M300_FLUIDD.zip'
         expected = (args.fluidd / 'SHA256SUMS').read_text().split()
         if expected != [digest(frontend), frontend.name]:
             raise ValueError('Fluidd build checksum mismatch')
