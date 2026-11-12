@@ -1,0 +1,27 @@
+name: Prepare unified OLED artwork
+on:
+  push:
+    branches: [fix/rc3-unified-oled-artwork]
+    paths: ['.github/workflows/prepare-rc3-artwork.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: c5935fb8e9dff24ea7fc474ed3369d12171216a0
+          persist-credentials: false
+      - name: Export the exact reviewed baseline
+        run: |
+          mkdir -p "$RUNNER_TEMP/export"
+          git rev-parse HEAD > "$RUNNER_TEMP/export/SOURCE_COMMIT"
+          git archive --format=tar.gz HEAD > "$RUNNER_TEMP/export/source.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC3_SOURCE_BASE
+          path: ${{ runner.temp }}/export/
+          retention-days: 7
+          if-no-files-found: error
