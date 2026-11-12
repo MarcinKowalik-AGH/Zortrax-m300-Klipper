@@ -7,7 +7,7 @@ const internalMacros = new Set([
 export function m300MacroHidden (name: string, model: unknown): boolean {
   if (model !== 'M300_CLASSIC') return false
   const key = name.toUpperCase()
-  return internalMacros.has(key) || /^(TEST_M300_|TEST_ZORTRAX_|ZORTRAX_TEST_)/.test(key)
+  return internalMacros.has(key) || /^(?:TEST_M300_|TEST_ZORTRAX_|ZORTRAX_TEST_)/.test(key)
 }
 
 // An explicit valid custom category is preserved by the getter.
