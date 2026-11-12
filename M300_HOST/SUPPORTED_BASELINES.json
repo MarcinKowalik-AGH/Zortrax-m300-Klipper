@@ -539,5 +539,8 @@
   ],
   "m300_temperature_policy.py": [
     "1c410893a2f6952e0fff7d28fa6ba711bc0c5b3a692c4f43568120bafa71e5a1"
+  ],
+  "m300_release.py": [
+    "f8d475024da21f1c99186c38f1de9df2538258cc60a4bf2ff31dcf1618f4ce5b"
   ]
 }
