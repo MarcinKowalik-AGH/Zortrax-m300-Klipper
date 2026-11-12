@@ -5,6 +5,9 @@ This deliberately does not split arbitrary strings at '/': file paths, numeric
 ratios and identifiers are data. Only the known bilingual UI labels are mapped.
 """
 
+from .m300_release import VERSION
+
+
 EXACT = {
     'Adjust this screw, then confirm.': 'Adjust screw; then confirm.',
     'Measuring platform. Keep clear.': 'Probing platform. Keep clear.',
@@ -13,7 +16,11 @@ EXACT = {
     'Stock menu atlas / M11': 'Original menu reference',
     'OLED link / M10': 'OLED link',
     'M300_CLASSIC / M11': 'Zortrax M300 Classic',
-    '0.11.0-LAB / 2026-10-26': 'Host UI: R7 Fans',
+    '0.11.0-LAB / 2026-10-26': 'Host '+VERSION,
+    'Etap: P01 LAB': 'Host '+VERSION,
+    'M300 Klipper / M03 LAB': 'M300 Classic / Klipper',
+    'M10 OLED link': 'OLED link',
+    'LAB: hardware still unqualified': 'Hardware acceptance pending',
     'select an explicit HOTEND temperature first': 'Select a nozzle temperature first.',
     'select an explicit BED temperature first': 'Select a bed temperature first.',
     'm300_calibration is not configured': 'Platform leveling unavailable. Module not configured.',
