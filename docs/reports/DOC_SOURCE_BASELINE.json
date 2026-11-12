@@ -32,6 +32,7 @@
   "current_fact_source_commit": "b8f76f0839508858462af234007e76b78d7e6293",
   "note_beta23": "Current factual sources rechecked against beta.22; 65-image beta.20 visual manifests remain unchanged.",
   "note_beta24": "Retain beta.20 illustration hashes; current source hashes include pre-existing M300305/105 changes and qualified clearance update, not a new visual/hardware claim.",
-  "current_reference_release": "v1.0.0-rc.1",
-  "note_rc1": "Current controls audited; historical beta.20 rendered images remain separately labeled."
+  "current_reference_release": "v1.0.0-rc.2",
+  "note_rc1": "Current controls audited; historical beta.20 rendered images remain separately labeled.",
+  "note_rc2": "Exact legacy XY recognition added to installer; current runtime and historical images otherwise unchanged."
 }
