@@ -35,8 +35,7 @@ Instalator sprawdza i zapamiętuje istniejący port Fluidd. Zachowuje mesh, PID,
 UART, własną konfigurację oraz zapisane ustawienia kwalifikowanego Z. Nie omijaj
 odmowy nadpisania nieznanego kodu ani SHA256SUMS. Po instalacji odśwież Fluidd
 przez Cmd+Shift+R. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i MCU/M300_SD.zip.
-Ta aktualizacja **nie wymaga wgrywania MCU**: rzeczywista zgodna wersja firmware
-pozostaje 0.13.14.19-TONED-OLED-UART8. Information pokazuje krótkie numery;
+Ta aktualizacja hosta **nie wymaga wgrywania MCU**. Wcześniejsze MCU R14.18/R14.19 pozostają zgodne; osobne, numeryczne wydanie [MCU 1.0.0](docs/pl/MCU_FIRMWARE_1.0.0.md) ma [ZIP do wgrania](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.0). Information pokazuje krótkie numery;
 pełne identyfikatory są nadal dostępne w diagnostyce.
 
 ## Stan odbioru
