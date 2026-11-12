@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan/apply/rollback M300 R16.12 native R15.3-compatible update, 180C homing and separate TEST UI."""
+"""Plan, apply and roll back the M300 Classic host update."""
 import argparse
 import ast
 import base64
@@ -43,9 +43,9 @@ NAMES += ('m300_models.py', 'm300_sd.py', 'm300_fat.py', 'm300_binary.py',
           'm300_zcode.py', 'm300_job_sd.py')
 NAMES += ('m300_print_ui.py', 'm300_print_hold.py', 'm300_print_control.py', 'm300_job_state.py', 'm300_resources.py')
 NAMES += ('m300_activity_graphics.py', 'm300_cartesian_graphics.py', 'm300_klipper_logo.py', 'm300_activity_sprites.json')
-NAMES += ('m300_menu_sprites.json', 'm300_temperature_policy.py')
+NAMES += ('m300_menu_sprites.json', 'm300_temperature_policy.py', 'm300_release.py')
 NAMES += ('m300_errors.py', 'm300_error_codes.py', 'm300_error_codes.json')
-CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg', 'm300_tests.cfg')
+CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg')
 
 
 def digest(data):
@@ -158,7 +158,7 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
     if qualified_first_print_z:
         import m300_first_print_config
         m300_first_print_config.validate_tree(tree)
-    test_config = (HERE / 'payload/m300_tests.cfg').read_text()
+    test_config = (HERE / 'legacy/m300_tests.cfg').read_text()
     stock_xy = dict(profile.blocks(test_config)[1])['gcode_macro TEST_ZORTRAX_XY']
     for path, text in tree.items():
         if not path.is_relative_to(config.parent):
@@ -192,11 +192,13 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
     if 'm300_motion' in existing and 'idle_timeout' not in existing:
         additions.append('\n[idle_timeout]\n' + profile.IDLE_GCODE)
     if additions:
-        addition = '\n# M300 R16.12 native R15.3-compatible update and separate TEST macros\n' + ''.join(additions) + '\n'
+        addition = '\n# M300 Classic host configuration\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
         at = marker.start() if marker else len(text)
         text = text[:at] + addition + text[at:]
     desired[config] = text.encode()
+    import m300_rc_ui
+    m300_rc_ui.apply_to_plan(desired, config)
     if organize_config:
         active = {p: desired[p].decode() for p in tree}
         # Newly added canonical macro files are already referenced by the
@@ -344,13 +346,13 @@ def main():
         root, config = paths(args)
         if args.rollback:
             stopped()
-            print(json.dumps({'status': 'ROLLED_BACK_R16',
+            print(json.dumps({'status': 'ROLLED_BACK_M300_HOST',
                               'files': rollback(args.rollback, root, config)}))
             return
         changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True,
                        qualified_first_print_z=args.qualified_first_print_z)
-        result = {'status': 'PLAN_M300_R16_12' if changes else 'ALREADY_M300_R16_12',
-                  'host_update': 'R16.12 + M300-305-105-R1',
+        result = {'status': 'PLAN_M300_HOST' if changes else 'ALREADY_M300_HOST',
+                  'host_update': '1.0.0-rc.1',
                   'target_limits': {'extruder': 305, 'heater_bed': 105},
                   'sensor_shutdown_limits': {'extruder': 310, 'heater_bed': 120},
                   'hardware_validation': 'USER_REPORTED_2026-11-11',
@@ -366,7 +368,7 @@ def main():
         if args.apply and changes:
             stopped()
             result['receipt'] = str(apply(root, config, changes))
-            result['status'] = 'INSTALLED_M300_R16_12'
+            result['status'] = 'INSTALLED_M300_HOST'
         print(json.dumps(result, indent=2))
     except Exception as exc:
         parser.exit(1, 'REFUSED: ' + str(exc) + '\n')
