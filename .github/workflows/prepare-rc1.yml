@@ -1,0 +1,28 @@
+name: Prepare RC1 source review
+on:
+  push:
+    branches: [release/rc1-ui-consistency]
+    paths: ['.github/workflows/prepare-rc1.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 89c04d4f1c6a82b19f239b156958451e4d7fc764
+          persist-credentials: false
+      - name: Export exact source and file manifest
+        run: |
+          mkdir -p "$RUNNER_TEMP/rc1-source"
+          git archive --format=tar HEAD | gzip -n > "$RUNNER_TEMP/rc1-source/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/rc1-source/SOURCE_COMMIT"
+          sha256sum "$RUNNER_TEMP/rc1-source/source.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC1_SOURCE_BASE
+          path: ${{ runner.temp }}/rc1-source/
+          retention-days: 7
+          if-no-files-found: error
