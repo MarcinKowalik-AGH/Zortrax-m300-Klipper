@@ -1,14 +1,15 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.6
+# Zortrax M300 Classic — Klipper 1.0.0-rc.7
 
-**RC6:** Przywrócono odtwarzanie zatwierdzonych, cieniowanych klatek RC3 w menu. Bez przerysowywania ikon i bez wgrywania MCU. Klik uruchamiający grzanie z RC5 pozostaje bez zmian. [Opis i animowane rendery](docs/pl/RELEASE_v1.0.0-rc.6.md).
+**RC7:** Licznik całkowity obejmuje czas druku modelu z ukończonych, anulowanych i przerwanych wydruków. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.7.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
 
 
-**MCU 1.0.2:** [oryginalne logo Zortrax przed ekranem oczekiwania](docs/pl/MCU_FIRMWARE_1.0.2.md), bez zmiany hosta RC3, bootloadera ani wspólnych ikon. [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.2).
-**Szósty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**MCU 1.0.3:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.3.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.3).
+
+**Siódmy kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC6](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.6) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC7](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.7) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -39,7 +40,7 @@ Instalator sprawdza i zapamiętuje istniejący port Fluidd. Zachowuje mesh, PID,
 UART, własną konfigurację oraz zapisane ustawienia kwalifikowanego Z. Nie omijaj
 odmowy nadpisania nieznanego kodu ani SHA256SUMS. Po instalacji odśwież Fluidd
 przez Cmd+Shift+R. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i MCU/M300_SD.zip.
-Ta aktualizacja menu **nie wymaga wgrywania MCU**. Dotychczasowe MCU **1.0.2** i wspólne ikony pozostają bez zmian. Instalator hosta nie flashuje MCU. Starsze autonomiczne obrazy pozostają zależne od wersji aplikacji na płytce; [opis MCU 1.0.2](docs/pl/MCU_FIRMWARE_1.0.2.md).
+MCU 1.0.3 wgrywa się osobno z karty SD podczas testu zapisu licznika na płycie. [Aktualizacja MCU i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.3.md).
 
 ## Stan odbioru
 

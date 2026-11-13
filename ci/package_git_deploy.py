@@ -35,8 +35,8 @@ def package(release, output, commit):
         '# M300 Classic ' + provenance['distribution_version'] + ' — Orange Pi\n\n'
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
         'Run `python3 install-orange-pi.py --port 4480` as the Klipper user while idle and Ready.\n'
-        'RC1 preserves qualified Z, mesh and PID. No MCU flashing is needed when upgrading from beta.24.\n'
-        'The MCU image is for a separate first-install or verified firmware update only.\n\n'
+        'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'
+        'The MCU image is a separate SD update. Enable MCU counter writes after qualifying the board backup.\n\n'
         'Source commit: `' + commit + '`\n')
     files = sorted(path for path in output.rglob('*') if path.is_file())
     (output / 'SHA256SUMS').write_text(''.join(

@@ -16,6 +16,7 @@ from .m300_binary import compile_m300, DEFAULT_MAX_BYTES
 from .m300_job_sd import ReadOnlySnapshot, _open_source, _new_snapshot, _seal_snapshot
 from .m300_maintenance import other_service
 from .m300_native_service import lock_command, require_idle_print
+from .m300_runtime import deposited
 
 MAX_LINE = 64 * 1024
 ORCA_HEADER_BYTES = 256 * 1024
@@ -266,7 +267,8 @@ class M300Models:
         self.ready = False
         self.operation = self.token = self.preview = None
         self.filename = self.source = self.error = None
-        self.counter_error = None
+        self.runtime = None
+        self.runtime_started = self.runtime_deposited = self.runtime_ended = False
         self.active = self.completed = self.completed_token = None
         self.native_load = self.native_print = None
         self.printer.register_event_handler('klippy:ready', self._ready)
@@ -285,26 +287,57 @@ class M300Models:
         self.native_load = self.v_sd._load_file
         self.v_sd._load_file = self._load_native_model
         stats = self.v_sd.print_stats
+        self.runtime = self.printer.lookup_object('m300_nvm', None)
+        native_start = stats.note_start
         native_complete, native_pause = stats.note_complete, stats.note_pause
         native_error = getattr(stats, 'note_error', None)
+        native_cancel = stats.note_cancel
+
+        def start():
+            native_start()
+            self.runtime_started = True
+            if self.runtime_deposited and not self.runtime_ended:
+                self.runtime.runtime_start(self.reactor.monotonic())
 
         def complete():
             was_printing = stats.state == 'printing'
             native_complete()
             self._record_complete()
-            if was_printing and stats.state == 'complete':
-                self._record_native_job_time(stats)
+            if self.runtime is None:
+                return
+            self.runtime.runtime_pause(self.reactor.monotonic())
+            sd = self.v_sd
+            if (self.runtime_started and was_printing and stats.state == 'complete'
+                    and sd.current_file is None and sd.work_timer is None
+                    and not sd.must_pause_work and sd.file_position == sd.file_size):
+                self.runtime.runtime_complete()
+            self.runtime_started = False
 
         def pause():
             native_pause()
+            if self.runtime is not None:
+                self.runtime.runtime_pause(self.reactor.monotonic())
             active = self.active
             if active is not None and self.v_sd.current_file is active.stream:
                 active.stream.expected_seek = self.v_sd.file_position
 
         stats.note_complete, stats.note_pause = complete, pause
+        if self.runtime is not None:
+            stats.note_start = start
+            self._watch_deposition()
+            self._watch_heater_waits(stats)
+
+            def cancelled():
+                self.runtime.runtime_pause(self.reactor.monotonic())
+                self.runtime_started = False
+                native_cancel()
+            stats.note_cancel = cancelled
         if native_error is not None:
             def failed(message):
                 native_error(message)
+                if self.runtime is not None:
+                    self.runtime.runtime_pause(self.reactor.monotonic())
+                    self.runtime_started = False
                 if stats.state == 'error':
                     from .m300_error_codes import report
                     report(self.printer, message, source='native_print',
@@ -313,6 +346,59 @@ class M300Models:
         record = lock_command(self.gcode, 'SDCARD_PRINT_FILE', self._dispatch_print)
         if record is not None:
             self.native_print = record[1]
+
+    def _watch_deposition(self):
+        move = self.printer.lookup_object('gcode_move', None)
+        if move is None:
+            return
+        # Observe native dispatch rather than interpreting a slicer's E mode,
+        # extrusion factor or arcs independently of Klipper's parser.
+        for name in ('G0', 'G1', 'G2', 'G3'):
+            previous = self.gcode.ready_gcode_handlers.get(name)
+            if previous is None:
+                continue
+
+            def watch(gcmd, previous=previous):
+                if (not self.ready or not self.runtime_started or self.runtime_deposited
+                        or self.runtime_ended or not self.v_sd.cmd_from_sd):
+                    return previous(gcmd)
+                before = tuple(move.last_position[:4])
+                now = self.reactor.monotonic()
+                result = previous(gcmd)
+                if (self.ready and not self.printer.is_shutdown()
+                        and self.runtime_started and not self.runtime_ended
+                        and deposited(before, move.last_position[:4])):
+                    self.runtime_deposited = True
+                    self.runtime.runtime_start(now)
+                return result
+
+            lock_command(self.gcode, name, watch)
+
+    def _watch_heater_waits(self, stats):
+        for name in ('M109', 'M190', 'TEMPERATURE_WAIT'):
+            previous = self.gcode.ready_gcode_handlers.get(name)
+            if previous is None:
+                continue
+
+            def wait(gcmd, previous=previous):
+                if (not self.runtime_started or not self.runtime_deposited
+                        or self.runtime_ended or not self.v_sd.cmd_from_sd):
+                    return previous(gcmd)
+                self.runtime.runtime_pause(self.reactor.monotonic())
+                result = previous(gcmd)
+                if (self.ready and not self.printer.is_shutdown()
+                        and stats.state == 'printing' and not self.v_sd.must_pause_work):
+                    self.runtime.runtime_start(self.reactor.monotonic())
+                return result
+
+            lock_command(self.gcode, name, wait)
+
+    def runtime_end(self):
+        if self.runtime_started:
+            self.runtime_ended = True
+            now = self.reactor.monotonic()
+            self.runtime.runtime_pause(now)
+            self.runtime.runtime_drained(now)
 
     def _load_native_model(self, gcmd, filename, check_subdirs=False):
         # The native loader resolves the exact file, retains standard filename
@@ -368,6 +454,9 @@ class M300Models:
             raise gcmd.error(str(exc)) from exc
 
     def _reset_print(self, *args):
+        if self.runtime is not None:
+            self.runtime.runtime_pause(self.reactor.monotonic())
+        self.runtime_started = self.runtime_deposited = self.runtime_ended = False
         active, completed = self.active, self.completed
         self.active = self.completed = self.completed_token = None
         for model in (active, completed):
@@ -387,23 +476,6 @@ class M300Models:
             self.completed_token = secrets.token_hex(16)
         else:
             model.stream.release()
-
-    def _record_native_job_time(self, stats):
-        sd = self.v_sd
-        nvm = self.printer.lookup_object('m300_nvm', None)
-        if (nvm is None or not self.ready or self.printer.is_shutdown()
-                or sd.current_file is not None or sd.work_timer is not None
-                or sd.must_pause_work or sd.file_position != sd.file_size):
-            return
-        try:
-            seconds = stats.get_status(self.reactor.monotonic())['print_duration']
-            nvm.record_completed_job(seconds, native=True)
-            self.counter_error = None
-        except Exception as exc:
-            self.counter_error = str(exc)
-            logging.exception('M300 native completed job counter was not persisted')
-            from .m300_error_codes import report
-            report(self.printer, exc, source='m300_nvm')
 
     def _reprint_available(self, now):
         model = self.completed
@@ -607,7 +679,7 @@ class M300Models:
             state = 'ERROR' if self.error else 'IDLE'
         return dict(ready=self.ready, state=state, busy=self.operation is not None,
                     token=self.token, filename=self.filename, source=self.source, error=self.error,
-                    counter_error=self.counter_error,
+                    counter_error=self.runtime.runtime_error if self.runtime is not None else None,
                     bytes_copied=getattr(card, 'bytes_copied', 0) if self.operation else 0,
                     format=('Z-code' if preview.binary else 'G-code') if preview else None,
                     source_sha256=preview.source_sha256 if preview else None,

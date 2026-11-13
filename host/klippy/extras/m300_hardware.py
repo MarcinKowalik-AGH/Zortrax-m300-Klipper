@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Read stock M300 identity once, before native MCU configuration and enable.
+"""Identify the stock M300 and optionally synchronize its print-minute counter.
 
-No polling, motion interception, Flash writes or SAVE_CONFIG modifications.
-FILEOUTPUT deliberately does not invent a factory identity.
+Factory Flash updates are opt-in and performed only before MCU configuration.
+FILEOUTPUT deliberately does not invent a factory identity or update Flash.
 """
 import json
 import logging
 import math
+import os
+
+from .m300_counter_sync import (COMMIT_FORMAT, RESULT_FORMAT, STATE_FORMAT,
+                                CounterJournal, CounterRecoveryError, CounterSync)
 
 REVISION = '0.13.15.7-FACTORY-Z'
 FACTORY_ADDRESS = 0x0803f848
@@ -33,6 +37,10 @@ class M300Hardware:
         self.board, self.config = board, config
         self.printer, self.mcu = board.printer, board.mcu
         self.profile = config.getchoice('z_profile', ['factory', 'config'], 'factory')
+        self.counter_backup = config.get('factory_counter_backup', '').strip()
+        self.counter_sync = CounterSync()
+        self.counter_legacy_state = None
+        self.counter_legacy_error = None
         self.state, self.error = 'NOT_READ', None
         self.factory = {'valid': False, 'revision': None, 'z_steps_per_mm': None}
         self.header = self.raw = None
@@ -87,6 +95,77 @@ class M300Hardware:
             except Exception as exc:
                 self.factory_info_error = str(exc)
 
+    def _sync_factory_counter(self, constants):
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        supported = (constants.get('M300_MODEL') == 'M300_CLASSIC'
+                     and constants.get('M300_FACTORY_COUNTER_ABI') == 1
+                     and self.mcu.check_valid_response(STATE_FORMAT)
+                     and self.mcu.check_valid_response(RESULT_FORMAT))
+        if nvm is None:
+            if self.counter_backup:
+                self.counter_sync.status = 'HOST_NVM_UNAVAILABLE'
+            if supported:
+                query = self.mcu.lookup_query_command('m300_factory_counter_query',
+                                                      STATE_FORMAT)
+                bounded = self.board.startup_transport._bounded
+                _, state, *_ = self.counter_sync.observe(
+                    bounded('m300_factory_counter_query', query.send))
+                if state == 2:
+                    self.counter_sync.status = 'RECOVERY_REQUIRED'
+                    self.counter_sync.error = (
+                        'M300 factory counter recovery requires the original host NVM journal')
+                    raise self.config.error(self.counter_sync.error)
+            return
+        journal = CounterJournal(nvm.store)
+        if not supported:
+            self.counter_sync.banks = 'UNAVAILABLE'
+            try:
+                data = nvm.executor.submit(journal.load)
+                if data is not None:
+                    if data['machine_id'] != nvm.ui_snapshot()['identity']['machine_id']:
+                        raise ValueError('factory counter journal belongs to another printer')
+                    self.counter_legacy_state = data
+                    self.counter_sync.pending = data['pending'] is not None
+            except (OSError, ValueError) as exc:
+                self.counter_legacy_error = str(exc)
+                self.counter_sync.error = str(exc)
+            if self.counter_backup or self.counter_legacy_state or self.counter_legacy_error:
+                self.counter_sync.status = 'MCU_ABI_UNAVAILABLE'
+            return
+        validator = None
+        if self.counter_backup:
+            from .m300_counter_backup import validate_backup
+            path = os.path.expanduser(self.counter_backup)
+
+            def validator(serial):
+                if not os.path.isabs(path):
+                    raise ValueError('factory_counter_backup must be an absolute path')
+                return nvm.executor.submit(validate_backup, path, serial)
+        try:
+            query = self.mcu.lookup_query_command('m300_factory_counter_query', STATE_FORMAT)
+            commit = self.mcu.lookup_query_command(COMMIT_FORMAT, RESULT_FORMAT)
+            bounded = self.board.startup_transport._bounded
+            self.counter_sync.run(
+                nvm.ui_snapshot(), lambda: nvm.executor.submit(journal.load),
+                lambda data: nvm.executor.submit(journal.save, data),
+                lambda: bounded('m300_factory_counter_query', query.send),
+                lambda args: bounded('m300_factory_counter_commit',
+                                     lambda: commit.send(args)), validator)
+        except CounterRecoveryError as exc:
+            self.counter_sync.status = 'RECOVERY_REQUIRED'
+            self.counter_sync.error = str(exc)
+            raise self.config.error('M300 factory counter recovery: ' + str(exc)) from None
+        except Exception as exc:
+            self.counter_sync.status = 'REFUSED'
+            self.counter_sync.error = str(exc)
+            if self.counter_sync.banks == 'RECOVERY_REQUIRED':
+                raise self.config.error('M300 factory counter recovery: ' + str(exc)) from None
+            logging.warning('M300 factory counter synchronization refused: %s', exc)
+        if self.counter_sync.serial is not None:
+            self.serial_number = self.counter_sync.serial
+            if not self.counter_sync.display_blocked:
+                self.factory_print_minutes = self.counter_sync.minutes
+
     def _receive_factory_info(self, result):
         self.printer.get_reactor().register_async_callback(
             lambda eventtime: self._apply_factory_info(result))
@@ -102,6 +181,18 @@ class M300Hardware:
                 raise ValueError('invalid factory information response')
             self.serial_number = 'Z%08X' % serial if serial else None
             self.factory_print_minutes = minutes if valid else None
+            data = self.counter_legacy_state
+            if (self.counter_legacy_error or self.counter_sync.status == 'REFUSED'
+                    or self.counter_sync.display_blocked):
+                self.factory_print_minutes = None
+            elif data and data['serial'] == self.serial_number:
+                pending = data['pending']
+                if (not valid or minutes < data['last_minutes']
+                        or pending is not None and minutes != pending['expected']):
+                    self.factory_print_minutes = None
+                    self.counter_sync.error = 'Factory counter needs the matching MCU ABI to reconcile its journal'
+                else:
+                    self.counter_sync.committed_seconds = 60 * data['committed']
             self.factory_info_error = None
         except Exception as exc:
             self.factory_info_error = str(exc)
@@ -128,14 +219,16 @@ class M300Hardware:
                               'explicitly keeps an operator-selected Z configuration')
                 raise self.config.error(self.error)
             self._configure_factory_info(constants)
+            self._sync_factory_counter(constants)
             return
         try:
             self._apply_identity(self._query_factory())
         except Exception as exc:
             self.state, self.error = 'ERROR', str(exc)
             raise self.config.error('M300 hardware identity: ' + self.error) from None
-        logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
         self._configure_factory_info(constants)
+        self._sync_factory_counter(constants)
+        logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
 
     def _apply_identity(self, response):
         """Shared with software tests; caller must be in MCU identification."""
@@ -189,12 +282,19 @@ class M300Hardware:
                 'serial_number': self.serial_number,
                 'factory_print_minutes': self.factory_print_minutes,
                 'factory_info_error': self.factory_info_error,
+                'factory_counter_sync': self.counter_sync.status,
+                'factory_counter_error': self.counter_sync.error,
+                'factory_counter_pending': self.counter_sync.pending,
+                'factory_counter_banks': self.counter_sync.banks,
+                'factory_counter_active_bank': self.counter_sync.active_bank,
+                'factory_counter_committed_seconds': self.counter_sync.committed_seconds,
                 'stock_z_steps_per_mm': self.factory['z_steps_per_mm'],
                 'configured_rotation_distance': self.configured_rotation,
                 'effective_rotation_distance': self.effective_rotation,
                 'effective_z_steps_per_mm': self.effective_steps,
                 'factory_profile_applied': self.applied,
-                'factory_flash_written': False, 'physical_scale_measured': False}
+                'factory_flash_written': self.counter_sync.flash_written,
+                'physical_scale_measured': False}
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('M300_HARDWARE ' + json.dumps(self.get_status(), sort_keys=True))

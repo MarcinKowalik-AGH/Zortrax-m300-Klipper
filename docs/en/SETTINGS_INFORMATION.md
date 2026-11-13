@@ -121,16 +121,18 @@ Open **Zortrax M300 → Information** or run `ZORTRAX_INFORMATION` in Fluidd.
 | Printer information | Model, hardware version, serial number and total printing time on one screen |
 | Help | Project repository for documentation and issues |
 
-MCU R14.6 exposes `M300_FACTORY_INFO_ABI=1`. It reads the factory serial
-from ID1 and the last complete ID0 print-time record from the active OEM NVM bank.
-The lifetime display adds the OEM minutes and the completed-job seconds
-stored in the Klipper host NVM. A native Fluidd or Models print contributes
-Klipper's `print_duration` at successful EOF. The legacy workflow retains
-its own completion hook. Both use the same durable host counter.
+The factory information ABI reads the serial from ID1 and print minutes
+from ID0 in the active OEM settings bank. RC7 also records model-print time
+from completed, cancelled and interrupted native Fluidd and Models jobs
+in a durable host counter. The lifetime display adds the factory minutes
+and the host seconds still pending transfer. The host retains seconds below
+one minute and reconciles confirmed transfers so they count once.
 
 On older MCU firmware, a configured `serial_number:` is a fallback.
 An unavailable OEM counter is shown as unavailable. `ZORTRAX_INFO` also
-reports the OEM and Klipper components separately.
+reports the OEM and Klipper components separately. MCU 1.0.3 supports
+transferring whole minutes to factory storage after enabling and qualifying
+the feature for the individual printer. [MCU storage and update procedure](MCU_FIRMWARE_1.0.3.md).
 
 Opening Information or Printer information requests Moonraker history in the
 background. Fluidd's Printer information page has a Refresh button. In the console,

@@ -494,7 +494,7 @@ class EnglishOnlyTests(unittest.TestCase):
 
     def test_nvm_preserves_legacy_settings_but_exposes_and_accepts_only_english(self):
         saved=dict(language='PL',light_mode='WHITE',sleep_mode='15MIN')
-        n=M300NVM.__new__(M300NVM);n._busy=False;n._deferred_settings={}
+        n=M300NVM.__new__(M300NVM);n._busy=False;n._deferred_settings={};n._runtime_error=None
         n.printer=NS(command_error=RuntimeError)
         n.store=NS(_published={'settings':saved},source='existing',warnings=[])
         n.snapshot=lambda:copy.deepcopy(n.store._published)

@@ -68,7 +68,7 @@ class M300Job:
         self.release_motors = config.getboolean('release_motors_on_end', True)
         self.filament_pause = config.getboolean('filament_pause', False)
         self.filament_delay = self._option('filament_pause_delay', 1., .1, 10.)
-        self.machine = JobState()
+        self.machine = JobState(on_transition=self._runtime_transition)
         self.ready = False
         self.installed = False
         self.prepared = None
@@ -130,6 +130,18 @@ class M300Job:
 
     def _error(self, message):
         return self.printer.command_error('M300 job: ' + message)
+
+    def _runtime_transition(self, previous, state, _):
+        if self.board.native_control or (previous != 'PRINTING' and state != 'PRINTING'):
+            return
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        if nvm is None:
+            return
+        now = self.reactor.monotonic()
+        if state == 'PRINTING':
+            nvm.runtime_start(now)
+        else:
+            nvm.runtime_pause(now, drain=state != 'FAULT')
 
     def _service(self):
         return self.printer.lookup_object('m300_filament', None)
@@ -859,13 +871,8 @@ class M300Job:
             self.sd.complete()
             if token != self.machine.token or phase != self.machine.state:
                 return
-            # The EOF movement/file cleanup budget is finished. Retain the
-            # cleanup owner while storage yields, without charging filesystem
-            # latency against the already-completed motion phase deadline.
+            # Completion is published only after EOF and physical cleanup.
             self.phase_deadline = None
-            # Keep COMPLETING visible while the native NVM executor yields.
-            # This permit is issued only after EOF, queue drain, file close,
-            # and terminal output cleanup; ordinary COMPLETING has no permit.
             self._completion_write_token = token
             try:
                 self._record_completion(token)
@@ -888,12 +895,7 @@ class M300Job:
         self._cleanup_pending = False
 
     def completion_write_authorized(self, token):
-        """Authorize only this session's post-cleanup completion counter write.
-
-        The NVM adapter calls this without yielding. Cancellation/restart/fault
-        revokes the session token before cleanup and therefore revokes this
-        permission even while an already-submitted atomic write is pending.
-        """
+        """Authorize only this session's post-cleanup completion event."""
         return (type(token) is int and token == self.machine.token
                 and token == self._last_eof_token
                 and token == self._completion_write_token
@@ -913,24 +915,17 @@ class M300Job:
         nvm = self.printer.lookup_object('m300_nvm', None)
         if nvm is not None:
             try:
-                if phase == 'COMPLETING':
-                    nvm.record_completed_job(seconds, token=token)
-                else:
-                    nvm.record_completed_job(seconds)
+                nvm.runtime_complete()
             except Exception as exc:
-                self.nvm_warning = 'Completed job counter was not persisted: ' + str(exc)
+                self.nvm_warning = 'Completed job counter was not scheduled: ' + str(exc)
                 logging.exception('M300 completion NVM')
-        # An atomic write may have completed after cancellation or shutdown.
-        # Its EOF counter is attempted once; never resurrect that old session
-        # or publish its repeat action when the yielding continuation resumes.
         if (token != self.machine.token or phase != self.machine.state
                 or not self.ready or self.printer.is_shutdown()):
             return
         if phase == 'COMPLETING':
             self.machine.advance('completed', token, self.reactor.monotonic())
             self._finish_cleanup()
-        # No yield separates COMPLETE, the released NVM owner, and the menu
-        # event. A consumer observing COMPLETE can immediately select repeat.
+        # No yield separates COMPLETE from the repeat action becoming available.
         self.printer.send_event('m300:job_completed', filename, seconds)
 
     def _terminal_cleanup(self, release_motors=True):

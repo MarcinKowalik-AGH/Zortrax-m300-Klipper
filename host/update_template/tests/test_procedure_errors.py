@@ -142,8 +142,10 @@ class ProcedureErrorsTests(unittest.TestCase):
         with errors_session() as h:
             models = M300Models.__new__(M300Models)
             models.printer, models.gcode, models.job = h.printer, h.gcode, h.job
+            models.reactor = h.reactor
             models.native_load = models.native_print = None
-            stats = NS(state='printing', note_complete=lambda: None, note_pause=lambda: None)
+            stats = NS(state='printing', note_complete=lambda: None, note_pause=lambda: None,
+                       note_start=lambda: None, note_cancel=lambda: None)
             original = Mock(side_effect=lambda msg: setattr(stats, 'state', 'error'))
             stats.note_error = original
             models.v_sd = NS(_load_file=lambda *a, **kw: None, print_stats=stats)

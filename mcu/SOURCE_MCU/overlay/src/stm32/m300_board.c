@@ -82,6 +82,16 @@ static uint16_t hot_min, hot_max, bed_min, bed_max;
 static volatile uint8_t fan_requested = 3;
 static volatile uint8_t fan_forced = 1;
 
+int
+m300_factory_write_allowed(void)
+{
+    // Flash reads/IRQ service can stall while the FPEC is busy. The write
+    // window ends before board config; also check the three physical gates.
+    return !configured && !armed && !fault && !sched_is_shutdown()
+        && !(GPIOD->ODR & (1u << 14)) && !(GPIOC->ODR & (3u << 8))
+        && !(GPIOE->IDR & (1u << 15));
+}
+
 static void
 raw_write(GPIO_TypeDef *regs, uint32_t bit, uint32_t value)
 {

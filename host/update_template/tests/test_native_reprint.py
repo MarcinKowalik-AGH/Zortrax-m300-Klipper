@@ -8,7 +8,7 @@ from test_native_models import model_session, prepare
 
 
 @contextmanager
-def replay_session():
+def replay_session(heater_wait=None):
     with model_session() as h:
         sd = h.vsd
         stats = sd.print_stats
@@ -38,11 +38,16 @@ def replay_session():
             sd.do_resume()
 
         stats.set_current_file = set_file
+        stats.note_start = lambda: setattr(stats, 'state', 'printing')
+        stats.note_cancel = lambda: setattr(stats, 'state', 'cancelled')
         stats.note_complete = lambda: setattr(stats, 'state', 'complete')
         stats.note_pause = lambda: setattr(stats, 'state', 'paused')
         sd._load_file = load
         sd._reset_file = reset
         h.gcode.register_command('SDCARD_PRINT_FILE', print_file)
+        if heater_wait is not None:
+            h.gcode.register_command('M109', None)
+            h.gcode.register_command('M109', lambda gcmd: heater_wait(h))
         h.models._ready()
         yield h
 
@@ -62,25 +67,26 @@ def finish(h, read_all=True):
 
 
 class NativeReprintTests(unittest.TestCase):
-    def test_native_fluidd_and_models_time_persist_once_per_completed_job(self):
+    def test_native_fluidd_and_models_completion_counter_persists_once(self):
         with replay_session() as h:
             stats = h.vsd.print_stats
-            stats.get_status = lambda now: {'print_duration': 123.5}
             path = h.files / 'native.gcode'
             path.write_text('G90\n')
             h.run('SDCARD_PRINT_FILE FILENAME="native.gcode"')
-            stats.state = 'printing'
+            stats.note_start()
             finish(h)
             stats.note_complete()
+            h.nvm._save_runtime(h.now)
             self.assertEqual(h.nvm.ui_snapshot()['counters'],
-                             {'completed_jobs': 1, 'print_seconds': 123.5})
+                             {'completed_jobs': 1, 'print_seconds': 0.})
 
             h.models.start(prepare(h))
-            stats.state = 'printing'
+            stats.note_start()
             finish(h)
             stats.note_complete()
+            h.nvm._save_runtime(h.now)
             self.assertEqual(h.nvm.ui_snapshot()['counters'],
-                             {'completed_jobs': 2, 'print_seconds': 247.})
+                             {'completed_jobs': 2, 'print_seconds': 0.})
 
     def test_physical_job_replays_same_bytes_and_uses_single_use_tokens(self):
         with replay_session() as h:

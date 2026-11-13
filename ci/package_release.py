@@ -62,7 +62,8 @@ def main():
     shutil.copytree(ROOT / 'host/klippy', release / 'HOST_SOURCE/klippy',
                     ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / '.ci/reports', release / 'REPORTS',
-                    ignore=shutil.ignore_patterns('timer-test', 'factory-test', 'sd-card-test', 'panel-test'))
+                    ignore=shutil.ignore_patterns('timer-test', 'factory-test', 'factory-counter-test',
+                                                  'sd-card-test', 'panel-test'))
     if (ROOT / '.ci/fileoutput/REPORT.json').exists():
         shutil.copy2(ROOT / '.ci/fileoutput/REPORT.json', release / 'REPORTS/KLIPPY_FILEOUTPUT.json')
     provenance = {'model': META['model'], 'upstream_commit': META['upstream_commit'],
@@ -101,7 +102,7 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'M300 Classic RC6 host; MCU 1.0.2 OEM startup logo and unified artwork. See INSTALL_EN.md.\n'
+        f"M300 Classic {META['distribution_version']} host and MCU {META['mcu_release']}. See INSTALL_EN.md.\n"
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     if args.fluidd:

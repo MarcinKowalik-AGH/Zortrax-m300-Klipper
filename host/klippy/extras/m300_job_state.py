@@ -72,7 +72,7 @@ class JobState:
     context is copied on admission and on every read. Adapter-owned live motion,
     file and heater objects belong outside this immutable source context.
     """
-    def __init__(self, history_limit=64):
+    def __init__(self, history_limit=64, on_transition=None):
         if (isinstance(history_limit, bool) or not isinstance(history_limit, int)
                 or not 1 <= history_limit <= 4096):
             raise JobStateError('history_limit must be an integer in 1..4096')
@@ -81,6 +81,7 @@ class JobState:
         self._context = {}
         self._reason = None
         self._history = deque(maxlen=history_limit)
+        self._on_transition = on_transition
 
     @property
     def state(self):
@@ -112,6 +113,8 @@ class JobState:
         self._reason = reason
         self._history.append({'from': previous, 'to': state, 'event': event,
                               'token': self._token, 'at': now, 'reason': reason})
+        if self._on_transition is not None:
+            self._on_transition(previous, state, now)
 
     def start(self, context, now):
         now = _finite(now, 'now')

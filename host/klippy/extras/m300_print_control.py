@@ -330,6 +330,9 @@ class M300PrintControl:
         self._lease();self._wake()
 
     def _park_pause(self):
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        if nvm is not None:
+            nvm.runtime_drained(self.reactor.monotonic())
         ctx=self.context
         ctx['file']=self._file()
         if id(self.sd.current_file) != self._pending_file or not self._position_is(ctx['origin']):
@@ -513,6 +516,9 @@ class M300PrintControl:
         self._phase('WAIT_CANCEL_DRAIN')
 
     def _cancel_drained(self):
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        if nvm is not None:
+            nvm.runtime_drained(self.reactor.monotonic())
         self.steps.clear()
         if self._cancel_park and not self._material_busy() and not self.printer.is_shutdown():
             try:
@@ -596,6 +602,9 @@ class M300PrintControl:
                 self.lease.heat(heater,op['targets'][name])
             self.stable_since=None;self._phase('HEATING',self.heat_timeout)
         else:
+            models = self.printer.lookup_object('m300_models', None)
+            if models is not None:
+                models.runtime_end()
             plan=self._plan()
             measured,target=self.hotend.get_temp(self.reactor.monotonic())
             if self.retract and measured>=self.hotend.min_extrude_temp and target>0:
