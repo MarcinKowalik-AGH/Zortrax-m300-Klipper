@@ -108,8 +108,11 @@ def main():
             h.menu.page='klipper';h.menu.rows=lambda now:('Klipper',[
                 ('Back',('page','main')),('Bed mesh',('native_gcode','BED_MESH'))])
             h.oled.page,h.oled.selection='m04',1;h.oled._render_key=None
-            h.oled._render(h.now)
-            assert right_icon(h.oled._render_wire)==raw['bed_mesh'][0]
+            # Navigation previews now play the accepted sequence. Check each
+            # original phase, not a permanently frozen frame-zero assumption.
+            for frame in range(4):
+                h.oled._render(frame*.5)
+                assert right_icon(h.oled._render_wire)==raw['bed_mesh'][frame]
             assert not any(x[0]in('move','heat','fan')for x in h.events)
     report=dict(status='PASS_UNIFIED_OLED_ARTWORK',style=ICON_STYLE,
         activity_symbols=24,activity_frames=count,oem_descriptors=37,oem_frames=oem_count,
