@@ -342,6 +342,43 @@ int main(void)
     REJECT(arm_model(), M300_FAULT_ARM); // zero gates still cannot ARM
     assert(!(GPIOC->ODR & (1u<<8)) && !(GPIOD->ODR & (1u<<14)));
 
+#ifndef M300_OLD_SNAPSHOT_API
+    // An idle runtime Flash transaction keeps stationary Z hold and cooling.
+    uint32_t flash_ticks = timer_from_us(47000);
+    restart_model();
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    prepare(3); arm_model();
+    assert(m300_factory_runtime_allowed(flash_ticks));
+    write_pin(enable, 1);
+    assert(GPIOD->ODR & (1u << 14));
+    assert(m300_factory_runtime_allowed(flash_ticks));
+    write_pin(heater, 1);
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    write_pin(heater, 0);
+    adc_model(314, 3000);
+    write_pin(fan1, 0);
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    write_pin(fan1, 1);
+    assert(m300_factory_runtime_allowed(flash_ticks));
+    GPIOE->IDR |= 1u << 15;
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    GPIOE->IDR &= ~(1u << 15);
+    now_ticks += timer_from_us(FRESH_US) - flash_ticks;
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    assert(m300_factory_runtime_allowed(0));
+    REJECT(m300_factory_platform_fault(), M300_FAULT_PLATFORM);
+    assert(!(GPIOD->ODR & (1u << 14)));
+    assert(!m300_factory_runtime_allowed(flash_ticks));
+    assert(m300_factory_led_pin(GPIOB, 1u << 5));
+    assert(m300_factory_led_pin(GPIOD, 1u << 6));
+    assert(m300_factory_led_pin(GPIOD, 1u << 7));
+    assert(!m300_factory_led_pin(GPIOE, 1u << 13));
+    assert(!m300_factory_led_pin(GPIOC, 1u << 8));
+    assert(m300_factory_heater_pin(GPIOC, 1u << 8));
+    assert(m300_factory_heater_pin(GPIOC, 1u << 9));
+    assert(!m300_factory_heater_pin(GPIOE, 1u << 14));
+#endif
+
     // Raw range policy cannot be expanded by a validly encoded host command.
     uint32_t bad_config[]={3, 1, M300_HOT_RAW_MAX+1, 1800, 3900};
     restart_model(); REJECT(command_m300_config(bad_config), M300_FAULT_CONFIG);

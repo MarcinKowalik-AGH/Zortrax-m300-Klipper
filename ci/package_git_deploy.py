@@ -36,7 +36,7 @@ def package(release, output, commit):
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
         'Run `python3 install-orange-pi.py --port 4480` as the Klipper user while idle and Ready.\n'
         'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'
-        'The MCU image is a separate SD update. Enable MCU counter writes after qualifying the board backup.\n\n'
+        'Install the MCU image separately from SD. After enabling MCU counter writes with the board backup, Klipper synchronizes automatically while idle.\n\n'
         'Source commit: `' + commit + '`\n')
     files = sorted(path for path in output.rglob('*') if path.is_file())
     (output / 'SHA256SUMS').write_text(''.join(

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-11",
+  "updated": "2026-11-13",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -466,6 +466,44 @@
             "kind": "user_message",
             "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
             "quote": "zmniejszyłem też przy homingu odsunięcie stołu żeby rozłaczyć kontakt z 5 na 2 bo to wystarcza"
+          }
+        }
+      ]
+    },
+    {
+      "id": "OEM_131_BOOT",
+      "function": "Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader",
+      "events": [
+        {
+          "date": "2026-11-13",
+          "version": "Fabryczne 1.3.1",
+          "version_basis": "user_report_stock_version_and_successful_launch",
+          "test": "Wgranie aplikacji i uruchomienie drukarki",
+          "status": "CONFIRMED_HARDWARE",
+          "result": "Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej.",
+          "problem": "Potwierdzenie dotyczy zwykłego uruchomienia aplikacji.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "wgrywam przez bootloader 1.3.1 i się uruchamia",
+            "date": "2026-11-13"
+          }
+        }
+      ]
+    },
+    {
+      "id": "COUNTER_RUNTIME_SYNC",
+      "function": "Automatyczny zapis licznika ID0 w MCU",
+      "events": [
+        {
+          "date": "2026-11-13",
+          "version": "RC8 / MCU 1.0.4",
+          "version_basis": "release_candidate_not_device_readback",
+          "test": "Synchronizacja po wydruku i odzyskanie po zaniku zasilania podczas zapisu",
+          "status": "AWAITING_TEST",
+          "result": "Próba sprzętowa zapisu i odczytu po zapisie oczekuje.",
+          "problem": "Wymaga potwierdzenia na płycie M300 Classic.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
           }
         }
       ]

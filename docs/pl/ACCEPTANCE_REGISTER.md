@@ -36,6 +36,8 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Nowy instalator i zapamiętanie portu | beta.23 | Aktualizacja → odczyt FLUIDD_ENDPOINT_SELECTED → ponowne wywołanie | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Kwalifikowany wariant Z pierwszego wydruku | 0.13.16.38 / test 11.11.2026 | Nastawy istniejącego egzemplarza | Uzgodniona konfiguracja: position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1. | Nie jest globalnym standardem dla innych egzemplarzy. |
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
+| Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
+| Automatyczny zapis licznika ID0 w MCU | RC8 / MCU 1.0.4 | Synchronizacja po wydruku i odzyskanie po zaniku zasilania podczas zapisu | Oczekuje na test: Próba sprzętowa zapisu i odczytu po zapisie oczekuje. | Wymaga potwierdzenia na płycie M300 Classic. |
 
 ## Historia i źródła potwierdzeń
 
@@ -266,6 +268,24 @@ Zapis użytkownika / treść przesłanego zrzutu: „zmniejszyłem też przy hom
 Materiał źródłowy: `docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md`.
 
 Podstawa wersji: `explicit_user_message_after_attached_note`.
+
+### OEM_131_BOOT — Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader
+
+**2026-11-13 · Fabryczne 1.3.1 · Potwierdzone na sprzęcie**
+
+Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej.
+
+Zapis użytkownika / treść przesłanego zrzutu: „wgrywam przez bootloader 1.3.1 i się uruchamia”.
+
+Podstawa wersji: `user_report_stock_version_and_successful_launch`.
+
+### COUNTER_RUNTIME_SYNC — Automatyczny zapis licznika ID0 w MCU
+
+**2026-11-13 · RC8 / MCU 1.0.4 · Oczekuje na test**
+
+Próba sprzętowa zapisu i odczytu po zapisie oczekuje.
+
+Podstawa wersji: `release_candidate_not_device_readback`.
 
 ## Jak aktualizować
 

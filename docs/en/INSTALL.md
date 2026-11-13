@@ -4,12 +4,12 @@
 
 **New host with no M300 installation?** Use the
 [first-install guide](FIRST_INSTALL.md) and fixed
-[v1.0.0-rc.7 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.7).
+[v1.0.0-rc.8 release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.8).
 The updater described below requires an existing native M300 installation.
 
 [Procedure bindings](MAINTENANCE_MATERIAL.md) · [Validation and printer tests](PRINT_CONTEXT.md)
 
-RC7 pairs host 1.0.0-rc.7 with MCU 1.0.3 for M300 Classic. The MCU update is a separate SD procedure. See [MCU firmware and print-time storage](MCU_FIRMWARE_1.0.3.md).
+RC8 pairs host 1.0.0-rc.8 with MCU 1.0.4 for M300 Classic. The MCU update is a separate SD procedure. See [MCU firmware and print-time storage](MCU_FIRMWARE_1.0.4.md).
 The host installer also accepts supported installations running earlier MCU revisions.
 Use the same UART rate on the MCU and the Orange Pi. The R14.14 dry-run
 baseline uses 750,000 baud. The installer preserves the configured baud.
@@ -136,7 +136,7 @@ ZORTRAX_INFO REFRESH=0
 QUERY_PROBE
 ```
 
-Confirm Ready, the real HW05/Z400 identity, normal native control, host 1.0.0-rc.7,
+Confirm Ready, the real HW05/Z400 identity, normal native control, host 1.0.0-rc.8,
 fan/maintenance/procedure revisions and an open PC7 contact with clearance.
 Motion reports the native rail speeds and a fault phase. Calibration still
 reports its four independent movement speeds. The packaged

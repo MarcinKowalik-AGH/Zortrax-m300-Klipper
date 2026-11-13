@@ -501,6 +501,12 @@ class M300NVM:
     def runtime_error(self):
         return self._runtime_error
 
+    def runtime_is_checkpointed(self, now):
+        clock = self.print_clock
+        return (clock.since is None and clock.drain_since is None
+                and not self._runtime_writing and self._runtime_target is None
+                and clock.snapshot(now) == self._runtime_saved)
+
     def _stop_runtime(self, *args):
         # Shutdown callbacks cannot yield. The next timer writes any final
         # sample while the reactor still runs, and disconnect drains it too.
@@ -568,6 +574,8 @@ class M300NVM:
             return resumed + CHECKPOINT_SECONDS
         if clock.snapshot(resumed) != self._runtime_saved:
             return self.reactor.NOW
+        if not disconnected and self.runtime_is_checkpointed(resumed):
+            self.printer.send_event('m300:runtime_checkpoint')
         return self.reactor.NEVER
 
     def _guard(self, calibration=False, completed_job=False, completion_token=None):

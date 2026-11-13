@@ -37,8 +37,8 @@ DECL_CONSTANT("M300_OLED_DMA_IRQ_PRIORITY", 4);
 #define PANEL_EXTI_USED (PANEL_EXTI_AB | PANEL_EXTI_RELEASE)
 DECL_CONSTANT("M300_LOCAL_OLED_ABI", 1);
 #if CONFIG_M300_XY_STEP_TIMER
-DECL_CONSTANT_STR("M300_MCU_RELEASE", "1.0.3");
-#define M300_LOCAL_RELEASE_TEXT "MCU: 1.0.3"
+DECL_CONSTANT_STR("M300_MCU_RELEASE", "1.0.4");
+#define M300_LOCAL_RELEASE_TEXT "MCU: 1.0.4"
 DECL_CONSTANT("M300_XY_STEP_TIMER_ABI", 1);
 #else
 DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.9");
@@ -258,6 +258,20 @@ static uint8_t last_ab, candidate, debounce_count;
 static volatile uint8_t pressed;
 static uint8_t button_armed, long_sent;
 static volatile uint8_t continuous_press;
+
+int
+m300_factory_panel_timer(const struct timer *timer)
+{
+    // Do not defer a motion-service button or an in-flight OLED DMA alarm.
+    return (timer == &panel_timer && !panel_release_sync && !continuous_press)
+        || timer == &local_timer || timer == &oled_host_timer;
+}
+
+int
+m300_factory_panel_idle(void)
+{
+    return !panel_release_sync && !continuous_press && !oled_dma_busy();
+}
 static volatile uint8_t changed;
 
 static uint8_t

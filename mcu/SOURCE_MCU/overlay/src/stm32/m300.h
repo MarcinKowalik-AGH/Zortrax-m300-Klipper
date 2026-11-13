@@ -30,6 +30,10 @@ enum m300_fault {
 
 void m300_early_init(void);
 int m300_factory_write_allowed(void);
+int m300_factory_runtime_allowed(uint32_t blocked_ticks);
+int m300_factory_led_pin(const void *regs, uint32_t bit);
+int m300_factory_heater_pin(const void *regs, uint32_t bit);
+void m300_factory_platform_fault(void);
 void m300_check_pin_mode(uint32_t pin, uint32_t mode);
 void m300_check_native_input(uint32_t pin);
 uint32_t m300_filter_gpio(void *regs, uint32_t bit, uint32_t val);

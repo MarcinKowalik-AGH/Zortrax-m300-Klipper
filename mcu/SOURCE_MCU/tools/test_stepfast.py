@@ -25,7 +25,7 @@ def main():
         result=subprocess.run([str(temp/'test')],capture_output=True,text=True)
         if result.returncode:print(result.stderr)
         result.check_returncode()
-    report={'status':'PASS','guard_equivalence_cases':6720,'existing_guard_rejection_scenarios':31,'physical_hardware':False,'measured_F103_cycles':False,'upstream_commit':patch_upstream.PIN,'source_sha256':hashlib.sha256((KIT/'overlay/src/stm32/m300_board.c').read_bytes()).hexdigest(),'summary':result.stdout}
+    report={'status':'PASS','guard_equivalence_cases':6720,'existing_guard_rejection_scenarios':32,'physical_hardware':False,'measured_F103_cycles':False,'upstream_commit':patch_upstream.PIN,'source_sha256':hashlib.sha256((KIT/'overlay/src/stm32/m300_board.c').read_bytes()).hexdigest(),'summary':result.stdout}
     if args.report:args.report.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
 if __name__=='__main__':main()

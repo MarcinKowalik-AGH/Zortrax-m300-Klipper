@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.7 — first installation
+# Zortrax M300 Classic v1.0.0-rc.8 — first installation
 
 > **Beta.23 installer:** examples use port 4480. Fresh KIAUH still on port 80 can pass `--port 80` or use unique detection; nginx is not rewritten. A successful selection is saved beside printer.cfg. [Details (PL)](../pl/INSTALLATION_AND_CI.md).
 
@@ -15,7 +15,7 @@ The bootloader and factory application are not distributed in this release.
 | Linux | Board-specific Raspberry Pi OS Lite, or a supported Armbian/Debian/Ubuntu server image |
 | Services, Python environment, nginx, Moonraker | One Klipper + Moonraker + Fluidd instance installed with KIAUH |
 | Klipper actually used for M300 | The complete pinned and patched `KLIPPER_HOST` tree in this release |
-| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.3, for the already installed SD bootloader |
+| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.4, for the already installed SD bootloader |
 | Fluidd actually used for M300 | Our precompiled Fluidd 1.37.7 extension in the same release |
 | Machine configuration | First-install templates, with local paths/UART rendered by the installer |
 
@@ -93,11 +93,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.7/Zortrax_M300_Klipper_v1.0.0-rc.7.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.7/SHA256SUMS-v1.0.0-rc.7.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.7.zip$' SHA256SUMS-v1.0.0-rc.7.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.7.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.7 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/SHA256SUMS-v1.0.0-rc.8.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.8.zip$' SHA256SUMS-v1.0.0-rc.8.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.8 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -111,7 +111,7 @@ application at **0x08008000**, not a bootloader image or a whole-chip erase.
 After a successful flash, remove the update card or remove the update file
 before later boots. The old host updater never flashes the MCU automatically.
 
-RC7 starts with local print-time accounting. To enable the MCU transfer, first verify the full flash backup of this board, then set `factory_counter_backup:` to its absolute path in the existing `[m300_mcu]` section. Follow the [qualification and update procedure](MCU_FIRMWARE_1.0.3.md) before issuing `FIRMWARE_RESTART` while idle.
+RC8 starts with local print-time accounting. To enable the MCU transfer, verify the existing full Flash backup of this board and set `factory_counter_backup:` to its absolute path in the existing `[m300_mcu]` section. With MCU 1.0.4, synchronization runs automatically after the printer becomes eligible to write. [MCU update and counter checks](MCU_FIRMWARE_1.0.4.md).
 
 ## 5. Install the matching M300 host/configuration/Fluidd
 
@@ -158,10 +158,10 @@ QUERY_PROBE
 M105
 ```
 
-Expect Ready, matching 750000 baud, MCU `1.0.3` when installing the separate
+Expect Ready, matching 750000 baud, MCU `1.0.4` when installing the separate
 MCU firmware release (older R14.18/R14.19 identifiers remain valid on existing
 printers), zero heater targets and sensible ambient temperatures. Confirm the endstops/contact change when operated.
-The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.7/docs/en/HARDWARE_VARIANTS.md)
+The [factory hardware/Z profile](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/en/HARDWARE_VARIANTS.md)
 must match the printer. An erased/unknown factory record is an error, not a
 reason to guess a Z scale.
 
@@ -185,7 +185,7 @@ START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_tempe
 END_PRINT
 ```
 
-See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.7/docs/pl/PRINT_CONTROL.md).
+See the [workflow and pause/M600 parameters](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/pl/PRINT_CONTROL.md).
 
 ## Updates and acceptance scope
 

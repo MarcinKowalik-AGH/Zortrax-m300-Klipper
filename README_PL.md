@@ -1,15 +1,15 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.7
+# Zortrax M300 Classic — Klipper 1.0.0-rc.8
 
-**RC7:** Licznik całkowity obejmuje czas druku modelu z ukończonych, anulowanych i przerwanych wydruków. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.7.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
+**RC8:** Klipper automatycznie synchronizuje zgromadzone minuty druku modelu z MCU 1.0.4, gdy skonfigurowana drukarka jest bezczynna i spełnia warunki zapisu. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.8.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
 
 
-**MCU 1.0.3:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.3.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.3).
+**MCU 1.0.4:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.4.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.4).
 
-**Siódmy kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**Ósmy kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC7](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.7) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC8](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.8) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -40,7 +40,7 @@ Instalator sprawdza i zapamiętuje istniejący port Fluidd. Zachowuje mesh, PID,
 UART, własną konfigurację oraz zapisane ustawienia kwalifikowanego Z. Nie omijaj
 odmowy nadpisania nieznanego kodu ani SHA256SUMS. Po instalacji odśwież Fluidd
 przez Cmd+Shift+R. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i MCU/M300_SD.zip.
-MCU 1.0.3 wgrywa się osobno z karty SD podczas testu zapisu licznika na płycie. [Aktualizacja MCU i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.3.md).
+MCU 1.0.4 wgrywa się osobno z karty SD, aby używać automatycznej synchronizacji w trakcie normalnej pracy drukarki. [Aktualizacja MCU i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.4.md).
 
 ## Stan odbioru
 

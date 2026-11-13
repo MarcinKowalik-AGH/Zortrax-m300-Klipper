@@ -100,6 +100,8 @@ def main():
         KIT / 'tests/test_m300_factory_counter.c',
         KIT / 'overlay/src/stm32/m300_factory_counter.c', '-o', factory_counter])
     run('factory_counter_power_cut_model', [factory_counter])
+    run('factory_counter_runtime_scheduler', [sys.executable,
+        KIT / 'tools/test_factory_runtime_scheduler.py', '--upstream', pristine])
     sd_card = report / 'sd-card-test'
     run('sd_card_model_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                                   ROOT / 'mcu/tests/test_m300_sd.c', '-o', sd_card])

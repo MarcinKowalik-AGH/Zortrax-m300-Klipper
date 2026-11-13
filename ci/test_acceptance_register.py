@@ -8,7 +8,7 @@ class AcceptanceTests(unittest.TestCase):
     def setUp(self):
         self.data=json.loads((m.ROOT/'docs/reports/HARDWARE_ACCEPTANCE.json').read_text())
     def test_valid_and_markdown_exact(self):
-        self.assertEqual(m.validate(self.data),21)
+        self.assertEqual(m.validate(self.data),23)
         self.assertEqual(m.render(self.data),(m.ROOT/'docs/pl/ACCEPTANCE_REGISTER.md').read_text())
     def test_confirmed_needs_user_evidence(self):
         d=deepcopy(self.data);d['features'][0]['events'][0]['evidence']={'kind':'ci_pass','quote':'741 tests'}
@@ -27,9 +27,11 @@ class AcceptanceTests(unittest.TestCase):
         f=next(f for f in self.data['features'] if f['id']=='OLED_LAYOUT')
         self.assertEqual(f['events'][-1]['status'],'CONFIRMED_UI')
         self.assertNotEqual(f['events'][-1]['status'],'CONFIRMED_HARDWARE')
-    def test_no_unperformed_hardware_pass(self):
-        for f in self.data['features']:
-            for e in f['events']:self.assertNotEqual(e['status'],'CONFIRMED_HARDWARE')
+    def test_stock_launch_evidence_does_not_qualify_runtime_counter(self):
+        stock = next(f for f in self.data['features'] if f['id'] == 'OEM_131_BOOT')
+        self.assertEqual(stock['events'][-1]['status'], 'CONFIRMED_HARDWARE')
+        runtime = next(f for f in self.data['features'] if f['id'] == 'COUNTER_RUNTIME_SYNC')
+        self.assertEqual(runtime['events'][-1]['status'], 'AWAITING_TEST')
     def test_mandatory_fields_validated(self):
         for key in ('date','version','test','result'):
             d=deepcopy(self.data);d['features'][0]['events'][0][key]=''

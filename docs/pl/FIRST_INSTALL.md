@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.7 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-rc.8 — instalacja od początku
 
 > **Instalator beta.23:** przykłady dotyczą portu 4480. Nowa instalacja KIAUH pozostająca na 80 wymaga `--port 80` lub jednoznacznego wykrycia; instalator nie zmienia nginx. Po sukcesie zapisuje port/katalog obok printer.cfg. [Szczegóły](INSTALLATION_AND_CI.md).
 
@@ -19,7 +19,7 @@ Nie trzeba ręcznie kopiować patchy ani kompilować firmware drukarki lub Fluid
 |---|---|
 | System Linux | Obraz dobrany do konkretnego Raspberry Pi lub Orange Pi; nie ma jednego obrazu pasującego do obu rodzin |
 | Klipper host | Pełne źródła przypiętej wersji z kompletem zmian M300, nie same moduły extras |
-| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.3, do posiadanego bootloadera SD |
+| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.4, do posiadanego bootloadera SD |
 | Fluidd | Gotowa kompilacja 1.37.7 z menu i wizualizacją M300 |
 | Konfiguracja | Oddzielne pliki sprzętu, termiki, procedur i makr; ścieżki i UART ustawia instalator |
 | Kontrola wydania | Sumy SHA-256, identyfikator źródeł, raporty testów i licencje |
@@ -99,11 +99,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.7/Zortrax_M300_Klipper_v1.0.0-rc.7.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.7/SHA256SUMS-v1.0.0-rc.7.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.7.zip$' SHA256SUMS-v1.0.0-rc.7.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.7.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.7 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/SHA256SUMS-v1.0.0-rc.8.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.8.zip$' SHA256SUMS-v1.0.0-rc.8.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.8 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -119,7 +119,7 @@ Plik zawiera aplikację od adresu **0x08008000**. Nie jest wsadem bootloadera,
 pełnym zrzutem Flash ani poleceniem kasowania fabrycznych danych. Instalator
 hosta nie wykonuje tej operacji automatycznie.
 
-RC7 domyślnie zlicza czas druku lokalnie. Aby włączyć zapis do MCU, sprawdź pełną kopię Flash tej płyty i podaj jej ścieżkę bezwzględną jako `factory_counter_backup:` w istniejącej sekcji `[m300_mcu]`. Przejdź [procedurę weryfikacji](MCU_FIRMWARE_1.0.3.md) przed poleceniem `FIRMWARE_RESTART` przy bezczynnej drukarce.
+RC8 domyślnie zlicza czas druku lokalnie. Aby włączyć zapis do MCU, sprawdź posiadaną pełną kopię Flash tej płyty i podaj jej ścieżkę bezwzględną jako `factory_counter_backup:` w istniejącej sekcji `[m300_mcu]`. Z MCU 1.0.4 synchronizacja następuje automatycznie, gdy drukarka spełni warunki zapisu. [Aktualizacja MCU i odczyt licznika](MCU_FIRMWARE_1.0.4.md).
 
 ## 5. Pierwsza instalacja M300 na hoście
 
@@ -167,11 +167,11 @@ QUERY_PROBE
 M105
 ```
 
-Oczekiwane: Ready, zgodne 750000 baud, MCU `1.0.3` po wgraniu osobnego
+Oczekiwane: Ready, zgodne 750000 baud, MCU `1.0.4` po wgraniu osobnego
 wydania firmware (na już działających drukarkach starsze identyfikatory
 R14.18/R14.19 pozostają zgodne), cele temperatur 0°C i poprawne
 odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
-[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.7/docs/en/HARDWARE_VARIANTS.md)
+[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.
 
@@ -196,11 +196,11 @@ Procedura końcowa:
 END_PRINT
 ```
 
-[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.7/docs/pl/PRINT_CONTROL.md).
+[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/pl/PRINT_CONTROL.md).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Tag i pliki `v1.0.0-rc.7` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
+Tag i pliki `v1.0.0-rc.8` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
 późniejszych aktualizacji projektu. Po tej pierwszej instalacji można ją
 sklonować i używać zwykłego instalatora `install-orange-pi.py --port 4480`
 (beta.23 preferuje 4480 i ponownie sprawdza zapisany port/katalog). Nie aktualizuj portu przyciskiem
