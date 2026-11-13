@@ -1,0 +1,27 @@
+name: Prepare RC6 animation repair
+on:
+  push:
+    branches: [fix/rc6-approved-menu-animation]
+    paths: ['.github/workflows/prepare-rc6-animation.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 287fcddea4e6e966239a70407c7f8438a8502eed
+          persist-credentials: false
+      - name: Export exact source without Git credentials
+        run: |
+          mkdir -p exports
+          git archive --format=zip HEAD > exports/M300_RC6_SOURCE_BASE.zip
+          sha256sum exports/M300_RC6_SOURCE_BASE.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_RC6_SOURCE_BASE
+          path: exports/M300_RC6_SOURCE_BASE.zip
+          retention-days: 7
+          if-no-files-found: error
