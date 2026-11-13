@@ -154,6 +154,8 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         duty = (fan.get('channels', {}).get('print' if lower else 'hotend', {}).get('effective_duty'))
         enabled = type(duty) in (int,float) and duty>0 and fan.get('mcu_status_fresh') is True
         return symbol('fan_lower' if lower else 'fan_upper', enabled and selected != 0)
+    if page in ('temperature_HOTEND', 'temperature_BED'):
+        return symbol('heat_bed' if page == 'temperature_BED' else 'heat_nozzle')
     if panel_page == 'temps':
         return symbol('heat_bed' if selected == 2 else 'heat_nozzle')
     if page in ('models', 'browser', 'model_file', 'preview', 'confirm_print'):

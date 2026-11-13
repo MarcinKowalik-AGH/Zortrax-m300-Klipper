@@ -17,7 +17,7 @@ from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
 from .m300_settings import PAGES as SETTINGS_PAGES, TITLES
 from .m300_nvm import BRIGHTNESS_KEYS
-from .m300_settings_ui import brightness_frame, menu_frame
+from .m300_settings_ui import brightness_frame, menu_frame, temperature_frame
 from .m300_activity_graphics import fault_symbol, menu_symbol, procedure_symbol
 from .m300_error_codes import CODES
 
@@ -46,6 +46,7 @@ class M300MenuUI:
         self._leveling_frames = deque(maxlen=16)
         self.leveling_settings = False
         self._brightness_presented = None
+        self._temperature_presented = None
         self.history = MenuHistory(self.menu_max_depth)
         self._return_cursors = {}
         path = os.path.join(os.path.dirname(__file__), 'm300_m11_stock_atlas.json')
@@ -70,6 +71,7 @@ class M300MenuUI:
         self._leveling_frames.clear()
         self.leveling_settings = False
         self._brightness_presented = None
+        self._temperature_presented = None
 
     def entered(self, old, new, remember=True):
         self.history.entered(old, new, remember)
@@ -245,6 +247,23 @@ class M300MenuUI:
     def maintenance_frame(self, panel_page, rows, selected, frame_type, labels=None, sprite=None):
         if panel_page != 'm04':
             return None
+        if self.menu.page in ('temperature_HOTEND', 'temperature_BED'):
+            kind = self.menu.page[12:]
+            limits = self.menu.temperature_range(kind)
+            if limits is None:
+                wire = menu_frame(tuple(labels or [r[0] for r in rows]), (),
+                                  selected, frame_type, sprite)
+                self._temperature_presented = self.menu.generation, selected, wire
+                return wire
+            index = selected or self.menu.temperature_selection()
+            if index is None or not 0 < index < len(rows):
+                self._temperature_presented = None
+                return None
+            value = rows[index][1][2]
+            title = 'Hotend TEMP' if kind == 'HOTEND' else 'Bed TEMP'
+            wire = temperature_frame(title, value, *limits, selected == 0, frame_type, sprite)
+            self._temperature_presented = self.menu.generation, selected, wire
+            return wire
         if self.menu.page in SETTINGS_PAGES:
             settings = self.printer.lookup_object('m300_settings', None)
             if settings is not None:
@@ -263,6 +282,16 @@ class M300MenuUI:
         lower=rows[2][0][len(FAN_LABELS[2])+1:]
         note='Automatic upper-fan cooling' if upper=='(Cooling)' else ''
         return fan_frame(upper,lower,note,selected,frame_type,sprite)
+
+    def temperature_selection(self):
+        return self.menu.temperature_selection()
+
+    def temperature_receipt(self, stream):
+        frame = getattr(self, '_temperature_presented', None)
+        if (frame is not None and stream.enabled and stream.ready
+                and frame[2] == stream.previous):
+            return frame[:2]
+        return None
 
     def brightness_selection(self):
         key = self.menu.page[8:]

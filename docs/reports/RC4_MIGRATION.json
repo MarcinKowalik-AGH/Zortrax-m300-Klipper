@@ -1,0 +1,11 @@
+{
+  "status": "PASS_OFFLINE_RC3_TO_RC4_MIGRATION",
+  "source_artifact_sha256": "1f06d13bf55a76e8e0d552ff485819060129402ccbbb323e634a55a6bccd3d27",
+  "changed_paths": 10,
+  "preserved_original_files": 2420,
+  "idempotent": true,
+  "rollback_exact": true,
+  "unknown_edit_refused": true,
+  "hardware_access": false,
+  "mcu_flashed": false
+}

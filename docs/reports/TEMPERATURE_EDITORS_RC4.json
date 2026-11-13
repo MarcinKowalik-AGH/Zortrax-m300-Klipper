@@ -1,0 +1,89 @@
+{
+  "status": "PASS_PRODUCTION_TEMPERATURE_EDITOR_RENDER",
+  "release": "v1.0.0-rc.4",
+  "source": "M300OLED._render + original indexed PNG encoder",
+  "physical_printer_tested": false,
+  "heater_targets_changed": false,
+  "screens": [
+    {
+      "name": "hotend_210",
+      "kind": "HOTEND",
+      "value_c": 210,
+      "range_c": [
+        170,
+        305
+      ],
+      "native_file": "docs/img/oled-temperature/hotend_210.png",
+      "zoom_file": "docs/img/oled-temperature/hotend_210@3x.png",
+      "wire_sha256": "de2ee638506e8c5acb5a1ba033f69f5507f3e9245c5249e8e5b853e3d1a7b31e",
+      "png_sha256": "fd3c1919a9fb4c0791c7bca9f61552de0aa52100173089a6bb1c18223389fb02",
+      "zoom_sha256": "6a8f514ebc964c5539b6de1fc804724a200a61c6b555ff0f7c157058a815d61f",
+      "sprite": "activity:heat_nozzle",
+      "dimensions": [
+        256,
+        64
+      ],
+      "zoom": 3
+    },
+    {
+      "name": "bed_60",
+      "kind": "BED",
+      "value_c": 60,
+      "range_c": [
+        40,
+        105
+      ],
+      "native_file": "docs/img/oled-temperature/bed_60.png",
+      "zoom_file": "docs/img/oled-temperature/bed_60@3x.png",
+      "wire_sha256": "1d9dc3960cd554c5f72ec37d3314b07fffb19e875fc2ebc9358f4e3115f1d824",
+      "png_sha256": "6f1258cb1052d9b67e86715a784a0534dc0aba380620187d901d88fadc1a8df8",
+      "zoom_sha256": "dba348bcc5222d0cbf621e666c3c5478b189c46be080d85015c42b3cefdb1dac",
+      "sprite": "activity:heat_bed",
+      "dimensions": [
+        256,
+        64
+      ],
+      "zoom": 3
+    },
+    {
+      "name": "hotend_305",
+      "kind": "HOTEND",
+      "value_c": 305,
+      "range_c": [
+        170,
+        305
+      ],
+      "native_file": "docs/img/oled-temperature/hotend_305.png",
+      "zoom_file": "docs/img/oled-temperature/hotend_305@3x.png",
+      "wire_sha256": "606d2a86ce0171f39f2144f0db2e0e012787039bbd00a4ceeace0d3f08a17ff4",
+      "png_sha256": "53fa1e0e0e3fa59e20316f243ba30b76bdfc32ce83e3f215a8f504bb5ca576d8",
+      "zoom_sha256": "21f89659112f46082a2a87cafd01d058f26835434e9ef2b8ff87ca7dfe866fa2",
+      "sprite": "activity:heat_nozzle",
+      "dimensions": [
+        256,
+        64
+      ],
+      "zoom": 3
+    },
+    {
+      "name": "bed_105",
+      "kind": "BED",
+      "value_c": 105,
+      "range_c": [
+        40,
+        105
+      ],
+      "native_file": "docs/img/oled-temperature/bed_105.png",
+      "zoom_file": "docs/img/oled-temperature/bed_105@3x.png",
+      "wire_sha256": "eba63d62ff08e70c9f765d5bdd428544b8773f706ceffc215e6c6a58f9e42a77",
+      "png_sha256": "30de09d7351bba4b09cd241a3a87dd91a2e09b366dbc8ae3de497e66677b5de6",
+      "zoom_sha256": "d2ddbfd2db8f12c598a5b9c4d57c1104180b33d678fb632268278815476c5161",
+      "sprite": "activity:heat_bed",
+      "dimensions": [
+        256,
+        64
+      ],
+      "zoom": 3
+    }
+  ]
+}

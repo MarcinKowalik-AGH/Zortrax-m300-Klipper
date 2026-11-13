@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-rc.3'
+CURRENT_RELEASE = 'v1.0.0-rc.4'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
@@ -132,7 +132,7 @@ def main():
         install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
         check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-rc1:'+lang)
         supplement = (ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md')).read_text()
-        check('1.0.1' in supplement and 'M300_SD.zip' in supplement,
+        check(port['mcu_release'] in supplement and 'M300_SD.zip' in supplement,
               'current-MCU-update-instructions:'+lang)
         check('beta.20' in supplement, 'historical-illustration-baseline-disclosed:'+lang)
     for name in ('README.md','README_PL.md'):

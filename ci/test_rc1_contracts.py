@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.3'
+VERSION='v1.0.0-rc.4'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -28,7 +28,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertNotIn("'Host UI: R7 Fans'",labels)
 
     def test_protected_motion_thermal_mesh_and_pixel_sources_unchanged(self):
-        report=json.loads((ROOT/'docs/reports/RC1_REVIEW.json').read_text())
+        report=json.loads((ROOT/'docs/reports/RC4_REVIEW.json').read_text())
         self.assertFalse(report['physical_tests_performed'])
         self.assertGreaterEqual(len(report['protected_sha256']),14)
         for path,expected in report['protected_sha256'].items():
@@ -37,7 +37,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],828)
+        self.assertEqual(meta['self_contained_host_tests'],846)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -109,7 +109,7 @@ class Rc1Contracts(unittest.TestCase):
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/('RELEASE_'+VERSION+'.md')).read_text()
             self.assertIn('--port 4480',text)
-            self.assertIn('1.0.1',text)
+            self.assertIn('1.0.2',text)
 
     def test_obsolete_generators_and_duplicate_publish_workflow_removed(self):
         for path in ('tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py',
