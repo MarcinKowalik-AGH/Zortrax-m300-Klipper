@@ -1,0 +1,40 @@
+name: Prepare MCU print-time review
+on:
+  push:
+    branches: [feat/rc7-mcu-print-time]
+    paths: ['.github/workflows/prepare-runtime-review.yml']
+permissions:
+  contents: read
+jobs:
+  references:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fcab07c537e75046dc39968b279160ce7c70605c
+          path: m300
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: MarcinKowalik-AGH/Zortrax-m300-Boot-Loader
+          ref: 156daf4d1d5f14d2f0e553a64b352397be397745
+          path: boot
+          persist-credentials: false
+      - name: Collect public pinned references only
+        run: |
+          set -euo pipefail
+          cd m300
+          python3 ci/prepare_upstream.py
+          mkdir ../exports
+          cp mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip ../exports/
+          cp ../boot/firmware/v1.4/M300Boot_v1.4_SD_FACTORY_OEMV3.zip ../exports/
+          cp ../boot/firmware/v1.4/SHA256SUMS.txt ../exports/BOOT_SHA256SUMS.txt
+          cd ../exports
+          sha256sum *.zip > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_RUNTIME_REFERENCES
+          path: exports/
+          retention-days: 7
+          if-no-files-found: error
