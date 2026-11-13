@@ -342,6 +342,7 @@ int main(void)
     REJECT(arm_model(), M300_FAULT_ARM); // zero gates still cannot ARM
     assert(!(GPIOC->ODR & (1u<<8)) && !(GPIOD->ODR & (1u<<14)));
 
+#ifndef M300_OLD_SNAPSHOT_API
     // An idle runtime Flash transaction keeps stationary Z hold and cooling.
     uint32_t flash_ticks = timer_from_us(47000);
     restart_model();
@@ -376,6 +377,7 @@ int main(void)
     assert(m300_factory_heater_pin(GPIOC, 1u << 8));
     assert(m300_factory_heater_pin(GPIOC, 1u << 9));
     assert(!m300_factory_heater_pin(GPIOE, 1u << 14));
+#endif
 
     // Raw range policy cannot be expanded by a validly encoded host command.
     uint32_t bad_config[]={3, 1, M300_HOT_RAW_MAX+1, 1800, 3900};
