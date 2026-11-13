@@ -1,5 +1,6 @@
 # Classic M300 P01 LAB build; does not identify the physical MCU/crystal.
-# Native F103 64 KiB application region and 20 KiB SRAM are kept conservative.
+# Classic M300 uses a 68 KiB linker budget inside its existing app slot.
+# SRAM remains at 20 KiB.
 CONFIG_LOW_LEVEL_OPTIONS=y
 CONFIG_MACH_STM32=y
 CONFIG_MACH_STM32F103=y

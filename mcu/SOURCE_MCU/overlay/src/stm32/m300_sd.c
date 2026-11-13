@@ -35,6 +35,18 @@ static uint32_t block_count, deadline, poll_ticks, power_count, last_chunk;
 static struct timer sd_timer;
 static struct task_wake sd_wake;
 
+int
+m300_factory_sd_timer(const struct timer *timer)
+{
+    return timer == &sd_timer && !sd_active;
+}
+
+int
+m300_factory_sd_idle(void)
+{
+    return !sd_active;
+}
+
 static void
 sd_put(unsigned pin, unsigned value)
 {

@@ -92,6 +92,19 @@ m300_factory_write_allowed(void)
         && !(GPIOE->IDR & (1u << 15));
 }
 
+int
+m300_factory_led_pin(const void *regs, uint32_t bit)
+{
+    return (regs == GPIOB && bit == (1u << 5))
+        || (regs == GPIOD && (bit == (1u << 6) || bit == (1u << 7)));
+}
+
+int
+m300_factory_heater_pin(const void *regs, uint32_t bit)
+{
+    return regs == GPIOC && (bit == (1u << 8) || bit == (1u << 9));
+}
+
 static void
 raw_write(GPIO_TypeDef *regs, uint32_t bit, uint32_t value)
 {
@@ -206,6 +219,14 @@ trip(uint8_t reason)
     shutdown("M300 local guard latched");
 }
 
+void
+m300_factory_platform_fault(void)
+{
+    // The SRAM Flash routine already forced the pins safe. Record a latched
+    // connector fault even if PE15 bounced low before Flash was readable.
+    trip(M300_FAULT_PLATFORM);
+}
+
 static uint16_t
 read_inputs(void)
 {
@@ -283,6 +304,22 @@ fan_control_allowed(uint32_t now)
 
 #include "m300_cooling.inc"
 
+// Caller masks IRQs so the ADC and heartbeat stamps form a coherent snapshot.
+int
+m300_factory_runtime_allowed(uint32_t blocked_ticks)
+{
+    uint32_t now = timer_read_time();
+    if (blocked_ticks >= timer_from_us(FRESH_US))
+        return 0;
+    uint32_t fresh = timer_from_us(FRESH_US) - blocked_ticks;
+    return configured && armed && !fault && !sched_is_shutdown()
+        && !(GPIOE->IDR & (1u << 15)) && !(GPIOC->ODR & (3u << 8))
+        && heartbeat_seen && now - heartbeat_time < fresh
+        && adc_seen == ADC_BOTH && now - hot_time < fresh
+        && now - bed_time < fresh && raw_in_range()
+        && (hot_raw < COOL_ON_RAW || (GPIOE->ODR & (1u << 14)));
+}
+
 static void
 sync_fan_policy(void)
 {
@@ -349,6 +386,12 @@ guard_event(struct timer *timer)
 
 static struct timer guard_timer = { .func = guard_event };
 static uint8_t guard_timer_started;
+
+int
+m300_factory_board_timer(const struct timer *timer)
+{
+    return timer == &guard_timer;
+}
 
 void
 m300_board_init(void)

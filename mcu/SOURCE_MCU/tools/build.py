@@ -20,11 +20,15 @@ PIN = 'ee2c6fb6b00b2b5d097ef70d0868df7d74943b51'
 ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0'
 APP_START = 0x08008000
 NVM_START = 0x0803A000
-MCU_RELEASE = '1.0.3'
+APP_LINKER_BYTES = 0x11000
+MCU_RELEASE = '1.0.4'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_factory_counter_query',
                      'm300_factory_counter_commit serial=%u source=%c expected=%u target=%u settings_crc=%u',
+                     'm300_factory_counter_query_runtime token=%u',
+                     'm300_factory_counter_commit_runtime serial=%u source=%c expected=%u'
+                     ' target=%u settings_crc=%u deadline=%u',
                      'm300_uart_query',
                      'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',
@@ -91,7 +95,7 @@ def check_config(path):
             raise ValueError('Wrong MCU configuration: ' + key)
     numbers = {'CONFIG_FLASH_APPLICATION_ADDRESS': APP_START,
                'CONFIG_CLOCK_FREQ': 72000000,
-               'CONFIG_FLASH_SIZE': 0x10000, 'CONFIG_RAM_SIZE': 0x5000}
+               'CONFIG_FLASH_SIZE': APP_LINKER_BYTES, 'CONFIG_RAM_SIZE': 0x5000}
     for key, value in numbers.items():
         if int(cfg.get(key, '-1'), 0) != value:
             raise ValueError('Wrong MCU configuration: ' + key)
@@ -121,6 +125,7 @@ def validate(work, output, env, log):
     for key, expected in {'M300_ABI': 1, 'M300_MODEL': 'M300_CLASSIC',
                           'M300_FACTORY_ABI': 1, 'M300_FACTORY_HW_ADDRESS': 0x0803f848,
                           'M300_FACTORY_INFO_ABI': 1, 'M300_FACTORY_COUNTER_ABI': 1,
+                          'M300_FACTORY_COUNTER_RUNTIME_ABI': 1,
                           'M300_SOFTWARE_PWM_ONLY': 1, 'M300_FAN_POLICY': 3,
                           'M300_LOCAL_COOLING_ABI': 1, 'M300_LOCAL_COOLING_ON_RAW': 314,
                           'M300_LOCAL_COOLING_OFF_RAW': 281,
@@ -151,7 +156,10 @@ def validate(work, output, env, log):
             not in dictionary['responses']):
         raise ValueError('Missing or incompatible factory information response')
     for response in ('m300_factory_counter_state serial=%u state=%c source=%c print_minutes=%u settings_crc=%u',
-                     'm300_factory_counter_result status=%c'):
+                     'm300_factory_counter_result status=%c',
+                     'm300_factory_counter_runtime_state token=%u serial=%u state=%c source=%c'
+                     ' print_minutes=%u settings_crc=%u',
+                     'm300_factory_counter_runtime_result deadline=%u status=%c'):
         if response not in dictionary['responses']:
             raise ValueError('Missing or incompatible factory counter response: ' + response)
     for prefix in REQUIRED_COMMANDS:

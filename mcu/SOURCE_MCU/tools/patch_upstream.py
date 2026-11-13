@@ -16,7 +16,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-1.0.3"
+VERSION = "M300_CLASSIC-1.0.4"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "scripts/buildcommands.py": "b67abb120a4d283af722dd1fc28c1317836510cc426cda4d917ad2548c645b44",
@@ -73,6 +73,9 @@ config M300_XY_STEP_TIMER
     depends on M300_CLASSIC && !WANT_STEPPER_OPTIMIZED_BOTH_EDGE
     default y
 ''', key)
+    anchor = "config FLASH_SIZE\n    hex\n"
+    f[key] = replace(f[key], anchor, anchor + "    default 0x11000 if M300_CLASSIC\n",
+                     key + ":classic-application-budget")
 
     key = "src/stm32/Makefile"
     anchor = "# Add source files\n"
@@ -115,10 +118,62 @@ m300_native_config_started(void)
 ''', key + ":error-include")
     anchor = "static struct timer sentinel_timer = {\n"
     f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
-int32_t
-m300_factory_periodic_margin(void)
+extern int m300_factory_board_timer(const struct timer *);
+extern int m300_factory_panel_timer(const struct timer *);
+extern int m300_factory_sd_timer(const struct timer *);
+extern int m300_factory_led_timer(const struct timer *);
+
+static int
+m300_factory_timer_tolerant(const struct timer *timer)
 {
-    return (int32_t)(periodic_timer.waketime - timer_read_time());
+    return m300_factory_board_timer(timer) || m300_factory_panel_timer(timer)
+        || m300_factory_sd_timer(timer) || m300_factory_led_timer(timer);
+}
+
+int32_t
+m300_factory_timer_margin(void)
+{
+    struct timer *timer = SchedStatus.timer_list;
+    while (timer != &periodic_timer && timer != &sentinel_timer) {
+        if (timer != &deleted_timer && !m300_factory_timer_tolerant(timer))
+            break;
+        timer = timer->next;
+    }
+    return (int32_t)(timer->waketime - timer_read_time());
+}
+
+// Called with IRQs masked after Flash. A no-op head consumes the timer kick
+// without dispatching a future timer. Strict timers retain their deadlines.
+void
+m300_factory_rebase_timers(void)
+{
+    uint32_t now = timer_read_time(), wake = now + timer_from_us(250);
+    struct timer **link = &SchedStatus.timer_list;
+    if (*link == &deleted_timer)
+        *link = deleted_timer.next;
+    struct timer *deferred = NULL;
+    while (*link != &sentinel_timer && timer_is_before((*link)->waketime, wake)) {
+        struct timer *timer = *link;
+        if (!m300_factory_timer_tolerant(timer)) {
+            link = &timer->next;
+            continue;
+        }
+        *link = timer->next;
+        timer->waketime = wake;
+        timer->next = deferred;
+        deferred = timer;
+    }
+    while (deferred) {
+        struct timer *timer = deferred;
+        deferred = timer->next;
+        timer->next = *link;
+        *link = timer;
+    }
+    SchedStatus.last_insert = &periodic_timer;
+    deleted_timer.waketime = now;
+    deleted_timer.next = SchedStatus.timer_list;
+    SchedStatus.timer_list = &deleted_timer;
+    timer_kick();
 }
 #endif
 
@@ -382,6 +437,22 @@ m300_stepper_prepare_timer(struct stepper *s)
     m300_xy_timer_abort_all();
 #endif
 ''', key + ":xy-timer-shutdown")
+    anchor = "// Schedule a set of steps with a given timing\n"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
+int
+m300_factory_steppers_idle(void)
+{
+    uint8_t oid;
+    struct stepper *s;
+    foreach_oid(oid, s, command_config_stepper) {
+        if (s->count || !move_queue_empty(&s->mq))
+            return 0;
+    }
+    return 1;
+}
+#endif
+
+''' + anchor, key + ":factory-stepper-idle")
     anchor = "command_queue_step(uint32_t *args)\n{\n"
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_require_motion();
@@ -395,12 +466,45 @@ m300_stepper_prepare_timer(struct stepper *s)
 #include "board/m300.h"
 #endif
 ''' + anchor, key + ":include")
+    anchor = "// Load next pin output setting\n"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
+int
+m300_factory_led_timer(const struct timer *timer)
+{
+    if (timer->func != digital_toggle_event)
+        return 0;
+    const struct digital_out_s *d = container_of(timer, struct digital_out_s, timer);
+    // Only settled PWM on the three cosmetic LED pins can slide. Heater,
+    // fan, buzzer and queued output changes retain their exact deadlines.
+    return !(d->flags & DF_CHECK_END) && !d->mq.first
+        && m300_factory_led_pin(d->pin.regs, d->pin.bit);
+}
+#endif
+
+''' + anchor, key + ":factory-led-timing")
     anchor = "command_config_digital_out(uint32_t *args)\n{\n"
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_check_output_defaults(args[1], args[2], args[3]);
 #endif
 ''', key + ":defaults")
     anchor = "command_queue_digital_out(uint32_t *args)\n{\n    struct digital_out_s *d = oid_lookup(args[0], command_config_digital_out);\n"
+    before = "void\n" + anchor
+    f[key] = replace(f[key], before, '''#if CONFIG_M300_CLASSIC
+int
+m300_factory_heaters_idle(void)
+{
+    uint8_t oid;
+    struct digital_out_s *d;
+    foreach_oid(oid, d, command_config_digital_out) {
+        if (m300_factory_heater_pin(d->pin.regs, d->pin.bit)
+            && (d->mq.first || (d->flags & (DF_ON | DF_TOGGLING | DF_CHECK_END))))
+            return 0;
+    }
+    return 1;
+}
+#endif
+
+''' + before, key + ":factory-heater-idle")
     f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
     m300_require_output(d->pin.regs, d->pin.bit, args[2]);
 #endif
@@ -446,7 +550,7 @@ ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
     anchor = "    return version + extra\n"
     f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
     if fixed:
-        if fixed != "1.0.3":
+        if fixed != "1.0.4":
             error("Unsupported M300 firmware version")
         return fixed
     return version + extra

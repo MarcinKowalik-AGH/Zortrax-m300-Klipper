@@ -59,14 +59,21 @@ class RuntimeCounterTests(unittest.TestCase):
 
     def test_cancelled_model_keeps_time_without_marking_a_completion(self):
         with replay_session() as h:
+            checkpoints = []
+            h.handlers['m300:runtime_checkpoint'].append(
+                lambda: checkpoints.append(h.nvm.ui_snapshot()['counters']['print_seconds']))
             native_model(h)
             deposit(h)
-            h.now += 42.5
+            h.now += 15.
+            h.nvm._save_runtime(h.now)
+            self.assertEqual(checkpoints, [])
+            h.now += 27.5
             h.busy_until = h.now
             h.vsd.print_stats.note_cancel()
             h.nvm._save_runtime(h.now)
             self.assertEqual(h.nvm.ui_snapshot()['counters'],
                              {'completed_jobs': 0, 'print_seconds': 42.5})
+            self.assertEqual(checkpoints, [42.5])
 
     def test_cancel_before_deposition_keeps_no_print_time(self):
         with replay_session() as h:

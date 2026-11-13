@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.3'
+EXPECTED = '1.0.4'
 
 
 def require(condition, message):
@@ -33,16 +33,28 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
     require(data['config']['M300_ABI'] == 1, 'MCU ABI mismatch')
     require(data['config']['M300_FACTORY_COUNTER_ABI'] == 1,
             'Factory counter ABI missing')
+    require(data['config']['M300_FACTORY_COUNTER_RUNTIME_ABI'] == 1,
+            'Factory counter runtime capability missing')
     require('m300_factory_counter_query' in data['commands'],
             'Factory counter query command missing')
+    require('m300_factory_counter_query_runtime token=%u' in data['commands'],
+            'Factory counter runtime query format changed')
     require('m300_factory_counter_commit serial=%u source=%c expected=%u'
             ' target=%u settings_crc=%u' in data['commands'],
             'Factory counter commit format changed')
+    require('m300_factory_counter_commit_runtime serial=%u source=%c expected=%u'
+            ' target=%u settings_crc=%u deadline=%u' in data['commands'],
+            'Factory counter runtime commit format changed')
     require('m300_factory_counter_state serial=%u state=%c source=%c'
             ' print_minutes=%u settings_crc=%u' in data['responses'],
             'Factory counter query response format changed')
     require('m300_factory_counter_result status=%c' in data['responses'],
             'Factory counter commit response format changed')
+    require('m300_factory_counter_runtime_state token=%u serial=%u state=%c source=%c'
+            ' print_minutes=%u settings_crc=%u' in data['responses'],
+            'Factory counter runtime query response format changed')
+    require('m300_factory_counter_runtime_result deadline=%u status=%c' in data['responses'],
+            'Factory counter runtime response format changed')
     require(data['config']['M300_FAN_POLICY'] == 3,
             'Independent cooling fan policy changed')
     require(data['config']['M300_UART_RATE_COUNT'] == 8,
