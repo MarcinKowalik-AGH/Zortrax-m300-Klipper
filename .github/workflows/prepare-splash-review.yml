@@ -6,30 +6,70 @@ on:
 permissions:
   contents: read
 jobs:
-  export:
+  prepare:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 12
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 5acfd0f042a45f25f1ac2e5269ee72c3261589ee
-          path: m300
-          persist-credentials: false
-      - uses: actions/checkout@v4
+          ref: feat/mcu-1.0.2-oem-startup-logo
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
         with:
-          repository: MarcinKowalik-AGH/Zortrax-Inventure-Klipper
-          ref: d632dd83d542513dfd393d454374e5b42ea02faf
-          path: inventure
-          persist-credentials: false
-      - name: Export source snapshots without credentials
+          python-version: '3.12'
+      - name: Verify baseline and apply the exact reviewed patch
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir exports
-          git -C m300 archive --format=zip HEAD > exports/M300_SPLASH_SOURCE_BASE.zip
-          git -C inventure archive --format=zip HEAD > exports/INVENTURE_SPLASH_REFERENCE.zip
-          cd exports && sha256sum *.zip > SHA256SUMS
-      - uses: actions/upload-artifact@v4
+          set -euo pipefail
+          test "$(git diff --name-only 5acfd0f042a45f25f1ac2e5269ee72c3261589ee)" = '.github/workflows/prepare-splash-review.yml'
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/82784fbe0b5080dbdb7f4e2039fdc3514171ce7d --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/splash.patch"
+          echo '5bd5e26b98a1a1eaf6ffa1a6e3f7016bca50dcc6209eb8e63675b943f7c3010a  '"$RUNNER_TEMP/splash.patch" | sha256sum -c -
+          git apply --check "$RUNNER_TEMP/splash.patch"
+          git apply --index "$RUNNER_TEMP/splash.patch"
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          assert len(paths)==26,paths
+          for path in paths:
+              assert path in ('PORT.json','README.md','README_PL.md') or path.startswith(('ci/','docs/','mcu/SOURCE_MCU/')),path
+          assert not subprocess.check_output(['git','diff','--cached','--','host','frontend','mcu/SOURCE_MCU/config'],text=True)
+          PY
+      - name: Validate source, exact logo, native startup timing and inherited tests
+        run: |
+          set -euo pipefail
+          python ci/prepare_upstream.py
+          python -m pip install --quiet Pillow==11.3.0 Jinja2==3.1.6
+          python ci/generate_startup_logo.py --check
+          python mcu/SOURCE_MCU/tests/test_startup_epoch.py
+          cc -std=c11 -O2 -Wall -Wextra -Werror mcu/SOURCE_MCU/tests/test_panel.c -o "$RUNNER_TEMP/panel-test"
+          "$RUNNER_TEMP/panel-test"
+          python ci/test_rc1_contracts.py
+          python ci/test_release23_contracts.py
+          PYTHONPATH=ci python - <<'PY'
+          from pathlib import Path
+          from project import stage_host_update
+          stage_host_update(Path('.ci/splash-host'))
+          PY
+          (cd .ci/splash-host && python -m unittest discover -s tests -v)
+          python docs/tools/check_manual.py --output .ci/reports/DOCUMENTATION_MCU102.json
+          git diff --cached --check
+      - name: Commit only the verified implementation
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'MCU 1.0.2: exact OEM Zortrax startup logo with nonblocking hold and immediate host/fault preemption'
+          git push origin HEAD:feat/mcu-1.0.2-oem-startup-logo
+      - name: Preserve verification output
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: M300_SPLASH_REVIEW_SOURCES
-          path: exports/
-          retention-days: 7
-          if-no-files-found: error
+          name: MCU102_SPLASH_PREPARATION
+          path: .ci/reports/DOCUMENTATION_MCU102.json
+          if-no-files-found: warn
+          retention-days: 14
