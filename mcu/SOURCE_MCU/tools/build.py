@@ -21,7 +21,7 @@ ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2b
 APP_START = 0x08008000
 NVM_START = 0x0803A000
 APP_LINKER_BYTES = 0x11000
-MCU_RELEASE = '1.0.4'
+MCU_RELEASE = '1.0.5'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_factory_counter_query',
@@ -33,8 +33,7 @@ REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_local_oled_query', 'm300_oled_host state=',
                      'm300_sd_config ', 'm300_sd_open ', 'm300_sd_read ',
                      'm300_sd_chunk ', 'm300_sd_close ',
-                     'm300_panel_release_arm ', 'm300_panel_release_disarm ',
-                     'm300_oled_rle_bench ')
+                     'm300_panel_release_arm ', 'm300_panel_release_disarm ')
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -172,6 +171,10 @@ def validate(work, output, env, log):
                if any(command.startswith(prefix) for prefix in forbidden)]
     if exposed:
         raise ValueError('Bypass-capable unowned MCU commands present: ' + repr(exposed))
+    if (any(command.startswith('m300_oled_rle_bench ') for command in commands)
+            or any(response.startswith('m300_oled_rle_result ')
+                   for response in dictionary['responses'])):
+        raise ValueError('OLED benchmark exposed in the production MCU dictionary')
     symbols_text = run(['arm-none-eabi-nm', '-n', work / 'out/klipper.elf'], env=env, log=log)
     symbols = {}
     for line in symbols_text.splitlines():

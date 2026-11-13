@@ -1,5 +1,7 @@
 """Post-job MCU synchronization, runtime UART correlation and durable retries."""
+import os
 from pathlib import Path
+import stat
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace as NS
 import unittest
@@ -181,6 +183,19 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertEqual(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
         self.assertEqual(h.hw.counter_sync.status, 'SYNCED')
 
+    def test_motion_and_heat_defer_without_reading_service_telemetry(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        status = Mock(return_value={'state': 'IDLE', 'busy': False})
+        h.objects['m300_pad_mesh'] = NS(get_status=status)
+        h.objects['toolhead'].check_busy = lambda now: (now + 1., now, False)
+        self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        h.objects['toolhead'].check_busy = lambda now: (now, now, True)
+        h.heat['target'] = 60.
+        self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        status.assert_not_called()
+        h.transport.query.assert_not_called()
+
     def test_status_two_after_partial_write_keeps_wal_until_runtime_recovery(self):
         h = self.setup_controller()
         h.hw.counter_runtime = h.transport
@@ -216,3 +231,47 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertEqual(h.transport.commit.call_args_list[0], h.transport.commit.call_args_list[1])
         self.assertEqual((h.hw.counter_sync.minutes, h.hw.counter_sync.committed_seconds), (302, 120))
         self.assertIsNone(h.journal.load()['pending'])
+
+    def test_visible_pending_intent_is_synced_before_any_flash_commit(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        fsync = os.fsync
+        allow_directory_sync = False
+
+        def failing_fsync(fd):
+            if stat.S_ISDIR(os.fstat(fd).st_mode) and not allow_directory_sync:
+                raise OSError('intent directory sync failed after rename')
+            fsync(fd)
+
+        with patch('payload.m300_nvm.os.fsync', side_effect=failing_fsync):
+            self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+            self.assertIsNotNone(h.journal.load()['pending'])
+            self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+            h.transport.commit.assert_not_called()
+            allow_directory_sync = True
+            self.assertEqual(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        h.transport.commit.assert_called_once()
+        self.assertEqual(h.journal.load()['committed'], 2)
+
+    def test_visible_settled_intent_recovers_display_without_another_flash_write(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        fsync = os.fsync
+        directory_calls = 0
+
+        def failing_fsync(fd):
+            nonlocal directory_calls
+            if stat.S_ISDIR(os.fstat(fd).st_mode):
+                directory_calls += 1
+                if directory_calls == 2:
+                    raise OSError('settlement directory sync failed after rename')
+            fsync(fd)
+
+        with patch('payload.m300_nvm.os.fsync', side_effect=failing_fsync):
+            self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+            self.assertIsNone(h.journal.load()['pending'])
+            self.assertIsNone(h.hw.get_status()['factory_print_minutes'])
+            self.assertEqual(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        h.transport.commit.assert_called_once()
+        self.assertEqual(h.hw.get_status()['factory_print_minutes'], 302)
+        self.assertEqual(h.hw.get_status()['factory_counter_committed_seconds'], 120)

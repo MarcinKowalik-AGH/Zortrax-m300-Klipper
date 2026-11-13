@@ -5,10 +5,40 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
+import subprocess
+import sys
+from urllib.parse import quote, unquote, urlsplit
 import zipfile
 
-from project import ROOT, META, KIT, OWNER, digest, source_digest, fresh_directory, stage_host_update
+from project import (ROOT, META, KIT, OWNER, digest, source_digest, fresh_directory,
+                     manifest, stage_host_update)
+
+
+REPOSITORY = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
+GUIDE_LINK = re.compile(r'(!?\[[^\]\n]*\]\()([^\s)]+)')
+
+
+def export_guide(source, output):
+    tag = META['distribution_version']
+
+    def replace(match):
+        target = match[2]
+        url = urlsplit(target)
+        if not url.path or url.scheme or url.netloc:
+            return match[0]
+        destination = (source.parent / unquote(url.path)).resolve()
+        if not destination.is_relative_to(ROOT) or not destination.exists():
+            raise ValueError(f'Missing guide link in {source.relative_to(ROOT)}: {target}')
+        path = quote(destination.relative_to(ROOT).as_posix())
+        kind = 'tree' if destination.is_dir() else 'blob'
+        if match[1].startswith('!'):
+            kind = 'raw'
+        return match[1] + url._replace(
+            path=f'{REPOSITORY}/{kind}/{tag}/{path}').geturl()
+
+    output.write_text(GUIDE_LINK.sub(replace, source.read_text()))
 
 
 def module(name, path):
@@ -43,7 +73,7 @@ def main():
     mcu = release / 'MCU'
     mcu.mkdir()
     for source in build.iterdir():
-        if source.is_file():
+        if source.is_file() and source.suffix != '.log':
             shutil.copy2(source, mcu / source.name)
     m3b = module('m300_container', KIT / 'tools/test01_m3b.py')
     packed = m3b.pack((mcu / 'klipper.bin').read_bytes())
@@ -54,7 +84,10 @@ def main():
         archive.write(mcu / 'M300APP.M3B', 'M300APP.M3B')
     stage = stage_host_update(ROOT / '.ci/release-host-update')
     host = release / 'M300_HOST'
-    shutil.copytree(stage, host, ignore=shutil.ignore_patterns(OWNER, '__pycache__', '*.pyc'))
+    shutil.copytree(stage, host, ignore=shutil.ignore_patterns(
+        OWNER, 'docs', 'tests', 'README_305_105_PL.md', '__pycache__', '*.pyc'))
+    manifest(host)
+    subprocess.run([sys.executable, '-B', 'VERIFY.py'], cwd=host, check=True)
     with zipfile.ZipFile(release / 'M300_HOST.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(host.rglob('*')):
             if path.is_file():
@@ -63,7 +96,7 @@ def main():
                     ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / '.ci/reports', release / 'REPORTS',
                     ignore=shutil.ignore_patterns('timer-test', 'factory-test', 'factory-counter-test',
-                                                  'sd-card-test', 'panel-test'))
+                                                  'sd-card-test', 'panel-test', '*.log'))
     if (ROOT / '.ci/fileoutput/REPORT.json').exists():
         shutil.copy2(ROOT / '.ci/fileoutput/REPORT.json', release / 'REPORTS/KLIPPY_FILEOUTPUT.json')
     provenance = {'model': META['model'], 'upstream_commit': META['upstream_commit'],
@@ -79,16 +112,17 @@ def main():
                       hotend_cooling_off_temperature=META['hotend_cooling_off_temperature'])
     provenance['distribution_version'] = META['distribution_version']
     (release / 'BUILD_PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
-    (release / 'INSTALL_EN.md').write_text((ROOT / 'docs/en/INSTALL.md').read_text())
     for language in ('en', 'pl'):
-        shutil.copy2(ROOT/'docs'/language/'FIRST_INSTALL.md',
-                     release/('FIRST_INSTALL_'+language.upper()+'.md'))
+        for guide in ('INSTALL', 'FIRST_INSTALL'):
+            export_guide(ROOT / 'docs' / language / (guide + '.md'),
+                         release / (guide + '_' + language.upper() + '.md'))
     # Ship portable, fully patched host source, not x86 native binaries from CI.
     # Copy pristine + canonical overlay rather than the mutated FILEOUTPUT tree,
     # which contains explicitly gated CI-only helper modules.
     runtime = release/'KLIPPER_HOST'
     shutil.copytree(ROOT/'.ci/pristine', runtime, ignore=shutil.ignore_patterns(
-        '.git', '__pycache__', '*.pyc', '*.so', '*.o', 'out', OWNER))
+        '.git', '.github', '.m300-build-owner.json', 'test',
+        '__pycache__', '*.pyc', '*.so', '*.o', 'out', OWNER))
     shutil.copytree(ROOT/'host/klippy',runtime/'klippy',dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     if list((runtime/'klippy/extras').glob('m300_ci_*')):
@@ -102,8 +136,10 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        f"M300 Classic {META['distribution_version']} host and MCU {META['mcu_release']}. See INSTALL_EN.md.\n"
-        'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
+        f"M300 Classic {META['distribution_version']} host and MCU {META['mcu_release']}.\n"
+        'Fresh KIAUH installation: FIRST_INSTALL_EN.md or FIRST_INSTALL_PL.md.\n'
+        'Existing M300 Klipper installation: INSTALL_EN.md or INSTALL_PL.md.\n'
+        'HOST_SOURCE contains the M300 Klippy source overlay.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     if args.fluidd:
         frontend = args.fluidd / 'M300_FLUIDD.zip'
@@ -115,9 +151,8 @@ def main():
                 raise ValueError('Invalid compiled Fluidd artifact')
         shutil.copy2(frontend, release / frontend.name)
         shutil.copy2(ROOT / 'ci/install_orange_pi.py', release / 'install-orange-pi.py')
-    (release / OWNER).unlink()
     hashes = {str(p.relative_to(release)): digest(p) for p in sorted(release.rglob('*'))
-              if p.is_file() and p.name != 'SHA256SUMS'}
+              if p.is_file() and p.name not in ('SHA256SUMS', OWNER)}
     (release / 'SHA256SUMS').write_text(''.join(value + '  ' + name + '\n' for name, value in hashes.items()))
     print(json.dumps({'status': 'PASS_M300_RELEASE_PACKAGE', 'files': len(hashes),
                       'm3b_payload_bytes': container['payload_bytes'], 'flashed': False}))

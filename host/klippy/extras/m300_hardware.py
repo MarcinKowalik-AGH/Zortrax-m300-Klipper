@@ -220,8 +220,7 @@ class M300Hardware:
         if ((sd is not None and sd.is_active()) or
                 (stats is not None and stats.get_status(now)['state'] in ('printing', 'paused'))
                 or (pause is not None and pause.is_paused)
-                or (control is not None and control.context is not None)
-                or other_service(printer, COUNTER_OWNERS, now)):
+                or (control is not None and control.context is not None)):
             return False
         queued, estimated, empty = printer.lookup_object('toolhead').check_busy(now)
         if not empty or not all(math.isfinite(value) for value in (queued, estimated)) or queued > estimated:
@@ -236,7 +235,7 @@ class M300Hardware:
             if (status['target'] != 0. or status['power'] != 0.
                     or pwm.get_mcu() is not self.mcu or native_pwm._last_clock > current_clock):
                 return False
-        return True
+        return other_service(printer, COUNTER_OWNERS, now) is None
 
     def _runtime_counter_tick(self, eventtime):
         reactor = self.printer.get_reactor()
@@ -257,6 +256,9 @@ class M300Hardware:
                 raise OSError('M300 factory counter synchronization stopped')
             return transport.query()
 
+        def load():
+            return nvm.executor.submit(journal.load_for_sync, self.counter_sync.pending)
+
         def commit(args):
             # Disk I/O and read-only queries occur outside the G-code lock.
             # Recheck the complete idle window after durable intent is written.
@@ -276,8 +278,7 @@ class M300Hardware:
                     self.counter_sync.status = 'AWAITING_IDLE'
                 return reactor.monotonic() + delay
             self.counter_sync.run(
-                snapshot, lambda: nvm.executor.submit(journal.load),
-                lambda data: nvm.executor.submit(journal.save, data), query,
+                snapshot, load, lambda data: nvm.executor.submit(journal.save, data), query,
                 commit, self._counter_validator(nvm), runtime=True)
             if self.counter_sync.status == 'RECOVERY_REQUIRED':
                 self.counter_sync.error = 'MCU factory counter transfer is pending read-back or recovery'
@@ -351,8 +352,14 @@ class M300Hardware:
             query = self.mcu.lookup_query_command('m300_factory_counter_query', STATE_FORMAT)
             commit = self.mcu.lookup_query_command(COMMIT_FORMAT, RESULT_FORMAT)
             bounded = self.board.startup_transport._bounded
+
+            def load():
+                if self.counter_backup:
+                    return nvm.executor.submit(journal.load_for_sync, self.counter_sync.pending)
+                return nvm.executor.submit(journal.load)
+
             self.counter_sync.run(
-                nvm.ui_snapshot(), lambda: nvm.executor.submit(journal.load),
+                nvm.ui_snapshot(), load,
                 lambda data: nvm.executor.submit(journal.save, data),
                 lambda: bounded('m300_factory_counter_query', query.send),
                 lambda args: bounded('m300_factory_counter_commit',

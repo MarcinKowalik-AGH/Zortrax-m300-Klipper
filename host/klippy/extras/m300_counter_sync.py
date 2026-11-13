@@ -5,7 +5,7 @@ import hashlib
 import json
 import math
 
-from .m300_nvm import _canonical, _read_regular, _unique_pairs
+from .m300_nvm import _canonical, _read_regular, _sync_directory, _unique_pairs
 
 
 STATE_FORMAT = ('m300_factory_counter_state serial=%u state=%c source=%c'
@@ -68,6 +68,13 @@ class CounterJournal:
                 != document['sha256']):
             raise ValueError('factory counter journal checksum mismatch')
         return _validate_journal(document['data'])
+
+    def load_for_sync(self, was_pending):
+        data = self.load()
+        if data is not None and (was_pending or data['pending'] is not None):
+            # An earlier rename may have succeeded before directory fsync failed.
+            _sync_directory(self.path)
+        return data
 
     def save(self, data):
         _validate_journal(data)
@@ -148,6 +155,10 @@ class CounterSync:
             before = (pending['source'], pending['expected'], pending['settings_crc'])
             after = (1 - pending['source'], pending['target'], pending['settings_crc'])
             self.display_blocked = state != 1 or (source, minutes, crc) != before
+        elif state == 1:
+            self.display_blocked = minutes < data['last_minutes'] or total < self.committed_seconds
+            if self.display_blocked:
+                raise ValueError('factory or host counter went backwards')
         if state == 2 and not self.pending:
             raise CounterRecoveryError('interrupted MCU factory banks have no matching host transaction')
         if validate_backup is None:
@@ -166,8 +177,6 @@ class CounterSync:
             raise CounterRecoveryError('MCU factory banks need inspection before synchronization')
 
         if pending is None:
-            if minutes < data['last_minutes'] or total < self.committed_seconds:
-                raise ValueError('factory or host counter went backwards')
             whole_minutes = int(total // 60) - data['committed']
             if not whole_minutes:
                 if fresh or minutes != data['last_minutes']:

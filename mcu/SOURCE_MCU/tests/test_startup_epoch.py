@@ -87,7 +87,7 @@ class StartupEpoch(unittest.TestCase):
             screen=[[0]*256 for _ in range(64)]
             for x in range(4,192):screen[12][x]=5
             for y,text in [(2,'ZORTRAX M300'),(18,'Waiting for Klipper...'),
-                           (34,'MCU: 1.0.4'),(50,f'UART: {baud} 8N1')]:
+                           (34,'MCU: 1.0.5'),(50,f'UART: {baud} 8N1')]:
                 x=4
                 for char in text:
                     w,span,bits=glyphs[char]

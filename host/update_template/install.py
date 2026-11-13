@@ -62,6 +62,17 @@ def verify():
     return len(manifest)
 
 
+def package_version():
+    release = ast.parse((HERE / 'payload/m300_release.py').read_text())
+    for node in release.body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'VERSION'
+                                                 for target in node.targets):
+            version = ast.literal_eval(node.value)
+            if isinstance(version, str) and version:
+                return version
+    raise ValueError('Missing host release version in the verified package')
+
+
 def check_api(root):
     for rel, cls, methods in (
         ('klippy/extras/m300_oled_transport.py', 'OledStream',
@@ -110,14 +121,14 @@ def validate_settings(data):
         raise ValueError('Invalid display timeout/contrast')
 
 
-def already_included(config, settings):
+def already_included(config, settings, *, read_text=Path.read_text):
     seen, pending, included = set(), [config], False
     while pending:
         path = pending.pop().resolve()
         if path in seen or path == settings.resolve():
             continue
         seen.add(path)
-        text = path.read_text()
+        text = read_text(path)
         if re.search(r'(?mi)^\s*\[m300_display\]\s*$', text):
             raise ValueError('Existing inline [m300_display]: ' + str(path))
         for pattern in re.findall(r'(?mi)^\s*\[include\s+([^\]]+)\]', text):
@@ -137,25 +148,38 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
     extras = root / 'klippy/extras'
     desired = {extras / name: (HERE / 'payload' / name).read_bytes()
                for name in NAMES}
+    before = {}
+
+    def snapshot(path):
+        if path not in before:
+            before[path] = path.read_bytes() if path.exists() else None
+        return before[path]
+
+    def read_config(path):
+        data = snapshot(path)
+        if data is None:
+            raise ValueError('Missing configuration file: ' + str(path))
+        return data.decode().replace('\r\n', '\n').replace('\r', '\n')
+
     baselines = json.loads((HERE / 'SUPPORTED_BASELINES.json').read_text())
     for p, data in desired.items():
-        if p.name == 'm300_menu.py' and not p.is_file():
+        installed = snapshot(p)
+        if p.name == 'm300_menu.py' and installed is None:
             raise ValueError('An installed native M300 menu is required')
-        if p.exists():
-            installed = p.read_bytes()
-            if installed != data:
-                installed_sha256 = digest(installed)
-                if installed_sha256 not in baselines.get(p.name, []):
-                    raise ValueError(
-                        'Existing unknown M300 runtime module: %s (SHA-256: %s). '
-                        'Refusing to overwrite unverified local changes.' %
-                        (p, installed_sha256))
+        if installed is not None and installed != data:
+            installed_sha256 = digest(installed)
+            if installed_sha256 not in baselines.get(p.name, []):
+                raise ValueError(
+                    'Existing unknown M300 runtime module: %s (SHA-256: %s). '
+                    'Refusing to overwrite unverified local changes.' %
+                    (p, installed_sha256))
     settings = config.parent / 'm300_display.cfg'
-    settings_data = settings.read_bytes() if settings.exists() else (
-        HERE / 'payload/m300_display.cfg').read_bytes()
+    settings_data = snapshot(settings)
+    if settings_data is None:
+        settings_data = (HERE / 'payload/m300_display.cfg').read_bytes()
     validate_settings(settings_data)
     desired[settings] = settings_data
-    tree = profile.read_tree(config)
+    tree = profile.read_tree(config, read_text=read_config)
     if qualified_first_print_z:
         import m300_first_print_config
         m300_first_print_config.validate_tree(tree)
@@ -171,8 +195,8 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
     for name in CONFIG_FILES:
         target = config.parent / name
         if target not in desired:
-            if target.exists():
-                desired[target] = profile.convert_text(target.read_text(), stock_xy).encode()
+            if snapshot(target) is not None:
+                desired[target] = profile.convert_text(read_config(target), stock_xy).encode()
             else:
                 text = profile.missing_macros((HERE / 'payload' / name).read_text(), existing)
                 desired[target] = profile.convert_text(text).encode()
@@ -188,7 +212,7 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
                    if section.lower().startswith('include ')):
             additions.append('[include ' + name + ']\n')
     text = desired[config].decode()
-    if not already_included(config, settings):
+    if not already_included(config, settings, read_text=read_config):
         additions.append('[include m300_display.cfg]\n')
     if 'm300_motion' in existing and 'idle_timeout' not in existing:
         additions.append('\n[idle_timeout]\n' + profile.IDLE_GCODE)
@@ -215,16 +239,19 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
             if not moonraker.resolve().is_relative_to(config.parent):
                 raise ValueError('Moonraker configuration must be inside the config directory to organize it')
             unused = not any(p.name == 'fluidd.cfg' for p in tree)
-            updated, _ = profile.organize_moonraker(moonraker.read_text(), fluidd_config_unused=unused)
+            updated, _ = profile.organize_moonraker(read_config(moonraker), fluidd_config_unused=unused)
             desired[moonraker] = updated.encode()
     import m300_thermal_config
     if thermal_305105:
         m300_thermal_config.apply_to_plan(desired, config, tree)
     if qualified_first_print_z:
         m300_first_print_config.apply_to_plan(desired, config, tree)
-    return [(p, p.read_bytes() if p.exists() else None, data)
-            for p, data in desired.items()
-            if not p.exists() or p.read_bytes() != data]
+    changes = []
+    for path, data in desired.items():
+        installed = snapshot(path)
+        if installed != data:
+            changes.append((path, installed, data))
+    return changes
 
 
 def atomic_write(path, data):
@@ -353,7 +380,7 @@ def main():
         changes = plan(root, config, organize_config=args.organize_config, thermal_305105=True,
                        qualified_first_print_z=args.qualified_first_print_z)
         result = {'status': 'PLAN_M300_HOST' if changes else 'ALREADY_M300_HOST',
-                  'host_update': '1.0.0-rc.3',
+                  'host_update': package_version(),
                   'target_limits': {'extruder': 305, 'heater_bed': 105},
                   'sensor_shutdown_limits': {'extruder': 310, 'heater_bed': 120},
                   'hardware_validation': 'USER_REPORTED_2026-11-11',

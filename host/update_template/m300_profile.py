@@ -281,7 +281,7 @@ def convert_text(text, stock_xy=None):
     return ''.join(output) + saved
 
 
-def read_tree(path):
+def read_tree(path, *, read_text=Path.read_text):
     result = {}
     def visit(path):
         path = path.resolve()
@@ -289,7 +289,7 @@ def read_tree(path):
             return
         if len(result) >= 128:
             raise ValueError('Too many configuration includes')
-        text = path.read_text()
+        text = read_text(path)
         result[path] = text
         for section, _ in blocks(text)[1]:
             if section.lower().startswith('include '):

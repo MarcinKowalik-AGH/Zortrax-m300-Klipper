@@ -1,15 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.8
+# Zortrax M300 Classic — Klipper 1.0.0-rc.9
 
-**RC8:** Klipper automatycznie synchronizuje zgromadzone minuty druku modelu z MCU 1.0.4, gdy skonfigurowana drukarka jest bezczynna i spełnia warunki zapisu. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.8.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
+**RC9** aktualizuje instalator Orange Pi i synchronizację czasu druku z MCU. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.9.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
 
+**MCU 1.0.5:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.5.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**MCU 1.0.4:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.4.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.4).
-
-**Ósmy kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**Dziewiąty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC8](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.8) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -20,7 +19,7 @@ START aktywuje wybraną siatkę po homingu i wykonuje 2 linie Y oraz 2 linie X.
 Menu korzysta z oryginalnych grafik i wspólnie cieniowanych ikon. Podgląd OLED we Fluidd
 zachowuje szybki kanał nawigacji i kwadratowe piksele przy skali ×1/×2/×3.
 
-W RC1 ustawienia OLED i makra Fluidd prowadzą do tych samych funkcji. Dodano
+Ustawienia OLED i makra Fluidd prowadzą do tych samych funkcji. Dodano
 bezpośrednie skróty jasności OLED i LED. Usunięto laboratoryjne menu Service /
 Tests i zbędne przyciski testowe. Rzeczywisty test wentylatorów OEM, PID i odczyt
 diagnostyki pozostają. [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [Procedury druku](docs/pl/PRINT_CONTROL.md).
@@ -29,25 +28,25 @@ diagnostyki pozostają. [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [Procedury
 
 ## Aktualizacja Orange Pi
 
-Wyłącznie przy bezczynnej drukarce Ready, bez aktywnego ani wstrzymanego wydruku:
+Jeśli masz już klon gałęzi w `~/m300-orange-pi`, poczekaj na stan Ready,
+zakończ wydruk lub procedurę i wyłącz cele grzania:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
-Instalator sprawdza i zapamiętuje istniejący port Fluidd. Zachowuje mesh, PID,
-UART, własną konfigurację oraz zapisane ustawienia kwalifikowanego Z. Nie omijaj
-odmowy nadpisania nieznanego kodu ani SHA256SUMS. Po instalacji odśwież Fluidd
-przez Cmd+Shift+R. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i MCU/M300_SD.zip.
-MCU 1.0.4 wgrywa się osobno z karty SD, aby używać automatycznej synchronizacji w trakcie normalnej pracy drukarki. [Aktualizacja MCU i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.4.md).
+Instalator sprawdza działający Fluidd na porcie 4480 i zachowuje
+konfigurację UART, mesh, PID i ustawienia osi Z. Po aktualizacji
+odśwież Fluidd z pominięciem pamięci podręcznej.
+[Pełna instrukcja aktualizacji i pierwszego klonowania](docs/pl/INSTALL.md) ·
+[Aktualizacja MCU 1.0.5 i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.5.md).
 
 ## Stan odbioru
 
-RC1 jest kandydatem do wydania, a nie deklaracją ukończenia wszystkich prób
-sprzętowych. Notatka użytkownika potwierdza nagrzanie, homing i rozpoczęcie druku,
-nie cały Benchy ani pełny odbiór pierwszej warstwy. [Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md)
-zachowuje osobno potwierdzenia, problemy i testy oczekujące. Wariant Z=-0,5,
+Pierwsza próba użytkownika potwierdza nagrzanie, homing i rozpoczęcie druku.
+[Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md) zawiera potwierdzenia oraz
+pozostałe próby pełnego wydruku i pauzy/wznowienia. Wariant Z=-0,5,
 M07 5/6,5/1 i odsunięcie kontaktu 2 mm pozostaje świadomą konfiguracją
 sprawdzonego egzemplarza, nie ustawieniem narzucanym innym drukarkom.
 

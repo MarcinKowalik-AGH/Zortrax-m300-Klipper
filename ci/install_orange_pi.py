@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shlex
@@ -20,6 +21,13 @@ DEFAULT_FLUIDD_PORT = 4480
 INSTALL_STATE_NAME = '.m300-installer.json'
 OLD_PAD_GEOMETRY_ERROR = 'pad widths and edge_margin must leave a positive inset (width <= 100 mm)'
 BUGGY_MAINTENANCE_SHA256 = '16ca09b60c14c2503b5a77bce1c7f7b939938161b9953e55a4d06a9268da3a88'
+BUSY_OBJECTS = ('m300_job', 'm300_motion', 'm300_filament',
+                'm300_calibration', 'm300_maintenance', 'm300_pad_mesh', 'm300_nvm',
+                'm300_sd', 'm300_thermal', 'm300_fans')
+IDLE_QUERY = '/printer/objects/query?' + '&'.join((
+    'print_stats=state', 'pause_resume=is_paused', 'idle_timeout=state', 'm300_print_control=busy,paused',
+    'toolhead=print_time,estimated_print_time', 'extruder=target', 'heater_bed=target',
+    *(name + '=busy' for name in BUSY_OBJECTS)))
 
 
 def run(*args, capture=False, cwd=None):
@@ -65,9 +73,25 @@ def require_idle(*,repair_startup=False):
         if info['state'] == 'error' and OLD_PAD_GEOMETRY_ERROR in info.get('state_message',''):
             return info
         raise ValueError('Wait until Klipper is Ready and the printer is idle')
-    stats = printer('/printer/objects/query?print_stats')['status']['print_stats']
-    if stats['state'] not in ('standby', 'complete', 'cancelled', 'error'):
-        raise ValueError('Wait until Klipper is Ready and the printer is idle')
+    status = printer(IDLE_QUERY)['status']
+    message = 'Wait until Klipper is Ready and the printer is idle'
+    if status['print_stats']['state'] not in ('standby', 'complete', 'cancelled', 'error'):
+        raise ValueError(message)
+    control = status.get('m300_print_control') or {}
+    if (status['pause_resume']['is_paused'] is not False or control.get('paused')
+            or status['idle_timeout']['state'] not in ('Idle', 'Ready')):
+        raise ValueError(message + ' (paused or moving)')
+    for name in ('m300_print_control', *BUSY_OBJECTS):
+        if (status.get(name) or {}).get('busy'):
+            raise ValueError(message + f' ({name} is busy)')
+    toolhead = status['toolhead']
+    clocks = (toolhead['print_time'], toolhead['estimated_print_time'])
+    if not all(isinstance(value, (int, float)) and math.isfinite(value) for value in clocks):
+        raise ValueError(message + ' (motion clocks are unavailable)')
+    if clocks[0] > clocks[1]:
+        raise ValueError(message + ' (motion is still queued)')
+    if status['extruder']['target'] != 0 or status['heater_bed']['target'] != 0:
+        raise ValueError(message + ' (turn off both heater targets)')
     return info
 
 
@@ -261,28 +285,81 @@ def deploy_web(source, root, build_id, *, execute=run):
     return backup
 
 
-def apply_host(host, args, plan, *,repair_startup=False):
+def restore_web(root, backup, *, execute=run):
+    if backup is None:
+        return
+    replaced = backup.with_suffix('')
+    execute('sudo', 'mv', '-T', '--', root, replaced)
+    try:
+        execute('sudo', 'mv', '-T', '--', backup, root)
+    except BaseException:
+        execute('sudo', 'mv', '-T', '--', replaced, root)
+        raise
+    execute('sudo', 'rm', '-rf', '--', replaced)
+    execute('sudo', 'systemctl', 'reload', 'nginx')
+
+
+def restore_host(host, args, receipt, *, restart_moonraker=False):
+    if receipt is None:
+        return
+    run('sudo', 'systemctl', 'stop', 'klipper.service')
+    try:
+        run(sys.executable, 'install.py', *args, '--rollback', receipt, cwd=host)
+    finally:
+        run('sudo', 'systemctl', 'start', 'klipper.service')
+        if restart_moonraker:
+            run('sudo', 'systemctl', 'restart', 'moonraker.service')
+
+
+def apply_host(host, args, plan, *, repair_startup=False):
     if plan['status'] == 'ALREADY_M300_HOST':
+        if repair_startup:
+            raise ValueError('Startup repair found no host files to replace')
+        wait_ready()
         return
     if plan['status'] != 'PLAN_M300_HOST':
         raise ValueError('Unexpected host install plan')
     require_idle(repair_startup=repair_startup)
+    restart_moonraker = any(Path(p).name == 'moonraker.conf' for p in plan.get('files', ()))
     run('sudo', 'systemctl', 'stop', 'klipper.service')
     try:
-        run(sys.executable, 'install.py', *args, '--apply', cwd=host)
-    finally:
+        applied = json.loads(run(sys.executable, 'install.py', *args, '--apply', cwd=host, capture=True))
+        receipt = applied.get('receipt')
+        if applied['status'] != 'ALREADY_M300_HOST' and not receipt:
+            raise ValueError('Host installer returned no backup receipt')
+    except BaseException:
         run('sudo', 'systemctl', 'start', 'klipper.service')
+        raise
+    try:
+        run('sudo', 'systemctl', 'start', 'klipper.service')
+        if restart_moonraker:
+            run('sudo', 'systemctl', 'restart', 'moonraker.service')
+        # The exact legacy startup repair may still require the operator to
+        # clear a latched MCU fault, so only normal updates wait for Ready.
+        if not repair_startup:
+            wait_ready()
+    except BaseException as exc:
+        try:
+            restore_host(host, args, receipt, restart_moonraker=restart_moonraker)
+        except (ValueError, OSError, subprocess.CalledProcessError) as restore_error:
+            raise ValueError(f'{exc}; host rollback failed using {receipt}: {restore_error}') from exc
+        raise
+    return receipt
 
 
 def wait_ready():
-    for _ in range(45):
+    deadline = time.monotonic() + 45
+    reason = ''
+    while time.monotonic() < deadline:
         try:
-            if printer('/printer/info')['state'] == 'ready':
+            info = printer('/printer/info')
+            if info['state'] == 'ready':
                 return
-        except URLError:
-            pass
+            reason = info.get('state_message') or info['state']
+        except (URLError, TimeoutError) as exc:
+            reason = str(exc)
         time.sleep(1)
-    raise ValueError('Klipper did not reach Ready after the host update')
+    raise ValueError(f'Klipper did not reach Ready after the host update: {reason}')
 
 
 def main():
@@ -315,9 +392,10 @@ def main():
         if args.repair_startup:
             # Repair the host before requiring Ready or deploying the web UI.
             # Hardware/MCU latches still require the operator's explicit reset.
-            apply_host(host,host_args,plan,repair_startup=True)
+            host_receipt = apply_host(host,host_args,plan,repair_startup=True)
             print(json.dumps(dict(status='REPAIRED_M300_SERVICE_STARTUP',
-                next_command='FIRMWARE_RESTART',mcu_flashed=False,mcu_reset=False)))
+                next_command='FIRMWARE_RESTART',mcu_flashed=False,mcu_reset=False,
+                host_update=plan['host_update'],host_receipt=host_receipt)))
             return
         config = run('sudo', 'nginx', '-T', capture=True)
         config_dir = Path(info['config_file']).parent
@@ -332,20 +410,17 @@ def main():
                 bundle.extractall(temp)
             source = verified_web_root(Path(temp) / 'fluidd-m300')
             (source / '.m300-fluidd-build').write_text(build_id + '\n')
-            apply_host(host, host_args, plan)
-            wait_ready()
+            host_receipt = apply_host(host, host_args, plan)
             run(sys.executable, 'setup_fluidd.py', '--apply', '--config-directory',
                 Path(info['config_file']).parent, cwd=host)
             backup = deploy_web(source, root, build_id)
-        if args.organize_config and any(Path(p).name == 'moonraker.conf' for p in plan.get('files', ())):
-            run('sudo', 'systemctl', 'restart', 'moonraker.service')
-            wait_ready()
         receipt = save_install_state(config_dir, root, fluidd_port)
         print(json.dumps({'status': 'INSTALLED_M300_HOST', 'fluidd_root': str(root),
+                          'host_update': plan['host_update'], 'host_receipt': host_receipt,
                           'fluidd_port': fluidd_port, 'selection': selection,
                           'install_state': str(receipt),
                           'fluidd_backup': str(backup) if backup else None, 'mcu_flashed': False}))
-    except (ValueError, OSError, KeyError, IndexError, subprocess.CalledProcessError) as exc:
+    except (ValueError, OSError, KeyError, IndexError, TypeError, subprocess.CalledProcessError) as exc:
         parser.exit(1, f'M300 installation stopped: {exc}\n')
 
 

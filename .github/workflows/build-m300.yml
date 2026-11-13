@@ -45,6 +45,7 @@ jobs:
           python ci/test_retry_failed_workflow.py
           python ci/test_acceptance_register.py
           python ci/test_release23_contracts.py
+          python ci/test_package_guides.py
           python ci/test_rc1_contracts.py
           python ci/acceptance_register.py --check
 
@@ -112,6 +113,7 @@ jobs:
           set -euo pipefail
           python ci/package_release.py --build dist/mcu --fluidd dist/fluidd
           cd dist/release
+          rm .m300-ci-generated.json
           sha256sum -c SHA256SUMS
 
       - name: Upload the ready-to-install package
