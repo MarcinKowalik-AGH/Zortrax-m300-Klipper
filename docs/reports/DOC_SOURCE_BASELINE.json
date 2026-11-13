@@ -9,7 +9,7 @@
     "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
     "host/klippy/extras/m300_oled_preview.py": "8bde30a5f94f8aabef8eee8ff7e89ed6ca2285131dccf59327360ff6a9781de7",
     "host/klippy/extras/m300_oem_graphics.py": "a86e6483e2f96e82f91183f3a1f4e8e6a14bd7438466b9c831f5cebe074e45d1",
-    "host/klippy/extras/m300_activity_graphics.py": "62d676c583c7e818116361aa781d5af4635c5d0fd03df8e7e37dab36e6cadccc",
+    "host/klippy/extras/m300_activity_graphics.py": "9b7a5282a1a20f502c52ae5c43c2eafdb840f0f68759d3290272acf6b8f782e4",
     "host/klippy/extras/m300_leveling_oem.py": "b540bffda306139926cd88cc209217943d1b2abe68b5679315daefa5e910d423",
     "host/klippy/extras/m300_print_ui.py": "973063079c476c0186c233a60125b767cf4e305bfc21da73f4175d1a749c8cc0",
     "host/klippy/extras/m300_display_oem.py": "8b2b90b9215881163b17b9c7fef1942a216f5bdd4dd23c9613d1f1a32181904f",

@@ -161,14 +161,14 @@ class ActivityGraphicsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'integrity'):
                 ActivityGraphics(path).get('activity:heat_bed')
 
-    def test_menu_command_previews_match_operations_and_are_static(self):
+    def test_menu_command_previews_match_operations_and_animate(self):
         cases={'ZORTRAX_HEAT':'heat_nozzle','M109 S240':'heat_nozzle',
                'M190 S60':'heat_bed','TURN_OFF_HEATERS':'cooling',
                'BED_MESH':'bed_mesh','ZORTRAX_FAN_LOWER':'fan_lower',
                'ZORTRAX_FAN_TEST_START':'fan_upper','SAVE_CONFIG':'firmware_update'}
         for command, name in cases.items():
             choice=menu_symbol('klipper','m04',[('',('native_gcode',command))])
-            self.assertEqual((choice.key,choice.animated),('activity:'+name,False))
+            self.assertEqual((choice.key,choice.animated),('activity:'+name,True))
 
     def test_fault_icons_explain_reported_failures_without_creating_a_fault(self):
         cases={'filament jam':'filament_jam','filament runout':'filament_runout',
@@ -248,8 +248,8 @@ class ActivityGraphicsTests(unittest.TestCase):
             self.assertNotEqual(h.ui.get_oem_sprite('m04',rows,0,h.now),h.ui.get_oem_sprite('m04',rows,0,h.now+.5))
             self.assertEqual(status['state'],'PROBING')
 
-    def test_file_work_only_animates_while_its_owner_is_busy(self):
-        self.assertFalse(menu_symbol('browser','m04',browser=dict(source='sd',busy=False)).animated)
+    def test_file_navigation_and_busy_owner_use_existing_animation(self):
+        self.assertTrue(menu_symbol('browser','m04',browser=dict(source='sd',busy=False)).animated)
         self.assertEqual(menu_symbol('preview','m04',browser=dict(busy=True)).key,'activity:file_convert')
         self.assertTrue(menu_symbol('browser','m04',sd=dict(busy=True)).animated)
 
