@@ -13,13 +13,19 @@ STATE_FORMAT = ('m300_factory_counter_state serial=%u state=%c source=%c'
 COMMIT_FORMAT = ('m300_factory_counter_commit serial=%u source=%c expected=%u'
                  ' target=%u settings_crc=%u')
 RESULT_FORMAT = 'm300_factory_counter_result status=%c'
+RUNTIME_COMMIT_FORMAT = ('m300_factory_counter_commit_runtime serial=%u source=%c expected=%u'
+                         ' target=%u settings_crc=%u deadline=%u')
+RUNTIME_RESULT_FORMAT = 'm300_factory_counter_runtime_result deadline=%u status=%c'
+RUNTIME_QUERY_FORMAT = 'm300_factory_counter_query_runtime token=%u'
+RUNTIME_STATE_FORMAT = ('m300_factory_counter_runtime_state token=%u serial=%u state=%c'
+                        ' source=%c print_minutes=%u settings_crc=%u')
 MAX_UINT = 0xffffffff
 JOURNAL_KEYS = {'serial', 'machine_id', 'committed', 'last_minutes', 'pending'}
 PENDING_KEYS = {'source', 'expected', 'target', 'settings_crc'}
 
 
 class CounterRecoveryError(ValueError):
-    """The pending Flash update needs another pre-configuration window."""
+    """The pending Flash update needs another safe window."""
 
 
 def _uint(value, limit=MAX_UINT):
@@ -102,8 +108,10 @@ class CounterSync:
         self.active_bank = 'AB'[source] if state == 1 else None
         return packet
 
-    def run(self, snapshot, load, save, query, commit, validate_backup=None):
+    def run(self, snapshot, load, save, query, commit, validate_backup=None, *,
+            runtime=False):
         self.status = 'CHECKING'
+        self.error = None
         serial, state, source, minutes, crc = self.observe(query())
         try:
             data = load()
@@ -182,14 +190,27 @@ class CounterSync:
 
         try:
             observed_banks = self.banks, self.active_bank
+            previous_display_blocked = self.display_blocked
             self.banks, self.active_bank = 'RECOVERY_REQUIRED', None
+            self.display_blocked = True
             result = commit([serial, pending['source'], pending['expected'],
                              pending['target'], pending['settings_crc']])
             status = result['status']
-            if type(status) is int and status == 2 and state == 1:
-                self.banks, self.active_bank = observed_banks
-                self.status = 'AWAITING_FIRMWARE_RESTART'
-                return
+            if type(status) is int and status == 2:
+                if runtime:
+                    observed = self.observe(query())
+                    before = (serial, 1, pending['source'], pending['expected'],
+                              pending['settings_crc'])
+                    self.display_blocked = observed != before
+                    if observed[0] != serial or observed[1] == 0:
+                        raise ValueError('MCU bank read-back unavailable after deferral')
+                    self.status = 'AWAITING_IDLE' if observed == before else 'RECOVERY_REQUIRED'
+                    return
+                if state == 1:
+                    self.banks, self.active_bank = observed_banks
+                    self.display_blocked = previous_display_blocked
+                    self.status = 'AWAITING_FIRMWARE_RESTART'
+                    return
             if type(status) is not int or status not in (0, 1):
                 raise ValueError('MCU refused factory counter transaction (status %r)' % status)
             self.flash_written = status == 0
