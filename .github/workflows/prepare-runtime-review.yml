@@ -1,0 +1,28 @@
+name: Prepare runtime counter review
+on:
+  push:
+    branches: [fix/rc7-runtime-mcu-counter]
+    paths: ['.github/workflows/prepare-runtime-review.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fcab07c537e75046dc39968b279160ce7c70605c
+          persist-credentials: false
+      - name: Export exact source tree and modes
+        run: |
+          mkdir -p exports
+          git archive --format=tar HEAD | gzip -n > exports/M300_RC6_COUNTER_BASE.tar.gz
+          git ls-tree -r HEAD > exports/M300_RC6_TREE.txt
+          sha256sum exports/* > exports/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_COUNTER_BASE
+          path: exports/
+          if-no-files-found: error
+          retention-days: 7
