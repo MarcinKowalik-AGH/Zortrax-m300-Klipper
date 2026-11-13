@@ -25,16 +25,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git diff --name-only e27a553278a7428a2d2ddf6db80293cb2bfa4bdc)" = '.github/workflows/prepare-rc5-target.yml'
-          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/48acd77b4a32e3469eb31e3522b9c2104df74562 --jq .content | base64 --decode)
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/a1d07e36658dc486ef7a8b2342c4fe274745cbee --jq .content | base64 --decode)
           echo "::add-mask::$url"
           curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/rc5.patch"
-          echo '00d056bb7395e67b12ea4df60a74ee6b2f8437f2e81d8f7a67ec6e1877ad73d4  '"$RUNNER_TEMP/rc5.patch" | sha256sum -c -
+          echo 'd5a28a6dd29475058487768770392a6c09dce3ff53795734b3d10732cf8ec764  '"$RUNNER_TEMP/rc5.patch" | sha256sum -c -
           git apply --check "$RUNNER_TEMP/rc5.patch"
           git apply --index "$RUNNER_TEMP/rc5.patch"
           python - <<'PY'
           import subprocess
           paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
-          assert len(paths)==32,paths
+          assert len(paths)==34,paths
           assert not subprocess.check_output(['git','diff','--cached','--','mcu','frontend','host/config'],text=True)
           allowed={'host/klippy/extras/m300_menu.py','host/klippy/extras/m300_settings_ui.py','host/klippy/extras/m300_release.py'}
           assert all(p in allowed for p in paths if p.startswith('host/klippy/')),paths
