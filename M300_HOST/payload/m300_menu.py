@@ -379,19 +379,71 @@ class M300Menu:
         if limits is None:
             return None
         lower, upper = limits
-        value = self._temperature[kind]
-        if value is None:
-            heater = self.job.hotend if kind == 'HOTEND' else self.job.bed
-            value = getattr(heater, 'target_temp', getattr(heater, 'target', lower))
+        # Reflect a target set from Fluidd/G-code, not a stale manual preset.
+        value = self._heater_target(kind)
+        if value is None or value <= 0.:
+            value = self._temperature[kind]
         if (not isinstance(value, (int, float)) or isinstance(value, bool)
                 or not math.isfinite(value)):
             value = lower
         value = max(lower, min(upper, math.floor(value + .5)))
         return value - lower + 1  # Index zero is Back, never heater OFF.
 
+    def _heater_target(self, kind):
+        heater = getattr(self.job, 'hotend' if kind == 'HOTEND' else 'bed', None)
+        value = getattr(heater, 'target_temp', getattr(heater, 'target', None))
+        if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                and math.isfinite(value)):
+            return float(value)
+        return None
+
     def _temperature_label(self, kind):
+        value = self._heater_target(kind)
+        if value is not None:
+            return 'OFF' if value == 0. else '%g°C' % value
         value = self._temperature[kind]
         return '---' if value is None else '%d°C' % value
+
+    def _apply_temperature(self, kind, value):
+        """Apply an acknowledged click through native Klipper, never raw PWM.
+
+        Called after returning to the parent so the queued command owns that
+        generation. Navigation, disconnect and shutdown invalidate pending work.
+        A refusal leaves the real heater target and last successful choice alone.
+        """
+        generation = self.generation
+        expected_target = self._heater_target(kind)
+        heater = 'extruder' if kind == 'HOTEND' else 'heater_bed'
+
+        def execute(now):
+            with self.gcode.get_mutex():
+                if generation != self.generation or self.printer.is_shutdown():
+                    return
+                oled = self.printer.lookup_object('m300_oled', None)
+                try:
+                    if oled is not None and (not oled.connected
+                            or not oled.stream.enabled or not oled.stream.ready):
+                        raise self._error('panel disconnected; temperature not applied')
+                    limits = self.temperature_range(kind)
+                    if limits is None or not limits[0] <= value <= limits[1]:
+                        raise self._error('temperature limits changed; choose again')
+                    if expected_target is None or self._heater_target(kind) != expected_target:
+                        raise self._error('heater target changed; choose again')
+                    # This is the same command as Heat and Fluidd. Existing
+                    # service ownership, target limits and thermal guards apply.
+                    self.gcode.run_script_from_command(
+                        'SET_HEATER_TEMPERATURE HEATER=%s TARGET=%d' % (heater, value))
+                    if self._heater_target(kind) != value:
+                        raise self._error('heater did not accept the selected target')
+                    self._temperature[kind] = value
+                except self.printer.command_error as exc:
+                    self.reason = str(exc)
+                    if oled is not None:
+                        oled.message = ('Notice', self.reason)
+                if oled is not None:
+                    self._refresh_panel(oled)
+                    self.reactor.update_timer(oled.timer, self.reactor.NOW)
+        self.reactor.register_callback(execute)
 
     def _notice(self, rows):
         if self.reason:
@@ -1159,8 +1211,12 @@ class M300Menu:
                         or type(action[2]) is not int
                         or not limits[0] <= action[2] <= limits[1]):
                     raise self._error('temperature choice changed; review the current range')
-                self._temperature[action[1]] = action[2]
+                native = getattr(self.job.board, 'native_control', False)
+                if not native:
+                    self._temperature[action[1]] = action[2]
                 self._navigate(action[3])
+                if native:
+                    self._apply_temperature(action[1], action[2])
             elif kind == 'material':
                 # M09 is optional: legacy M08 retains the original M03 route.
                 service = self.printer.lookup_object('m300_material_ui', None)

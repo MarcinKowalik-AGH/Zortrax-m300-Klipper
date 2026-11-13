@@ -3,8 +3,8 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "mcu_release": "1.0.2",
   "host_update": "R16.12",
-  "github_commit": "e27a553278a7428a2d2ddf6db80293cb2bfa4bdc",
-  "github_run_id": "43408531120",
+  "github_commit": "287fcddea4e6e966239a70407c7f8438a8502eed",
+  "github_run_id": "43447221883",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -17,5 +17,5 @@
   "release_stage": "VERIFIED",
   "hotend_cooling_on_temperature": 50,
   "hotend_cooling_off_temperature": 45,
-  "distribution_version": "v1.0.0-rc.4"
+  "distribution_version": "v1.0.0-rc.5"
 }
