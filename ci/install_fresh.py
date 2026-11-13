@@ -49,7 +49,8 @@ def verify(package):
         if target.is_symlink() or not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != digest:
             raise ValueError('Release checksum mismatch: '+name)
         expected[name] = digest
-    for name in ('KLIPPER_HOST/klippy/klippy.py', 'M300_HOST/install.py',
+    for name in ('BUILD_PROVENANCE.json', 'install-orange-pi.py',
+                 'KLIPPER_HOST/klippy/klippy.py', 'M300_HOST/install.py',
                  'M300_FLUIDD.zip', 'FIRST_INSTALL/requirements-m300.txt',
                  'FIRST_INSTALL/m300_classic_base.cfg', 'FIRST_INSTALL/m300_classic_services.cfg',
                  'FIRST_INSTALL/m300_classic_sensors.cfg'):
@@ -144,20 +145,27 @@ def check_service(data, root, python):
         raise ValueError('Klipper service does not load the expected environment file')
 
 
-def install(package, root, data, python, serial, baud, web_root, *, execute=run):
+def require_unused_klipper(printer):
+    info = printer('/server/info')
+    if info.get('klippy_state') not in ('disconnected', 'startup', 'error'):
+        raise ValueError('First install expects an unused, unconfigured KIAUH instance')
+
+
+def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=None, execute=run):
     config = data/'config/printer.cfg'
     refuse_existing(config, root)
     data.mkdir(parents=True,exist_ok=True)
     (data/'gcodes').mkdir(exist_ok=True)
     (data/'config').mkdir(exist_ok=True)
     moon = data/'config/moonraker.conf'
-    updated_moon = moonraker_config(moon.read_text())
+    moonraker_config(moon.read_text())
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     backup = root.parent/('m300-first-install-backup-'+stamp)
     backup.mkdir(mode=0o700)
     stage = Path(tempfile.mkdtemp(prefix='m300-first-stage-',dir=root.parent))
     moved = False
     installed = []
+    web_backup = None
     try:
         source = stage/'klipper'
         shutil.copytree(package/'KLIPPER_HOST', source)
@@ -166,16 +174,39 @@ def install(package, root, data, python, serial, baud, web_root, *, execute=run)
         # Refuse incomplete/foreign host payloads before touching the active tree.
         updater = module('m300_first_update',package/'M300_HOST/install.py')
         updater.verify();updater.check_api(source)
-        # The normal installer also validates all APIs and hashes during future upgrades.
-        execute(python,'-m','pip','install','-r',package/'FIRST_INSTALL/requirements-m300.txt')
+        dependencies = stage/'dependencies'
+        dependencies.mkdir()
+        execute(python, '-m', 'pip', 'install', '--target', dependencies, '-r',
+                package/'FIRST_INSTALL/requirements-m300.txt')
+        # Python loads Klippy from this directory with the service's existing
+        # interpreter. Stage the pinned dependencies beside the script so they
+        # move and roll back with Klipper, leaving the KIAUH venv intact.
+        for dependency in dependencies.iterdir():
+            target = source/'klippy'/dependency.name
+            if target.exists() or target.with_suffix('.py').exists():
+                raise ValueError('Python dependency conflicts with Klipper: '+dependency.name)
+            dependency.rename(target)
         execute(python,'-c','import chelper; chelper.get_ffi()',cwd=source/'klippy')
-        for path in dest.iterdir():
-            if path.name!='printer.cfg' and (config.parent/path.name).exists():
-                raise ValueError('Config changed during first-install preparation')
+        deploy = module('m300_first_deploy',package/'install-orange-pi.py')
+        archive = package/'M300_FLUIDD.zip'
+        with zipfile.ZipFile(archive) as bundle:
+            for name in bundle.namelist():
+                if Path(name).is_absolute() or '..' in Path(name).parts:
+                    raise ValueError('Unsafe Fluidd archive member')
+            bundle.extractall(stage/'web')
+        build_id = hashlib.sha256(archive.read_bytes()).hexdigest()
+        web = deploy.verified_web_root(stage/'web/fluidd-m300')
+        (web/'.m300-fluidd-build').write_text(build_id+'\n')
+        refuse_existing(config, root)
+        updated_moon = moonraker_config(moon.read_text())
         shutil.copy2(moon,backup/'moonraker.conf')
         if config.exists():shutil.copy2(config,backup/'printer.cfg')
         (backup/'RECEIPT.json').write_text(json.dumps(dict(source_commit=json.loads(
             (package/'BUILD_PROVENANCE.json').read_text())['github_commit'],root=str(root),data=str(data)),indent=2)+'\n')
+        active_state = execute('systemctl', 'show', 'klipper.service',
+                               '--property=ActiveState', '--value', capture=True).strip()
+        if active_state not in ('active', 'inactive', 'failed'):
+            raise ValueError('Wait until the stock Klipper service is fully started or stopped')
         execute('sudo','systemctl','stop','klipper.service')
         try:
             root.rename(backup/'klipper');moved=True
@@ -184,28 +215,26 @@ def install(package, root, data, python, serial, baud, web_root, *, execute=run)
                 target=config.parent/path.name
                 updater.atomic_write(target,path.read_bytes());installed.append(target)
             updater.atomic_write(moon,updated_moon.encode())
-            deploy = module('m300_first_deploy',package/'install-orange-pi.py')
-            archive=package/'M300_FLUIDD.zip'
-            with zipfile.ZipFile(archive) as bundle:
-                for name in bundle.namelist():
-                    if Path(name).is_absolute() or '..' in Path(name).parts:
-                        raise ValueError('Unsafe Fluidd archive member')
-                bundle.extractall(stage/'web')
-            build_id=hashlib.sha256(archive.read_bytes()).hexdigest()
-            web=stage/'web/fluidd-m300'
-            (web/'.m300-fluidd-build').write_text(build_id+'\n')
-            deploy.deploy_web(web,web_root,build_id,execute=execute)
-        except BaseException:
-            if moved:
-                if root.exists():root.rename(stage/'failed-klipper')
-                (backup/'klipper').rename(root)
-            for target in installed:target.unlink(missing_ok=True)
-            if (backup/'printer.cfg').exists():shutil.copy2(backup/'printer.cfg',config)
-            shutil.copy2(backup/'moonraker.conf',moon)
-            raise
-        finally:
             execute('sudo','systemctl','start','klipper.service')
-        execute('sudo','systemctl','restart','moonraker.service')
+            execute('sudo','systemctl','restart','moonraker.service')
+            web_backup = deploy.deploy_web(web,web_root,build_id,execute=execute)
+            if fluidd_port is not None:
+                deploy.save_install_state(config.parent,web_root,fluidd_port)
+        except BaseException:
+            execute('sudo','systemctl','stop','klipper.service')
+            try:
+                if moved:
+                    if root.exists():root.rename(stage/'failed-klipper')
+                    (backup/'klipper').rename(root)
+                for target in installed:target.unlink(missing_ok=True)
+                if (backup/'printer.cfg').exists():shutil.copy2(backup/'printer.cfg',config)
+                shutil.copy2(backup/'moonraker.conf',moon)
+                deploy.restore_web(web_root,web_backup,execute=execute)
+            finally:
+                if active_state == 'active':
+                    execute('sudo','systemctl','start','klipper.service')
+                execute('sudo','systemctl','restart','moonraker.service')
+            raise
         return backup
     finally:
         shutil.rmtree(stage)
@@ -241,17 +270,15 @@ def main():
         run('sudo','-v')
         web,fluidd_port,selection=deploy.select_fluidd(
             run('sudo','nginx','-T',capture=True),args.port,args.fluidd_root)
-        # An empty KIAUH printer must not be able to drive another configured machine.
-        info=deploy.printer('/printer/info')
-        if info.get('state') in ('printing','paused','ready'):
-            raise ValueError('First install expects an unused, unconfigured KIAUH instance')
+        # Moonraker's server status is available while stock Klipper is stopped.
+        require_unused_klipper(deploy.printer)
         plan=dict(status='PLAN_FIRST_M300_INSTALL',source_commit=provenance['github_commit'],
                   serial=str(args.serial),baud=args.baud,klipper=str(root),data=str(data),
                   fluidd_root=str(web),fluidd_port=fluidd_port,selection=selection,
                   mcu_flashed=False,motion_or_heating_sent=False)
         if args.apply:
-            plan['backup']=str(install(PACKAGE,root,data,python,args.serial,args.baud,web))
-            deploy.save_install_state(data/'config',web,fluidd_port)
+            plan['backup']=str(install(PACKAGE,root,data,python,args.serial,args.baud,web,
+                                       fluidd_port=fluidd_port))
             plan['status']='INSTALLED_FIRST_M300_CHECK_READY'
         print(json.dumps(plan,indent=2))
     except (ValueError,OSError,KeyError,subprocess.CalledProcessError) as exc:

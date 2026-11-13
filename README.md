@@ -1,15 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.8
+# Zortrax M300 Classic — Klipper 1.0.0-rc.9
 
-**RC8:** Klipper automatically synchronizes accumulated model-print minutes with MCU 1.0.4 once the configured printer is idle and eligible to write. [Release notes](docs/en/RELEASE_v1.0.0-rc.8.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC9** updates the Orange Pi installer and MCU print-time synchronization. [Release notes](docs/en/RELEASE_v1.0.0-rc.9.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
+**MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**MCU 1.0.4:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.4.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.4).
-
-**Eighth release candidate for the classic M300**, using its original controller,
+**Ninth release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC8](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.8) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -29,24 +28,25 @@ remain. [Macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Print control](docs/pl
 
 ## Existing Orange Pi installation
 
-Only while idle and Ready, not during a print or pause:
+For an existing `~/m300-orange-pi` checkout, wait for Ready, finish any
+print or procedure, and turn the heater targets off before running:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
-The installer validates/persists the existing Fluidd endpoint, preserves operator
-configuration, mesh, PID and qualified Z settings, and refuses unknown runtime
-edits. Do not bypass checksums or force-reset local work. Refresh Fluidd after
-installation. The host updater installs M300_HOST and M300_FLUIDD.zip. Install MCU 1.0.4 separately from SD to use automatic synchronization during normal operation. [MCU update and counter checks](docs/en/MCU_FIRMWARE_1.0.4.md).
+The updater validates the existing Fluidd endpoint on port 4480.
+It preserves operator configuration, mesh, PID and qualified Z settings.
+After installation, reload Fluidd without the browser cache. The
+[full update guide](docs/en/INSTALL.md) covers a first clone and read-only
+checks. [MCU 1.0.5 update and print-time checks](docs/en/MCU_FIRMWARE_1.0.5.md).
 
 ## Qualification and limits
 
-RC1 means release candidate, not universal hardware certification. The user's
-first-print report confirms heating, homing and entry into printing, not a full
-completed Benchy or every pause/resume scenario. [Acceptance register](docs/pl/ACCEPTANCE_REGISTER.md)
-records observations separately from CI. The optional qualified Z profile
+The first-print report confirms heating, homing and entry into printing.
+The [acceptance register](docs/pl/ACCEPTANCE_REGISTER.md) records those observations
+and tracks the full print and pause/resume tests. The optional qualified Z profile
 (-0.5 limit, M07 5/6.5/1, contact clearance 2 mm) is not silently applied to new
 printers. No unverified Y315 cleaning zone or blind forced moves are included.
 

@@ -1,47 +1,40 @@
-# Instalator, port Fluidd i ograniczone ponawianie CI — beta.23
+# Instalator M300, port Fluidd i ponawianie CI
 
-[Instrukcja główna](../../README_PL.md) · [START i druk](PRINT_CONTROL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md)
+[Instrukcja główna](../../README_PL.md) · [Pierwsza instalacja](FIRST_INSTALL.md) · [Aktualizacja](INSTALL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md)
 
-## Wybór portu bez powrotu do błędu 4080
+## Port Fluidd 4480
 
-Obowiązującym portem M300 użytkownika jest **4480**. Aktualizacja nie przestawia
-nginx, Moonrakera, UART ani drukarki. Wskazuje wyłącznie istniejący katalog
-interfejsu, do którego zostanie wdrożony zweryfikowany Fluidd.
+M300 używa **4480**. Instalator wdraża Fluidd do katalogu wskazanego przez
+istniejącą konfigurację nginx. Na nowym hoście ustaw port 4480 w KIAUH
+zgodnie z [instrukcją pierwszej instalacji](FIRST_INSTALL.md#2-kiauh-i-przygotowanie-usług).
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 ```
 
-Uruchom jako użytkownik klipper, nie jako root, wyłącznie przy bezczynnej
-maszynie Ready. Wstrzymany wydruk również blokuje instalację. W razie konfliktu
-lokalnych plików nie wykonuj reset --hard ani nie omijaj SHA256SUMS.
+Uruchom z konta Klippera, przy bezczynnej maszynie Ready i wyłączonych celach
+grzania. Wstrzymany wydruk również blokuje instalację. W razie konfliktu
+lokalnych plików zachowaj je i sprawdź komunikat przed ponowną próbą.
 
-Po przejściu na beta.23 parametr można pominąć: instalator korzysta kolejno z
-jawnego `--port`/`--fluidd-root`, sprawdzonego lokalnego zapisu, portu **4480**,
-a gdy go brak — jednej jednoznacznej instalacji Fluidd wykrytej w nginx.
-Istniejący pojedynczy serwer na 4080 lub 80 nie jest przenoszony. Przy dwóch
-kandydatach lub niejednoznacznym katalogu następuje odmowa, nie losowy wybór.
+Instalator sprawdza porty `listen`, katalog `root` lub `alias` i tytuł Fluidd
+w `index.html`. IPv4 i IPv6 prowadzące do tego samego katalogu są jednym
+wyborem. Jeśli niestandardowej konfiguracji nginx nie można odczytać
+automatycznie, wskaż `--fluidd-root /bezwzględna/ścieżka --port 4480`.
+Ścieżka musi prowadzić do katalogu aktywnego Fluidd.
 
-Weryfikacja obejmuje zwykły katalog interfejsu, tytuł Fluidd w index.html,
-porty listen i katalog root/alias. IPv4 i IPv6 dla tej samej instalacji nie
-są dwiema drukarkami. Do trudniejszych konfiguracji nginx pozostaje jawne
-`--fluidd-root /pełna/ścieżka --port 4480`; nadal trzeba wskazać prawdziwy
-katalog Fluidd, a nie katalog źródeł Git czy konfigurację drukarki.
+Po udanym wdrożeniu instalator zapisuje **`.m300-installer.json`** obok
+aktywnego `printer.cfg`, zazwyczaj w `~/printer_data/config`. Plik zawiera
+wersję schematu, port i katalog. Gdy polecenie pomija jawny wybór, instalator
+weryfikuje ten zapis względem nginx. Bez zapisu sprawdza port 4480, a
+następnie szuka jednego jednoznacznego Fluidd. Obsługuje także konfiguracje
+legacy na innych portach.
 
-Po udanym wdrożeniu zapisywany jest plik **`.m300-installer.json` w katalogu
-z aktywnym printer.cfg** (zwykle `~/printer_data/config`). Zawiera tylko wersję
-schematu, port i ścieżkę katalogu, bez haseł. Powstaje atomowo po zakończeniu
-aktualizacji. Nie należy dodawać go do repozytorium paczki. Kolejna instalacja
-ponownie weryfikuje zapis względem nginx. Po świadomej zmianie portu wskaż nowy
-`--port`; jawny wybór zastępuje stary zapis dopiero po sukcesie.
-
-Także instalator pierwszego uruchomienia korzysta z tego samego wykrywania.
-Próba planowania bez `--apply` nie zapisuje ustawień. Pierwsza instalacja KIAUH
-na 80 pozostaje na 80, dopóki operator sam nie zmieni nginx.
-
-Komunikat `FLUIDD_ENDPOINT_SELECTED` pokazuje wybrany katalog, port i źródło
-wyboru. Wynik końcowy podaje lokalizację zapisu. Polecenie nie flashuje MCU.
+`FLUIDD_ENDPOINT_SELECTED` pokazuje katalog, port i źródło wyboru.
+Wynik `INSTALLED_M300_HOST` podaje także ścieżki potwierdzeń i kopii,
+jeśli zmieniono hosta lub Fluidd. Przy pierwszej instalacji polecenie bez
+`--apply` wyświetla plan bez zapisu ustawień. Aktualizacja MCU jest osobnym
+krokiem opisanym w [instrukcji firmware](MCU_FIRMWARE_1.0.5.md).
 
 ## Retry GitHub Actions: tylko awarie przejściowe
 
@@ -66,8 +59,9 @@ maile nie znikają; raport wskazuje źródłowy SHA i numer próby.
 Każdy nieudany krok musi kwalifikować się do ponowienia. Błąd testu ma
 pierwszeństwo nawet wtedy, gdy w tym samym kroku jest też komunikat sieciowy.
 Nie ma `continue-on-error`, usuwania testów ani automatycznego edytowania kodu.
-Nie zwiększamy limitów pamięci MCU, by ukryć błąd linkowania. Udany build i
-zgodny SHA pozostają warunkiem publikacji gałęzi orange-pi oraz ZIP-a.
+Budowanie i weryfikacja MCU sprawdzają limity linkera oraz granicę obszaru
+aplikacji w mapie Flash. Udany build i zgodny SHA są warunkiem publikacji
+gałęzi `orange-pi` oraz ZIP-a.
 
 Decyzja jest zapisywana jako `CI_RETRY_DECISION.json`, w podsumowaniu i
 artefakcie workflow. Błąd samej klasyfikacji kończy się **bez ponowienia**.

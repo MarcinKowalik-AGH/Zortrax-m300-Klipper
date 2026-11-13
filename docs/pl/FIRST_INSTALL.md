@@ -1,6 +1,6 @@
-# Zortrax M300 Classic v1.0.0-rc.8 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-rc.9 — instalacja od początku
 
-> **Instalator beta.23:** przykłady dotyczą portu 4480. Nowa instalacja KIAUH pozostająca na 80 wymaga `--port 80` lub jednoznacznego wykrycia; instalator nie zmienia nginx. Po sukcesie zapisuje port/katalog obok printer.cfg. [Szczegóły](INSTALLATION_AND_CI.md).
+Jeśli na tym hoście działa już Klipper dla M300, użyj [instrukcji aktualizacji](INSTALL.md).
 
 Instrukcja zakłada, że w drukarce jest już zgodny bootloader M300 obsługujący
 aktualizację z SD, a na Raspberry Pi lub Orange Pi nie ma jeszcze oprogramowania
@@ -8,7 +8,7 @@ drukarki. Wydanie jest przeznaczone dla **klasycznego M300, STM32F103,
 oryginalnego hotendu, płyty kontaktowej i dyszy 0,4 mm**. M300 Plus, Dual
 i Inventure mają inne układy; ta paczka ich nie obsługuje.
 
-## Co pobrać: gotową paczkę czy patch?
+## Co zawiera paczka
 
 **Zalecana jest gotowa, wersjonowana paczka z naszego GitHuba.** KIAUH służy
 do przygotowania usług systemowych i zależności. Następnie nasz instalator
@@ -19,7 +19,7 @@ Nie trzeba ręcznie kopiować patchy ani kompilować firmware drukarki lub Fluid
 |---|---|
 | System Linux | Obraz dobrany do konkretnego Raspberry Pi lub Orange Pi; nie ma jednego obrazu pasującego do obu rodzin |
 | Klipper host | Pełne źródła przypiętej wersji z kompletem zmian M300, nie same moduły extras |
-| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.4, do posiadanego bootloadera SD |
+| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.5, do posiadanego bootloadera SD |
 | Fluidd | Gotowa kompilacja 1.37.7 z menu i wizualizacją M300 |
 | Konfiguracja | Oddzielne pliki sprzętu, termiki, procedur i makr; ścieżki i UART ustawia instalator |
 | Kontrola wydania | Sumy SHA-256, identyfikator źródeł, raporty testów i licencje |
@@ -60,7 +60,7 @@ Nie należy podstawiać numeracji P4 z Inventure.
 
 Ustaw **750000 baud po obu stronach**, także w ustawieniu UART bootloadera.
 Dla tego łącza mamy czysty test ruchów XY do zadanych 400 mm/s. Próba 1500000
-wykazała retransmisje, dlatego nie jest domyślną rekomendacją tej bety.
+wykazała retransmisje, dlatego użyj 750000 baud na nowej instalacji.
 Instalator nie przestawia prędkości w drukarce.
 
 Sprawdź wybrany port, zastępując `ttyS1` właściwą nazwą:
@@ -76,7 +76,7 @@ Na tym porcie nie może działać konsola systemowa ani inny program. Jeśli
 użytkownik nie ma praw do portu, dodaj go do grupy urządzenia, zwykle poleceniem
 `sudo usermod -aG dialout "$USER"`, i zaloguj się ponownie.
 
-## 2. KIAUH: przygotowanie usług
+## 2. KIAUH i przygotowanie usług
 
 ```bash
 sudo apt-get update
@@ -88,9 +88,28 @@ git clone https://github.com/dw-0/kiauh.git "$HOME/kiauh"
 Wybierz **Install → Klipper → jedna instancja**, następnie **Moonraker**
 i **Fluidd**. Zachowaj standardowe ścieżki `~/klipper`, `~/klippy-env`,
 `~/printer_data` i usługi `klipper.service`, `moonraker.service`.
-Dla Fluidd wybierz **port 80**. Przy innym porcie trzeba później podać tę
-wartość instalatorowi. Na tym etapie nie ustawiaj silników, grzałek ani innej
-drukarki. Początkowy błąd pustej konfiguracji Klippera jest spodziewany.
+Na pytanie **Configure Fluidd for port** wpisz **4480**. Gdy KIAUH
+zaproponuje opcjonalny `Fluidd-Config`, wybierz **No**. Paczka M300 zawiera
+własne makra. Zachowaj wygenerowany tymczasowy `printer.cfg` wraz ze
+znacznikiem portu szeregowego. Klipper może zgłaszać błąd konfiguracji do
+czasu instalacji plików M300.
+
+Jeśli KIAUH na tym nowym hoście ustawił Fluidd na 80, sprawdź aktywną
+konfigurację przez `sudo nginx -T`. KIAUH używa standardowo pliku
+`/etc/nginx/sites-available/fluidd`. Użyj `sudoedit` na pliku aktywnej
+witryny Fluidd. Zmień w niej `listen 80;` na `listen 4480;` oraz
+`listen [::]:80;` na `listen [::]:4480;`, jeśli IPv6 jest włączone.
+Pozostałe witryny zostaw bez zmian. Sprawdź konfigurację przed przeładowaniem:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Przed przejściem dalej sprawdź, czy Fluidd odpowiada na 4480:
+
+```bash
+curl --fail --silent --show-error http://127.0.0.1:4480/ | grep -io '<title>fluidd</title>'
+```
 
 ## 3. Pobranie wersjonowanej paczki
 
@@ -99,11 +118,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.8/SHA256SUMS-v1.0.0-rc.8.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.8.zip$' SHA256SUMS-v1.0.0-rc.8.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.8.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.8 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/SHA256SUMS-v1.0.0-rc.9.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.9.zip$' SHA256SUMS-v1.0.0-rc.9.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.9 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -115,23 +134,20 @@ Uruchom przewidzianą w bootloaderze aktualizację aplikacji z karty. Zachowaj
 750000 baud. Po poprawnym wgraniu wyjmij kartę aktualizacyjną albo usuń plik
 aktualizacji przed kolejnymi uruchomieniami.
 
-Plik zawiera aplikację od adresu **0x08008000**. Nie jest wsadem bootloadera,
-pełnym zrzutem Flash ani poleceniem kasowania fabrycznych danych. Instalator
-hosta nie wykonuje tej operacji automatycznie.
-
-RC8 domyślnie zlicza czas druku lokalnie. Aby włączyć zapis do MCU, sprawdź posiadaną pełną kopię Flash tej płyty i podaj jej ścieżkę bezwzględną jako `factory_counter_backup:` w istniejącej sekcji `[m300_mcu]`. Z MCU 1.0.4 synchronizacja następuje automatycznie, gdy drukarka spełni warunki zapisu. [Aktualizacja MCU i odczyt licznika](MCU_FIRMWARE_1.0.4.md).
+Plik zawiera aplikację od adresu **0x08008000**. Pozostaw tymczasową
+usługę Klippera zatrzymaną. Instalator uruchomi usługę M300 w punkcie 5.
 
 ## 5. Pierwsza instalacja M300 na hoście
 
-W katalogu rozpakowanej paczki:
+W katalogu rozpakowanej paczki uruchom instalator jako użytkownik KIAUH:
 
 ```bash
-sudo systemctl start klipper
 python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 4480
 ```
 
-To wyświetla plan. Dla Raspberry Pi podstaw port wybrany w punkcie 1,
-np. `--serial /dev/serial0`. Po sprawdzeniu ścieżek zastosuj ten sam wybór:
+Polecenie wyświetla plan. Dla Raspberry Pi podstaw port wybrany w punkcie 1,
+np. `--serial /dev/serial0`. Sprawdź UART, prędkość, ścieżkę Klippera, port
+4480 oraz katalog Fluidd. Następnie dodaj `--apply` do tego samego polecenia:
 
 ```bash
 python3 install-fresh.py --serial /dev/ttyS1 --baud 750000 --port 4480 --apply
@@ -147,15 +163,15 @@ aktualizacja nie nadpisała portu. Niestandardowe źródła wymagają ręcznego 
 Nie zmienia nakładek UART, ustawień startu Linuxa ani firmware MCU; nie wysyła
 bazowania, ruchu lub grzania.
 
-Przy błędzie zachowaj komunikat i katalog
-`~/m300-first-install-backup-<data>`. Błąd w trakcie wymiany hosta, konfiguracji
-lub strony przywraca poprzednie pliki. Samo zainstalowanie plików nie
-potwierdza komunikacji z MCU — trzeba sprawdzić stan Ready.
+Po wyniku `INSTALLED_FIRST_M300_CHECK_READY` zachowaj ścieżkę `backup`.
+Przy błędzie zachowaj komunikat i katalog `~/m300-first-install-backup-<data>`,
+jeśli powstał. Po błędzie transakcji instalator przywraca poprzednie pliki i
+usługi. W następnym kroku sprawdź połączenie z MCU i stan Ready.
 
 ## 6. Kontrola po instalacji
 
-Otwórz `http://<IP-hosta>/`, odśwież Fluidd z pominięciem pamięci przeglądarki
-i odczytaj bez wykonywania ruchów:
+Otwórz `http://<IP-hosta>:4480/`. Odśwież Fluidd z pominięciem pamięci
+przeglądarki i wykonaj polecenia odczytu:
 
 ```gcode
 ZORTRAX_MCU_STATUS
@@ -167,11 +183,10 @@ QUERY_PROBE
 M105
 ```
 
-Oczekiwane: Ready, zgodne 750000 baud, MCU `1.0.4` po wgraniu osobnego
-wydania firmware (na już działających drukarkach starsze identyfikatory
-R14.18/R14.19 pozostają zgodne), cele temperatur 0°C i poprawne
-odczyty temperatury otoczenia. Sprawdź reakcje krańcówek i styku dyszy.
-[Profil fabrycznej rewizji i osi Z](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/en/HARDWARE_VARIANTS.md)
+Sprawdź stan Ready, zgodność prędkości UART z punktem 5, MCU `1.0.5`,
+zerowe cele temperatur i odczyty zbliżone do temperatury otoczenia.
+Sprawdź reakcje krańcówek i styku dyszy.
+[Profil fabrycznej rewizji i osi Z](../en/HARDWARE_VARIANTS.md)
 powinien odpowiadać drukarce. Nie należy zgadywać skali Z po błędzie odczytu
 fabrycznej rewizji.
 
@@ -196,35 +211,37 @@ Procedura końcowa:
 END_PRINT
 ```
 
-[Opis pauzy, parkowania, M600 i wznowienia](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.8/docs/pl/PRINT_CONTROL.md).
+[Opis pauzy, parkowania, M600 i wznowienia](PRINT_CONTROL.md).
+
+## Opcjonalna synchronizacja czasu druku z MCU
+
+Klipper domyślnie zapisuje czas druku na hoście. Po potwierdzeniu stanu Ready
+w istniejącej sekcji `[m300_mcu]` w `~/printer_data/config/printer.cfg` podaj
+w `factory_counter_backup:` ścieżkę bezwzględną do sprawdzonej pełnej kopii
+Flash tej płyty. Zapisz plik i raz uruchom ponownie Klippera, aby wczytać wpis.
+Najbliższa oczekująca pełna minuta zsynchronizuje się automatycznie po
+spełnieniu warunków zapisu. [Konfiguracja i odczyt stanu MCU](MCU_FIRMWARE_1.0.5.md).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Tag i pliki `v1.0.0-rc.8` pozostają niezmienne. Gałąź `orange-pi` jest kanałem
-późniejszych aktualizacji projektu. Po tej pierwszej instalacji można ją
-sklonować i używać zwykłego instalatora `install-orange-pi.py --port 4480`
-(beta.23 preferuje 4480 i ponownie sprawdza zapisany port/katalog). Nie aktualizuj portu przyciskiem
-instalującym stockowego Klippera lub Fluidd. System Linux i Moonraker to osobne
-komponenty — przed ich zmianą zachowuj kopie konfiguracji.
+Wersjonowana paczka instaluje `v1.0.0-rc.9`. Gałąź `orange-pi` dostarcza
+późniejsze aktualizacje projektu. [Instrukcja aktualizacji](INSTALL.md) opisuje
+klonowanie gałęzi oraz wdrożenie na działającym Fluidd na porcie 4480.
+Aktualizuj Klippera i Fluidd instalatorem M300. Przed osobną aktualizacją systemu lub Moonrakera
+zachowaj ich konfigurację.
 
-Raporty w paczce obejmują testy regresji hosta, prawdziwe procesy Klippera FILEOUTPUT,
-test pierwszej konfiguracji oraz budowanie ARM i Fluidd. Nie zastępują prób
-na wszystkich płytkach SBC, rewizjach drukarki i eksportach Z-Suite.
-Potwierdzony sprzętowo jest m.in. test XY na HW05 przy 750000 baud. Na nowej
-instalacji pozostają do wykonania wydruk, pauza/wznowienie/M600 i ocena łącza.
+Paczka zawiera raporty z regresji hosta, Klippera FILEOUTPUT, pierwszej
+instalacji i budowania ARM oraz Fluidd. Potwierdzony sprzętowo jest test XY
+na HW05 przy 750000 baud. Na nowej instalacji sprawdź drukowanie,
+pauzę/wznowienie/M600 i stabilność łącza.
 
-Źródła instalacji systemowej: [KIAUH](https://dw-0.github.io/kiauh/setup/installation/),
+Dokumentacja instalacji systemowej
+
+[KIAUH](https://dw-0.github.io/kiauh/setup/installation/),
 [UART Raspberry Pi](https://www.raspberrypi.com/documentation/computers/configuration.html),
-[Armbian](https://docs.armbian.com/User-Guide_Getting-Started/),
+[Armbian](https://docs.armbian.com/getting-started/),
 [Moonraker](https://moonraker.readthedocs.io/en/latest/installation/).
-
 
 ## Dokumentacja po uruchomieniu
 
-[Obsługa](USER_GUIDE.md) · [Menu OLED i rendery](OLED_MENU_REFERENCE.md) · [Mesh](BED_MESH_AND_LEVELING.md) · [Parametry i termika](TECHNICAL_REFERENCE.md) · [Spis dokumentacji](../../README_PL.md).
-
-Ta instrukcja opisuje pierwszą instalację. Dokumentacja użytkowa z 10.11.2026 nie zmienia kodu wykonawczego beta.20 ani parametrów istniejącej drukarki. Host API podglądu to NAV-EVENT-1, pipeline frontendu to NAV-PIPELINE-2, wygląd przycisków to OLED-ZOOM-2, a panel Tune to TUNE-PREPARE-1.
-
-## Podgląd i instrukcja ekranowa po instalacji beta.20
-
-Sprawdź [ilustrowaną instrukcję 65 funkcji OLED](OLED_FUNCTIONS.md) i [zmiany z 10.11.2026](UPDATE_2026-11-10.md). W prawym dolnym obszarze karty temperatur są przyciski ×1/×2/×3 pod HIDE; ekran pozostaje wycentrowany. Tune jest dostępne również przed pierwszym pomiarem; samo wejście nie wykonuje ruchu. All oznacza bazowanie, Calibrate — BED_MESH. Użytkownik potwierdził poprawny wygląd podglądu beta.20; nie zastępuje to odbioru nowej instalacji sprzętowej.
+[Obsługa](USER_GUIDE.md) · [Menu OLED i makra](RC1_UI.md) · [Instrukcja ilustrowana](OLED_FUNCTIONS.md) · [Mesh](BED_MESH_AND_LEVELING.md) · [Parametry i termika](TECHNICAL_REFERENCE.md)

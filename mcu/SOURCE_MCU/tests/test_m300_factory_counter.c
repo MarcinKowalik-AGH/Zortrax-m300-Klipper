@@ -290,6 +290,32 @@ test_changed_id_after_erase_started(unsigned source)
     assert(flash.ops == operations);
 }
 
+static void
+test_wrong_receiver_before_erase(unsigned source)
+{
+    struct flash flash;
+    init(&flash, source);
+    uint32_t crc = inspect(&flash).settings_crc;
+    struct flash original = flash;
+    assert(commit(&flash, EXPECTED, TARGET, crc) == M300_COUNTER_APPLIED);
+    unsigned old_erase_op = flash.ops;
+
+    flash = original;
+    flash.cut = old_erase_op;
+    assert(commit(&flash, EXPECTED, TARGET, crc) == M300_COUNTER_IO_ERROR);
+    flash.cut = 0;
+    unsigned receiver = (1 - source) * PAGE;
+    assert(read_word(&flash, receiver) == 0);
+    assert(read_word(&flash, receiver + 8) == 0);
+    // The latest counter, settings and authorization marker still match.
+    // A different earlier ID0 means this is not the prepared transaction.
+    set_word(&flash, receiver + 12, EXPECTED & (EXPECTED - 1) & 0xffff);
+    assert(commit(&flash, EXPECTED, TARGET, crc) == M300_COUNTER_INVALID_BANKS);
+    assert(flash.ops == old_erase_op);
+    assert(memcmp(flash.memory + source * PAGE,
+                  original.memory + source * PAGE, PAGE) == 0);
+}
+
 int
 main(void)
 {
@@ -297,6 +323,8 @@ main(void)
     test_alternating_and_conflicts();
     test_changed_id_after_erase_started(0);
     test_changed_id_after_erase_started(1);
+    test_wrong_receiver_before_erase(0);
+    test_wrong_receiver_before_erase(1);
     printf("PASS M300 factory counter power cuts=%u, alternating writes=100\n",
            cases);
     return 0;

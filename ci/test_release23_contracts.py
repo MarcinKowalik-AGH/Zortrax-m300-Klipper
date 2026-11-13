@@ -2,6 +2,7 @@
 import ast
 import json
 from pathlib import Path
+import shlex
 import types
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
@@ -43,23 +44,30 @@ class ReleaseContracts(unittest.TestCase):
         self.assertIn('python ci/test_acceptance_register.py',build)
         self.assertIn('python docs/tools/check_manual.py',build)
 
-    def test_current_installation_entrypoints_include_4480(self):
+    def test_current_installation_entrypoints_use_project_port(self):
         for path in ('README.md','README_PL.md','docs/pl/FIRST_INSTALL.md',
                      'docs/en/FIRST_INSTALL.md','docs/en/INSTALL.md','docs/pl/USER_GUIDE.md'):
             text=(ROOT/path).read_text()
             self.assertIn('4480',text,path)
             for line in text.splitlines():
-                if line.strip().startswith(('python3 ','python ')) and 'install-orange-pi.py' in line:
-                    self.assertIn('--port 4480',line,path)
+                if line.strip().startswith('python3 ') and 'install-orange-pi.py' in line:
+                    self.assertEqual(shlex.split(line)[2:4], ['--port', '4480'], path)
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-            self.assertIn('releases/download/v1.0.0-rc.8/',text)
+            self.assertIn('releases/download/v1.0.0-rc.9/',text)
+            commands = [shlex.split(line) for line in text.splitlines()
+                        if line.startswith('python3 install-fresh.py ')]
+            self.assertEqual(len(commands), 2, lang)
+            plan, apply = commands
+            self.assertEqual(apply, plan + ['--apply'], lang)
+            self.assertEqual(plan[plan.index('--port') + 1], '4480', lang)
+            self.assertIn('nginx -t', text, lang)
 
     def test_host_release_and_numeric_mcu_identity(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.8')
-        self.assertEqual(meta['mcu_release'],'1.0.4')
-        self.assertEqual(meta['self_contained_host_tests'],903)
+        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.9')
+        self.assertEqual(meta['mcu_release'],'1.0.5')
+        self.assertEqual(meta['self_contained_host_tests'],907)
         self.assertEqual(meta['print_control_revision'],'0.13.16.38-PRINT-DRAIN-XY-PURGE')
 
 if __name__=='__main__':unittest.main(verbosity=2)

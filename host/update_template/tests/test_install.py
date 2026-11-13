@@ -219,6 +219,22 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(p.read_text(), 'unknown')
         self.assertEqual(self.config.read_bytes(), self.original)
 
+    def test_apply_refuses_edit_made_after_baseline_validation_during_plan(self):
+        path = self.root / 'klippy/extras/m300_menu.py'
+        read_tree = install.profile.read_tree
+
+        def edit_then_read_tree(*args, **kwargs):
+            path.write_bytes(b'# concurrent local menu edit\n')
+            return read_tree(*args, **kwargs)
+
+        with patch.object(install.profile, 'read_tree', side_effect=edit_then_read_tree):
+            changes = install.plan(self.root, self.config)
+        with self.assertRaisesRegex(ValueError, 'File changed since plan'):
+            install.apply(self.root, self.config, changes)
+        self.assertEqual(path.read_bytes(), b'# concurrent local menu edit\n')
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.root / 'klippy/extras/m300_display.py').exists())
+
     def test_unknown_core_module_is_not_overwritten_by_factory_upgrade(self):
         p = self.root / 'klippy/extras/m300_mcu.py'
         p.write_text('# local core change\n')

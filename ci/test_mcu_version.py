@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.4'
+EXPECTED = '1.0.5'
 
 
 def require(condition, message):

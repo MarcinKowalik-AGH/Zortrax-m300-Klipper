@@ -66,6 +66,14 @@ class FirstInstallTest(unittest.TestCase):
         (self.config.parent/'m300_settings.json').write_text('keep')
         with self.assertRaisesRegex(ValueError,'Existing printer data'):fresh.refuse_existing(self.config,self.root)
 
+    def test_stopped_stock_klipper_preflight_uses_moonraker_server_status(self):
+        with patch.object(fresh, 'run', return_value={'klippy_state': 'disconnected'}) as printer:
+            fresh.require_unused_klipper(printer)
+            printer.assert_called_once_with('/server/info')
+        for state in ('ready', 'shutdown', None):
+            with self.subTest(state=state), self.assertRaisesRegex(ValueError, 'unused'):
+                fresh.require_unused_klipper(lambda _: {'klippy_state': state})
+
     def test_release_checksum_checked_before_importing_runtime(self):
         runtime=self.package/'KLIPPER_HOST/klippy';runtime.mkdir(parents=True)
         (runtime/'klippy.py').write_text('never execute')
@@ -125,6 +133,9 @@ class FirstInstallTest(unittest.TestCase):
         self.assertEqual((self.web/'config.json').read_text(),'{"custom":true}')
         self.assertFalse(any(a and a[0] in ('G28','M104','M140','FIRMWARE_RESTART') for a in calls))
         self.assertNotIn('update_manager klipper',self.moon.read_text())
+        pip = next(args for args in calls if args[1:4] == ('-m', 'pip', 'install'))
+        self.assertEqual(pip[4], '--target')
+        self.assertEqual(pip[5].name, 'dependencies')
 
     def test_failed_web_deploy_restores_entire_previous_setup(self):
         self.prepare_runtime();old_moon=self.moon.read_text();calls=[]
@@ -139,6 +150,49 @@ class FirstInstallTest(unittest.TestCase):
         self.assertFalse((self.config.parent/'m300_services.cfg').exists())
         self.assertIn('old',(self.web/'index.html').read_text())
 
+    def test_failed_service_start_or_receipt_restores_entire_previous_setup(self):
+        self.prepare_runtime()
+        old_moon = self.moon.read_text()
+        for service in (('start', 'klipper.service'), ('restart', 'moonraker.service'), None):
+            with self.subTest(service=service):
+                calls = []
+
+                def execute(*args, **kwargs):
+                    if args[:2] == ('sudo', 'systemctl') and args[2:] == service and args not in calls:
+                        calls.append(args)
+                        raise subprocess.CalledProcessError(1, args)
+                    return self.execute(calls, *args, **kwargs)
+
+                # An invalid port fails after the successful web swap, when saving state.
+                port = 4480 if service else 0
+                with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                    fresh.install(self.package, self.root, self.data, Path('/python'),
+                                  Path('/dev/ttyS1'), 750000, self.web,
+                                  fluidd_port=port, execute=execute)
+                self.assertEqual((self.root/'klippy/klippy.py').read_text(), 'stock')
+                self.assertEqual(self.config.read_text(), '[include fluidd.cfg]\n')
+                self.assertEqual(self.moon.read_text(), old_moon)
+                self.assertIn('old', (self.web/'index.html').read_text())
+                self.assertFalse((self.config.parent/'m300_services.cfg').exists())
+
+    def test_failed_install_leaves_previously_stopped_stock_service_stopped(self):
+        self.prepare_runtime()
+        calls = []
+
+        def execute(*args, **kwargs):
+            if args[:3] == ('systemctl', 'show', 'klipper.service'):
+                return 'inactive\n'
+            if args == ('sudo', 'systemctl', 'start', 'klipper.service'):
+                calls.append(args)
+                raise subprocess.CalledProcessError(1, args)
+            return self.execute(calls, *args, **kwargs)
+
+        with self.assertRaises(subprocess.CalledProcessError):
+            fresh.install(self.package, self.root, self.data, Path('/python'),
+                          Path('/dev/ttyS1'), 750000, self.web, execute=execute)
+        self.assertEqual(calls.count(('sudo', 'systemctl', 'start', 'klipper.service')), 1)
+        self.assertEqual((self.root/'klippy/klippy.py').read_text(), 'stock')
+
     def prepare_runtime(self):
         # Copy pristine core + current overlay, exactly as release packaging does.
         shutil.copytree(ROOT/'.ci/pristine',self.package/'KLIPPER_HOST',
@@ -148,6 +202,8 @@ class FirstInstallTest(unittest.TestCase):
     @staticmethod
     def execute(calls,*args,**kw):
         calls.append(args)
+        if args[:3] == ('systemctl', 'show', 'klipper.service'):
+            return 'active\n'
         if str(args[0])!='/python' and not (args[0]=='sudo' and args[1] in ('systemctl','chown')):
             if args[0]=='sudo':args=args[1:]
             return fresh.run(*args,**kw)

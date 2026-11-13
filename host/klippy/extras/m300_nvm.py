@@ -95,6 +95,14 @@ def _unique_pairs(pairs):
     return result
 
 
+def _sync_directory(path):
+    fd = os.open(os.path.dirname(path), os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def _check_no_live(value, depth=0):
     if depth > 12:
         raise NVMError('excessive nested data')
@@ -285,11 +293,7 @@ class HostNVM:
                 target.flush()
                 os.fsync(target.fileno())
             os.replace(temporary, path)
-            dirfd = os.open(directory, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
-            try:
-                os.fsync(dirfd)
-            finally:
-                os.close(dirfd)
+            _sync_directory(path)
         finally:
             if os.path.exists(temporary):
                 os.unlink(temporary)
@@ -353,11 +357,7 @@ class HostNVM:
                 if self._last_good is not None:
                     self._atomic_replace(self.path + '.bak', self._last_good)
                 os.replace(staged['path'], self.path)
-                dirfd = os.open(os.path.dirname(self.path), os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
-                try:
-                    os.fsync(dirfd)
-                finally:
-                    os.close(dirfd)
+                _sync_directory(self.path)
                 self._last_good = staged['raw']
                 self._published = copy.deepcopy(staged['data'])
                 self.source, self.warnings = 'primary', []

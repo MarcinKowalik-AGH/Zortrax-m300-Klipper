@@ -191,51 +191,53 @@ m300_counter_commit(const struct m300_counter_io *io, unsigned source,
     if (source > 1 || target == UINT32_MAX || target <= expected)
         return M300_COUNTER_INVALID_TARGET;
     unsigned old = source * PAGE, next = (1u - source) * PAGE;
-    struct page_image original, receiver;
-    scan(io, old, &original);
-    scan(io, next, &receiver);
-    int original_matches = original.valid && original.header == ACTIVE
-        && minutes(&original) == expected
-        && settings_crc(&original) == fingerprint;
+    uint16_t receiver_header = read_word(io, next);
     uint16_t body[BODY_WORDS];
-    unsigned words = 0;
-    if (receiver.valid && minutes(&receiver) == target
-        && settings_crc(&receiver) == fingerprint)
-        words = make_body(body, &receiver, expected, target);
-    uint16_t marker = read_word(io, next + ERASE_MARKER);
-    int receiver_matches = words && body_matches(io, next, body, words);
-
-    if (receiver_matches && receiver.header == ACTIVE && !marker) {
-        // The destination was verified and the old page already authorized
-        // for erase. A torn old erase can leave a valid-looking header/body.
-        if (erased_tail(io, old, old + PAGE))
-            return M300_COUNTER_ALREADY_APPLIED;
-        if (!io->write_allowed(io->context))
-            return M300_COUNTER_NOT_QUIESCENT;
-        return erase(io, old) ? M300_COUNTER_APPLIED : M300_COUNTER_IO_ERROR;
+    if (receiver_header == ACTIVE && read_word(io, next + ERASE_MARKER) == 0) {
+        // The authorization marker enables recovery even if a torn erase
+        // changed the old page. Check the entire destination first.
+        struct page_image receiver;
+        scan(io, next, &receiver);
+        if (receiver.valid && minutes(&receiver) == target
+            && settings_crc(&receiver) == fingerprint
+            && body_matches(io, next, body,
+                            make_body(body, &receiver, expected, target))) {
+            if (erased_tail(io, old, old + PAGE))
+                return M300_COUNTER_ALREADY_APPLIED;
+            if (!io->write_allowed(io->context))
+                return M300_COUNTER_NOT_QUIESCENT;
+            return erase(io, old) ? M300_COUNTER_APPLIED : M300_COUNTER_IO_ERROR;
+        }
     }
     if (!io->write_allowed(io->context))
         return M300_COUNTER_NOT_QUIESCENT;
+    struct page_image original;
+    scan(io, old, &original);
+    int original_matches = original.valid && original.header == ACTIVE
+        && minutes(&original) == expected
+        && settings_crc(&original) == fingerprint;
     if (!original_matches)
         return original.valid && original.header == ACTIVE
             ? M300_COUNTER_CONFLICT : M300_COUNTER_INVALID_BANKS;
 
-    words = make_body(body, &original, expected, target);
+    unsigned words = make_body(body, &original, expected, target);
     if (!body_matches(io, next, body, words)) {
         // A stock RECEIVING page is not ours unless the exact prepared bytes
         // match. A dirty ERASED page may be a cut while staging this transaction.
-        if (receiver.header != ERASED)
+        if (receiver_header != ERASED)
             return M300_COUNTER_INVALID_BANKS;
         if (!erase(io, next))
             return M300_COUNTER_IO_ERROR;
         for (unsigned i = 0; i < words; i++)
             if (body[i] != ERASED && !program(io, next + 4 + 2 * i, body[i]))
                 return M300_COUNTER_IO_ERROR;
+        if (!body_matches(io, next, body, words))
+            return M300_COUNTER_IO_ERROR;
     }
-    if (!body_matches(io, next, body, words)
-        || (receiver.header != ACTIVE && !program(io, next, ACTIVE))
-        || !body_matches(io, next, body, words)
-        || !program(io, next + ERASE_MARKER, 0)
+    if (receiver_header != ACTIVE
+        && (!program(io, next, ACTIVE) || !body_matches(io, next, body, words)))
+        return M300_COUNTER_IO_ERROR;
+    if (!program(io, next + ERASE_MARKER, 0)
         || !body_matches(io, next, body, words))
         return M300_COUNTER_IO_ERROR;
 

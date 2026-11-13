@@ -1,6 +1,7 @@
 """Validate the deployment helper without changing a real web root or service."""
 from pathlib import Path
 import hashlib
+import json
 import subprocess
 import tempfile
 import unittest
@@ -46,7 +47,7 @@ class OrangePiInstallerTest(unittest.TestCase):
 
     def test_verified_repair_restarts_host_without_resetting_mcu(self):
         with patch.object(installer,'require_idle',return_value=dict(state='shutdown')) as idle:
-            with patch.object(installer,'run') as run:
+            with patch.object(installer,'run',return_value=self.applied_host()) as run:
                 installer.apply_host(Path('/package/host'),('--root','/my/klipper','--config','/my/printer.cfg'),
                     dict(status='PLAN_M300_HOST'),repair_startup=True)
         idle.assert_called_once_with(repair_startup=True)
@@ -78,6 +79,46 @@ class OrangePiInstallerTest(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError,'idle'):
                         installer.apply_host(Path('/package/host'),(),{'status':'PLAN_M300_HOST'})
                 run.assert_not_called()
+
+    def test_terminal_print_stats_still_require_motion_services_and_heaters_idle(self):
+        status = {'print_stats': {'state': 'cancelled'}, 'pause_resume': {'is_paused': False},
+                  'idle_timeout': {'state': 'Ready'}, 'extruder': {'target': 0},
+                  'heater_bed': {'target': 0},
+                  'toolhead': {'print_time': 10, 'estimated_print_time': 11}}
+        info = {'state': 'ready'}
+        with patch.object(installer, 'printer', side_effect=[info, {'status': status}]) as printer:
+            self.assertEqual(installer.require_idle(), info)
+            self.assertEqual(printer.call_args.args, (installer.IDLE_QUERY,))
+        for name, state in (('m300_print_control', {'busy': True}),
+                            ('m300_print_control', {'paused': True}),
+                            ('m300_maintenance', {'busy': True}),
+                            ('pause_resume', {'is_paused': True}),
+                            ('idle_timeout', {'state': 'Printing'}),
+                            ('toolhead', {'print_time': 12, 'estimated_print_time': 11}),
+                            ('toolhead', {'print_time': float('nan'), 'estimated_print_time': 11}),
+                            ('heater_bed', {'target': 100})):
+            with self.subTest(name=name), patch.object(installer, 'printer', side_effect=[
+                    info, {'status': dict(status, **{name: state})}]):
+                with self.assertRaisesRegex(ValueError, 'idle'):
+                    installer.require_idle()
+
+    def test_unready_host_restores_receipt_and_restarts_prior_services(self):
+        with patch.object(installer, 'require_idle'), \
+             patch.object(installer, 'wait_ready', side_effect=ValueError('MCU startup failed')), \
+             patch.object(installer, 'run', return_value=self.applied_host()) as run:
+            with self.assertRaisesRegex(ValueError, 'MCU startup failed'):
+                installer.apply_host(Path('/package/host'), (), {
+                    'status': 'PLAN_M300_HOST', 'files': ['/config/moonraker.conf']})
+        operations = [call.args[2:] for call in run.call_args_list]
+        self.assertEqual(operations, [
+            ('stop', 'klipper.service'), ('--apply',), ('start', 'klipper.service'),
+            ('restart', 'moonraker.service'), ('stop', 'klipper.service'),
+            ('--rollback', '/previous/RECEIPT.json'), ('start', 'klipper.service'),
+            ('restart', 'moonraker.service')])
+
+    @staticmethod
+    def applied_host():
+        return json.dumps(dict(status='INSTALLED_M300_HOST', receipt='/previous/RECEIPT.json'))
 
     def test_qualified_geometry_flag_reaches_host_plan(self):
         self.check_geometry_flag(True)
@@ -132,7 +173,7 @@ class OrangePiInstallerTest(unittest.TestCase):
                 installer.nginx_root(config, port)
 
     def test_installed_host_skips_service_restart(self):
-        with patch.object(installer, 'run') as run:
+        with patch.object(installer, 'run') as run, patch.object(installer, 'wait_ready'):
             installer.apply_host(Path('/package/host'), (), {'status': 'ALREADY_M300_HOST'})
         run.assert_not_called()
 
