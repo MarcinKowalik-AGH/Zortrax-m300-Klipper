@@ -1,10 +1,10 @@
 {
   "model": "M300_CLASSIC",
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "1.0.4",
+  "mcu_release": "1.0.5",
   "host_update": "R16.12",
-  "github_commit": "560b2b9ac23828fa86bb1d2c4c609d3d0083e497",
-  "github_run_id": "43521897509",
+  "github_commit": "fbecbae8810aaa7f77663c8758b71b13380305b9",
+  "github_run_id": "43527367700",
   "physical_hardware": false,
   "flashed": false,
   "factory_Z_requires_MCU_factory_ABI": 1,
@@ -17,5 +17,5 @@
   "release_stage": "VERIFIED",
   "hotend_cooling_on_temperature": 50,
   "hotend_cooling_off_temperature": 45,
-  "distribution_version": "v1.0.0-rc.8"
+  "distribution_version": "v1.0.0-rc.9"
 }

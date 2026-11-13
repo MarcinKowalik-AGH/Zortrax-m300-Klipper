@@ -23,7 +23,6 @@ PANEL_RESPONSE_V2 = ('m300_panel_state_v2 clock=%u sequence=%u position=%u press
 PANEL_PINS = ('PB12', 'PB13', 'PB14', 'PB15', 'PE9', 'PE10', 'PE7', 'PE8', 'PC5')
 OLED_STATS = ('m300_oled_stats blocks=%u wire=%u queued=%c peak=%c fault=%c'
               ' spi_hz=%u max_busy_ticks=%u')
-OLED_RLE_RESULT = 'm300_oled_rle_result c_ticks=%u asm_ticks=%u'
 # Same native serialqueue background priority used by Klipper's UC1701/OLED.
 BACKGROUND_PRIORITY_CLOCK = 0x7fffffff00000000
 _DIRECT_SELECT = object()
@@ -117,7 +116,6 @@ class M300OLED:
         self.gcode.register_command('ZORTRAX_OLED_REINIT', self.cmd_reinit)
         self.gcode.register_command('ZORTRAX_OLED_TEXT', self.cmd_text)
         self.gcode.register_command('ZORTRAX_OLED_PERF_RESET', self.cmd_perf_reset)
-        self.gcode.register_command('ZORTRAX_OLED_RLE_BENCH', self.cmd_rle_bench)
 
     def _build_config(self):
         constants = self.mcu.get_constants()
@@ -1240,17 +1238,6 @@ class M300OLED:
         self.render_max_ms = self.render_last_ms = 0.
         self.render_count = self.tick_count = 0
         gcmd.respond_info('OLED performance samples reset; transport/session unchanged')
-
-    def cmd_rle_bench(self, gcmd):
-        if not self.connected or not self.mcu.check_valid_response(OLED_RLE_RESULT):
-            raise gcmd.error('OLED RLE benchmark requires a ready M300 OLED RLE MCU')
-        length = gcmd.get_int('LENGTH', 128, minval=1, maxval=128)
-        offset = gcmd.get_int('OFFSET', 1, minval=0, maxval=3)
-        query = self.mcu.lookup_query_command(
-            'm300_oled_rle_bench length=%c offset=%c', OLED_RLE_RESULT, cq=self.cq)
-        result = query.send([length, offset])
-        gcmd.respond_info('OLED RLE fill, %d bytes, offset %d: C %d cycles, ASM %d cycles'
-                          % (length, offset, result['c_ticks'], result['asm_ticks']))
 
     def get_status(self, now):
         age = None if self.encoder.last_time is None else now - self.encoder.last_time
