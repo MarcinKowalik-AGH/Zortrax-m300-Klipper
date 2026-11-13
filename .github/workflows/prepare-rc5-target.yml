@@ -1,0 +1,73 @@
+name: Prepare RC5 heater target correction
+on:
+  push:
+    branches: [fix/rc5-oled-apply-heater-target]
+    paths: ['.github/workflows/prepare-rc5-target.yml']
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/rc5-oled-apply-heater-target
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify RC4 baseline and import reviewed patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(git diff --name-only e27a553278a7428a2d2ddf6db80293cb2bfa4bdc)" = '.github/workflows/prepare-rc5-target.yml'
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/48acd77b4a32e3469eb31e3522b9c2104df74562 --jq .content | base64 --decode)
+          echo "::add-mask::$url"
+          curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/rc5.patch"
+          echo '00d056bb7395e67b12ea4df60a74ee6b2f8437f2e81d8f7a67ec6e1877ad73d4  '"$RUNNER_TEMP/rc5.patch" | sha256sum -c -
+          git apply --check "$RUNNER_TEMP/rc5.patch"
+          git apply --index "$RUNNER_TEMP/rc5.patch"
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          assert len(paths)==32,paths
+          assert not subprocess.check_output(['git','diff','--cached','--','mcu','frontend','host/config'],text=True)
+          allowed={'host/klippy/extras/m300_menu.py','host/klippy/extras/m300_settings_ui.py','host/klippy/extras/m300_release.py'}
+          assert all(p in allowed for p in paths if p.startswith('host/klippy/')),paths
+          PY
+      - name: Check native heater reference, regressions and raster documentation
+        run: |
+          set -euo pipefail
+          python ci/prepare_upstream.py
+          cmp .ci/pristine/klippy/extras/heaters.py host/update_template/tests/reference/native_heaters.py
+          python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt Pillow==11.3.0
+          PYTHONPATH=ci python - <<'PY'
+          from pathlib import Path
+          from project import stage_host_update
+          stage_host_update(Path('.ci/rc5-prepare'))
+          PY
+          (cd .ci/rc5-prepare && python -m unittest discover -s tests -v)
+          python ci/test_rc1_contracts.py
+          python ci/test_release23_contracts.py
+          python ci/render_temperature_editors.py --check
+          python docs/tools/check_manual.py --output .ci/reports/RC5_DOCUMENTATION.json
+          git diff --cached --check
+      - name: Commit only verified implementation
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'RC5: acknowledged OLED temperature click applies guarded native heater target'
+          git push origin HEAD:fix/rc5-oled-apply-heater-target
+      - name: Preserve diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RC5_PREPARATION
+          path: .ci/reports/RC5_DOCUMENTATION.json
+          if-no-files-found: warn
+          retention-days: 7
