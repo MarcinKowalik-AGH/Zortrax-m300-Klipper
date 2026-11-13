@@ -16,10 +16,11 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-1.0.2"
+VERSION = "M300_CLASSIC-1.0.3"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "scripts/buildcommands.py": "b67abb120a4d283af722dd1fc28c1317836510cc426cda4d917ad2548c645b44",
+    "src/basecmd.c": "c91c423e08662a642108bb79a3377a312e47c11e4f7178e19e11734a1e874f79",
     "src/sched.c": "61c00658d8bb829f1e0344adf3e47939deea7f972381e8928e228fd168fab94b",
     "src/adccmds.c": "708e25a6ba5dfe93b1556c7bca0c7113676b84cca1a46f31c2d6e669b998a04d",
     "src/stm32/serial.c": "feea757d96f50203874ead8c89dd5b9488150986b46ef0180cf658f37c7d2650",
@@ -75,12 +76,29 @@ config M300_XY_STEP_TIMER
 
     key = "src/stm32/Makefile"
     anchor = "# Add source files\n"
-    f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c stm32/m300_errors.c
+    f[key] = replace(f[key], anchor, anchor + '''src-$(CONFIG_M300_CLASSIC) += stm32/m300_board.c stm32/m300_panel.c stm32/m300_sd.c stm32/m300_uart.c stm32/m300_factory.c stm32/m300_factory_counter.c stm32/m300_errors.c
 src-$(CONFIG_M300_XY_STEP_TIMER) += stm32/m300_xy_step_timer.c
 ifeq ($(CONFIG_M300_CLASSIC),y)
 CFLAGS_klipper.elf += -Wl,-Map=$(OUT)klipper.map
 endif
 ''', key)
+
+    key = "src/basecmd.c"
+    anchor = '#include <string.h> // memset\n'
+    f[key] = replace(f[key], anchor, anchor + '#include "autoconf.h"\n',
+                     key + ":m300-include")
+    anchor = "static uint8_t oid_count;\n"
+    f[key] = replace(f[key], anchor, anchor + '''
+#if CONFIG_M300_CLASSIC
+// OEM NVM Flash can stall native timers even while the M300 board is
+// unarmed. Refuse the write once native object configuration has begun.
+int
+m300_native_config_started(void)
+{
+    return oids != NULL || is_finalized();
+}
+#endif
+''', key + ":m300-write-window")
 
     key = "src/stm32/serial.c"
     f[key] = replace(f[key], '#include "internal.h" // enable_pclock\n',
@@ -95,6 +113,16 @@ endif
 #include "board/m300_errors.h"
 #endif
 ''', key + ":error-include")
+    anchor = "static struct timer sentinel_timer = {\n"
+    f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
+int32_t
+m300_factory_periodic_margin(void)
+{
+    return (int32_t)(periodic_timer.waketime - timer_read_time());
+}
+#endif
+
+''' + anchor, key + ":factory-flash-timing")
     anchor = '    SchedStatus.shutdown_status = 2;\n    sched_timer_reset();\n'
     f[key] = replace(f[key], anchor, '''    SchedStatus.shutdown_status = 2;
 #if CONFIG_M300_CLASSIC
@@ -418,7 +446,7 @@ ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
     anchor = "    return version + extra\n"
     f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
     if fixed:
-        if fixed != "1.0.2":
+        if fixed != "1.0.3":
             error("Unsupported M300 firmware version")
         return fixed
     return version + extra

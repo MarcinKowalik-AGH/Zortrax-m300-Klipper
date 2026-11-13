@@ -1,14 +1,15 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.6
+# Zortrax M300 Classic — Klipper 1.0.0-rc.7
 
-**RC6:** Restored menu animation from the accepted RC3 shaded frames. No artwork redraw or MCU flashing. RC5 click-to-heat remains unchanged. [Details and animated renders](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC7:** The lifetime counter records model-print time from completed, cancelled and interrupted jobs. [Release notes](docs/en/RELEASE_v1.0.0-rc.7.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 
-**MCU 1.0.2:** [original Zortrax startup logo before the waiting screen](docs/en/MCU_FIRMWARE_1.0.2.md), with no RC3 host, bootloader or unified-artwork changes. [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.2).
-**Sixth release candidate for the classic M300**, using its original controller,
+**MCU 1.0.3:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.3.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.3).
+
+**Seventh release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC6](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.6) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC7](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.7) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -38,8 +39,7 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 The installer validates/persists the existing Fluidd endpoint, preserves operator
 configuration, mesh, PID and qualified Z settings, and refuses unknown runtime
 edits. Do not bypass checksums or force-reset local work. Refresh Fluidd after
-installation. RC1 uses clean package names: M300_HOST, M300_FLUIDD.zip and
-MCU/M300_SD.zip. This menu update **requires no MCU flashing**. Existing MCU **1.0.2** and unified artwork are unchanged; the host installer never flashes the MCU. [MCU 1.0.2 details](docs/en/MCU_FIRMWARE_1.0.2.md).
+installation. The host updater installs M300_HOST and M300_FLUIDD.zip. Use the separate SD procedure for MCU 1.0.3 when qualifying MCU counter storage. [MCU update and counter checks](docs/en/MCU_FIRMWARE_1.0.3.md).
 
 ## Qualification and limits
 

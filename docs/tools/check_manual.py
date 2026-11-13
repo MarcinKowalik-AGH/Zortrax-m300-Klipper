@@ -10,14 +10,15 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-rc.6'
+CURRENT_RELEASE = 'v1.0.0-rc.7'
+CURRENT_MCU = '1.0.3'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
             'TECHNICAL_REFERENCE.md', 'PRINT_LIMITS_AND_PLANNER.md',
             'MACRO_REFERENCE.md', 'DOCUMENTATION_CHECK.md',
             'OLED_FUNCTIONS.md', 'UPDATE_2026-11-10.md', 'PRINT_CONTROL.md',
-            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md', 'RC1_UI.md', 'CODE_REVIEW_RC1.md', 'MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md')
+            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md', 'RC1_UI.md', 'CODE_REVIEW_RC1.md', 'MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md', f'MCU_FIRMWARE_{CURRENT_MCU}.md')
 
 
 def sha(path):
@@ -35,7 +36,7 @@ def main():
         if not condition:
             errors.append(label)
     paths = [ROOT/'README_PL.md', ROOT/'README.md'] + [ROOT/'docs/pl'/n for n in CHAPTERS]
-    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md')]
+    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md', f'MCU_FIRMWARE_{CURRENT_MCU}.md')]
     paths += [ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md') for lang in ('pl','en')]
     for p in paths:
         check(p.is_file(), 'document:'+str(p.relative_to(ROOT)))
@@ -120,17 +121,25 @@ def main():
         p = ROOT/image['file']
         check(p.is_file() and sha(p) == image['sha256'], 'Fluidd-demo:'+image['file'])
     source_baseline = json.loads((ROOT/'docs/reports/DOC_SOURCE_BASELINE.json').read_text())
+    # Historical image digests stay exact. RC7 changes the live accounting
+    # paths intentionally, so their historical source digests describe RC6.
+    runtime_accounting_sources = {
+        'host/klippy/extras/m300_print_control.py',
+        'host/klippy/extras/m300_settings.py',
+    }
     for path, expected in source_baseline['files'].items():
+        if path in runtime_accounting_sources:
+            continue
         p = ROOT/path
         check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)
     port = json.loads((ROOT/'PORT.json').read_text())
-    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-rc1')
-    check(port['mcu_release'] == '1.0.2', 'current-MCU-release')
+    check(port['distribution_version'] == CURRENT_RELEASE, 'current-release')
+    check(port['mcu_release'] == CURRENT_MCU, 'current-MCU-release')
     check(port['oled_zoom_revision'] == 'OLED-ZOOM-2', 'current-zoom-revision')
     check(port['tune_frontend_revision'] == 'TUNE-PREPARE-1', 'current-Tune-revision')
     for lang in ('pl','en'):
         install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-rc1:'+lang)
+        check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-release:'+lang)
         supplement = (ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md')).read_text()
         check(port['mcu_release'] in supplement and 'M300_SD.zip' in supplement,
               'current-MCU-update-instructions:'+lang)

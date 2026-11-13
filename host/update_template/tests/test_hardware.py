@@ -48,7 +48,8 @@ def fixture(profile='factory', fileoutput=False):
     kin = NS(get_steppers=lambda: [stepper])
     toolhead = NS(get_kinematics=lambda: kin,
                   get_status=lambda now: {'homed_axes': ''})
-    printer = NS(lookup_object=lambda name: toolhead,
+    printer = NS(lookup_object=lambda name, default=None:
+                 toolhead if name == 'toolhead' else default,
                  get_reactor=lambda: NS(monotonic=lambda: 1.),
                  register_event_handler=Mock())
     board = NS(printer=printer, mcu=mcu, mcu_name='mcu',
@@ -124,6 +125,36 @@ class HardwareTests(unittest.TestCase):
         hw._apply_factory_info(dict(serial=0, time_valid=1, print_minutes=0))
         self.assertIsNone(hw.get_status()['serial_number'])
         self.assertEqual(hw.get_status()['factory_print_minutes'], 0)
+
+    def test_older_mcu_subtracts_only_serial_bound_settled_host_minutes(self):
+        hw, _, _ = fixture()
+        hw.counter_legacy_state = dict(serial='Z12345678', machine_id='m300',
+                                       committed=2, last_minutes=302, pending=None)
+        hw._apply_factory_info(dict(serial=0x12345678, time_valid=1, print_minutes=310))
+        self.assertEqual(hw.get_status()['factory_counter_committed_seconds'], 120)
+        self.assertEqual(hw.get_status()['factory_print_minutes'], 310)
+
+    def test_older_mcu_hides_total_until_an_ambiguous_pending_update_can_be_read(self):
+        hw, _, _ = fixture()
+        hw.counter_legacy_state = dict(serial='Z12345678', machine_id='m300',
+                                       committed=2, last_minutes=302,
+                                       pending=dict(expected=302, target=306))
+        hw._apply_factory_info(dict(serial=0x12345678, time_valid=1, print_minutes=306))
+        self.assertIsNone(hw.get_status()['factory_print_minutes'])
+        self.assertIn('matching MCU ABI', hw.get_status()['factory_counter_error'])
+
+    def test_mcu_recovery_without_host_nvm_section_blocks_startup(self):
+        hw, _, _ = fixture()
+        constants = dict(hw.mcu.get_constants(), M300_FACTORY_COUNTER_ABI=1)
+        hw.mcu.get_constants = lambda: constants
+        query = Mock(return_value=dict(serial=0x12345678, state=2, source=255,
+                                      print_minutes=0, settings_crc=0))
+        hw.mcu.lookup_query_command = Mock(return_value=NS(send=query))
+        hw.board.startup_transport = NS(_bounded=lambda name, operation: operation())
+        with self.assertRaisesRegex(RuntimeError, 'requires the original host NVM'):
+            hw._identify()
+        self.assertEqual(hw.get_status()['factory_counter_banks'], 'RECOVERY_REQUIRED')
+        query.assert_called_once()
 
     def test_broken_or_erased_record_never_changes_step_scale(self):
         for response in (packet(0xff), packet(0xe5, 0xffffffff), packet(0xdf)):

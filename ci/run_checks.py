@@ -95,6 +95,11 @@ def main():
     run('factory_decoder_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                                     KIT / 'tests/test_m300_factory.c', '-o', factory])
     run('factory_decoder_execute', [factory])
+    factory_counter = report / 'factory-counter-test'
+    run('factory_counter_compile', ['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
+        KIT / 'tests/test_m300_factory_counter.c',
+        KIT / 'overlay/src/stm32/m300_factory_counter.c', '-o', factory_counter])
+    run('factory_counter_power_cut_model', [factory_counter])
     sd_card = report / 'sd-card-test'
     run('sd_card_model_compile', ['cc', '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
                                   ROOT / 'mcu/tests/test_m300_sd.c', '-o', sd_card])

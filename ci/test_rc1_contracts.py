@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.6'
+VERSION='v1.0.0-rc.7'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -16,7 +16,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(meta['distribution_version'],VERSION)
         self.assertEqual(meta['public_host_version'],VERSION[1:])
         self.assertEqual(meta['menu_revision'],VERSION[1:])
-        self.assertEqual(meta['mcu_release'],'1.0.2')
+        self.assertEqual(meta['mcu_release'],'1.0.3')
         self.assertIn('m300_release.py',meta['host_update_files'])
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)
@@ -27,17 +27,33 @@ class Rc1Contracts(unittest.TestCase):
         self.assertIn("'LAB: hardware still unqualified': 'Hardware acceptance pending'",labels)
         self.assertNotIn("'Host UI: R7 Fans'",labels)
 
-    def test_protected_motion_thermal_mesh_and_pixel_sources_unchanged(self):
+    def test_rc6_protected_motion_thermal_mesh_and_pixel_sources_unchanged(self):
         report=json.loads((ROOT/'docs/reports/RC6_REVIEW.json').read_text())
         self.assertFalse(report['physical_tests_performed'])
         self.assertGreaterEqual(len(report['protected_sha256']),14)
-        for path,expected in report['protected_sha256'].items():
+        controller = 'host/klippy/extras/m300_print_control.py'
+        drain_observer = (
+            "        nvm = self.printer.lookup_object('m300_nvm', None)\n"
+            "        if nvm is not None:\n"
+            "            nvm.runtime_drained(self.reactor.monotonic())\n"
+        ).encode()
+        end_observer = (
+            "            models = self.printer.lookup_object('m300_models', None)\n"
+            "            if models is not None:\n"
+            "                models.runtime_end()\n"
+        ).encode()
+        for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
-                self.assertEqual(hashlib.sha256((ROOT/path).read_bytes()).hexdigest(),expected)
+                data = (ROOT/path).read_bytes()
+                if path == controller:
+                    for observer, count in ((drain_observer, 2), (end_observer, 1)):
+                        self.assertEqual(data.count(observer), count)
+                        data = data.replace(observer, b'')
+                self.assertEqual(hashlib.sha256(data).hexdigest(), expected)
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],867)
+        self.assertEqual(meta['self_contained_host_tests'],896)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -109,7 +125,7 @@ class Rc1Contracts(unittest.TestCase):
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/('RELEASE_'+VERSION+'.md')).read_text()
             self.assertIn('--port 4480',text)
-            self.assertIn('1.0.2',text)
+            self.assertIn('1.0.3',text)
 
     def test_obsolete_generators_and_duplicate_publish_workflow_removed(self):
         for path in ('tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py',

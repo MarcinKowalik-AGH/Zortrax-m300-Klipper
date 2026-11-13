@@ -148,7 +148,9 @@ class M300Settings:
         factory_minutes=hw.get('factory_print_minutes')
         counters=self.nvm.ui_snapshot()['counters']
         klipper_seconds=counters['print_seconds']
-        total_seconds=(factory_minutes * 60 + klipper_seconds
+        committed_seconds=hw.get('factory_counter_committed_seconds', 0)
+        pending_seconds=max(0., klipper_seconds - committed_seconds)
+        total_seconds=(factory_minutes * 60 + pending_seconds
                        if factory_minutes is not None else None)
         version=display_text(version) or None
         return dict(host_version=HOST_VERSION,mcu_version=version,
@@ -158,9 +160,10 @@ class M300Settings:
             serial_source=('Factory record' if factory_serial else
                            'Configured printer serial' if serial else 'Unavailable'),
             factory_print_minutes=factory_minutes,klipper_print_seconds=klipper_seconds,
+            klipper_unsynced_print_seconds=pending_seconds,
             klipper_completed_jobs=counters['completed_jobs'],
             total_print_seconds=total_seconds,total_printing_time=duration(total_seconds),
-            time_source='Factory NVM + Klipper completed jobs' if total_seconds is not None else 'Unavailable',
+            time_source='Factory NVM + unsynced Klipper printing time' if total_seconds is not None else 'Unavailable',
             history_print_seconds=self.history_seconds,
             history_reading=self.reading,history_error=self.history_error,
             history_updated_at=self.history_stamp,project_url=PROJECT_URL)

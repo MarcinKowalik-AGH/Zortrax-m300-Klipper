@@ -192,6 +192,8 @@ def main():
                  args.root/'klippy/extras/m300_ci_early_status.py')
     shutil.copy2(Path(__file__).with_name('m300_ci_thermal_bindings.py'),
                  args.root/'klippy/extras/m300_ci_thermal_bindings.py')
+    shutil.copy2(Path(__file__).with_name('m300_ci_runtime_bindings.py'),
+                 args.root/'klippy/extras/m300_ci_runtime_bindings.py')
     for name,script,synthetic,error in cases:
         dest=args.output/name
         dest.mkdir(exist_ok=True)
@@ -201,7 +203,11 @@ def main():
         if 'TEST_ZORTRAX_XY' in script:
             cp.read(Path(__file__).resolve().parents[1]/'host/update_template/legacy/m300_tests.cfg')
         cp.add_section('m300_ci_thermal_bindings')
-        if name=='native_early_moonraker_status':cp.add_section('m300_ci_early_status')
+        cp.add_section('m300_ci_runtime_bindings')
+        if name == 'native_early_moonraker_status':
+            cp.add_section('m300_ci_early_status')
+            if not cp.has_section('gcode_arcs'):
+                cp.add_section('gcode_arcs')
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
             assert cp.getfloat(section, 'step_pulse_duration') == .000002
         assert cp.getfloat('m300_motion', 'z_home_hotend_target') == 180
@@ -270,12 +276,16 @@ def main():
         config=io.StringIO();cp.write(config)
         (dest/'printer.cfg').write_text(config.getvalue())
         (dest/'input.gcode').write_text('ZORTRAX_DISPLAY_STATUS\n' + script)
+        # Klippy opens its log in append mode. Discard a prior validation
+        # run's output so repeated checks report only this startup's handlers.
+        log = dest / 'klippy.log'
+        log.unlink(missing_ok=True)
         command=[sys.executable,str(args.root/'klippy/klippy.py'),str(dest/'printer.cfg'),
                  '-i',str(dest/'input.gcode'),'-o',str(dest/'protocol.bin'),'-d',str(args.dictionary)]
-        command+=['-l',str(dest/'klippy.log')]
+        command+=['-l',str(log)]
         process=subprocess.run(command,capture_output=True,text=True,timeout=45)
-        text=process.stdout+process.stderr+(dest/'klippy.log').read_text()
-        (dest/'klippy.log').write_text(text)
+        text=process.stdout+process.stderr+log.read_text()
+        log.write_text(text)
         if name == 'factory_erased_refused':
             assert error in text, (name, text[-3000:])
             assert "Configured MCU 'mcu'" not in text
@@ -313,6 +323,18 @@ def main():
             for key in ('G28','PAUSE','RESUME'):
                 expected[key]='extras.m300_print_control.M300PrintControl.cmd_'+key
             expected['G28:m300_backend']=EXPECTED['G28']
+        runtime = next(json.loads(line.split('M300_CI_RUNTIME_BINDINGS ', 1)[1])
+                       for line in text.splitlines() if 'M300_CI_RUNTIME_BINDINGS ' in line)
+        expected_commands = {'G0', 'G1', 'M109', 'M190', 'TEMPERATURE_WAIT'}
+        if cp.has_section('gcode_arcs'):
+            expected_commands.update(('G2', 'G3'))
+        assert set(runtime) == expected_commands, (name, runtime)
+        for key in ('G0', 'G1'):
+            chain = runtime[key]
+            downstream = ([expected[key], EXPECTED[key]] if cp.has_section('m300_print_control')
+                          else [EXPECTED[key]])
+            assert chain[1:] == downstream, (name, key, chain)
+            expected[key] = chain[0]
         for key,owner in expected.items():
             assert bindings['owners'][key]==owner,(name,key,bindings['owners'][key],owner)
         if error:
@@ -451,7 +473,8 @@ def main():
                         'synthetic_coordinates':synthetic,'physical_hardware':False,
                         'exit_code':process.returncode,
                         'protocol_bytes':(dest/'protocol.bin').stat().st_size,
-                        'native_bindings':bindings['owners']})
+                        'native_bindings':bindings['owners'],
+                        'runtime_command_chains':runtime})
         results[-1]['synthetic_factory_record'] = name in factory_cases
     result={'status':'PASS_REAL_KLIPPY_NATIVE_CORE','cases':results,
             'FILEOUTPUT':True,'physical_UART':False,'MCU_executed':False,

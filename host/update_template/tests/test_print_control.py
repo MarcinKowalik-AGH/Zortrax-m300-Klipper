@@ -413,7 +413,8 @@ class PrintControlTests(unittest.TestCase):
         h.control_until('IDLE')
 
     def test_cancel_during_soak_never_homes_or_reheats(self):
-        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True)
+        h=self.h;h.objects['m300_nvm']=NS(get_setting=lambda name,default:True,
+                                        runtime_drained=lambda now:None)
         h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
         h.control_until('STARTING','PLATFORM_SOAK');h.run('CANCEL_PRINT');h.control_until('IDLE')
         h.step_control(600.)

@@ -18,6 +18,8 @@ import tempfile
 import threading
 from datetime import datetime, timezone
 
+from .m300_runtime import CHECKPOINT_SECONDS, DRAIN_POLL_SECONDS, PrintClock
+
 SCHEMA_VERSION = 1
 MAX_BYTES = 65536
 MODEL = 'M300_CLASSIC'
@@ -439,6 +441,15 @@ class M300NVM:
         self._busy = False
         self._deferred_settings = {}
         self._settings_timer = self.reactor.register_timer(self._save_deferred_settings)
+        self.print_clock = PrintClock()
+        self._runtime_saved = (0., 0)
+        self._runtime_target = None
+        self._runtime_writing = False
+        self._runtime_error = None
+        self._runtime_timer = self.reactor.register_timer(self._save_runtime)
+        for event in ('klippy:shutdown', 'gcode:request_restart'):
+            self.printer.register_event_handler(event, self._stop_runtime)
+        self.printer.register_event_handler('klippy:disconnect', self._disconnect_runtime)
         for name, fn in (('ZORTRAX_SETTING', self.cmd_setting),
                          ('ZORTRAX_NVM_IMPORT', self.cmd_import),
                          ('ZORTRAX_NVM_STATUS', self.cmd_status)):
@@ -466,6 +477,98 @@ class M300NVM:
 
     def is_busy(self):
         return self._busy
+
+    def runtime_start(self, now):
+        self.print_clock.start(now, self.printer.lookup_object('toolhead', None))
+        self.reactor.update_timer(self._runtime_timer, self.reactor.NOW)
+
+    def runtime_pause(self, now, *, drain=True):
+        if drain:
+            self.print_clock.request_stop(now)
+        else:
+            self.print_clock.stop(now)
+        self.reactor.update_timer(self._runtime_timer, self.reactor.NOW)
+
+    def runtime_drained(self, now):
+        self.print_clock.drain(now, self.printer.lookup_object('toolhead', None))
+        self.reactor.update_timer(self._runtime_timer, self.reactor.NOW)
+
+    def runtime_complete(self):
+        self.print_clock.completed += 1
+        self.reactor.update_timer(self._runtime_timer, self.reactor.NOW)
+
+    @property
+    def runtime_error(self):
+        return self._runtime_error
+
+    def _stop_runtime(self, *args):
+        # Shutdown callbacks cannot yield. The next timer writes any final
+        # sample while the reactor still runs, and disconnect drains it too.
+        now = self.reactor.monotonic()
+        cutoff = self.print_clock.drain_since
+        self.runtime_pause(now if cutoff is None else cutoff, drain=False)
+
+    def _disconnect_runtime(self):
+        now = self.reactor.monotonic()
+        cutoff = self.print_clock.drain_since
+        self.print_clock.stop(now if cutoff is None else cutoff)
+        self._save_runtime(now, disconnected=True)
+
+    def _save_runtime(self, now, disconnected=False):
+        clock = self.print_clock
+        if clock.drain_since is not None:
+            toolhead = self.printer.lookup_object('toolhead', None)
+            clock.drain(now, toolhead)
+            if clock.drain_since is not None:
+                # Write only measured time up to the stop request until the
+                # native movement queue reports when its last move finished.
+                now = clock.drain_since
+        elapsed, jobs = sample = clock.snapshot(now)
+        saved_elapsed, saved_jobs = self._runtime_saved
+        seconds, completed = elapsed - saved_elapsed, jobs - saved_jobs
+        if self._busy and not disconnected and (seconds > 0. or completed):
+            # Let an already staged calibration retain its revision through
+            # publication. Ordinary model printing takes no settings lease.
+            return self.reactor.monotonic() + DRAIN_POLL_SECONDS
+        if (not self._runtime_writing or disconnected) and (seconds > 0. or completed):
+            def mutate(data):
+                counters = data['counters']
+                # An executor may finish after its reactor waiter stopped.
+                # Persist an absolute target to make the final retry safe.
+                counters['print_seconds'] = max(counters['print_seconds'], target_seconds)
+                counters['completed_jobs'] = max(counters['completed_jobs'], target_jobs)
+
+            if self._runtime_target is None:
+                counters = self.ui_snapshot()['counters']
+                self._runtime_target = (counters['print_seconds'] + seconds,
+                                        counters['completed_jobs'] + completed, sample)
+            target_seconds, target_jobs, committed_sample = self._runtime_target
+            self._runtime_writing = True
+            try:
+                if disconnected:
+                    # Disconnect runs after the reactor exits. Waiting on an
+                    # executor completion here would no longer be serviced.
+                    self.store.update(mutate)
+                else:
+                    self.executor.submit(self.store.update, mutate)
+                self._runtime_saved = committed_sample
+                self._runtime_target = None
+                self._runtime_error = None
+            except (NVMError, OSError, TypeError, KeyError) as exc:
+                self._runtime_error = str(exc)
+                logging.warning('M300 runtime checkpoint failed: %s', exc)
+            finally:
+                self._runtime_writing = False
+            if disconnected and self._runtime_saved == committed_sample and sample != committed_sample:
+                return self._save_runtime(now, disconnected=True)
+        if clock.drain_since is not None:
+            return self.reactor.monotonic() + DRAIN_POLL_SECONDS
+        resumed = self.reactor.monotonic()
+        if clock.since is not None or self._runtime_error is not None:
+            return resumed + CHECKPOINT_SECONDS
+        if clock.snapshot(resumed) != self._runtime_saved:
+            return self.reactor.NOW
+        return self.reactor.NEVER
 
     def _guard(self, calibration=False, completed_job=False, completion_token=None):
         if self._busy or self.printer.is_shutdown():
@@ -692,6 +795,8 @@ class M300NVM:
                     calibration_write_phase=getattr(self, 'calibration_write_phase', 'IDLE'),
                     calibration_write_outcome=getattr(self, 'calibration_write_outcome', 'NONE'),
                     source=self.store.source, warnings=list(self.store.warnings),
+                    runtime_checkpoint_error=self.runtime_error,
+                    runtime_checkpoint_interval=CHECKPOINT_SECONDS,
                     hardware_qualified=False,
                     sleep_seconds=SLEEP_SECONDS[data['settings']['sleep_mode']],
                     setting_choices={name: [{'value': value, 'label': LABELS.get(value, str(value))}

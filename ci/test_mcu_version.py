@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.2'
+EXPECTED = '1.0.3'
 
 
 def require(condition, message):
@@ -31,6 +31,18 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
             'MCU firmware release constant differs from dictionary version')
     require(data['config']['M300_MODEL'] == 'M300_CLASSIC', 'MCU model mismatch')
     require(data['config']['M300_ABI'] == 1, 'MCU ABI mismatch')
+    require(data['config']['M300_FACTORY_COUNTER_ABI'] == 1,
+            'Factory counter ABI missing')
+    require('m300_factory_counter_query' in data['commands'],
+            'Factory counter query command missing')
+    require('m300_factory_counter_commit serial=%u source=%c expected=%u'
+            ' target=%u settings_crc=%u' in data['commands'],
+            'Factory counter commit format changed')
+    require('m300_factory_counter_state serial=%u state=%c source=%c'
+            ' print_minutes=%u settings_crc=%u' in data['responses'],
+            'Factory counter query response format changed')
+    require('m300_factory_counter_result status=%c' in data['responses'],
+            'Factory counter commit response format changed')
     require(data['config']['M300_FAN_POLICY'] == 3,
             'Independent cooling fan policy changed')
     require(data['config']['M300_UART_RATE_COUNT'] == 8,
@@ -44,7 +56,7 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
     binary = None
     if binary_path is not None:
         binary = Path(binary_path).read_bytes()
-        require(b'1.0.2\0' in binary, 'Compiled MCU image lacks numeric release')
+        require((EXPECTED.encode() + b'\0') in binary, 'Compiled MCU image lacks numeric release')
         require(b'TONED-OLED-UART8' not in binary,
                 'Old development suffix remains in actual MCU image')
     info = None

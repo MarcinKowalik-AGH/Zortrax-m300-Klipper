@@ -281,17 +281,18 @@ int main(void)
     assert(!(GPIOE->ODR & ((1u << 9) | (1u << 10))) && GPIOB->ODR & (1u << 12));
 
     // Exercise actual transformed upstream reset/write/toggle entry points.
+    // Keep these reused fixture handles defined across REJECT longjmps.
     prepare(3);
-    struct gpio_out heater = gpio_out_setup(GPIO('C',8), 1);
-    struct gpio_out enable = gpio_out_setup(GPIO('D',14), 1);
-    struct gpio_out step = gpio_out_setup(GPIO('B',3), 1);
+    volatile struct gpio_out heater = gpio_out_setup(GPIO('C',8), 1);
+    volatile struct gpio_out enable = gpio_out_setup(GPIO('D',14), 1);
+    volatile struct gpio_out step = gpio_out_setup(GPIO('B',3), 1);
     assert(!(GPIOC->ODR & (1u<<8)) && !(GPIOD->ODR & (1u<<14)));
     write_pin(heater, 1); toggle_pin(heater);
     gpio_out_toggle(step); model_sync(step.regs);
     write_pin(enable, 1); toggle_pin(enable);
     assert(!(GPIOB->ODR & (1u<<3)) && !(GPIOD->ODR & (1u<<14)));
-    struct gpio_out fan0 = gpio_out_setup(GPIO('E',13), 0);
-    struct gpio_out fan1 = gpio_out_setup(GPIO('E',14), 1);
+    volatile struct gpio_out fan0 = gpio_out_setup(GPIO('E',13), 0);
+    volatile struct gpio_out fan1 = gpio_out_setup(GPIO('E',14), 1);
     toggle_pin(fan0); assert(fan_requested & 1);
     toggle_pin(fan0); assert(!(fan_requested & 1));
     assert(!(GPIOE->ODR & (1u<<13)) && (GPIOE->ODR & (1u<<14)));
