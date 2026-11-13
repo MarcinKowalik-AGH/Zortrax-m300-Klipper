@@ -6,6 +6,8 @@
 #include "m300_oled_stock_glyphs.inc"
 #include "m300_oled_activity.inc"
 #include "m300_error_icons.inc"
+#include "m300_oled_startup_logo.inc"
+#define M300_STARTUP_LOGO_HOLD_US 2500000u
 /* Host and MCU share the stock 50x50 OLED icon envelope and luminance.
  * Normal Klipper menus (including the three-tone Klipper logo) are rendered
  * on the Orange Pi and transferred unchanged as native 4bpp pixel data.
@@ -18,10 +20,11 @@ enum {
     LOCAL_OFF, LOCAL_WAIT_POWER, LOCAL_WAIT_LOW, LOCAL_WAIT_HIGH,
     LOCAL_INIT_CMDS, LOCAL_WINDOW, LOCAL_FRAME, LOCAL_DISPLAY_ON,
     LOCAL_READY, LOCAL_FAILED, LOCAL_HANDOVER,
-    LOCAL_ICON_WINDOW, LOCAL_ICON_FRAME
+    LOCAL_ICON_WINDOW, LOCAL_ICON_FRAME, LOCAL_SPLASH_HOLD
 };
 static uint8_t local_state, local_render_row, local_start_pending;
 static uint8_t local_reason, local_timer_active;
+static uint8_t local_startup_splash;
 static uint8_t local_animation_frame, local_icon_row;
 static uint32_t local_due, local_init_pos, local_frame_pos;
 static uint8_t local_row[128];
@@ -38,7 +41,8 @@ static const uint8_t local_init_bytes[] = {
 };
 static int local_has_claim(void) {
     return (local_state >= LOCAL_WAIT_POWER && local_state <= LOCAL_READY)
-        || local_state == LOCAL_ICON_WINDOW || local_state == LOCAL_ICON_FRAME;
+        || local_state == LOCAL_ICON_WINDOW || local_state == LOCAL_ICON_FRAME
+        || local_state == LOCAL_SPLASH_HOLD;
 }
 static void local_oled_cancel(void) {
     irqstatus_t flag=irq_save();
@@ -48,11 +52,13 @@ static void local_oled_cancel(void) {
     }
     irq_restore(flag);
     local_start_pending=0;
+    local_startup_splash=0;
     local_state=LOCAL_HANDOVER;
 }
 static void local_oled_recover(uint8_t reason,uint8_t timer_reset) {
     // Safe even during shutdown: no SPI, timer insertion/deletion or waits.
     if(timer_reset)local_timer_active=0;
+    local_startup_splash=0; // Never replay the logo on release, disconnect or fault.
     local_reason=reason;
     local_start_pending=2;
     panel_put(GPIOE,9,0);
@@ -60,6 +66,7 @@ static void local_oled_recover(uint8_t reason,uint8_t timer_reset) {
 }
 static void local_oled_failed(void) {
     local_start_pending=0;
+    local_startup_splash=0;
     local_state=LOCAL_FAILED;
     panel_put(GPIOB,12,1);
     panel_put(GPIOE,9,0);
@@ -135,6 +142,12 @@ static void local_render_icon(unsigned row) {
 static void local_render(unsigned row) {
     local_render_row=row;
     memset(local_row,0,sizeof(local_row));
+    if(local_startup_splash && !local_error.code && !local_error.kind) {
+        // OEM bitmap centered at its native size: no scaling or new font.
+        if(row>=12u && row<52u)
+            memcpy(local_row+24u,m300_startup_logo[row-12u],80u);
+        return;
+    }
     if(local_error.code || local_error.kind) {
         const struct m300_error_text *error=m300_error_text(local_error.code,local_error.kind);
         char title[]="Error #000";
@@ -168,14 +181,22 @@ static uint_fast8_t local_event(struct timer *timer) {
     sched_wake_task(&local_wake);
     uint32_t now=timer_read_time();
     // Sleep between frames. No 1 kHz idle wake and no animation over UART.
-    timer->waketime=local_state==LOCAL_READY && timer_is_before(now,local_due)
-        ? local_due : m300_next_timer(timer->waketime,now,timer_from_us(1000));
+    if(local_state==LOCAL_SPLASH_HOLD && timer_is_before(now,local_due)) {
+        // At most 10 wakeups/s while showing the static logo. Error metadata
+        // can preempt it; UART commands/host ownership never wait for this.
+        uint32_t poll=now+timer_from_us(100000);
+        timer->waketime=timer_is_before(poll,local_due) ? poll : local_due;
+    } else {
+        timer->waketime=local_state==LOCAL_READY && timer_is_before(now,local_due)
+            ? local_due : m300_next_timer(timer->waketime,now,timer_from_us(1000));
+    }
     return SF_RESCHEDULE;
 }
 static void local_oled_init(void) {
     // DECL_INIT(m300_panel_init) precedes generic timer_init(), which resets
     // DWT->CYCCNT. No deadline or scheduler timer may be based on that epoch.
     local_state=LOCAL_OFF;
+    local_startup_splash=1; // Only true for a new application startup.
     local_reason=local_timer_active=0;
     local_start_pending=1;
     sched_wake_task(&local_wake);
@@ -234,6 +255,8 @@ void m300_local_oled_task(void) {
             local_error.code=0;
             local_error.kind=local_reason==2u ? M300_ERROR_LINK : M300_ERROR_SHUTDOWN;
         }
+        if(local_error.code || local_error.kind || local_reason>=1u)
+            local_startup_splash=0;
         const uint8_t col[]={0x1c,0x5b},row[]={0,63};
         if(!local_cmd(0x15,col,2) || !local_cmd(0x75,row,2) || !local_cmd(0x5c,0,0)) return;
         local_frame_pos=0;local_state=LOCAL_FRAME;
@@ -245,8 +268,17 @@ void m300_local_oled_task(void) {
         if(local_frame_pos==8192)local_state=LOCAL_DISPLAY_ON;
     } else if(local_state==LOCAL_DISPLAY_ON) {
         if(local_cmd(0xaf,0,0)) {
-            local_due=now+timer_from_us(500000);
-            local_state=LOCAL_READY;
+            local_due=now+timer_from_us(local_startup_splash
+                ? M300_STARTUP_LOGO_HOLD_US : 500000u);
+            local_state=local_startup_splash ? LOCAL_SPLASH_HOLD : LOCAL_READY;
+        }
+    } else if(local_state==LOCAL_SPLASH_HOLD) {
+        struct m300_error_state current;
+        m300_error_snapshot(&current);
+        if(!timer_is_before(now,local_due) || current.code || current.kind) {
+            local_startup_splash=0;
+            local_animation_frame=0;
+            local_state=LOCAL_WINDOW; // Redraw the whole waiting/error screen.
         }
     } else if(local_state==LOCAL_READY && !timer_is_before(now,local_due)) {
         struct m300_error_state current;

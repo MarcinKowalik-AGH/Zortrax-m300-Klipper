@@ -17,7 +17,7 @@ CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'TECHNICAL_REFERENCE.md', 'PRINT_LIMITS_AND_PLANNER.md',
             'MACRO_REFERENCE.md', 'DOCUMENTATION_CHECK.md',
             'OLED_FUNCTIONS.md', 'UPDATE_2026-11-10.md', 'PRINT_CONTROL.md',
-            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md', 'RC1_UI.md', 'CODE_REVIEW_RC1.md', 'MCU_FIRMWARE_1.0.1.md')
+            'INSTALLATION_AND_CI.md', 'ACCEPTANCE_REGISTER.md', 'RC1_UI.md', 'CODE_REVIEW_RC1.md', 'MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md')
 
 
 def sha(path):
@@ -35,7 +35,7 @@ def main():
         if not condition:
             errors.append(label)
     paths = [ROOT/'README_PL.md', ROOT/'README.md'] + [ROOT/'docs/pl'/n for n in CHAPTERS]
-    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md')]
+    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md')]
     paths += [ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md') for lang in ('pl','en')]
     for p in paths:
         check(p.is_file(), 'document:'+str(p.relative_to(ROOT)))
@@ -125,7 +125,7 @@ def main():
         check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)
     port = json.loads((ROOT/'PORT.json').read_text())
     check(port['distribution_version'] == CURRENT_RELEASE, 'current-release-rc1')
-    check(port['mcu_release'] == '1.0.1', 'current-MCU-release')
+    check(port['mcu_release'] == '1.0.2', 'current-MCU-release')
     check(port['oled_zoom_revision'] == 'OLED-ZOOM-2', 'current-zoom-revision')
     check(port['tune_frontend_revision'] == 'TUNE-PREPARE-1', 'current-Tune-revision')
     for lang in ('pl','en'):

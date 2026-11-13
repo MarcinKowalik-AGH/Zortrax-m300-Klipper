@@ -87,7 +87,7 @@ static unsigned snapshot_v2;
 static uint32_t snapshot_position, snapshot_nav_position, snapshot_invalid;
 static unsigned byte_count;
 static unsigned host_reply_count, host_reply_state, host_reply_local, host_reply_fault, host_reply_reason;
-static uint8_t payload[32], wire[20000];
+static uint8_t payload[32], wire[65536];
 static uint32_t fake_baud=250000;
 static uint32_t m300_uart_baud(void) {return fake_baud;}
 static void writel(void *addr, uint32_t value) {
@@ -265,7 +265,7 @@ int main(void) {
     // Progress entirely from the local timer: no host and no panel_config.
     SPI2->SR=1u<<1;
     uint8_t frame[8192];
-    for(unsigned i=0;i<1000 && local_state!=LOCAL_READY;i++) {
+    for(unsigned i=0;i<1600 && local_state!=LOCAL_READY;i++) {
         mock_time=local_timer.waketime;
         assert(local_timer.func(&local_timer)==SF_RESCHEDULE);
         unsigned before_bytes=byte_count, before_pos=local_frame_pos;
@@ -505,7 +505,7 @@ int main(void) {
     command_m300_oled_config(config); command_m300_oled_control(control);
     assert(local_state==LOCAL_HANDOVER); // host can recover an optional local failure
     // A host can take over at EVERY local phase; the task never writes again.
-    for(unsigned phase=LOCAL_OFF;phase<=LOCAL_ICON_FRAME;phase++) {
+    for(unsigned phase=LOCAL_OFF;phase<=LOCAL_SPLASH_HOLD;phase++) {
         if(phase==LOCAL_FAILED || phase==LOCAL_HANDOVER)continue;
         panel_fault=oled_configured=0;m300_panel_init();
         if(phase!=LOCAL_OFF)m300_local_oled_task();

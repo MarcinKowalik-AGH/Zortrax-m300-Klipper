@@ -1,0 +1,15 @@
+{
+  "source": "Inventure 1.6.1 / r0323 OEM application; reconstructed from archived full_linear_thumb_r0323.txt",
+  "source_application_sha256": "9b980ba04531fac4425b77a23969076d24d8f25629fc2a501ac05d262c142268",
+  "listing_sha256": "3e31b322d9c402bd710f5988367f004510efd9af9f28947d4f3245d0afb7fdbe",
+  "descriptor_address": "0x0802c910",
+  "compressed_block": "0x0802c924",
+  "width": 160,
+  "height": 40,
+  "x": 48,
+  "y": 12,
+  "format": "gray4-row-major-high-nibble-first",
+  "decoded_sha256": "0082d29a88eef7515547189dedd83a7ef8b50fc32f0ab93ef307fb58439560d5",
+  "zlib_b64": "eNrtls1rE0EUwGc3jSTBQ1qlKLawXS+itsSLeLA1XkQEk3gpCGK31Qb1kn+hIvTaove2Bz0VGqsXbQtB0INfXU1BEJTYDwQtbi5V2nzs+N6bmW3XNMFDQQ99h2S+3m/mfcybZWxX/pCmuTcvd5IX5Lwa3VleZZf3r3hmjWoT8LZZ2NKxbXKlUQb0dD91j8x9fv1AzJxLD0b13v5g+ibnLq1KtabTMXbyGs7un3z76Ymh9aavswBMGRJlRDjKRIQv46oLRex9oCNmebVlii+2cU8eJji3rvB1mNxTwIGvWoGXmA7tCRjr5LzMiFc1MsQ7IBWfC17lNOeL7X7eIEeenhUjd23gsT7Of4HCOAcI8ZaD2GR6Tiq6KXE+0PKdr4fzMeJ1y5Ey8cKgEWN7oG8JntVJvEOe5k/iofjOB7wi8vTC5iDwsDvNuqgddhznG8sRbxxNn5nntF0dHkceHWJ1sih5wuAsMTTTNI0Qxw2CaECc6WOc/Eu8V1brsIrvjVSCOPdRn7+AxLQlDwxeFuYKgXnXYOipUYx7kQzOCqWt+Ye8jRjTwJwS5sBByYMwWz2iiaILAFA3qJ+kKeBVDP/9QN4QbQDmiBwQkExJmkvSJo4KI++pj+Yb2F1hNbwyJh/No3RJXsRn7jgdX7fVCJ43jrzpWh4mWkQZgjsTT49vMRfRecYCRbUroiz8GarlLcFfu0goMSUo6NIlyQO0GyevVCVvBAOcVcf18RaFlWteqSh5Z5LmarawomnzmWjA++LjBRQvsWluWKQb8lzDc+jf8dT5yNyAGMvI5ei/mOcMqwGv1n+YEVYyxWT2rii7R4UVKr51eLXxxYzV7Dw2j3ueHFchCpPl9Xno/NjW/IP7wfMh2kTLepsllV6GhurzvPtBF0+GIJWk9bjXM8HDqvFIbr/WiIeYMobuqLy/dEFzlMVnsDidh+oxHEW3Ve80t9riltbnoT7/eLb5VEHWPxtRfVzV6gCOg8cyWI4crGqo34AXoiLuqHoaphCIX+CN7uWCF/Iq5wJryNNyvvqc9Kr0EvAq0RHJYyPqWYg15rFjcuG6Ld+3vKii5WifqKyCRwUX5DbbnpdUPE3s7Pbje4lxTMkoWwnH6nbhDXF+YMAoFu490hlzHMlznFXBu+g47+RFm8KFj/V5eHyuOs532mTeKS60mGyfSSKuxq3Zp5fk94QpPz00NYlD8oYz7fLszAB8ncDUYdPsUNMn/veP7d+I0xEP",
+  "source_rights": "Original Zortrax firmware artwork; retained as an attributed OEM reference, not relicensed as project-authored artwork."
+}

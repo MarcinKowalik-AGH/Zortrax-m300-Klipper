@@ -1,4 +1,7 @@
 """Cold start through the real generic timer initialization, without host config."""
+import base64
+import hashlib
+import zlib
 import json
 import os
 import re
@@ -43,18 +46,23 @@ class StartupEpoch(unittest.TestCase):
                 with self.subTest(inherited=inherited,baud=baud):
                     r=self.run_case(M300_INHERITED_CLOCK=inherited,M300_BAUD=baud)
                     self.assertEqual(r['ready'],1)
-                    self.assertLess(r['ready_at_us'],1000000)
-                    self.assertGreaterEqual(r['ready_at_us'],530000)
+                    self.assertLess(r['ready_at_us'],4000000)
+                    self.assertEqual(r['splash_frames'],1)
+                    self.assertEqual(r['wait_frames'],1)
+                    self.assertGreaterEqual(r['splash_exit_us']-r['splash_at_us'],2500000)
+                    self.assertLess(r['splash_exit_us']-r['splash_at_us'],2503000)
+                    self.assertEqual(r['task_spi_max'],32)
+                    self.assertGreaterEqual(r['ready_at_us'],3000000)
                     times.append(r['ready_at_us'])
         self.assertEqual(len(set(times)),1) # no inherited epoch changes the start
 
     def test_host_handover_at_every_startup_phase(self):
-        for at in [0,1000,10000,500000,530000,560000,700000,1000000]:
+        for at in [0,1000,10000,500000,530000,560000,700000,810000,1000000,2000000,3300000,3400000,3800000]:
             with self.subTest(at=at):
                 self.assertEqual(self.run_case(M300_HOST_AT_US=at)['host'],1)
 
     def test_shutdown_before_first_task_and_during_drawing(self):
-        for at in [0,1000,10000,530000,560000,700000,1000000]:
+        for at in [0,1000,10000,530000,560000,700000,810000,1000000,2000000,3300000,3400000,3800000]:
             with self.subTest(at=at):
                 self.assertEqual(self.run_case(M300_SHUTDOWN_AT_US=at)['shutdown'],1)
 
@@ -79,7 +87,7 @@ class StartupEpoch(unittest.TestCase):
             screen=[[0]*256 for _ in range(64)]
             for x in range(4,192):screen[12][x]=5
             for y,text in [(2,'ZORTRAX M300'),(18,'Waiting for Klipper...'),
-                           (34,'MCU: 1.0.1'),(50,f'UART: {baud} 8N1')]:
+                           (34,'MCU: 1.0.2'),(50,f'UART: {baud} 8N1')]:
                 x=4
                 for char in text:
                     w,span,bits=glyphs[char]
@@ -100,5 +108,30 @@ class StartupEpoch(unittest.TestCase):
             out=Path(self.temp.name)/f'{baud}.bin'
             self.run_case(M300_BAUD=baud,M300_FRAME_OUTPUT=out)
             self.assertEqual(out.read_bytes(),expected)
+
+    def test_original_logo_pixels_centered_without_resampling(self):
+        asset=json.loads((ROOT.parents[1]/'docs/assets/startup/zortrax_logo_r0323.json').read_text())
+        logo=zlib.decompress(base64.b64decode(asset['zlib_b64'],validate=True))
+        self.assertEqual(hashlib.sha256(logo).hexdigest(),
+            '0082d29a88eef7515547189dedd83a7ef8b50fc32f0ab93ef307fb58439560d5')
+        expected=bytearray(8192)
+        for row in range(40):expected[(row+12)*128+24:(row+12)*128+104]=logo[row*80:(row+1)*80]
+        for baud in [19200,57600,115200,250000,500000,750000,1000000,1500000]:
+            with self.subTest(baud=baud):
+                out=Path(self.temp.name)/f'logo-{baud}.bin'
+                r=self.run_case(M300_BAUD=baud,M300_SPLASH_OUTPUT=out)
+                self.assertEqual(out.read_bytes(),expected)
+                self.assertEqual(r['splash_seen'],1)
+                self.assertEqual(r['splash_frames'],1)
+                self.assertEqual(r['wait_frames'],1)
+
+    def test_no_logo_replay_on_lease_release_expiry_or_error_metadata(self):
+        binary=Path(self.temp.name)/'recovery'
+        subprocess.run(['cc','-std=c11','-O2','-Wall','-Wextra','-Werror',
+            str(ROOT/'tests/test_startup_recovery.c'),'-o',str(binary)],check=True)
+        for scenario in ('lease','expiry','metadata'):
+            with self.subTest(scenario=scenario):
+                p=subprocess.run([str(binary),scenario],capture_output=True,text=True)
+                self.assertEqual(p.returncode,0,p.stdout+p.stderr)
 
 if __name__=='__main__':unittest.main()

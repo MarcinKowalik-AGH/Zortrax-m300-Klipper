@@ -2,8 +2,8 @@
   "reference_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
   "reference_release": "v1.0.0-beta.20",
   "files": {
-    "README.md": "7eea53fd7b32532c5c4f83ca1d3ece5e88daa23aac4d761d3bd55e267537b046",
-    "README_PL.md": "69155f17ef0737b33eb4c5e7a30a0125b40dd8e3902615a50fd5b54d8a7587ff",
+    "README.md": "398dfaa8db5524fd17b3539a1437d663afa2aa375e46e081a1c7d730d75d6a35",
+    "README_PL.md": "f30051f87362fc55e0c9a9790a9c180cce8e9fa25a106f20ccc3c5f15e3872a4",
     "docs/en/FEATURES.md": "0353da5aa913454509501e1533a7d2fa248b66281dd4f92dcea8becd408b44bf",
     "docs/en/FIRST_INSTALL.md": "20f513f2d960c029d54ca5f5c1ea43e96172c79c0c82214c722a18746c4b284c",
     "docs/en/FLUIDD_M300.md": "ba4d94646306e7081f1dc947a90c6bd3c8769d1612fce09cfbc669a93f11bf11",
@@ -167,7 +167,7 @@
     "docs/reports/OLED_FUNCTION_CATALOG.json": "098e26203877d456c62c3c7330e0b3d57b9059aedd4f4e033f96157c6162edbb",
     "docs/reports/OLED_RENDER_MANIFEST.json": "62803feeda10dd5d56cbb1865d0dee933a1f2535b5d0dd370704b04e6e546049",
     "docs/reports/USER_ACCEPTANCE_20261110.json": "881d47d9c3f623537aafcbda66d1c8e9a6acdb6ec998354cc75f217e8a9fa268",
-    "docs/tools/check_manual.py": "08b017698dba152b8a8ad2cbacde82f87a2ed1f674be29196b470edb71ef7c99",
+    "docs/tools/check_manual.py": "9c83115b683e804093947e32c403b10219351febe546f54fd6b0ca6d00326ca9",
     "docs/tools/render_fluidd_oled_manual.py": "d51f6b08b57e59b280a1fc2b33d151e71015a64929928c91ef89df44a4ae165f",
     "docs/tools/render_oled_manual.py": "c75972913f07f6c127dd09e69d9ca07db5161c120b38cc84209d45add5fe621b",
     "docs/pl/PRINT_CONTROL.md": "adb2d75e4a00a0c846bd9cb22178cba0069cf0ba86d25f6b9e99b088c8121ba2",
@@ -189,6 +189,12 @@
     "docs/en/RELEASE_v1.0.0-rc.2.md": "663fcc864bae6784bb3e5ca8c6da2003ec2ffd8003d373dc40bcd2f4be211863",
     "docs/reports/DOCUMENTATION_RC2_VALIDATION.json": "95ce83e9c589e1f754ef6e42036f8f511558b9bd747e86dcafdbc98e090c4940",
     "docs/reports/OLED_UNIFIED.json": "d05195d610e1d960d35c39c9d59879ad911e8f78dcb9eff34ef5a06b18e96bac",
-    "docs/reports/DOCUMENTATION_RC3_VALIDATION.json": "acb0c59ca06295f721687f156d2e162761bb1dd514966959cf8c9b3c91c14b5c"
+    "docs/reports/DOCUMENTATION_RC3_VALIDATION.json": "acb0c59ca06295f721687f156d2e162761bb1dd514966959cf8c9b3c91c14b5c",
+    "docs/pl/MCU_FIRMWARE_1.0.2.md": "b4a337acd734e504e4b26175e9c9cb8080aae26b9412d66787e5fe136e3cd6a1",
+    "docs/en/MCU_FIRMWARE_1.0.2.md": "2140ca3bc5935c3c6e43d486c7e18af383d15635fb79770dfe76469d640e330b",
+    "docs/assets/startup/zortrax_startup.png": "6649a3c7312f8429b60490186c6580176a59ec868eda3056b8caaaee1b01c9f2",
+    "docs/assets/startup/zortrax_logo_r0323.json": "213b87ca722911f09d3e466003781bf33b4dfab04911bc36582e1b6c05df5f3f",
+    "docs/assets/startup/preview_provenance.json": "b47d0ef7da7eefcb46764541c80d6156dae56b64c9bc14849fb6dd8b71e99fb0",
+    "docs/assets/startup/zortrax_startup@3x.png": "2098627c79c36bb5a2dd3a7a5671011a2b8230b6e3eee79f8dee0a1061b9dc3f"
   }
 }
