@@ -7,6 +7,7 @@ update observations, but cannot silently grant consent to a new job or phase.
 from .m300_temperature_policy import target_limit
 import json
 import logging
+import math
 import os
 import stat
 import textwrap
@@ -349,6 +350,44 @@ class M300Menu:
         self._navigate('motion_jog')
         self._motion_jog_token = token
         oled.page, oled.selection, oled.render_at = 'm04', 0, 0.
+
+    def temperature_range(self, kind):
+        """One-degree choices inside the existing manual-heat selection range.
+
+        This is presentation only: no targets, PWM, timers or NVM are changed.
+        Native limits and the separate normal-operation target policy win.
+        """
+        if kind not in ('HOTEND', 'BED'):
+            return None
+        heater = self.job.hotend if kind == 'HOTEND' else self.job.bed
+        lower, upper = ((170, 305) if kind == 'HOTEND' else (40, 120))
+        raw_limits = (heater.min_temp, heater.max_temp,
+                      getattr(heater, 'm300_target_max', heater.max_temp))
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                   and math.isfinite(v) for v in raw_limits):
+            return None
+        low, high = raw_limits[0], target_limit(heater)
+        lower, upper = max(lower, math.ceil(low)), min(upper, math.floor(high))
+        return (lower, upper) if lower <= upper else None
+
+    def temperature_selection(self):
+        """Initial draft index; never saves or starts heating on menu entry."""
+        if self.page not in ('temperature_HOTEND', 'temperature_BED'):
+            return None
+        kind = self.page[12:]
+        limits = self.temperature_range(kind)
+        if limits is None:
+            return None
+        lower, upper = limits
+        value = self._temperature[kind]
+        if value is None:
+            heater = self.job.hotend if kind == 'HOTEND' else self.job.bed
+            value = getattr(heater, 'target_temp', getattr(heater, 'target', lower))
+        if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                or not math.isfinite(value)):
+            value = lower
+        value = max(lower, min(upper, math.floor(value + .5)))
+        return value - lower + 1  # Index zero is Back, never heater OFF.
 
     def _temperature_label(self, kind):
         value = self._temperature[kind]
@@ -695,13 +734,13 @@ class M300Menu:
                 rows.extend((line, None) for line in textwrap.wrap(
                     self.clean(status['reason'], 240), 36))
             return 'M300 Z / M06', self._notice(rows)
-        if self.page.startswith('temperature_'):
+        if self.page in ('temperature_HOTEND', 'temperature_BED'):
             kind = self.page[12:]
-            heater = self.job.hotend if kind == 'HOTEND' else self.job.bed
-            candidates = sorted(set([*range(170, 301, 10), 305])) if kind == 'HOTEND' else sorted(set([*range(40, 121, 10), 105]))
+            limits = self.temperature_range(kind)
+            choices = (range(limits[0], limits[1] + 1) if limits else ())
             return 'Select ' + kind + ' TEMP', [(self.t('Back'), ('page', self._return_page))] + [
                 ('%d°C' % value, ('temp', kind, value, self._return_page))
-                for value in candidates if heater.min_temp <= value <= target_limit(heater)]
+                for value in choices]
         if self.page == 'calibration':
             status = self._service('m300_calibration').get_status(now)
             token, phase = self._cal_view
@@ -1112,6 +1151,14 @@ class M300Menu:
                 self._return_page = action[2]
                 self._navigate('temperature_' + action[1])
             elif kind == 'temp':
+                if len(action) != 4 or action[1] not in ('HOTEND', 'BED'):
+                    raise self._error('invalid temperature choice')
+                limits = self.temperature_range(action[1])
+                if (self.page != 'temperature_' + action[1]
+                        or action[3] != self._return_page or limits is None
+                        or type(action[2]) is not int
+                        or not limits[0] <= action[2] <= limits[1]):
+                    raise self._error('temperature choice changed; review the current range')
                 self._temperature[action[1]] = action[2]
                 self._navigate(action[3])
             elif kind == 'material':

@@ -74,6 +74,40 @@ def brightness_frame(title, level, back, frame_type, sprite=None):
     return frame.wire_bytes()
 
 
+@lru_cache(maxsize=64)
+def temperature_frame(title, value, lower, upper, back, frame_type, sprite=None):
+    """Native-pixel draft editor. Numeric value and icon have disjoint areas."""
+    if not (type(value) is int and lower <= value <= upper):
+        raise ValueError('Temperature draft outside its visible range')
+    frame = frame_type()
+    draw_text(frame, 16, 0, title)
+    draw_text(frame, 16, 14, '%d-%d°C / 1°C' % (lower, upper))
+    draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to select')
+    draw_text(frame, 16, 40, 'Hold to go back')
+    # Same 16-segment geometry as brightness. The number, not the coarse bar,
+    # is the exact temperature; a single-value range is shown fully filled.
+    filled = (16 if upper == lower else
+              (16 * (value - lower) + (upper - lower) // 2) // (upper - lower))
+    for segment in range(16):
+        left = 16 + BRIGHTNESS_BAR_PITCH * segment
+        for x in range(left, left + BRIGHTNESS_BAR_WIDTH):
+            for y in range(55, 63):
+                if segment < filled or x in (left, left + BRIGHTNESS_BAR_WIDTH-1) or y in (55, 62):
+                    frame.pixel(x, y, 15 if segment < filled else 5)
+    if sprite is not None:
+        w, h, raw = sprite
+        if (w, h, len(raw)) != (50, 50, 1250):
+            raise ValueError('Temperature editor requires a native 50x50 icon')
+        # Keep every original nibble; move only the icon's origin to (200,0).
+        # Text below it begins at y=51 and uses the remaining 13 pixel rows.
+        for column in range(25):
+            offset = (100 + column) * 64
+            frame.raw[offset:offset + 50] = raw[column::25]
+    label = '%d°C' % value
+    draw_text(frame, 200 + max(0, (50 - width(label)) // 2), 51, label)
+    return frame.wire_bytes()
+
+
 def notice_frame(title, message, frame_type, sprite=None):
     rows = ['Back', title]
     pixels = menu_label_pixels(sprite)
