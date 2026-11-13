@@ -1,5 +1,7 @@
 # M300 RC4 — OLED temperature editors
 
+> RC4 history: the selection-only behavior below is superseded by [RC5](RELEASE_v1.0.0-rc.5.md). In RC5, confirmation applies the heater target.
+
 [Main guide](../../README.md) · [Menu and shared controls](RC1_UI.md) · [Unified artwork](RELEASE_v1.0.0-rc.3.md)
 
 ## Appearance

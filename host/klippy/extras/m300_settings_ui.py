@@ -82,7 +82,7 @@ def temperature_frame(title, value, lower, upper, back, frame_type, sprite=None)
     frame = frame_type()
     draw_text(frame, 16, 0, title)
     draw_text(frame, 16, 14, '%d-%d°C / 1°C' % (lower, upper))
-    draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to select')
+    draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to heat')
     draw_text(frame, 16, 40, 'Hold to go back')
     # Same 16-segment geometry as brightness. The number, not the coarse bar,
     # is the exact temperature; a single-value range is shown fully filled.

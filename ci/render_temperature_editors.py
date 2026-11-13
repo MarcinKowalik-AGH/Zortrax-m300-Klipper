@@ -20,7 +20,7 @@ def main():
     from test_temperature_editor import enter
     from test_settings_information import session
     from payload.m300_oled_preview import encoded_png
-    output=ROOT/'docs/img/oled-temperature'
+    output=ROOT/'docs/img/oled-temperature-rc5'
     output.mkdir(parents=True,exist_ok=True)
     records=[]
     for name,kind,value in (('hotend_210','HOTEND',210),('bed_60','BED',60),
@@ -53,9 +53,9 @@ def main():
                 zoom_sha256=hashlib.sha256(enlarged.read_bytes()).hexdigest(),
                 sprite=h.ui.last_sprite,dimensions=[256,64],zoom=3))
     report=dict(status='PASS_PRODUCTION_TEMPERATURE_EDITOR_RENDER',
-        release='v1.0.0-rc.4',source='M300OLED._render + original indexed PNG encoder',
+        release='v1.0.0-rc.5',source='M300OLED._render + original indexed PNG encoder',
         physical_printer_tested=False,heater_targets_changed=False,screens=records)
-    path=ROOT/'docs/reports/TEMPERATURE_EDITORS_RC4.json'
+    path=ROOT/'docs/reports/TEMPERATURE_EDITORS_RC5.json'
     if args.check:
         assert json.loads(path.read_text())==report, 'Render provenance mismatch'
     else:

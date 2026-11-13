@@ -1,4 +1,4 @@
-"""Native temperature-editor pixels, real encoder/ACK path and no heater side effects."""
+"""Native temperature-editor pixels, real encoder/ACK path and guarded heater application on explicit confirmation."""
 import unittest
 from unittest.mock import patch
 
@@ -8,6 +8,9 @@ from payload.m300_settings_ui import temperature_frame
 from payload.m300_ui_m11_state import require_rows
 from payload.m300_oem_graphics import OEMGraphics
 from payload.m300_leveling_oem import width
+from tests.reference import native_heaters
+from types import SimpleNamespace as NS
+import threading
 
 
 Frame = test_display.renderer.Frame
@@ -19,7 +22,30 @@ def limits(h):
     h.hotend.m300_target_max, h.bed.m300_target_max = 305., 105.
 
 
+def bind_native_heaters(h):
+    if getattr(h, '_native_heater_bound', False):
+        return
+    h._native_heater_bound = True
+    # The shared menu fixture normally uses RuntimeError; use production's
+    # native command-error contract for asynchronously executed commands.
+    from payload.m300_menu import M300Menu
+    h.menu._error = M300Menu._error.__get__(h.menu, M300Menu)
+    manager = native_heaters.PrinterHeaters.__new__(native_heaters.PrinterHeaters)
+    manager.printer = h.printer
+    h.objects['heaters'] = manager
+    for name, heater in (('extruder', h.hotend), ('heater_bed', h.bed)):
+        heater.printer = h.printer
+        h.gcode.register_mux_command('SET_HEATER_TEMPERATURE', 'HEATER', name,
+            lambda cmd, obj=heater: native_heaters.Heater.cmd_SET_HEATER_TEMPERATURE(obj, cmd))
+
+
+def apply_pending(h):
+    # The explicit click appends one nonblocking native command callback.
+    h.callbacks.pop()(h.now)
+
+
 def enter(h, kind):
+    bind_native_heaters(h)
     limits(h)
     h.menu.page = 'klipper'
     rows = h.menu.rows(h.now)[1]
@@ -64,11 +90,11 @@ class TemperatureEditorTests(unittest.TestCase):
             h.bed.min_temp=50.1
             self.assertEqual(h.menu.temperature_range('BED'),(51,84))
 
-    def test_menu_entry_prefers_previous_selection_then_actual_target_then_minimum(self):
+    def test_menu_entry_prefers_actual_target_then_last_choice_when_off(self):
         with session() as h:
             limits(h);h.menu.page='temperature_HOTEND'
             h.hotend.target=215.;h.menu._temperature['HOTEND']=207
-            self.assertEqual(h.menu.temperature_selection(),38)
+            self.assertEqual(h.menu.temperature_selection(),46)
             h.menu._temperature['HOTEND']=None
             self.assertEqual(h.menu.temperature_selection(),46)
             h.hotend.target=0.
@@ -148,7 +174,7 @@ class TemperatureEditorTests(unittest.TestCase):
             self.assertEqual((h.menu.page,h.oled.selection),('klipper',index))
             self.assertEqual(h.menu._temperature['HOTEND'],200.)
 
-    def test_rotation_and_acknowledged_click_select_exact_draft_without_starting_heat(self):
+    def test_rotation_is_draft_and_acknowledged_click_applies_native_target(self):
         for kind,initial in (('HOTEND',200),('BED',60)):
             with self.subTest(kind=kind),session() as h:
                 parent=enter(h,kind);h.oled.menu_reverse=True
@@ -156,9 +182,12 @@ class TemperatureEditorTests(unittest.TestCase):
                 self.assertEqual(h.menu._temperature[kind],initial)
                 h.oled._render(h.now);h.panel_display.pump()
                 event(h,3,nav=-3,shorts=1)
+                self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
+                apply_pending(h)
                 self.assertEqual(h.menu._temperature[kind],initial+3)
                 self.assertEqual((h.menu.page,h.oled.selection),('klipper',parent))
-                self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
+                self.assertEqual(h.hotend.target if kind=='HOTEND' else h.bed.target,initial+3)
+                self.assertEqual(h.bed.target if kind=='HOTEND' else h.hotend.target,0.)
 
     def test_coalesced_turn_and_press_never_confirms_unseen_temperature(self):
         with session() as h:
@@ -168,6 +197,7 @@ class TemperatureEditorTests(unittest.TestCase):
             self.assertEqual(h.menu._temperature['HOTEND'],200.)
             h.oled._render(h.now);h.panel_display.pump()
             event(h,3,nav=-4,shorts=2)
+            apply_pending(h)
             self.assertEqual(h.menu._temperature['HOTEND'],204)
 
     def test_unacknowledged_draft_is_not_accepted(self):
@@ -179,6 +209,7 @@ class TemperatureEditorTests(unittest.TestCase):
             self.assertEqual((h.menu.page,h.menu._temperature['BED']),('temperature_BED',60.))
             h.panel_display.pump()
             event(h,4,nav=-2,shorts=2)
+            apply_pending(h)
             self.assertEqual(h.menu._temperature['BED'],62)
 
     def test_long_press_cancels_draft_and_restores_parent_cursor(self):
@@ -246,15 +277,122 @@ class TemperatureEditorTests(unittest.TestCase):
             event(h,3,shorts=2)
             self.assertEqual(h.menu._temperature['HOTEND'],200.)
 
-    def test_only_explicit_existing_heat_action_calls_service_after_selection(self):
+    def test_existing_heat_action_remains_compatible_after_applied_selection(self):
         with session() as h:
             enter(h,'HOTEND')
+            h.menu.select(('temp','HOTEND',213,'klipper'),h.now)
+            apply_pending(h)
+            self.assertEqual(h.hotend.target,213.)
             with patch.object(h.menu,'_native_script') as start:
-                h.menu.select(('temp','HOTEND',213,'klipper'),h.now)
-                start.assert_not_called()
                 h.menu.select(('service','HOTEND'),h.now)
                 start.assert_called_once_with('SET_HEATER_TEMPERATURE HEATER=extruder TARGET=213')
-                self.assertEqual(h.menu._temperature['BED'],60.)
+            self.assertEqual(h.menu._temperature['BED'],60.)
+
+    def test_changed_limits_in_gcode_queue_refuse_without_false_acceptance(self):
+        with session() as h:
+            enter(h,'HOTEND')
+            h.menu.select(('temp','HOTEND',300,'klipper'),h.now)
+            h.hotend.m300_target_max=250.
+            apply_pending(h)
+            self.assertEqual(h.hotend.target,0.)
+            self.assertEqual(h.menu._temperature['HOTEND'],200.)
+            self.assertIn('limits changed',h.menu.reason)
+            self.assertIsNotNone(h.oled.message)
+
+    def test_new_external_target_is_not_overwritten_by_a_queued_click(self):
+        with session() as h:
+            enter(h,'BED')
+            h.menu.select(('temp','BED',70,'klipper'),h.now)
+            h.run('SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=55')
+            apply_pending(h)
+            self.assertEqual(h.bed.target,55.)
+            self.assertIn('target changed',h.menu.reason)
+            self.assertEqual(h.menu._temperature['BED'],60.)
+
+    def test_navigation_or_shutdown_cancels_queued_target(self):
+        for change in ('navigation','shutdown'):
+            with self.subTest(change=change),session() as h:
+                enter(h,'HOTEND')
+                h.menu.select(('temp','HOTEND',220,'klipper'),h.now)
+                if change=='navigation':h.menu._navigate('maintenance')
+                else:h.shutdown=True
+                apply_pending(h)
+                self.assertEqual(h.hotend.target,0.)
+                self.assertEqual(h.menu._temperature['HOTEND'],200.)
+
+    def test_disconnected_panel_cannot_apply_a_pending_target(self):
+        with session() as h:
+            enter(h,'BED')
+            h.menu.select(('temp','BED',80,'klipper'),h.now)
+            h.oled.connected=False
+            apply_pending(h)
+            self.assertEqual(h.bed.target,0.)
+            self.assertIn('disconnected',h.menu.reason)
+
+    def test_service_heater_ownership_is_not_bypassed_by_oled(self):
+        with session() as h:
+            enter(h,'HOTEND')
+            h.menu.select(('temp','HOTEND',220,'klipper'),h.now)
+            from payload.m300_native_service import NativeServiceLease
+            owner=NS(printer=h.printer,gcode=h.gcode)
+            lease=NativeServiceLease(owner,lambda:1,lambda:None,lambda why:None)
+            lease.acquire(h.toolhead,h.gmove,[h.hotend,h.bed])
+            try:
+                apply_pending(h)
+                self.assertEqual(h.hotend.target,0.)
+                self.assertEqual(h.menu._temperature['HOTEND'],200.)
+                self.assertIn('owns heaters',h.menu.reason)
+                self.assertIsNotNone(h.oled.message)
+            finally:lease.release()
+
+    def test_parent_labels_follow_live_native_targets_including_off(self):
+        with session() as h:
+            enter(h,'HOTEND')
+            self.assertEqual(h.menu._temperature_label('HOTEND'),'OFF')
+            h.run('SET_HEATER_TEMPERATURE HEATER=extruder TARGET=225')
+            self.assertEqual(h.menu._temperature_label('HOTEND'),'225°C')
+            h.run('SET_HEATER_TEMPERATURE HEATER=extruder TARGET=0')
+            self.assertEqual(h.menu._temperature_label('HOTEND'),'OFF')
+
+    def test_real_native_heater_status_exposes_target_after_physical_click(self):
+        # Actual pinned Heater.set_temp/get_status and native G-code dispatcher;
+        # the physical encoder/OLED ACK path is modelled, not bypassed.
+        with session() as h:
+            heater=native_heaters.Heater.__new__(native_heaters.Heater)
+            heater.printer=h.printer;heater.lock=threading.Lock()
+            heater.target_temp=0.;heater.smoothed_temp=25.;heater.last_pwm_value=0.
+            h.hotend=h.job.hotend=heater
+            enter(h,'HOTEND');h.oled.menu_reverse=True
+            event(h,1);event(h,2,nav=-10)
+            h.oled._render(h.now);h.panel_display.pump()
+            event(h,3,nav=-10,shorts=1)
+            self.assertEqual(heater.get_status(h.now)['target'],0.)
+            apply_pending(h)
+            self.assertEqual(heater.get_status(h.now)['target'],210.)
+            self.assertEqual(h.menu._temperature_label('HOTEND'),'210°C')
+            h.menu.page='temperature_HOTEND'
+            self.assertEqual(h.menu.temperature_selection(),41)
+
+    def test_apply_changes_no_motion_nvm_or_other_heater(self):
+        with session() as h:
+            enter(h,'BED')
+            initial=list(h.position);nvm=h.nvm.ui_snapshot()
+            h.menu.select(('temp','BED',72,'klipper'),h.now)
+            apply_pending(h)
+            self.assertEqual(h.bed.target,72.)
+            self.assertEqual(h.hotend.target,0.)
+            self.assertEqual(h.position,initial)
+            self.assertEqual(h.nvm.ui_snapshot(),nvm)
+
+    def test_handler_that_does_not_set_target_reports_failure(self):
+        with session() as h:
+            enter(h,'BED')
+            h.menu.select(('temp','BED',72,'klipper'),h.now)
+            with patch.object(h.gcode,'run_script_from_command',return_value=None):
+                apply_pending(h)
+            self.assertEqual(h.bed.target,0.)
+            self.assertEqual(h.menu._temperature['BED'],60.)
+            self.assertIn('did not accept',h.menu.reason)
 
 
 if __name__ == '__main__':

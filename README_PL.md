@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.4
+# Zortrax M300 Classic — Klipper 1.0.0-rc.5
 
-**RC4:** Hotend TEMP i Bed TEMP mają teraz pasek, regulację co 1°C, ikonę grzałki i wartość liczbową. Wybór pozostaje oddzielony od grzania. [Opis i rendery OLED](docs/pl/RELEASE_v1.0.0-rc.4.md).
+**RC5:** Zatwierdzenie Hotend TEMP lub Bed TEMP ustawia rzeczywisty cel Klippera i uruchamia grzanie. Obrót zmienia tylko podgląd, Back/przytrzymanie anulują. OLED i Fluidd pokazują ten sam aktualny cel. [Opis i rendery OLED](docs/pl/RELEASE_v1.0.0-rc.5.md).
 
 
 **MCU 1.0.2:** [oryginalne logo Zortrax przed ekranem oczekiwania](docs/pl/MCU_FIRMWARE_1.0.2.md), bez zmiany hosta RC3, bootloadera ani wspólnych ikon. [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.2).
-**Czwarty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**Piąty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC4](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.4) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC5](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.5) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [OLED i makra RC1](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 

@@ -1,5 +1,7 @@
 # M300 RC4 — regulatory temperatury na OLED
 
+> Historia RC4: opisany niżej wybór bez grzania zastąpiono w [RC5](RELEASE_v1.0.0-rc.5.md). W RC5 klik ustawia cel grzałki.
+
 [Instrukcja główna](../../README_PL.md) · [Ustawienia i menu](RC1_UI.md) · [Wspólne ikony](RELEASE_v1.0.0-rc.3.md)
 
 ## Zakres
