@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.4'
+VERSION='v1.0.0-rc.5'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -28,7 +28,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertNotIn("'Host UI: R7 Fans'",labels)
 
     def test_protected_motion_thermal_mesh_and_pixel_sources_unchanged(self):
-        report=json.loads((ROOT/'docs/reports/RC4_REVIEW.json').read_text())
+        report=json.loads((ROOT/'docs/reports/RC5_REVIEW.json').read_text())
         self.assertFalse(report['physical_tests_performed'])
         self.assertGreaterEqual(len(report['protected_sha256']),14)
         for path,expected in report['protected_sha256'].items():
@@ -37,7 +37,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],846)
+        self.assertEqual(meta['self_contained_host_tests'],855)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

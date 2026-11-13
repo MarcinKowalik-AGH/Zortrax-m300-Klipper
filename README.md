@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.4
+# Zortrax M300 Classic — Klipper 1.0.0-rc.5
 
-**RC4:** Hotend TEMP and Bed TEMP now use one-degree segmented-bar editors with native heater icons and numeric values. Selection remains separate from heating. [Details and OLED renders](docs/en/RELEASE_v1.0.0-rc.4.md).
+**RC5:** Confirming Hotend TEMP or Bed TEMP now applies the native Klipper heater target and starts heating. Rotation is draft-only; Back/hold cancel. The OLED and Fluidd show the same actual target. [Details and OLED renders](docs/en/RELEASE_v1.0.0-rc.5.md).
 
 
 **MCU 1.0.2:** [original Zortrax startup logo before the waiting screen](docs/en/MCU_FIRMWARE_1.0.2.md), with no RC3 host, bootloader or unified-artwork changes. [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.2).
-**Fourth release candidate for the classic M300**, using its original controller,
+**Fifth release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC4](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.4) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC5](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.5) · [First installation](docs/en/FIRST_INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

@@ -101,7 +101,7 @@ def main():
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(
         'M300 Classic only. MCU application starts at 0x08008000. No bootloader image.\n'
-        'M300 Classic RC4 host; MCU 1.0.2 OEM startup logo and unified artwork. See INSTALL_EN.md.\n'
+        'M300 Classic RC5 host; MCU 1.0.2 OEM startup logo and unified artwork. See INSTALL_EN.md.\n'
         'HOST_SOURCE is the complete source snapshot, not an automatic installer.\n'
         'CI performs software checks and a real ARM build, not physical printer tests.\n')
     if args.fluidd:
