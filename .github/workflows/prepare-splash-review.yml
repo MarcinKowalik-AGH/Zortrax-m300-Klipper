@@ -1,0 +1,35 @@
+name: Prepare MCU startup logo review
+on:
+  push:
+    branches: [feat/mcu-1.0.2-oem-startup-logo]
+    paths: ['.github/workflows/prepare-splash-review.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 5acfd0f042a45f25f1ac2e5269ee72c3261589ee
+          path: m300
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: MarcinKowalik-AGH/Zortrax-Inventure-Klipper
+          ref: d632dd83d542513dfd393d454374e5b42ea02faf
+          path: inventure
+          persist-credentials: false
+      - name: Export source snapshots without credentials
+        run: |
+          mkdir exports
+          git -C m300 archive --format=zip HEAD > exports/M300_SPLASH_SOURCE_BASE.zip
+          git -C inventure archive --format=zip HEAD > exports/INVENTURE_SPLASH_REFERENCE.zip
+          cd exports && sha256sum *.zip > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M300_SPLASH_REVIEW_SOURCES
+          path: exports/
+          retention-days: 7
+          if-no-files-found: error
