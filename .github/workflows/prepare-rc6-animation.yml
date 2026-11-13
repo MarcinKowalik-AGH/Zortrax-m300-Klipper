@@ -25,23 +25,25 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git diff --name-only 287fcddea4e6e966239a70407c7f8438a8502eed)" = '.github/workflows/prepare-rc6-animation.yml'
-          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/6a3f1197361af60fda6ef442c2419c1e338b7009 --jq .content | base64 --decode)
+          url=$(gh api repos/MarcinKowalik-AGH/Zortrax-m300-Klipper/git/blobs/94adfb0eead12aea8e1f03cca782c7eedc74daad --jq .content | base64 --decode)
           echo "::add-mask::$url"
           curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/animation.patch"
-          echo '8be79145a9ea08ea29e7c1b966a51d8e4eba4c82f9e6fcf91efbdbbf31387b73  '"$RUNNER_TEMP/animation.patch" | sha256sum -c -
+          echo 'acc352b67d077e6c3a287e5e1533fabfcd410eb30d70366ced8817a31d4b0f08  '"$RUNNER_TEMP/animation.patch" | sha256sum -c -
           git apply --check "$RUNNER_TEMP/animation.patch"
           git apply --index "$RUNNER_TEMP/animation.patch"
           python - <<'PY'
           import subprocess
           paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
-          assert len(paths)==29,paths
+          assert len(paths)==30,paths
           for path in paths:
               assert path in ('PORT.json','README.md','README_PL.md') or path.startswith(('ci/','docs/','host/')),path
           assert not subprocess.check_output(['git','diff','--cached','--','mcu','frontend','host/config'],text=True)
           PY
           cp .git/index "$RUNNER_TEMP/approved.index"
           GIT_INDEX_FILE="$RUNNER_TEMP/approved.index" git update-index --force-remove .github/workflows/prepare-rc6-animation.yml
-          test "$(GIT_INDEX_FILE="$RUNNER_TEMP/approved.index" git write-tree)" = dd88cd25461d26e83a3e83d0ece81a811c4035ab
+          actual=$(GIT_INDEX_FILE="$RUNNER_TEMP/approved.index" git write-tree)
+          echo "Reviewed complete source tree: $actual"
+          test "$actual" = d225e97fa884145a9f81125a6d4af7061e2f57ea
       - name: Run full host regressions and unchanged-pixel animation checks
         run: |
           set -euo pipefail
