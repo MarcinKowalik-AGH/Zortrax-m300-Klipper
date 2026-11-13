@@ -29,7 +29,8 @@ def main():
             enter(h,kind)
             low,high=h.menu.temperature_range(kind)
             h.oled.selection=value-low+1
-            h.oled._render(h.now)
+            # Fix the illustration clock, not runtime animation.
+            h.oled._render(0.)
             wire=h.oled._render_wire
             png=encoded_png(wire)
             native=output/(name+'.png')

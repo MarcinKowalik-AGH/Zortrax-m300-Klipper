@@ -359,7 +359,7 @@ class SettingsTreeTests(unittest.TestCase):
             h.oled.selection = 8
             h.oled._render(h.now)
             frame = h.oled._render_wire
-            sprite=h.ui.oem_sprites.get('activity:led_brightness')
+            sprite=h.ui.oem_sprites.get('activity:led_brightness', h.now)
             self.assertEqual(frame, brightness_frame('LED brightness', 8, False, test_display.renderer.Frame,sprite))
             for segment in range(16):
                 x = 16 + 10 * segment + 4
@@ -688,7 +688,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.5');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.6');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

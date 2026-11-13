@@ -1,0 +1,77 @@
+{
+  "status": "PASS_APPROVED_MENU_ANIMATION",
+  "release": "v1.0.0-rc.6",
+  "source": "M300OLED._render and original indexed PNG encoder",
+  "approved_artwork_release": "v1.0.0-rc.3",
+  "approved_sha256": {
+    "m300_activity_sprites.json": "c64d5aa3dd4425b2c435c8bd97dd411a022dbd8cef93fe84490efdc0924703df",
+    "m300_oem_sprites_131.json": "006058afcac0b9b888762a336935675bcac625b6f888e1fb10fca2872187c387",
+    "m300_menu_sprites.json": "baf8e39497f52a8d9f0957d4a2898bd27d103c545d14617cd1433b49b7cedf3a",
+    "m300_cartesian_graphics.py": "43658b39a2dc360de259233c96aa71ead4bbfcbade46654c921d8292e8456721",
+    "m300_klipper_logo.py": "42743be0d68327f9ca5df55753b5ce4158eed3b4c49fa92e1123ff57c54ed21a"
+  },
+  "physical_printer_tested": false,
+  "heater_targets_changed": false,
+  "screens": [
+    {
+      "name": "hotend_menu",
+      "file": "docs/img/oled-animation-rc6/hotend_menu.gif",
+      "frame_ms": 500,
+      "frames": 4,
+      "unique_frames": 4,
+      "wire_sha256": [
+        "94cfeacb05dc1ff9994fcba4b2b7ee7e6ba0c89cd6e7195a20dc6feb5167fa3c",
+        "84c7c253228f1d7b0499082e97f84b5d18cec9b85e923e15ed95655522465cfb",
+        "705d8250d4fca6a42d2c81e43142082b27832a0bd58a3238a184b56fc42a4f34",
+        "167f496f070875a7a1a0a887be803c1f0a425eb36c1ee6570eb9c86e9f57343e"
+      ],
+      "gif_sha256": "3d147b41557a9aaf5553d9464be443d32cca857685fc36495c5bc25cbd66ce74",
+      "sprite": "activity:heat_nozzle"
+    },
+    {
+      "name": "hotend_editor",
+      "file": "docs/img/oled-animation-rc6/hotend_editor.gif",
+      "frame_ms": 500,
+      "frames": 4,
+      "unique_frames": 4,
+      "wire_sha256": [
+        "e78478015132fb4c3bd714aff2f26e551d0363cbe29b17fa402f8d084e1d37bd",
+        "7ea071dd19566385fe77b68087d4706e8d829066790af8de20c02c25ad76053c",
+        "b402e8b7ac951722657ac16bc1c689c0aa3bae120ac7d1a069cce6979c0b7a16",
+        "196a9544e3f7c76af54026b73cddc474a806c8c51468b19f37998f2c3d54da9e"
+      ],
+      "gif_sha256": "57843d89b975a946f154a4e67b3136b2cf55d9c8b52a65ee3cb59c43e8ad0022",
+      "sprite": "activity:heat_nozzle"
+    },
+    {
+      "name": "bed_editor",
+      "file": "docs/img/oled-animation-rc6/bed_editor.gif",
+      "frame_ms": 500,
+      "frames": 4,
+      "unique_frames": 4,
+      "wire_sha256": [
+        "dcce627f2a16ff58e151132954804aa31a0e6615c3e4f9a013ba4b86177ebeff",
+        "507ac4afd69bb5e9f7f2e9def7a11240fc14258fe25a77fe898b11beab8978f2",
+        "faaa5d884afbee930f520d07a54b121d1adb91a558dfe6dc9c175990f87e1e4d",
+        "c727d6b056cecc95bc848294def5abd10b2ce87ba83bf69168d60d541d7a1a4d"
+      ],
+      "gif_sha256": "b71ab152e0987cba1d6876bf0919b6e21bfec9759e7042797fa50d70b8404a32",
+      "sprite": "activity:heat_bed"
+    },
+    {
+      "name": "led_brightness",
+      "file": "docs/img/oled-animation-rc6/led_brightness.gif",
+      "frame_ms": 500,
+      "frames": 4,
+      "unique_frames": 2,
+      "wire_sha256": [
+        "221024baac8afa6c1aae114bb53ff688897c01150ace52dccc864e46a33cc48e",
+        "da1cbbb5fc0f522ba89c6262bb0240c902b16ad175458ac68ae671b520c06e17",
+        "221024baac8afa6c1aae114bb53ff688897c01150ace52dccc864e46a33cc48e",
+        "da1cbbb5fc0f522ba89c6262bb0240c902b16ad175458ac68ae671b520c06e17"
+      ],
+      "gif_sha256": "1c124a91079e262abeaec76e0a02be9fb9476994246bbb882e217cfb4bdf39f5",
+      "sprite": "activity:led_brightness"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-rc.5'
+CURRENT_RELEASE = 'v1.0.0-rc.6'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',

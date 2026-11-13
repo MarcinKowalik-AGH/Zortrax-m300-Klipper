@@ -47,6 +47,8 @@ class M300MenuUI:
         self.leveling_settings = False
         self._brightness_presented = None
         self._temperature_presented = None
+        self._temperature_frames = deque(maxlen=8)
+        self._brightness_frames = deque(maxlen=8)
         self.history = MenuHistory(self.menu_max_depth)
         self._return_cursors = {}
         path = os.path.join(os.path.dirname(__file__), 'm300_m11_stock_atlas.json')
@@ -72,6 +74,8 @@ class M300MenuUI:
         self.leveling_settings = False
         self._brightness_presented = None
         self._temperature_presented = None
+        self._temperature_frames = deque(maxlen=8)
+        self._brightness_frames = deque(maxlen=8)
 
     def entered(self, old, new, remember=True):
         self.history.entered(old, new, remember)
@@ -137,7 +141,8 @@ class M300MenuUI:
             choice = procedure_symbol('m300_pad_mesh', status)
             self.last_sprite = (choice.key if choice else
                 '0x0801be48' if status.get('state')=='FAILED' else 'activity:bed_mesh')
-            return self.oem_sprites.get(self.last_sprite, now if choice and choice.animated else 0.)
+            preview = status.get('state', 'IDLE') == 'IDLE'
+            return self.oem_sprites.get(self.last_sprite, now if preview or choice and choice.animated else 0.)
         if menu_page == 'fan_test' and view and view['state'] in ('COMPLETE', 'CANCELLED', 'FAULT'):
             status = view.get('snapshots', {}).get(view['owner'], {})
             choice = fault_symbol(status)
@@ -184,11 +189,8 @@ class M300MenuUI:
             filament=snapshot('m300_filament') if (panel_page.startswith('filament')
                 or menu_page=='material_status') else {},
             job=snapshot('m300_job') if panel_page.startswith('job') else {})
-        if self.last_sprite in ('project-klipper', 'project-zortrax') or (
-                isinstance(self.last_sprite, str) and self.last_sprite.startswith('cartesian:')):
-            return self.oem_sprites.get(self.last_sprite, now)
-        if menu_page not in ('procedure', 'calibration', 'material_status') and not panel_page.startswith(('job', 'filament')):
-            return self.oem_sprites.get(self.last_sprite)
+        # OEM descriptors already encode their real frame count and cadence.
+        # Passing zero here froze valid multiframe icons in ordinary menus.
         return self.oem_sprites.get(self.last_sprite, now)
 
     def notice_sprite(self, title, message, now):
@@ -254,6 +256,7 @@ class M300MenuUI:
                 wire = menu_frame(tuple(labels or [r[0] for r in rows]), (),
                                   selected, frame_type, sprite)
                 self._temperature_presented = self.menu.generation, selected, wire
+                self._remember_editor_frame('_temperature_frames', selected, wire)
                 return wire
             index = selected or self.menu.temperature_selection()
             if index is None or not 0 < index < len(rows):
@@ -263,6 +266,7 @@ class M300MenuUI:
             title = 'Hotend TEMP' if kind == 'HOTEND' else 'Bed TEMP'
             wire = temperature_frame(title, value, *limits, selected == 0, frame_type, sprite)
             self._temperature_presented = self.menu.generation, selected, wire
+            self._remember_editor_frame('_temperature_frames', selected, wire)
             return wire
         if self.menu.page in SETTINGS_PAGES:
             settings = self.printer.lookup_object('m300_settings', None)
@@ -272,6 +276,7 @@ class M300MenuUI:
                     level = selected or self.menu.nvm.get_setting(key)
                     wire = brightness_frame(TITLES[key], level, selected == 0, frame_type, sprite)
                     self._brightness_presented = self.menu.generation, selected, wire
+                    self._remember_editor_frame('_brightness_frames', selected, wire)
                     return wire
                 return menu_frame(tuple(labels or [r[0] for r in rows]),
                     settings.active_rows(self.menu.page), selected, frame_type, sprite)
@@ -286,23 +291,45 @@ class M300MenuUI:
     def temperature_selection(self):
         return self.menu.temperature_selection()
 
-    def temperature_receipt(self, stream):
-        frame = getattr(self, '_temperature_presented', None)
-        if (frame is not None and stream.enabled and stream.ready
-                and frame[2] == stream.previous):
-            return frame[:2]
+    def _editor_key(self, selected):
+        # The same row index can denote a different temperature after limits
+        # change. A receipt must bind the displayed range as well as the row.
+        limits = (self.menu.temperature_range(self.menu.page[12:])
+                  if self.menu.page in ('temperature_HOTEND', 'temperature_BED')
+                  else None)
+        return self.oled._input_context(), self.menu.generation, selected, limits
+
+    def _remember_editor_frame(self, name, selected, wire):
+        # Animation changes pixels, not the visible choice. Retain a bounded
+        # set for this exact page/input epoch/generation/selection only.
+        frames = getattr(self, name, None)
+        if frames is None:
+            frames = deque(maxlen=8)
+            setattr(self, name, frames)
+        key = self._editor_key(selected)
+        if frames and frames[-1][0] != key:
+            frames.clear()
+        if not frames or frames[-1][1] != wire:
+            frames.append((key, wire))
+
+    def _editor_receipt(self, name, stream):
+        if not stream.enabled or not stream.ready:
+            return None
+        key = self._editor_key(self.oled.selection)
+        for context, wire in reversed(getattr(self, name, ())):
+            if context == key and wire == stream.previous:
+                return self.menu.generation, self.oled.selection
         return None
+
+    def temperature_receipt(self, stream):
+        return self._editor_receipt('_temperature_frames', stream)
 
     def brightness_selection(self):
         key = self.menu.page[8:]
         return self.menu.nvm.get_setting(key) if key in BRIGHTNESS_KEYS else None
 
     def brightness_receipt(self, stream):
-        frame = getattr(self, '_brightness_presented', None)
-        if (frame is not None and stream.enabled and stream.ready
-                and frame[2] == stream.previous):
-            return frame[:2]
-        return None
+        return self._editor_receipt('_brightness_frames', stream)
 
     def leveling_panel(self, events, received_view, now):
         if self.oled.page != 'm04' or self.menu.page != 'procedure':

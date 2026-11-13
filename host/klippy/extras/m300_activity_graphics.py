@@ -141,7 +141,7 @@ PAGE_SYMBOLS = {
 
 
 def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None, sd=None, models=None):
-    """Menu previews are static. Only a reported active fan or file I/O animates."""
+    """Play approved menu frames; live fan-test feedback remains state-driven."""
     if page == 'fan_test':
         fan = fan or {}
         channel = 'lower' if selected == 2 else 'upper'
@@ -151,13 +151,11 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         fan = fan or {}
         action = rows[selected][1] if rows and 0<=selected<len(rows) else None
         lower = selected in (2,3) or isinstance(action,tuple) and action[0]=='fan_set'
-        duty = (fan.get('channels', {}).get('print' if lower else 'hotend', {}).get('effective_duty'))
-        enabled = type(duty) in (int,float) and duty>0 and fan.get('mcu_status_fresh') is True
-        return symbol('fan_lower' if lower else 'fan_upper', enabled and selected != 0)
+        return symbol('fan_lower' if lower else 'fan_upper', True)
     if page in ('temperature_HOTEND', 'temperature_BED'):
-        return symbol('heat_bed' if page == 'temperature_BED' else 'heat_nozzle')
+        return symbol('heat_bed' if page == 'temperature_BED' else 'heat_nozzle', True)
     if panel_page == 'temps':
-        return symbol('heat_bed' if selected == 2 else 'heat_nozzle')
+        return symbol('heat_bed' if selected == 2 else 'heat_nozzle', True)
     if page in ('models', 'browser', 'model_file', 'preview', 'confirm_print'):
         sd, browser, models = sd or {}, browser or {}, models or {}
         if page in ('model_file', 'preview', 'confirm_print') and models.get('state')=='ERROR':
@@ -169,7 +167,7 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if browser.get('busy') is True:
             return symbol('file_convert' if page in ('model_file', 'preview', 'confirm_print') else 'sd_read', True)
         if page == 'browser' and browser.get('source') == 'sd':
-            return symbol('sd_read')
+            return symbol('sd_read', True)
     action = rows[selected][1] if rows and 0 <= selected < len(rows) else None
     if isinstance(action, tuple) and action:
         kind = action[0]
@@ -178,17 +176,17 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
             return Symbol(HOMING_ICONS[HOMING_ACTIONS[kind]], True)
         if kind == 'page' and target in PAGE_SYMBOLS:
             key = PAGE_SYMBOLS[target]
-            return Symbol(key, key.startswith('cartesian:'))
+            return Symbol(key, True)
         if kind == 'browse' and target == 'sd':
-            return symbol('sd_read')
+            return symbol('sd_read', True)
         if kind == 'fan_set' or kind == 'fan_test' and target == 'PRINT':
-            return symbol('fan_lower')
+            return symbol('fan_lower', True)
         if kind == 'fan_test' and target == 'HOTEND':
-            return symbol('fan_upper')
+            return symbol('fan_upper', True)
         if kind == 'service' and target in ('FAN_PRINT', 'FAN_HOTEND'):
-            return symbol('fan_lower' if target=='FAN_PRINT' else 'fan_upper')
+            return symbol('fan_lower' if target=='FAN_PRINT' else 'fan_upper', True)
         if (kind == 'service' and target in ('HOTEND', 'BED')) or kind == 'temperatures':
-            return symbol('heat_bed' if target == 'BED' else 'heat_nozzle')
+            return symbol('heat_bed' if target == 'BED' else 'heat_nozzle', True)
         if kind == 'native_gcode':
             command = str(target).strip().upper()
             name = command.split(maxsplit=1)[0] if command else ''
@@ -198,22 +196,22 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
             if homing:
                 return Symbol(HOMING_ICONS[homing], True)
             if name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
-                return symbol('bed_mesh')
+                return symbol('bed_mesh', True)
             if name in ('ZORTRAX_HEAT', 'M104', 'M109'):
-                return symbol('heat_nozzle')
+                return symbol('heat_nozzle', True)
             if name in ('ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
-                return symbol('heat_bed')
+                return symbol('heat_bed', True)
             if name == 'PID_CALIBRATE':
-                return symbol('heat_nozzle')
+                return symbol('heat_nozzle', True)
             if name in ('TURN_OFF_HEATERS', 'ZORTRAX_COOL'):
-                return symbol('cooling')
+                return symbol('cooling', True)
             if name in ('ZORTRAX_FAN_TEST_START', 'ZORTRAX_FAN_UPPER', 'ZORTRAX_FANS'):
-                return symbol('fan_upper')
+                return symbol('fan_upper', True)
             if name == 'ZORTRAX_FAN_LOWER':
-                return symbol('fan_lower')
+                return symbol('fan_lower', True)
             if name in ('FIRMWARE_RESTART', 'RESTART', 'SAVE_CONFIG'):
-                return symbol('firmware_update')
+                return symbol('firmware_update', True)
             if name == 'M112':
-                return symbol('emergency_stop')
+                return symbol('emergency_stop', True)
     key = PAGE_SYMBOLS.get(page) or PAGE_SYMBOLS.get(panel_page)
-    return Symbol(key, key.startswith('cartesian:')) if key else None
+    return Symbol(key, True) if key else None
