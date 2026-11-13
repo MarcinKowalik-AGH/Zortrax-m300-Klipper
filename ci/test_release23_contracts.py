@@ -58,7 +58,7 @@ class ReleaseContracts(unittest.TestCase):
     def test_host_release_and_numeric_mcu_identity(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
         self.assertEqual(meta['distribution_version'],'v1.0.0-rc.3')
-        self.assertEqual(meta['mcu_release'],'1.0.1')
+        self.assertEqual(meta['mcu_release'],'1.0.2')
         self.assertEqual(meta['self_contained_host_tests'],828)
         self.assertEqual(meta['print_control_revision'],'0.13.16.38-PRINT-DRAIN-XY-PURGE')
 

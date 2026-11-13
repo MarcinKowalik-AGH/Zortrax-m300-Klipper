@@ -46,8 +46,11 @@ int main(void) {
     if(early_config){command_m300_oled_config(config);configured_spi=spi_cr1;}
     unsigned host_seen=0,stop_seen=0,first_task=1,ready=0;
     uint32_t ready_at=0,bytes_at_stop=0,bytes_at_host=0;
-    uint8_t frame[8192]={0};
-    for(unsigned tick=0;tick<=2200;tick++) {
+    uint8_t frame[8192]={0}, splash[8192]={0};
+    unsigned splash_seen=0, wait_frames=0, splash_frames=0;
+    uint32_t splash_at=0, splash_exit_at=0;
+    unsigned task_spi_max=0;
+    for(unsigned tick=0;tick<=5400;tick++) {
         uint32_t elapsed=tick*1000u;
         mock_time=timer_from_us(elapsed);
         if(!stop_seen && elapsed>=stop_at) {
@@ -69,11 +72,27 @@ int main(void) {
            && !timer_is_before(mock_time,local_timer.waketime)) {
             unsigned before=byte_count,offset=local_frame_pos;
             unsigned drawing=local_state==LOCAL_FRAME;
+            unsigned drawing_splash=local_startup_splash;
+            unsigned was_hold=local_state==LOCAL_SPLASH_HOLD;
             (void)local_timer.func(&local_timer);
             m300_local_oled_task();
-            if(drawing && local_frame_pos==offset+32u)
-                memcpy(frame+offset,wire+before,32);
+            unsigned sent=byte_count-before;
+            assert(sent<=32u); // Every task remains one bounded SPI chunk.
+            if(sent>task_spi_max)task_spi_max=sent;
+            if(drawing && local_frame_pos==offset+32u) {
+                memcpy((drawing_splash ? splash : frame)+offset,wire+before,32);
+                if(local_frame_pos==8192u) {
+                    if(drawing_splash)splash_frames++;
+                    else wait_frames++;
+                }
+            }
+            if(was_hold && local_state!=LOCAL_SPLASH_HOLD && !splash_exit_at)
+                splash_exit_at=elapsed;
         }
+        if(local_state==LOCAL_SPLASH_HOLD && !splash_seen) {
+            splash_seen=1;splash_at=elapsed;
+        }
+        if(host_seen || stop_seen)assert(!local_startup_splash);
         if(local_state==LOCAL_READY && !ready){ready=1;ready_at=mock_time/M300_TIMER_SCALE;}
         if(host_seen && !stop_seen)assert(byte_count==bytes_at_host);
     }
@@ -81,14 +100,20 @@ int main(void) {
     if(host_seen){assert(local_state==LOCAL_HANDOVER);assert(ack_count==1);}
     else assert(!ack_count);
     if(stop_seen){
-        assert(panel_fault && local_reason==3 && local_state==LOCAL_READY);
+        assert(panel_fault && local_reason==3 && ready && !local_startup_splash);
+        assert(local_state==LOCAL_READY || local_state==LOCAL_ICON_WINDOW || local_state==LOCAL_ICON_FRAME);
         assert(byte_count>bytes_at_stop); // bounded task renders fault Waiting
         assert((GPIOE->ODR&(3u<<9))==(3u<<9));
     }
     const char *output=getenv("M300_FRAME_OUTPUT");
     if(output && ready){FILE *f=fopen(output,"wb");assert(f);assert(fwrite(frame,1,8192,f)==8192);assert(!fclose(f));}
+    output=getenv("M300_SPLASH_OUTPUT");
+    if(output && splash_seen){FILE *f=fopen(output,"wb");assert(f);assert(fwrite(splash,1,8192,f)==8192);assert(!fclose(f));}
     printf("{\"inherited_clock\":%u,\"ready\":%u,\"ready_at_us\":%u,"
-           "\"host\":%u,\"shutdown\":%u,\"bytes\":%u,\"baud\":%u}\n",
-           inherited,ready,ready_at,host_seen,stop_seen,byte_count,fake_baud);
+           "\"host\":%u,\"shutdown\":%u,\"bytes\":%u,\"baud\":%u,"
+           "\"splash_seen\":%u,\"splash_at_us\":%u,\"splash_exit_us\":%u,"
+           "\"splash_frames\":%u,\"wait_frames\":%u,\"task_spi_max\":%u}\n",
+           inherited,ready,ready_at,host_seen,stop_seen,byte_count,fake_baud,
+           splash_seen,splash_at,splash_exit_at,splash_frames,wait_frames,task_spi_max);
     return 0;
 }

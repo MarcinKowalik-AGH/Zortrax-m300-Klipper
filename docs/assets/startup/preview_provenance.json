@@ -1,0 +1,24 @@
+{
+  "status": "PASS_NATIVE_STARTUP_PREVIEW",
+  "source": "actual MCU SPI output in native C model",
+  "physical_printer_tested": false,
+  "model_result": {
+    "inherited_clock": 864000000,
+    "ready": 1,
+    "ready_at_us": 3569003,
+    "host": 0,
+    "shutdown": 0,
+    "bytes": 20376,
+    "baud": 750000,
+    "splash_seen": 1,
+    "splash_at_us": 810000,
+    "splash_exit_us": 3311000,
+    "splash_frames": 1,
+    "wait_frames": 1,
+    "task_spi_max": 32
+  },
+  "wire_sha256": "869698b03ab5256c7d8f6a608ec15415c0ff53bd1f9277a3aa7dc2a3ab5719ee",
+  "native_png_sha256": "6649a3c7312f8429b60490186c6580176a59ec868eda3056b8caaaee1b01c9f2",
+  "width": 256,
+  "height": 64
+}

@@ -1,5 +1,7 @@
 # Zortrax M300 Classic — Klipper 1.0.0-rc.3
 
+
+**MCU 1.0.2:** [oryginalne logo Zortrax przed ekranem oczekiwania](docs/pl/MCU_FIRMWARE_1.0.2.md), bez zmiany hosta RC3, bootloadera ani wspólnych ikon. [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.2).
 **Trzeci kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
