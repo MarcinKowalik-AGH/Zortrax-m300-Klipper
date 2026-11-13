@@ -276,12 +276,16 @@ def main():
         config=io.StringIO();cp.write(config)
         (dest/'printer.cfg').write_text(config.getvalue())
         (dest/'input.gcode').write_text('ZORTRAX_DISPLAY_STATUS\n' + script)
+        # Klippy opens its log in append mode. Discard a prior validation
+        # run's output so repeated checks report only this startup's handlers.
+        log = dest / 'klippy.log'
+        log.unlink(missing_ok=True)
         command=[sys.executable,str(args.root/'klippy/klippy.py'),str(dest/'printer.cfg'),
                  '-i',str(dest/'input.gcode'),'-o',str(dest/'protocol.bin'),'-d',str(args.dictionary)]
-        command+=['-l',str(dest/'klippy.log')]
+        command+=['-l',str(log)]
         process=subprocess.run(command,capture_output=True,text=True,timeout=45)
-        text=process.stdout+process.stderr+(dest/'klippy.log').read_text()
-        (dest/'klippy.log').write_text(text)
+        text=process.stdout+process.stderr+log.read_text()
+        log.write_text(text)
         if name == 'factory_erased_refused':
             assert error in text, (name, text[-3000:])
             assert "Configured MCU 'mcu'" not in text
