@@ -60,6 +60,7 @@ def main():
         expected_tests=4)
     run('toned_activity_transport', [sys.executable, ROOT/'ci/check_toned_activity.py'])
     run('unified_oled_artwork', [sys.executable, ROOT/'ci/check_shared_artwork.py'])
+    run('temperature_editor_rasters', [sys.executable, ROOT/'ci/render_temperature_editors.py', '--check'])
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
     run('first_install', [sys.executable, ROOT / 'ci/test_install_fresh.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',

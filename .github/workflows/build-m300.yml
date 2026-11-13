@@ -66,8 +66,10 @@ jobs:
       - name: Fetch checksum-pinned upstream Klipper
         run: python ci/prepare_upstream.py
 
-      - name: Install pinned native Klippy test dependencies
-        run: python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
+      - name: Install pinned native Klippy and raster test dependencies
+        run: |
+          python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
+          python -m pip install Pillow==11.3.0
 
       - name: Fresh complete STM32F103 build
         shell: bash

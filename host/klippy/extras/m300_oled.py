@@ -296,6 +296,8 @@ class M300OLED:
         received_leveling = receipt(self.stream) if receipt is not None else None
         brightness_receipt = getattr(received_ui, 'brightness_receipt', None)
         received_brightness = brightness_receipt(self.stream) if brightness_receipt else None
+        temperature_receipt = getattr(received_ui, 'temperature_receipt', None)
+        received_temperature = temperature_receipt(self.stream) if temperature_receipt else None
         platform_receipt=getattr(received_ui,'platform_receipt',None)
         received_platform=platform_receipt(self.stream) if platform_receipt is not None else None
         # Native serialhdl records this before dispatching its handler. A
@@ -409,8 +411,14 @@ class M300OLED:
             brightness_selection = getattr(received_ui, 'brightness_selection', None)
             brightness = (self.page == 'm04' and brightness_selection is not None
                           and brightness_selection() is not None)
+            temperature = (self.page == 'm04' and menu is not None and
+                           menu.page in ('temperature_HOTEND', 'temperature_BED'))
             if events['longs']:
-                if brightness:
+                if temperature:
+                    menu._navigate(menu._return_page, remember=False)
+                    cursor = getattr(received_ui, 'cursor_for', lambda page: None)(menu.page)
+                    self.selection = cursor if cursor is not None else 0
+                elif brightness:
                     menu._navigate('settings', remember=False)
                     self.selection = 0
                 else:
@@ -439,8 +447,9 @@ class M300OLED:
                     count = len(presented_actions) if presented_actions is not None else len(rows)
                     delta = -events['delta'] if self.menu_reverse else events['delta']
                     self.selection = max(0, min(count - 1, self.selection + delta))
-                if events['shorts'] and (not brightness or (
-                        not events['delta'] and received_brightness == (menu.generation, self.selection))):
+                adjustment_receipt = received_temperature if temperature else received_brightness
+                if events['shorts'] and (not (brightness or temperature) or (
+                        not events['delta'] and adjustment_receipt == (menu.generation, self.selection))):
                     # Coalesced clicks never cascade through several menus.
                     self._select(now, presented_actions=presented_actions)
             self.render_at = 0.
@@ -1113,6 +1122,11 @@ class M300OLED:
                     brightness = brightness_selection()
                     if brightness is not None:
                         self.selection = brightness
+                temperature_selection = getattr(ui, 'temperature_selection', None)
+                if temperature_selection is not None:
+                    temperature = temperature_selection()
+                    if temperature is not None:
+                        self.selection = temperature
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None

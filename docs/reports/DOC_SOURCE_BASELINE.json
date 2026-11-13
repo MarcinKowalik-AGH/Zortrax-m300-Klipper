@@ -3,13 +3,13 @@
   "source_commit": "4828a9da9d5fd8b0b93eb2ac267732ee7e49d506",
   "source_artifact_sha256": "bb18c92ffbf0746a5394fa3468002fc5c2d04e33b0a7f06f67db96d6b5bd186f",
   "files": {
-    "host/klippy/extras/m300_menu.py": "aeea7f72b7fe1178e01f1a6f9590dbbbe4ec878e46f5216700718254457b2db4",
+    "host/klippy/extras/m300_menu.py": "fb47860ec1068e1bf132d72816fe853c89c160ac839d80c3d105349d8ac2ec7e",
     "host/klippy/extras/m300_settings.py": "32b71933b4f43f7d654793aed74442175a8cd362ca0aa368cb8e6cc6bb0b6615",
-    "host/klippy/extras/m300_settings_ui.py": "926f3ba2a1d3600548aab7b77b8d72b927d4a37c5418e088cee0c1995c10841f",
+    "host/klippy/extras/m300_settings_ui.py": "f55aadd12f3255a127711ea05f8592559ff6ed55679ea1224dbdfbeb2ed163da",
     "host/klippy/extras/m300_oled_render.py": "75ad13df9980eca06e76e04e9f56e50feaf068cee10cfa247ac5c7839a78eced",
     "host/klippy/extras/m300_oled_preview.py": "8bde30a5f94f8aabef8eee8ff7e89ed6ca2285131dccf59327360ff6a9781de7",
     "host/klippy/extras/m300_oem_graphics.py": "a86e6483e2f96e82f91183f3a1f4e8e6a14bd7438466b9c831f5cebe074e45d1",
-    "host/klippy/extras/m300_activity_graphics.py": "66fd8d138f8f6154640c2c6f2e49cd2c71f067370842abd12c1e15deaf447f5b",
+    "host/klippy/extras/m300_activity_graphics.py": "62d676c583c7e818116361aa781d5af4635c5d0fd03df8e7e37dab36e6cadccc",
     "host/klippy/extras/m300_leveling_oem.py": "b540bffda306139926cd88cc209217943d1b2abe68b5679315daefa5e910d423",
     "host/klippy/extras/m300_print_ui.py": "973063079c476c0186c233a60125b767cf4e305bfc21da73f4175d1a749c8cc0",
     "host/klippy/extras/m300_display_oem.py": "8b2b90b9215881163b17b9c7fef1942a216f5bdd4dd23c9613d1f1a32181904f",
@@ -39,5 +39,6 @@
     "base_commit": "c5935fb8e9dff24ea7fc474ed3369d12171216a0",
     "style": "OEM_NATIVE_TONES_V1",
     "physical_printer_tested": false
-  }
+  },
+  "current_source_update": "v1.0.0-rc.4 temperature editor; beta.20 illustrations remain historical"
 }

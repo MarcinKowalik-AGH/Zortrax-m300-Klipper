@@ -1,0 +1,5283 @@
+{
+  "status": "PASS_DOCUMENTATION",
+  "reference_release": "v1.0.0-rc.4",
+  "visual_baseline_release": "v1.0.0-beta.20",
+  "documents": 32,
+  "local_link_references": 725,
+  "oled_screen_states": 65,
+  "oled_png_files": 130,
+  "native_pixels_compared": 1064960,
+  "user_screenshots": 3,
+  "config_macros": 41,
+  "illustrated_functions": 65,
+  "browser_demo_images": 3,
+  "checks_count": 1316,
+  "checks": [
+    {
+      "name": "document:README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/OVERVIEW_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/PRINT_LIMITS_AND_PLANNER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/DOCUMENTATION_CHECK.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/CODE_REVIEW_RC1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/MCU_FIRMWARE_1.0.1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/FRONTEND_BETA20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/FLUIDD_M300.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/FEATURES.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/SETTINGS_INFORMATION.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/UI_SYMBOLS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/MCU_FIRMWARE_1.0.1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/pl/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "document:docs/en/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/PRINT_LIMITS_AND_PLANNER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README_PL.md:docs/pl/CODE_REVIEW_RC1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/en/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/PRINT_LIMITS_AND_PLANNER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:README.md:docs/pl/CODE_REVIEW_RC1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/OVERVIEW_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../../host/klippy/extras",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../../mcu/SOURCE_MCU",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../en/MODELS_SD.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../../host/klippy/extras/m300_oled_preview.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../../frontend/fluidd/navigation",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../en/COOLING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../en/CONNECTION.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OVERVIEW_PL.md:../en/ERRORS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/FIRST_INSTALL.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/fluidd_overview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/macros_panel.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/fluidd_oled_beta20_x1.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/oled/material_load@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../../host/klippy/extras/m300_print_control.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/oled/pause@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../img/oled/cancel_confirmation@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:DOCUMENTATION_CHECK.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/USER_GUIDE.md:PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../reports/OLED_RENDER_MANIFEST.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/main_klipper@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/main_klipper.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/main_zortrax@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/main_zortrax.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/zortrax_menu@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/zortrax_menu.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_mesh@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_mesh.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_pid@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_pid.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_level@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_level.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_home_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_home_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_heat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_heat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_platform@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_platform.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/material_load@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/material_load.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/settings@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#settings",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/settings.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/settings_preheat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/settings_preheat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_light@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_light.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_buzzer@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_buzzer.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_sleep@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_sleep.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_language@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_language.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_sort@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_sort.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_preheat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/setting_preheat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/information@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#information",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/information.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/firmware@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/firmware.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/printer_information@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/printer_information.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/help@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#help",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/help.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_axes@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_axes.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_x@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#pid",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/models@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#models",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/models.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/bed_mesh@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/bed_mesh.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/service_tests@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/service_tests.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_temp_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_temp_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_temp_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_temp_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heat_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heat_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heat_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heat_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heaters_off@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_heaters_off.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_y@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_y.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_xy@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_xy.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_xyz@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_home_xyz.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_fans@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/klipper_fans.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/print_details@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/print_details.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_heat_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_heat_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_platform_down@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_platform_down.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_fan_test@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/maintenance_fan_test.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/material_unload@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/material_unload.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_y@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/move_y.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid_save@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pid_save.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/models_host@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/models_host.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/temperature_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/temperature_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/temperature_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/temperature_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/fan_controls@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/fan_controls.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/oled_brightness@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/oled_brightness.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/led_brightness@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/led_brightness.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_prepare@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_prepare.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_tighten@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_tighten.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_heating@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_heating.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_adjust@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_adjust.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_result@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/level_result.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pause@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#pause",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/pause.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/cancel_confirmation@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/cancel_confirmation.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/no_models@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/no_models.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/sleep@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/sleep.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/status_ready@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/status_ready.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/status_printing@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:OLED_FUNCTIONS.md#status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:../img/oled/status_printing.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_MENU_REFERENCE.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../../host/klippy/extras/m300_calibration.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../../host/klippy/extras/m300_native_z.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../../host/klippy/extras/m300_pad_mesh.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/oled/bed_mesh@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/bed_mesh_preview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/oled/level_prepare@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/oled/level_tighten@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/oled/level_adjust@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../img/oled/level_result@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/BED_MESH_AND_LEVELING.md:../en/LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../PORT.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../host/config/m300_classic_base.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../en/HARDWARE_VARIANTS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../host/klippy/extras/m300_native_z.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../en/CONNECTION.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../host/config/m300_classic_sensors.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../en/PROVENANCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../en/CONFIGURATION_AUDIT.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/TECHNICAL_REFERENCE.md:../../PORT.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/PRINT_LIMITS_AND_PLANNER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:../../host/config/m300_classic_base.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:../en/BUILD.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:../../README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_LIMITS_AND_PLANNER.md:DOCUMENTATION_CHECK.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/klipper_calibration.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/klipper_calibration.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/klipper_calibration.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/klipper_calibration.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/config/m300_tests.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/klippy/extras/m300_print_control.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:../../host/klippy/extras/m300_procedures.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MACRO_REFERENCE.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/DOCUMENTATION_CHECK.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/IMAGE_PROVENANCE.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/OLED_RENDER_MANIFEST.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/OLED_FUNCTION_CATALOG.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/FLUIDD_OLED_DEMO.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../tools/render_fluidd_oled_manual.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../tools/check_manual.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/DOCUMENTATION_RC1_VALIDATION.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/DOCUMENTATION_FILES.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/DOCUMENTATION_CHECK.md:../reports/DOC_SOURCE_BASELINE.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:USER_GUIDE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/status_ready@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/status_ready.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_klipper_status.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/status_printing@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/status_printing.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_klipper_status.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/main_klipper@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/main_klipper.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/main_zortrax@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/main_zortrax.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/zortrax_menu@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/zortrax_menu.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/print_details@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/print_details.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_temp_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_temp_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/temperature_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/temperature_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_temp_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_temp_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/temperature_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/temperature_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heat_hotend@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heat_hotend.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heat_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heat_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heaters_off@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_heaters_off.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_heat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_heat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_native_maintenance.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_heat_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_heat_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_native_maintenance.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_y@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_y.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_xy@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_xy.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_xyz@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_home_xyz.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_home_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_home_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_axes@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_axes.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_x@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_y@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_y.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_z@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/move_z.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_platform@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_platform.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_native_maintenance.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_platform_down@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_platform_down.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_native_maintenance.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_level@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_level.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_calibration.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_prepare@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_prepare.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_tighten@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_tighten.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_heating@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_heating.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_adjust@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_adjust.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_result@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/level_result.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_mesh@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_mesh.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_pad_mesh.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/bed_mesh@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/bed_mesh.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_pad_mesh.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/material_load@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/material_load.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_filament.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/material_unload@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/material_unload.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_filament.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/models@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/models.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_models.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/models_host@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/models_host.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_models.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pause@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pause.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_print_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/cancel_confirmation@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/cancel_confirmation.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_print_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/no_models@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/no_models.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_fans@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_fans.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_fans.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/fan_controls@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/fan_controls.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_fans.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_fan_test@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/maintenance_fan_test.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_native_fans.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_pid@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/klipper_pid.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid_bed@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid_bed.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid_save@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/pid_save.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/settings@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/settings.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/settings_preheat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/settings_preheat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_preheat@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_preheat.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_light@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_light.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_buzzer@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_buzzer.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_sleep@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_sleep.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/sleep@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/sleep.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_display_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_language@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_language.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_sort@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/setting_sort.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/oled_brightness@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/oled_brightness.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/led_brightness@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/led_brightness.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/information@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/information.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/firmware@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/firmware.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/printer_information@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/printer_information.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/help@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/help.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/service_tests@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../img/oled/service_tests.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:../../host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:TECHNICAL_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/OLED_FUNCTIONS.md:MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:OLED_MENU_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:RELEASE_v1.0.0-beta.18.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:RELEASE_v1.0.0-beta.19.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:RELEASE_v1.0.0-beta.20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../../PORT.json",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../img/fluidd_oled_beta20_x1.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../img/fluidd_oled_beta20_x2.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../img/fluidd_oled_beta20_x3.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../../host/klippy/extras/m300_oled_preview.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../../frontend/fluidd/navigation/M300OledPreview.vue",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:../../frontend/fluidd/navigation/m300-oled-pixels.ts",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/UPDATE_2026-11-10.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:BED_MESH_AND_LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:../../host/klippy/extras/m300_print_control.py",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:../../host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:PRINT_CONTROL_LEGACY_R16_29.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/PRINT_CONTROL.md:RELEASE_v1.0.0-rc.1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/INSTALLATION_AND_CI.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/INSTALLATION_AND_CI.md:PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/INSTALLATION_AND_CI.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/INSTALLATION_AND_CI.md:RELEASE_v1.0.0-rc.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/ACCEPTANCE_REGISTER.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/ACCEPTANCE_REGISTER.md:PRINT_CONTROL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/ACCEPTANCE_REGISTER.md:../reports/HARDWARE_ACCEPTANCE.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RC1_UI.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RC1_UI.md:MACRO_REFERENCE.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RC1_UI.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/CODE_REVIEW_RC1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/CODE_REVIEW_RC1.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/CODE_REVIEW_RC1.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/CODE_REVIEW_RC1.md:ACCEPTANCE_REGISTER.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/MCU_FIRMWARE_1.0.1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.1.md:FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.1.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.2.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.2.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.2.md:../assets/startup/zortrax_startup@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/MCU_FIRMWARE_1.0.2.md:../assets/startup/zortrax_logo_r0323.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FIRST_INSTALL.md:../pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FIRST_INSTALL.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FIRST_INSTALL.md:FRONTEND_BETA20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:../pl/INSTALLATION_AND_CI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:MAINTENANCE_MATERIAL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:PRINT_CONTEXT.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:RELEASE_v1.0.0-beta.9.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:CONFIGURATION_AUDIT.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:LEVELING.md#measured-contact-rectangles",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:LEVELING.md#measured-contact-rectangles",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:FLUIDD_M300.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:PRINT_CONTEXT.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:MODELS_SD.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:PRINT_CONTEXT.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:ERRORS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:COOLING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:SETTINGS_INFORMATION.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/INSTALL.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/FRONTEND_BETA20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:../../README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:../pl/UPDATE_2026-11-10.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:../img/fluidd_oled_beta20_x1.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FRONTEND_BETA20.md:FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/FLUIDD_M300.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:FRONTEND_BETA20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:RELEASE_v1.0.0-beta.20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:../pl/RELEASE_v1.0.0-beta.19.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:UI_SYMBOLS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:FRONTEND_BETA20.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:LEVELING.md#measured-contact-rectangles",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:LEVELING.md#measured-contact-rectangles",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:LEVELING.md#optional-klipper-pad-mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:../../frontend/fluidd/m300-leveling.patch",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FLUIDD_M300.md:INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/FEATURES.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FEATURES.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FEATURES.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FEATURES.md:INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FEATURES.md:VALIDATION_R16_9.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/FEATURES.md:VALIDATION_R16_9.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/LEVELING.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:MAINTENANCE_MATERIAL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:VALIDATION_R16_7.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:FLUIDD_M300.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/LEVELING.md:VALIDATION_R16_7.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/SETTINGS_INFORMATION.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/SETTINGS_INFORMATION.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/SETTINGS_INFORMATION.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/SETTINGS_INFORMATION.md:ERRORS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/UI_SYMBOLS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../pl/OLED_FUNCTIONS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/menu-symbols/klipper-full-logo-50x50.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/menu-symbols/m300-cartesian-preview.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:ERRORS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/M300_ACTIVITY_SYMBOLS_24.zip",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/preview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/preview.gif",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/bed_mesh.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/heat_nozzle.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/heat_bed.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/cooling.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/fan_upper.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/fan_lower.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/sd_read.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/file_convert.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/clean_nozzle.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/link_status.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/oled_brightness.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/led_brightness.svg",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/preview_additional.gif",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/assigned_oled.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/UI_SYMBOLS.md:../assets/ui-symbols/assigned_oled.gif",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/MCU_FIRMWARE_1.0.1.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.1.md:FIRST_INSTALL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.1.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/MCU_FIRMWARE_1.0.2.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.2.md:../../README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.2.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.2.md:../assets/startup/zortrax_startup@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/MCU_FIRMWARE_1.0.2.md:../assets/startup/zortrax_logo_r0323.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/pl/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:../../README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:../img/oled-temperature/hotend_210@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:../img/oled-temperature/bed_60@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/pl/RELEASE_v1.0.0-rc.4.md:../reports/TEMPERATURE_EDITORS_RC4.json",
+      "status": "PASS"
+    },
+    {
+      "name": "substantive:docs/en/RELEASE_v1.0.0-rc.4.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:../../README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:RC1_UI.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:RELEASE_v1.0.0-rc.3.md",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:../img/oled-temperature/hotend_210@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:../img/oled-temperature/bed_60@3x.png",
+      "status": "PASS"
+    },
+    {
+      "name": "link:docs/en/RELEASE_v1.0.0-rc.4.md:../reports/TEMPERATURE_EDITORS_RC4.json",
+      "status": "PASS"
+    },
+    {
+      "name": "render-source-commit",
+      "status": "PASS"
+    },
+    {
+      "name": "render-is-demonstration-not-hardware",
+      "status": "PASS"
+    },
+    {
+      "name": "65-rendered-screen-states",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:information",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:information",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:information",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:information",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:help",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:help",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:help",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:help",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:models",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:models",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:models",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:models",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "render-pair:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "dimensions:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "render-sha:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "square-3x:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "three-user-screenshots",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot:docs/img/fluidd_overview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-sha:docs/img/fluidd_overview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-size:docs/img/fluidd_overview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot:docs/img/macros_panel.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-sha:docs/img/macros_panel.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-size:docs/img/macros_panel.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot:docs/img/bed_mesh_preview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-sha:docs/img/bed_mesh_preview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "screenshot-size:docs/img/bed_mesh_preview.png",
+      "status": "PASS"
+    },
+    {
+      "name": "all-41-config-macros-covered",
+      "status": "PASS"
+    },
+    {
+      "name": "macro-manifest-matches-source",
+      "status": "PASS"
+    },
+    {
+      "name": "205-original-bed-temperature-pairs",
+      "status": "PASS"
+    },
+    {
+      "name": "205-bed-voltage-pairs",
+      "status": "PASS"
+    },
+    {
+      "name": "original-linear-hotend-map",
+      "status": "PASS"
+    },
+    {
+      "name": "61x61-interpolated-grid-not-3721-measurements",
+      "status": "PASS"
+    },
+    {
+      "name": "start-mesh-load-source",
+      "status": "PASS"
+    },
+    {
+      "name": "auto-without-profile-is-none",
+      "status": "PASS"
+    },
+    {
+      "name": "mesh-orientation-and-inactive-preview-explicit",
+      "status": "PASS"
+    },
+    {
+      "name": "flow-example-not-hardware-claim",
+      "status": "PASS"
+    },
+    {
+      "name": "65-illustrated-functions",
+      "status": "PASS"
+    },
+    {
+      "name": "function-to-render-coverage",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:main_klipper",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:main_zortrax",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:zortrax_menu",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_home",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_home_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_home_xy",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_home_xyz",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_home_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_temp_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_temp_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:temperature_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:temperature_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_heat_hotend",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_heaters_off",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_heat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_heat_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_platform",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_platform_down",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_level",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:level_prepare",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:level_tighten",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:level_heating",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:level_adjust",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:level_result",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:bed_mesh",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:material_load",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:material_unload",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:move_axes",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:move_x",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:move_y",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:move_z",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:pid",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:pid_bed",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:pid_save",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:klipper_fans",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:fan_controls",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:maintenance_fan_test",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:models_host",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:print_details",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:settings",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_light",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_buzzer",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_language",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_sort",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:setting_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:settings_preheat",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:oled_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:led_brightness",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:firmware",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:printer_information",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:help",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:help",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:help",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:service_tests",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:pause",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:cancel_confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:no_models",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:sleep",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:status_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "function-fields:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "function-illustration:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "function-source:status_printing",
+      "status": "PASS"
+    },
+    {
+      "name": "Fluidd-images-are-demonstrations",
+      "status": "PASS"
+    },
+    {
+      "name": "three-Fluidd-zoom-demonstrations",
+      "status": "PASS"
+    },
+    {
+      "name": "Fluidd-demo:docs/img/fluidd_oled_beta20_x1.png",
+      "status": "PASS"
+    },
+    {
+      "name": "Fluidd-demo:docs/img/fluidd_oled_beta20_x2.png",
+      "status": "PASS"
+    },
+    {
+      "name": "Fluidd-demo:docs/img/fluidd_oled_beta20_x3.png",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_menu.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_settings.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_settings_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_oled_render.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_oled_preview.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_oem_graphics.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_activity_graphics.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_leveling_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_print_ui.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_display_oem.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_klipper_status.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_fans.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_pad_mesh.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_print_control.py",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_display.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_classic_services.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_tests.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/klipper_calibration.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_classic_base.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_operations.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/config/m300_classic_sensors.cfg",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:frontend/fluidd/navigation/M300OledPreview.vue",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:frontend/fluidd/navigation/m300-oled-pixels.ts",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:frontend/fluidd/m300-tune.patch",
+      "status": "PASS"
+    },
+    {
+      "name": "source-baseline:host/klippy/extras/m300_native_motion.py",
+      "status": "PASS"
+    },
+    {
+      "name": "current-release-rc1",
+      "status": "PASS"
+    },
+    {
+      "name": "current-MCU-release",
+      "status": "PASS"
+    },
+    {
+      "name": "current-zoom-revision",
+      "status": "PASS"
+    },
+    {
+      "name": "current-Tune-revision",
+      "status": "PASS"
+    },
+    {
+      "name": "first-install-rc1:pl",
+      "status": "PASS"
+    },
+    {
+      "name": "current-MCU-update-instructions:pl",
+      "status": "PASS"
+    },
+    {
+      "name": "historical-illustration-baseline-disclosed:pl",
+      "status": "PASS"
+    },
+    {
+      "name": "first-install-rc1:en",
+      "status": "PASS"
+    },
+    {
+      "name": "current-MCU-update-instructions:en",
+      "status": "PASS"
+    },
+    {
+      "name": "historical-illustration-baseline-disclosed:en",
+      "status": "PASS"
+    },
+    {
+      "name": "README-current-release:README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "README-illustrated-guide:README.md",
+      "status": "PASS"
+    },
+    {
+      "name": "README-current-release:README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "README-illustrated-guide:README_PL.md",
+      "status": "PASS"
+    },
+    {
+      "name": "documented-current-UI",
+      "status": "PASS"
+    },
+    {
+      "name": "current-Tune-order-and-home",
+      "status": "PASS"
+    },
+    {
+      "name": "no-unimplemented-CI-auto-repair-claim",
+      "status": "PASS"
+    }
+  ],
+  "physical_printer_tested": false,
+  "errors": []
+}
