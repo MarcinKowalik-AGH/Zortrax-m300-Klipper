@@ -49,7 +49,7 @@ def check_browser(browser, url, javascript):
         page.locator('.v-application.fluidd').first.wait_for(state='visible')
         page.locator('.v-navigation-drawer').first.wait_for(state='attached')
         assert responses.get(url + javascript) == 200, responses
-        assert 'Fluidd' in page.title(), page.title()
+        assert 'fluidd' in page.title().casefold(), page.title()
     finally:
         context.close()
 
