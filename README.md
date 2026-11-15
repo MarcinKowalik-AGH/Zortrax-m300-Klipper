@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.10
+# Zortrax M300 Classic — Klipper 1.0.0-rc.11
 
-**RC10** synchronizes print time automatically with MCU 1.0.5. The MCU writes the factory counter directly on the board, with no Flash dump to supply. [Release notes](docs/en/RELEASE_v1.0.0-rc.10.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC11** updates Klipper by default and provides an explicit Fluidd repair command for port 4480. Klipper synchronizes the factory print-time counter directly with MCU 1.0.5, without a Flash dump. [Release notes](docs/en/RELEASE_v1.0.0-rc.11.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**Tenth release candidate for the classic M300**, using its original controller,
+**Eleventh release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.11) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -33,15 +33,15 @@ print or procedure, and turn the heater targets off before running:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
-The updater validates the existing Fluidd endpoint on port 4480.
-It preserves operator configuration, mesh, PID and qualified Z settings.
-After installation, reload Fluidd without the browser cache. If MCU 1.0.5 is
-already installed, update the host only. The
-[full update guide](docs/en/INSTALL.md) covers a first clone and read-only
-checks. [MCU 1.0.5 update and print-time checks](docs/en/MCU_FIRMWARE_1.0.5.md).
+This updates Klipper and preserves the existing Fluidd site and settings.
+If MCU 1.0.5 is already installed, the host update completes the upgrade.
+Use the separate `--update-fluidd --port 4480` command for a Fluidd update
+or repair. [Full update guide](docs/en/INSTALL.md) ·
+[Fluidd diagnosis and recovery](docs/en/INSTALL.md#diagnose-a-blank-or-unreachable-fluidd-page) ·
+[MCU 1.0.5 and print-time checks](docs/en/MCU_FIRMWARE_1.0.5.md).
 
 ## Qualification and limits
 

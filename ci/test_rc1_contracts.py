@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.10'
+VERSION='v1.0.0-rc.11'
 
 
 class Rc1Contracts(unittest.TestCase):

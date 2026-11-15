@@ -18,7 +18,6 @@ import stat
 import subprocess
 import sys
 import tempfile
-import zipfile
 
 PACKAGE = Path(__file__).resolve().parent
 BAUDS = (115200, 250000, 500000, 750000, 1000000, 1500000)
@@ -189,14 +188,7 @@ def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=
         execute(python,'-c','import chelper; chelper.get_ffi()',cwd=source/'klippy')
         deploy = module('m300_first_deploy',package/'install-orange-pi.py')
         archive = package/'M300_FLUIDD.zip'
-        with zipfile.ZipFile(archive) as bundle:
-            for name in bundle.namelist():
-                if Path(name).is_absolute() or '..' in Path(name).parts:
-                    raise ValueError('Unsafe Fluidd archive member')
-            bundle.extractall(stage/'web')
-        build_id = hashlib.sha256(archive.read_bytes()).hexdigest()
-        web = deploy.verified_web_root(stage/'web/fluidd-m300')
-        (web/'.m300-fluidd-build').write_text(build_id+'\n')
+        web = deploy.extract_web(archive, stage/'web')
         refuse_existing(config, root)
         updated_moon = moonraker_config(moon.read_text())
         shutil.copy2(moon,backup/'moonraker.conf')
@@ -217,7 +209,7 @@ def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=
             updater.atomic_write(moon,updated_moon.encode())
             execute('sudo','systemctl','start','klipper.service')
             execute('sudo','systemctl','restart','moonraker.service')
-            web_backup = deploy.deploy_web(web,web_root,build_id,execute=execute)
+            web_backup = deploy.deploy_web(web,web_root,port=fluidd_port,execute=execute)
             if fluidd_port is not None:
                 deploy.save_install_state(config.parent,web_root,fluidd_port)
         except BaseException:

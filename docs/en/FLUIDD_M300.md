@@ -345,10 +345,11 @@ under the Fluidd GPL-3.0 license. The patch and license are included in the ZIP.
 
 ## Install the web files
 
-The standard `orange-pi` installer installs this compiled Fluidd together
-with the host update and preserves the existing `config.json`. Pull
-`orange-pi` and run `install-orange-pi.py` as described in [Install](INSTALL.md).
-The steps below are for a custom web-root deployment only.
+For a Fluidd update or repair in an existing installation, use
+`install-orange-pi.py --update-fluidd --port 4480` on the Orange Pi. This
+uses the existing nginx site and preserves its `config.json`. See the
+[Fluidd update instructions](INSTALL.md#update-or-repair-fluidd).
+The steps below are for a custom web-root deployment.
 
 1. On the Orange Pi, identify the actual web root of your existing Fluidd
    server block (for nginx, inspect `sudo nginx -T` and the matching

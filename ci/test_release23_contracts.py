@@ -51,10 +51,15 @@ class ReleaseContracts(unittest.TestCase):
             self.assertIn('4480',text,path)
             for line in text.splitlines():
                 if line.strip().startswith('python3 ') and 'install-orange-pi.py' in line:
-                    self.assertEqual(shlex.split(line)[2:4], ['--port', '4480'], path)
+                    command = shlex.split(line)
+                    if '--update-fluidd' in command:
+                        self.assertIn('--port', command, path)
+                        self.assertEqual(command[command.index('--port') + 1], '4480', path)
+                    else:
+                        self.assertNotIn('--port', command, path)
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-            self.assertIn('releases/download/v1.0.0-rc.10/',text)
+            self.assertIn('releases/download/v1.0.0-rc.11/',text)
             commands = [shlex.split(line) for line in text.splitlines()
                         if line.startswith('python3 install-fresh.py ')]
             self.assertEqual(len(commands), 2, lang)
@@ -65,7 +70,7 @@ class ReleaseContracts(unittest.TestCase):
 
     def test_host_release_and_numeric_mcu_identity(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.10')
+        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.11')
         self.assertEqual(meta['mcu_release'],'1.0.5')
         self.assertEqual(meta['self_contained_host_tests'],906)
         self.assertEqual(meta['print_control_revision'],'0.13.16.38-PRINT-DRAIN-XY-PURGE')

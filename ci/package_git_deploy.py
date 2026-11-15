@@ -34,8 +34,8 @@ def package(release, output, commit):
     (output / 'README.md').write_text(
         '# M300 Classic ' + provenance['distribution_version'] + ' — Orange Pi\n\n'
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
-        'Run `python3 install-orange-pi.py --port 4480` as the Klipper user while idle and Ready.\n'
-        'The updater verifies the existing Fluidd site on port 4480 and preserves its nginx configuration.\n'
+        'Run `python3 install-orange-pi.py` as the Klipper user while idle and Ready to update the host.\n'
+        'For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --update-fluidd --port 4480`.\n'
         'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'
         'With MCU 1.0.5, Klipper automatically synchronizes print time to the board while idle. '
         'Install the MCU image from SD only if the board still requires the firmware update.\n\n'

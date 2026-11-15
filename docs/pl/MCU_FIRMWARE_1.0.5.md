@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.10/docs/pl/FIRST_INSTALL.md) · [Opis RC10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.10/docs/pl/RELEASE_v1.0.0-rc.10.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.11/docs/pl/FIRST_INSTALL.md) · [Opis RC11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.11/docs/pl/RELEASE_v1.0.0-rc.11.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Wgraj aplikację z karty SD
 
@@ -13,7 +13,7 @@ w `ZORTRAX_MCU_STATUS`.
 
 ## Odczyt licznika
 
-Klipper RC10 synchronizuje licznik automatycznie z dotychczasową konfiguracją.
+Od RC10 Klipper synchronizuje licznik automatycznie z dotychczasową konfiguracją.
 RC9 używał wpisu `factory_counter_backup:` do autoryzacji zapisu. RC10
 przyjmuje ten wpis i synchronizuje licznik bez odczytu zrzutu Flash. Zachowaj
 dotychczasowy stan licznika i dziennik Klippera. Dla domyślnej ścieżki `[m300_nvm]` dziennik

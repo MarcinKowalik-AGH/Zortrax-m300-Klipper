@@ -4,37 +4,36 @@
 
 ## Port Fluidd 4480
 
-M300 używa **4480**. Instalator wdraża Fluidd do katalogu wskazanego przez
-istniejącą konfigurację nginx. Na nowym hoście ustaw port 4480 w KIAUH
-zgodnie z [instrukcją pierwszej instalacji](FIRST_INSTALL.md#2-kiauh-i-przygotowanie-usług).
+M300 używa **4480**. Zwykła aktualizacja zmienia hosta Klippera. Opisuje ją
+[instrukcja aktualizacji](INSTALL.md#1-zaktualizuj-klippera). Na nowym hoście
+ustaw port 4480 w KIAUH zgodnie z
+[instrukcją pierwszej instalacji](FIRST_INSTALL.md#2-kiauh-i-przygotowanie-usług).
+
+Aby jawnie zaktualizować lub naprawić istniejący Fluidd, uruchom:
 
 ```bash
-git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480
 ```
 
-Uruchom z konta Klippera, przy bezczynnej maszynie Ready i wyłączonych celach
-grzania. Wstrzymany wydruk również blokuje instalację. W razie konfliktu
-lokalnych plików zachowaj je i sprawdź komunikat przed ponowną próbą.
-
 Instalator sprawdza porty `listen`, katalog `root` lub `alias` i tytuł Fluidd
-w `index.html`. IPv4 i IPv6 prowadzące do tego samego katalogu są jednym
-wyborem. Jeśli niestandardowej konfiguracji nginx nie można odczytać
-automatycznie, wskaż `--fluidd-root /bezwzględna/ścieżka --port 4480`.
-Ścieżka musi prowadzić do katalogu aktywnego Fluidd.
+w `index.html`. Naprawa pustego indeksu wymaga zgodnego głównego pliku
+JavaScript i manifestu. IPv4 i IPv6 prowadzące do tego samego katalogu są
+jednym wyborem. Jeśli niestandardowego układu nginx nie można odczytać
+automatycznie, dodaj `--fluidd-root /bezwzględna/ścieżka` do powyższego
+polecenia. Wskaż katalog aktywnego Fluidd.
 
-Po udanym wdrożeniu instalator zapisuje **`.m300-installer.json`** obok
+Instalator pierwszego uruchomienia zapisuje **`.m300-installer.json`** obok
 aktywnego `printer.cfg`, zazwyczaj w `~/printer_data/config`. Plik zawiera
-wersję schematu, port i katalog. Gdy polecenie pomija jawny wybór, instalator
-weryfikuje ten zapis względem nginx. Bez zapisu sprawdza port 4480, a
-następnie szuka jednego jednoznacznego Fluidd. Obsługuje także konfiguracje
-legacy na innych portach.
+wersję schematu, port i katalog. Przed wyborem bez jawnego portu procedura
+Fluidd może zweryfikować ten zapis względem nginx. Bez zapisu sprawdza port
+4480, a następnie szuka jednego jednoznacznego Fluidd. Obsługuje także
+starsze konfiguracje na innych portach.
 
 `FLUIDD_ENDPOINT_SELECTED` pokazuje katalog, port i źródło wyboru.
-Wynik `INSTALLED_M300_HOST` podaje także ścieżki potwierdzeń i kopii,
-jeśli zmieniono hosta lub Fluidd. Przy pierwszej instalacji polecenie bez
-`--apply` wyświetla plan bez zapisu ustawień. Aktualizacja MCU jest osobnym
-krokiem opisanym w [instrukcji firmware](MCU_FIRMWARE_1.0.5.md).
+Wynik `INSTALLED_M300_FLUIDD` podaje ścieżkę kopii, jeśli zastąpiono
+stronę. Instalator pierwszego uruchomienia bez `--apply` wyświetla plan
+bez zapisu ustawień. Aktualizacja MCU jest osobnym krokiem opisanym w
+[instrukcji firmware](MCU_FIRMWARE_1.0.5.md).
 
 ## Retry GitHub Actions: tylko awarie przejściowe
 

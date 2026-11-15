@@ -13,18 +13,17 @@ kopiować go jako aktualnej konfiguracji.**
 
 ## Aktualizacja działającej instalacji
 
-Przy bezczynnej drukarce **Ready**, bez pauzy ani aktywnej procedury, na Orange Pi:
+Przy bezczynnej drukarce **Ready**, bez pauzy ani aktywnej procedury,
+wyłącz cele grzania. Wykonaj na Orange Pi:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
-Beta.23 preferuje port 4480 i zapisuje zweryfikowany wybór w katalogu konfiguracji,
-w `.m300-installer.json`, poza repozytorium i jego sumami. Następne wywołanie bez
-`--port` odczytuje ten zapis i ponownie sprawdza nginx. Nie zmienia portu nginx.
-Nie trzeba wgrywać MCU: pozostaje `0.13.14.19-TONED-OLED-UART8`. Instalator hosta
-nie programuje MCU. Nie obchodź odmowy nadpisania nieznanych zmian.
+Polecenie aktualizuje hosta Klippera. [Instrukcja aktualizacji](INSTALL.md)
+opisuje sprawdzenie MCU oraz osobne polecenie Fluidd dla istniejącej witryny
+na porcie 4480.
 
 ## Jedno wywołanie START z OrcaSlicera
 
