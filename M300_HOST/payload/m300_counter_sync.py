@@ -115,23 +115,22 @@ class CounterSync:
         self.active_bank = 'AB'[source] if state == 1 else None
         return packet
 
-    def run(self, snapshot, load, save, query, commit, validate_backup=None, *,
-            runtime=False):
+    def run(self, snapshot, load, save, query, commit, *, runtime=False, allow_new=True):
         self.status = 'CHECKING'
         self.error = None
         serial, state, source, minutes, crc = self.observe(query())
         try:
             data = load()
         except (OSError, ValueError) as exc:
+            self.display_blocked = True
             if state == 2:
                 raise CounterRecoveryError(str(exc)) from exc
             raise
-        if data is None:
-            if state == 2:
-                raise CounterRecoveryError('interrupted MCU factory banks require the original host journal')
-            if validate_backup is None:
-                self.status = 'DISABLED'
-                return
+        if data is None and state == 2:
+            raise CounterRecoveryError('interrupted MCU factory banks require the original host journal')
+        if state == 0 and (data is None or data['pending'] is None):
+            self.status = 'MCU_COUNTER_UNAVAILABLE'
+            return
         if not serial:
             error = CounterRecoveryError if state == 2 else ValueError
             raise error('MCU factory serial is unavailable')
@@ -146,6 +145,7 @@ class CounterSync:
             data = dict(serial=self.serial, machine_id=machine, committed=0,
                         last_minutes=minutes, pending=None)
         elif data['serial'] != self.serial or data['machine_id'] != machine:
+            self.display_blocked = True
             error = CounterRecoveryError if state == 2 else ValueError
             raise error('factory counter journal belongs to another printer')
         self.committed_seconds = 60 * data['committed']
@@ -161,23 +161,11 @@ class CounterSync:
                 raise ValueError('factory or host counter went backwards')
         if state == 2 and not self.pending:
             raise CounterRecoveryError('interrupted MCU factory banks have no matching host transaction')
-        if validate_backup is None:
-            if state != 1 and self.pending:
-                raise CounterRecoveryError('configured Flash backup required to recover the pending update')
-            self.status = 'BACKUP_REQUIRED'
-            return
-        if state != 1:
-            try:
-                validate_backup(self.serial)
-            except (ValueError, OSError) as exc:
-                raise CounterRecoveryError(str(exc)) from exc
-        else:
-            validate_backup(self.serial)
-        if state != 1 and not self.pending:
-            raise CounterRecoveryError('MCU factory banks need inspection before synchronization')
-
         if pending is None:
             whole_minutes = int(total // 60) - data['committed']
+            if not allow_new:
+                self.status = 'AWAITING_IDLE' if whole_minutes else 'CURRENT'
+                return
             if not whole_minutes:
                 if fresh or minutes != data['last_minutes']:
                     save(dict(data, last_minutes=minutes))
