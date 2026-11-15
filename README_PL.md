@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.9
+# Zortrax M300 Classic — Klipper 1.0.0-rc.10
 
-**RC9** aktualizuje instalator Orange Pi i synchronizację czasu druku z MCU. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.9.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
+**RC10** automatycznie synchronizuje czas druku z MCU 1.0.5. MCU zapisuje fabryczny licznik bezpośrednio na płycie, bez pliku zrzutu Flash. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.10.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.5.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**Dziewiąty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
+**Dziesiąty kandydat do wydania dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -38,7 +38,8 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 
 Instalator sprawdza działający Fluidd na porcie 4480 i zachowuje
 konfigurację UART, mesh, PID i ustawienia osi Z. Po aktualizacji
-odśwież Fluidd z pominięciem pamięci podręcznej.
+odśwież Fluidd z pominięciem pamięci podręcznej. Jeśli masz już MCU 1.0.5,
+wystarczy zaktualizować hosta.
 [Pełna instrukcja aktualizacji i pierwszego klonowania](docs/pl/INSTALL.md) ·
 [Aktualizacja MCU 1.0.5 i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.5.md).
 

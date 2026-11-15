@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.9 — first installation
+# Zortrax M300 Classic v1.0.0-rc.10 — first installation
 
 If Klipper for M300 is already running on this host, follow the [update guide](INSTALL.md).
 
@@ -111,11 +111,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/SHA256SUMS-v1.0.0-rc.9.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.9.zip$' SHA256SUMS-v1.0.0-rc.9.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.9 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.10/Zortrax_M300_Klipper_v1.0.0-rc.10.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.10/SHA256SUMS-v1.0.0-rc.10.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.10.zip$' SHA256SUMS-v1.0.0-rc.10.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.10.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.10 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -206,18 +206,17 @@ END_PRINT
 
 See the [workflow and pause/M600 parameters](../pl/PRINT_CONTROL.md).
 
-## Optional MCU print-time synchronization
+## MCU print-time synchronization
 
-Klipper starts with local print-time accounting. After confirming Ready, edit
-the existing `[m300_mcu]` section in `~/printer_data/config/printer.cfg` and
-set `factory_counter_backup:` to the absolute path of the verified full Flash
-backup for this board. Save and restart Klipper once to load the setting.
-The next pending whole minute synchronizes automatically when the printer
-becomes eligible to write. [MCU setup and status checks](MCU_FIRMWARE_1.0.5.md).
+Klipper keeps print time on the host and automatically sends pending whole
+minutes to MCU 1.0.5 when the printer is idle and can safely write. The MCU
+updates the factory ID0 record in its own Flash and Klipper reads the result
+back. This works with the standard first-install configuration and requires
+no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.5.md#read-the-counter).
 
 ## Updates and acceptance scope
 
-The fixed `v1.0.0-rc.9` package installs this candidate. The `orange-pi` branch
+The fixed `v1.0.0-rc.10` package installs this candidate. The `orange-pi` branch
 serves later project updates. See the [update guide](INSTALL.md) to clone that
 branch and deploy to the existing Fluidd endpoint on 4480. Use the M300
 installer for Klipper and Fluidd. Back up the Moonraker and operating-system

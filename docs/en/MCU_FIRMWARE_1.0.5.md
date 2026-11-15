@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.9/docs/en/FIRST_INSTALL.md) · [RC9 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.9/docs/en/RELEASE_v1.0.0-rc.9.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.10/docs/en/FIRST_INSTALL.md) · [RC10 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.10/docs/en/RELEASE_v1.0.0-rc.10.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Install the SD application
 
@@ -11,13 +11,14 @@ application starts at `0x08008000`. Remove the update file before subsequent
 boots. With Klipper Ready, confirm `mcu_release: 1.0.5` in
 `ZORTRAX_MCU_STATUS`.
 
-## Enable and inspect
+## Read the counter
 
-In the existing `[m300_mcu]` section, set `factory_counter_backup:` to the
-absolute path of the verified 256 KiB full Flash backup of this board. Klipper
-checks the backup against the connected factory serial. Restart Klipper once
-if you added or changed the setting. After that, Klipper synchronizes pending
-whole minutes automatically when the printer is eligible.
+With Klipper RC10, synchronization starts automatically with the existing
+configuration. RC9 used `factory_counter_backup:` to authorize writes. RC10
+accepts the old entry and synchronizes without reading a Flash dump.
+Keep the existing print-time state and journal. With the default
+`[m300_nvm]` path, the journal is
+`~/printer_data/config/m300_settings.json.runtime-sync`.
 
 The MCU reads the active factory ID0 record, checks its previous value,
 writes the new value in the alternate settings bank and verifies it. The
@@ -30,7 +31,8 @@ time locally while the MCU defers the write.
 Run `ZORTRAX_HARDWARE_STATUS` and inspect
 `factory_counter_runtime_supported`, `factory_counter_sync`,
 `factory_counter_banks` and `factory_counter_pending`. `SYNCED` reports a
-verified result and `AWAITING_IDLE` indicates a deferred write.
+verified write, `CURRENT` indicates there is no whole minute to transfer
+and `AWAITING_IDLE` indicates a deferred write.
 `ZORTRAX_INFO REFRESH=0` shows factory, local and combined print time. If the
 sync state is `RECOVERY_REQUIRED`, keep the Klipper journal for reconciliation.
 After recovery, confirm `factory_counter_banks: NORMALIZED` and

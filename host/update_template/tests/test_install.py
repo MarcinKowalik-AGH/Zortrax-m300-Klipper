@@ -152,6 +152,47 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse((self.config.parent / 'm300_display.cfg').exists())
 
+    def test_rc9_counter_upgrade_preserves_legacy_config_and_journal(self):
+        # These bytes match the published RC9 host manifest and source tag.
+        extras = self.root / 'klippy/extras'
+        payload = ROOT / 'payload'
+        for name in install.NAMES:
+            (extras / name).write_bytes((payload / name).read_bytes())
+        previous_modules = {}
+        for name in ('m300_hardware', 'm300_counter_sync', 'm300_release'):
+            source = (ROOT / 'tests/reference/rc9' / (name + '.txt')).read_bytes()
+            path = extras / (name + '.py')
+            self.assertNotEqual(source, path.read_bytes())
+            path.write_bytes(source)
+            previous_modules[path] = source
+
+        legacy_setting = 'factory_counter_backup: /home/klipper/backup/full-flash.bin'
+        self.config.write_text(
+            '[mcu]\nserial: /dev/ttyS1\n\n[m300_mcu]\n' + legacy_setting + '\n\n'
+            '[extruder]\nsensor_type: M300_HOTEND_STOCK_LINEAR_LAB\nmax_temp: 310\n\n'
+            '[heater_bed]\nsensor_type: M300_BED_STOCK_TABLE_LAB\nmax_temp: 120\n\n'
+            '[m300_temperature_policy]\nhotend_target_max: 305\nbed_target_max: 105\n')
+        journal = self.config.parent / 'm300_settings.json.runtime-sync'
+        pending = {'source': 0, 'expected': 41, 'target': 42, 'settings_crc': 123}
+        data = {'serial': '123456', 'machine_id': 'RC9_FIXTURE', 'committed': 1,
+                'last_minutes': 41, 'pending': pending}
+        payload_bytes = json.dumps(data, sort_keys=True, separators=(',', ':')).encode()
+        journal.write_text(json.dumps({'data': data, 'sha256': hashlib.sha256(payload_bytes).hexdigest()}))
+        tracked = {self.config: self.config.read_bytes(), journal: journal.read_bytes(),
+                   **previous_modules}
+
+        changes = install.plan(self.root, self.config, thermal_305105=True)
+        self.assertGreaterEqual({path for path, _, _ in changes}, previous_modules.keys())
+        self.assertEqual({path: path.read_bytes() for path in tracked}, tracked)
+        receipt = install.apply(self.root, self.config, changes)
+        for path in previous_modules:
+            self.assertEqual(path.read_bytes(), (payload / path.name).read_bytes())
+        self.assertIn(legacy_setting, self.config.read_text())
+        self.assertEqual(journal.read_bytes(), tracked[journal])
+        self.assertEqual(install.plan(self.root, self.config, thermal_305105=True), [])
+        self.assertEqual(install.rollback(receipt, self.root, self.config), len(changes))
+        self.assertEqual({path: path.read_bytes() for path in tracked}, tracked)
+
     def test_preserve_existing_valid_display_settings(self):
         settings = self.config.parent / 'm300_display.cfg'
         data = b'[m300_display]\ntimeout: 600\ndim_contrast: 20\n'

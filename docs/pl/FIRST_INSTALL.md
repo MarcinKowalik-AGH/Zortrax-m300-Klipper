@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.9 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-rc.10 — instalacja od początku
 
 Jeśli na tym hoście działa już Klipper dla M300, użyj [instrukcji aktualizacji](INSTALL.md).
 
@@ -118,11 +118,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.9/SHA256SUMS-v1.0.0-rc.9.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.9.zip$' SHA256SUMS-v1.0.0-rc.9.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.9.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.9 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.10/Zortrax_M300_Klipper_v1.0.0-rc.10.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.10/SHA256SUMS-v1.0.0-rc.10.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.10.zip$' SHA256SUMS-v1.0.0-rc.10.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.10.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.10 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -213,18 +213,17 @@ END_PRINT
 
 [Opis pauzy, parkowania, M600 i wznowienia](PRINT_CONTROL.md).
 
-## Opcjonalna synchronizacja czasu druku z MCU
+## Synchronizacja czasu druku z MCU
 
-Klipper domyślnie zapisuje czas druku na hoście. Po potwierdzeniu stanu Ready
-w istniejącej sekcji `[m300_mcu]` w `~/printer_data/config/printer.cfg` podaj
-w `factory_counter_backup:` ścieżkę bezwzględną do sprawdzonej pełnej kopii
-Flash tej płyty. Zapisz plik i raz uruchom ponownie Klippera, aby wczytać wpis.
-Najbliższa oczekująca pełna minuta zsynchronizuje się automatycznie po
-spełnieniu warunków zapisu. [Konfiguracja i odczyt stanu MCU](MCU_FIRMWARE_1.0.5.md).
+Klipper zapisuje czas druku na hoście i automatycznie przekazuje oczekujące
+pełne minuty do MCU 1.0.5, gdy drukarka jest bezczynna i spełnia warunki
+zapisu. MCU aktualizuje fabryczny rekord ID0 we własnej pamięci Flash, a
+Klipper odczytuje wynik. Wystarcza standardowa konfiguracja pierwszej
+instalacji. [Odczyt stanu licznika](MCU_FIRMWARE_1.0.5.md#odczyt-licznika).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Wersjonowana paczka instaluje `v1.0.0-rc.9`. Gałąź `orange-pi` dostarcza
+Wersjonowana paczka instaluje `v1.0.0-rc.10`. Gałąź `orange-pi` dostarcza
 późniejsze aktualizacje projektu. [Instrukcja aktualizacji](INSTALL.md) opisuje
 klonowanie gałęzi oraz wdrożenie na działającym Fluidd na porcie 4480.
 Aktualizuj Klippera i Fluidd instalatorem M300. Przed osobną aktualizacją systemu lub Moonrakera

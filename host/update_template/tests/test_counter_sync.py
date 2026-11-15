@@ -21,7 +21,6 @@ class Fixture:
         self.crc = 0x12349876
         self.state = 1
         self.events = []
-        self.validate_backup = Mock()
 
     def query(self):
         return dict(serial=self.serial, state=self.state,
@@ -45,21 +44,20 @@ class Fixture:
         self.state = 1
         return dict(status=0)
 
-    def run(self, sync=None, *, validate=True, commit=None):
+    def run(self, sync=None, *, allow_new=True, commit=None):
         sync = sync or CounterSync()
         sync.run(self.snapshot, lambda: deepcopy(self.data), self.save,
-                 self.query, commit or self.commit,
-                 self.validate_backup if validate else None)
+                 self.query, commit or self.commit, allow_new=allow_new)
         return sync
 
 
 class CounterSyncTests(unittest.TestCase):
-    def test_disabled_without_backup_only_reads_bank_status(self):
+    def test_startup_reads_bank_status_without_creating_new_intent(self):
         h = Fixture()
         h.query = Mock(wraps=h.query)
-        sync = h.run(validate=False)
+        sync = h.run(allow_new=False)
         self.assertEqual((sync.status, sync.banks, sync.active_bank),
-                         ('DISABLED', 'NORMALIZED', 'A'))
+                         ('AWAITING_IDLE', 'NORMALIZED', 'A'))
         h.query.assert_called_once()
         self.assertEqual(h.events, [])
 
@@ -106,24 +104,20 @@ class CounterSyncTests(unittest.TestCase):
         self.assertEqual(h.events[-2][1][1:],
                          [pending[key] for key in ('source', 'expected', 'target', 'settings_crc')])
 
-    def test_interrupted_banks_require_prior_intent_and_valid_backup(self):
+    def test_interrupted_banks_require_prior_intent(self):
         h = Fixture()
         h.state = 2
         with self.assertRaises(CounterRecoveryError):
             h.run()
         with self.assertRaises(CounterRecoveryError):
-            h.run(validate=False)
+            h.run(allow_new=False)
         self.assertEqual(h.events, [])
         h.state = 1
         with self.assertRaises(CounterRecoveryError):
             h.run(commit=lambda args: dict(status=5))
         h.state = 2
-        h.validate_backup.side_effect = OSError('backup missing')
-        with self.assertRaises(CounterRecoveryError):
-            h.run()
-        with self.assertRaises(CounterRecoveryError):
-            h.run(validate=False)
         self.assertIsNotNone(h.data['pending'])
+        self.assertEqual(h.run(allow_new=False).status, 'SYNCED')
 
     def test_corrupt_journal_on_interrupted_banks_stops_startup(self):
         h = Fixture()
@@ -133,11 +127,11 @@ class CounterSyncTests(unittest.TestCase):
                               h.save, h.query, h.commit)
         self.assertEqual(h.events, [])
 
-    def test_missing_factory_counter_without_opt_in_keeps_host_startup_available(self):
+    def test_missing_factory_counter_keeps_host_startup_available(self):
         h = Fixture()
         h.state = 0
-        sync = h.run(validate=False)
-        self.assertEqual((sync.status, sync.banks), ('DISABLED', 'UNAVAILABLE'))
+        sync = h.run(allow_new=False)
+        self.assertEqual((sync.status, sync.banks), ('MCU_COUNTER_UNAVAILABLE', 'UNAVAILABLE'))
         self.assertEqual(h.events, [])
 
     def test_pending_never_applies_to_changed_state_or_another_printer(self):
@@ -165,29 +159,30 @@ class CounterSyncTests(unittest.TestCase):
         self.assertEqual(h.run().committed_seconds, 60)
         self.assertEqual(h.minutes, 316)
 
-    def test_configured_mcu_defers_and_backup_removal_retains_ui_accounting(self):
+    def test_configured_mcu_defers_and_startup_read_retains_ui_accounting(self):
         h = Fixture()
         sync = h.run(commit=lambda args: dict(status=2))
         self.assertEqual(sync.status, 'AWAITING_FIRMWARE_RESTART')
         self.assertTrue(sync.pending)
         self.assertEqual(h.run().status, 'SYNCED')
         h.snapshot['counters']['print_seconds'] += 180.
-        again = h.run(validate=False)
+        again = h.run(allow_new=False)
         self.assertEqual((again.status, again.committed_seconds, h.minutes),
-                         ('BACKUP_REQUIRED', 120, 302))
+                         ('AWAITING_IDLE', 120, 302))
 
-    def test_missing_backup_after_mcu_applied_pending_hides_unreconciled_total(self):
+    def test_startup_reconciles_applied_pending_without_another_flash_write(self):
         h = Fixture()
         def lose_ack(args):
             h.commit(args)
             raise OSError('lost acknowledgement')
         with self.assertRaises(CounterRecoveryError):
             h.run(commit=lose_ack)
-        commit = Mock()
-        sync = h.run(validate=False, commit=commit)
-        self.assertTrue(sync.display_blocked)
-        self.assertEqual(sync.status, 'BACKUP_REQUIRED')
-        commit.assert_not_called()
+        commit = Mock(wraps=h.commit)
+        sync = h.run(allow_new=False, commit=commit)
+        self.assertFalse(sync.display_blocked)
+        self.assertFalse(sync.flash_written)
+        self.assertEqual((sync.status, sync.committed_seconds), ('SYNCED', 120))
+        commit.assert_called_once()
 
     def test_verification_mismatch_keeps_durable_pending_state(self):
         h = Fixture()
@@ -200,13 +195,9 @@ class CounterSyncTests(unittest.TestCase):
         self.assertEqual(h.data['committed'], 0)
         self.assertEqual(h.data['pending']['target'], 302)
 
-    def test_rejected_backup_and_failed_journal_write_send_no_commit(self):
+    def test_failed_journal_write_sends_no_commit(self):
         h = Fixture()
         commit = Mock()
-        h.validate_backup.side_effect = ValueError('backup serial mismatch')
-        with self.assertRaisesRegex(ValueError, 'backup serial'):
-            h.run(commit=commit)
-        h.validate_backup.side_effect = None
         h.save = Mock(side_effect=OSError('fsync failed'))
         with self.assertRaisesRegex(OSError, 'fsync failed'):
             h.run(commit=commit)

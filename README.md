@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.9
+# Zortrax M300 Classic — Klipper 1.0.0-rc.10
 
-**RC9** updates the Orange Pi installer and MCU print-time synchronization. [Release notes](docs/en/RELEASE_v1.0.0-rc.9.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC10** synchronizes print time automatically with MCU 1.0.5. The MCU writes the factory counter directly on the board, with no Flash dump to supply. [Release notes](docs/en/RELEASE_v1.0.0-rc.10.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**Ninth release candidate for the classic M300**, using its original controller,
+**Tenth release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -38,7 +38,8 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
 
 The updater validates the existing Fluidd endpoint on port 4480.
 It preserves operator configuration, mesh, PID and qualified Z settings.
-After installation, reload Fluidd without the browser cache. The
+After installation, reload Fluidd without the browser cache. If MCU 1.0.5 is
+already installed, update the host only. The
 [full update guide](docs/en/INSTALL.md) covers a first clone and read-only
 checks. [MCU 1.0.5 update and print-time checks](docs/en/MCU_FIRMWARE_1.0.5.md).
 
