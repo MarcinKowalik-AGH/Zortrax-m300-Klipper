@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.11 — first installation
+# Zortrax M300 Classic v1.0.0-rc.12 — first installation
 
 If Klipper for M300 is already running on this host, follow the [update guide](INSTALL.md).
 
@@ -111,11 +111,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.11/Zortrax_M300_Klipper_v1.0.0-rc.11.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.11/SHA256SUMS-v1.0.0-rc.11.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.11.zip$' SHA256SUMS-v1.0.0-rc.11.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.11.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.11 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.12/Zortrax_M300_Klipper_v1.0.0-rc.12.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.12/SHA256SUMS-v1.0.0-rc.12.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.12.zip$' SHA256SUMS-v1.0.0-rc.12.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.12.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.12 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -216,7 +216,7 @@ no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.5.md#read-the-counter).
 
 ## Updates and acceptance scope
 
-The fixed `v1.0.0-rc.11` package installs this candidate. The `orange-pi` branch
+The fixed `v1.0.0-rc.12` package installs this candidate. The `orange-pi` branch
 serves later project updates. See the [update guide](INSTALL.md) to clone that
 branch and update Klipper. The guide also gives the separate Fluidd
 update or repair command for the existing site on 4480. Back up the Moonraker and operating-system

@@ -25,6 +25,10 @@ INSTALL_STATE_NAME = '.m300-installer.json'
 LEGACY_WEB_MARKER = '.m300-fluidd-build'
 HTML_CONTENT_TYPES = ('text/html',)
 JS_CONTENT_TYPES = ('application/javascript', 'text/javascript', 'application/x-javascript')
+WEB_ASSET = re.compile(
+    rb'''\b(src|href)\s*=\s*["'](?:\./|/)?(assets/[\w.-]+-[\w-]+\.(js|css))["']''', re.I)
+MIN_REPAIR_ASSETS = 3
+WEB_RELOAD_TIMEOUT = 5
 OLD_PAD_GEOMETRY_ERROR = 'pad widths and edge_margin must leave a positive inset (width <= 100 mm)'
 BUGGY_MAINTENANCE_SHA256 = '16ca09b60c14c2503b5a77bce1c7f7b939938161b9953e55a4d06a9268da3a88'
 BUSY_OBJECTS = ('m300_job', 'm300_motion', 'm300_filament',
@@ -310,12 +314,26 @@ def same_web_contents(source, root, *, http_verified):
 
 def web_probe_files(root):
     index = (root / 'index.html').read_bytes()
-    asset = re.search(rb'\bsrc=["\'](?:\./|/)?(assets/[\w.-]+-[\w-]+\.js)["\']', index)
-    if asset:
-        name = asset[1].decode('ascii')
-        return (('/', index, HTML_CONTENT_TYPES),
-                ('/' + name, (root / name).read_bytes(), JS_CONTENT_TYPES))
-    return ()
+    assets = WEB_ASSET.findall(index)
+    if not any(attr.lower() == b'src' and suffix.lower() == b'js' for attr, _, suffix in assets):
+        return ()
+    files = {'/': (index, HTML_CONTENT_TYPES)}
+    for _, name, suffix in assets:
+        path = name.decode('ascii')
+        if '/' + path not in files:
+            types = JS_CONTENT_TYPES if suffix.lower() == b'js' else ('text/css',)
+            files['/' + path] = (static_asset(root, path), types)
+    return tuple((path, body, types) for path, (body, types) in files.items())
+
+
+def static_asset(root, name):
+    path = root / name
+    try:
+        if path.resolve() == path and path.is_file():
+            return path.read_bytes()
+    except (OSError, RuntimeError):
+        pass
+    return None
 
 
 def recoverable_web_files(root, source):
@@ -323,54 +341,65 @@ def recoverable_web_files(root, source):
     if (source is None or index.is_symlink() or not index.is_file()
             or index.stat().st_size != 0):
         return ()
-    try:
-        files = web_probe_files(source)
-        if not files:
-            return ()
-        script, data, _ = files[1]
-        manifest = 'manifest.webmanifest'
-        for name, data in ((script.lstrip('/'), data), (manifest, (source / manifest).read_bytes())):
-            existing = root / name
-            if (existing.resolve() != existing or not existing.is_file()
-                    or existing.read_bytes() != data):
-                return ()
-    except OSError:
+    manifest = static_asset(source, 'manifest.webmanifest')
+    if not manifest or static_asset(root, 'manifest.webmanifest') != manifest:
         return ()
-    return (('/', b'', HTML_CONTENT_TYPES), files[1])
+    assets = []
+    matching = 0
+    for path, expected, types in web_probe_files(source)[1:]:
+        existing = static_asset(root, path.lstrip('/'))
+        assets.append((path, existing, types))
+        matching += bool(expected) and existing == expected
+    if matching < MIN_REPAIR_ASSETS:
+        return ()
+    return (('/', b'', HTML_CONTENT_TYPES), *assets)
 
 
-def web_responds(host, port, files):
-    try:
-        with closing(HTTPConnection(host, port, timeout=2)) as connection:
-            for path, expected, content_types in files:
+def matching_web_files(host, port, files):
+    matching = set()
+    with closing(HTTPConnection(host, port, timeout=2)) as connection:
+        for path, expected, content_types in files:
+            if expected is None:
+                continue
+            try:
                 connection.request('GET', f'{path}?m300_probe={time.monotonic_ns()}',
-                                   headers={'Cache-Control': 'no-cache'})
+                                   headers={'Cache-Control': 'no-cache', 'Connection': 'close'})
                 with connection.getresponse() as response:
-                    if (response.status != 200 or response.headers.get_content_type() not in content_types
-                            or response.read(len(expected) + 1) != expected):
-                        return False
-    except (OSError, HTTPException):
-        return False
-    return bool(files)
+                    if (response.status == 200 and response.headers.get_content_type() in content_types
+                            and response.read(len(expected) + 1) == expected):
+                        matching.add(path)
+            except (OSError, HTTPException):
+                break
+    return matching
 
 
 def local_web_host(root, port, *, repair_source=None):
     if port is None:
-        return None
+        return None, False
     try:
         files = web_probe_files(root) or recoverable_web_files(root, repair_source)
     except OSError:
-        return None
-    return next((host for host in ('127.0.0.1', '::1') if web_responds(host, port, files)), None)
+        return None, False
+    degraded = None
+    for host in ('127.0.0.1', '::1'):
+        observed = matching_web_files(host, port, files)
+        nonempty = {path for path, body, _ in files if body and path in observed}
+        if files and len(nonempty) == len(files):
+            return host, True
+        # A matching index or two matching named assets tie the observed
+        # endpoint to this Fluidd site even when other requests fail.
+        if '/' in nonempty or len(nonempty) >= 2:
+            degraded = degraded or host
+    return degraded, False
 
 
 def deploy_web(source, root, *, port=None, execute=run):
-    local_host = local_web_host(root, port, repair_source=source)
-    if same_web_contents(source, root, http_verified=local_host is not None):
+    local_host, healthy = local_web_host(root, port, repair_source=source)
+    if (local_host is None or healthy) and same_web_contents(source, root, http_verified=healthy):
         return None
     expected = web_probe_files(source) if local_host is not None else ()
-    if local_host is not None and not expected:
-        raise ValueError('Missing a hashed Fluidd JavaScript entrypoint in the package')
+    if local_host is not None and (not expected or any(not body for _, body, _ in expected)):
+        raise ValueError('Missing or empty Fluidd startup asset in the package')
     stage = Path(execute('sudo', 'mktemp', '-d', '--tmpdir=' + str(root.parent),
                          '.m300-fluidd.XXXXXX', capture=True).strip())
     backup = stage.with_name(stage.name + '.previous')
@@ -388,12 +417,13 @@ def deploy_web(source, root, *, port=None, execute=run):
             execute('sudo', 'systemctl', 'reload', 'nginx')
             reloaded = True
             if local_host is not None:
-                for _ in range(3):
-                    if web_responds(local_host, port, expected):
+                deadline = time.monotonic() + WEB_RELOAD_TIMEOUT
+                while True:
+                    if len(matching_web_files(local_host, port, expected)) == len(expected):
                         break
+                    if time.monotonic() >= deadline:
+                        raise ValueError(f'Fluidd did not serve the deployed page and startup assets on port {port}')
                     time.sleep(.2)
-                else:
-                    raise ValueError(f'Fluidd did not serve the deployed page and JavaScript on port {port}')
         except BaseException:
             if not stage.exists():
                 execute('sudo', 'mv', '-T', '--', root, stage)
