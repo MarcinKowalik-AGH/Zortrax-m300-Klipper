@@ -15,7 +15,7 @@ def packet(raw=0xe5, header=FACTORY_HEADER):
                 revision=identity['revision'] or 0, z_steps=identity['z_steps_per_mm'] or 0)
 
 
-def fixture(profile='factory', fileoutput=False):
+def fixture(profile='factory', fileoutput=False, *, legacy_backup=None):
     class Config:
         options = {'microsteps': 16, 'full_steps_per_rotation': 200,
                    'gear_ratio': '', 'step_pin': 'PB7'}
@@ -30,6 +30,8 @@ def fixture(profile='factory', fileoutput=False):
             return self.options.get(name, default)
     config = Config()
     config.options = dict(config.options)
+    if legacy_backup is not None:
+        config.options['factory_counter_backup'] = legacy_backup
     mcu = NS(is_fileoutput=lambda: fileoutput,
              _config_helper=NS(is_config_finalized=lambda: False),
              get_constants=lambda: {'M300_FACTORY_ABI': 1,
@@ -101,14 +103,17 @@ class HardwareTests(unittest.TestCase):
         self.assertEqual(hw.get_status()['configured_rotation_distance'], 8.)
         self.assertEqual(hw.get_status()['effective_z_steps_per_mm'], 800)
 
-    def test_query_is_once_without_runtime_polling_or_registered_motion_hooks(self):
+    def test_query_is_once_and_counter_hooks_only_schedule_a_ready_transport(self):
         hw, _, _ = fixture()
         hw._identify()
         hw.get_status(); hw.get_status()
         hw._query_factory.assert_called_once_with()
         events = hw.printer.register_event_handler.call_args_list
         self.assertEqual([call.args[0] for call in events],
-                         ['klippy:mcu_identify', 'klippy:ready'])
+                         ['klippy:mcu_identify', 'klippy:ready', 'm300:runtime_checkpoint',
+                          'klippy:shutdown', 'klippy:disconnect', 'gcode:request_restart'])
+        hw._queue_counter()
+        self.assertIsNone(hw.counter_timer)
 
     def test_optional_factory_info_queries_once_and_keeps_field_validity_separate(self):
         hw, _, _ = fixture()

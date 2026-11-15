@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 from test_counter_sync import Fixture
 from test_hardware import fixture as hardware_fixture
 from test_native_oem_services import Mutex
-from payload.m300_counter_sync import (CounterJournal, RUNTIME_COMMIT_FORMAT,
+from payload.m300_counter_sync import (COMMIT_FORMAT, CounterJournal, RUNTIME_COMMIT_FORMAT,
                                       RUNTIME_QUERY_FORMAT, RUNTIME_RESULT_FORMAT,
                                       RUNTIME_STATE_FORMAT)
 from payload.m300_hardware import (COUNTER_TIMEOUT, COUNTER_WINDOW,
@@ -85,8 +85,8 @@ class RuntimeTransportTests(unittest.TestCase):
 
 
 class RuntimeSynchronizationTests(unittest.TestCase):
-    def setup_controller(self):
-        hw, _, _ = hardware_fixture()
+    def setup_controller(self, *, legacy_backup=None):
+        hw, _, _ = hardware_fixture(legacy_backup=legacy_backup)
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         store = HostNVM(str(Path(temp.name) / 'settings.json'), 'm300', 'mechanics')
@@ -113,8 +113,6 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         reactor = NS(monotonic=lambda: 10., NOW=0., NEVER=1.e30, register_timer=lambda fn: fn,
                      update_timer=Mock(), unregister_timer=Mock())
         hw.printer.get_reactor = lambda: reactor
-        hw.counter_backup = '/verified-backup.bin'
-        hw._counter_validator = lambda nvm: fixture.validate_backup
         journal = CounterJournal(store)
 
         def commit(args):
@@ -127,9 +125,24 @@ class RuntimeSynchronizationTests(unittest.TestCase):
                   transport=transport, commit=commit, heat=heat, pwm=pwm, mutex=mutex,
                   objects=objects, print_state=print_state)
 
+    def startup(self, h, *, runtime):
+        def commit(args):
+            h.fixture.data = h.journal.load()
+            return h.fixture.commit(args)
+
+        send = Mock(side_effect=commit)
+        h.hw.mcu.lookup_query_command = Mock(side_effect=lambda command, fmt: NS(
+            send=send if command == COMMIT_FORMAT else h.fixture.query))
+        h.hw.board.startup_transport = NS(_bounded=lambda name, fn: fn())
+        h.hw._sync_factory_counter(dict(h.hw.mcu.get_constants(), M300_FACTORY_COUNTER_ABI=1,
+                                        M300_FACTORY_COUNTER_RUNTIME_ABI=int(runtime)))
+        return send
+
     def test_ready_and_post_job_checkpoint_queue_sync_without_restart(self):
         h = self.setup_controller()
-        h.hw.counter_runtime_supported = True
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertIsNone(h.journal.load())
+        self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'AWAITING_IDLE')
         with patch('payload.m300_hardware.RuntimeCounterTransport', return_value=h.transport):
             h.hw._request_factory_info()
         h.reactor.update_timer.assert_called_once_with(h.hw.counter_timer, h.reactor.NOW)
@@ -142,6 +155,51 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertEqual(h.hw.counter_timer(10.), h.reactor.NEVER)
         self.assertEqual(h.hw.get_status()['factory_print_minutes'], 303)
         self.assertEqual(h.journal.load()['committed'], 3)
+
+    def test_old_config_path_is_ignored_when_synchronizing_existing_backlog(self):
+        h = self.setup_controller(legacy_backup='removed/old-flash-dump.bin')
+        h.fixture.minutes = 286732
+        h.nvm.store.update(lambda data: data['counters'].update(print_seconds=135660.5))
+        self.startup(h, runtime=True).assert_not_called()
+        with patch('payload.m300_hardware.RuntimeCounterTransport', return_value=h.transport):
+            h.hw._request_factory_info()
+        self.assertEqual(h.hw.counter_timer(10.), h.reactor.NEVER)
+        h.transport.commit.assert_called_once_with([h.fixture.serial, 0, 286732, 288993,
+                                                    h.fixture.crc])
+        self.assertEqual(h.hw.get_status()['factory_print_minutes'], 288993)
+        self.assertEqual(h.journal.load()['committed'], 2261)
+
+    def test_startup_only_firmware_keeps_new_backlog_on_host(self):
+        h = self.setup_controller()
+        self.startup(h, runtime=False).assert_not_called()
+        h.hw._request_factory_info()
+        self.assertEqual(h.hw.get_status()['factory_print_minutes'], 300)
+        self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'MCU_ABI_UNAVAILABLE')
+        self.assertIsNone(h.hw.counter_timer)
+        self.assertIsNone(h.journal.load())
+
+    def test_startup_only_firmware_can_complete_preexisting_intent(self):
+        h = self.setup_controller()
+        h.journal.save(dict(serial='Z12345678', machine_id='m300', committed=0,
+                            last_minutes=300, pending=dict(source=0, expected=300, target=302,
+                                                           settings_crc=h.fixture.crc)))
+        h.fixture.state = 2
+        self.startup(h, runtime=False).assert_called_once()
+        self.assertEqual(h.hw.get_status()['factory_print_minutes'], 302)
+        self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'SYNCED')
+        self.assertIsNone(h.journal.load()['pending'])
+
+    def test_runtime_startup_rejects_another_printers_journal(self):
+        h = self.setup_controller()
+        h.journal.save(dict(serial='Z87654321', machine_id='m300', committed=2,
+                            last_minutes=302, pending=None))
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertIsNone(h.hw.get_status()['factory_print_minutes'])
+        self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'REFUSED')
+        h.hw.counter_runtime = h.transport
+        self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        h.transport.commit.assert_not_called()
+        self.assertIsNone(h.hw.get_status()['factory_print_minutes'])
 
     def test_active_job_heat_queue_or_service_prevents_runtime_uart_access(self):
         h = self.setup_controller()
@@ -173,12 +231,18 @@ class RuntimeSynchronizationTests(unittest.TestCase):
     def test_admission_is_rechecked_after_intent_before_uart_commit(self):
         h = self.setup_controller()
         h.hw.counter_runtime = h.transport
-        h.fixture.validate_backup.side_effect = lambda serial: h.print_state.update(state='printing')
-        self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+
+        save = CounterJournal.save
+
+        def start_print_after_save(journal, data):
+            save(journal, data)
+            h.print_state.update(state='printing')
+
+        with patch.object(CounterJournal, 'save', start_print_after_save):
+            self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
         h.transport.commit.assert_not_called()
         self.assertIsNotNone(h.journal.load()['pending'])
         self.assertEqual(h.hw.counter_sync.status, 'AWAITING_IDLE')
-        h.fixture.validate_backup.side_effect = None
         h.print_state['state'] = 'complete'
         self.assertEqual(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
         self.assertEqual(h.hw.counter_sync.status, 'SYNCED')

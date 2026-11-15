@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9).
+i użyj [paczki v1.0.0-rc.10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10).
 Ta instrukcja dotyczy hosta z działającym portem M300. [English](../en/INSTALL.md)
 
 ## 1. Zaktualizuj Klippera i Fluidd
@@ -51,14 +51,21 @@ aliasy PID oraz usuwa rozpoznane, zbędne wpisy aktualizacji strony.
 `--qualified-first-print-z` wymaga sprawdzonego mechanicznie prześwitu
 konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 
-## 2. Wgraj MCU z karty SD
+## 2. Sprawdź wersję MCU
 
-Instalator hosta pozostawia aktualny firmware MCU. Aby połączyć RC9 z
-MCU 1.0.5, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj plik
-z `MCU/M300_SD.zip` lub osobnego [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
+Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
+dołączoną do RC10, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+plik z `MCU/M300_SD.zip` lub osobnego
+[ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.
-Na zgodnym starszym MCU Klipper nadal liczy czas druku lokalnie.
-[Instalacja MCU i synchronizacja licznika](MCU_FIRMWARE_1.0.5.md).
+[Instrukcja MCU 1.0.5](MCU_FIRMWARE_1.0.5.md).
+
+Z MCU 1.0.5 synchronizacja działa automatycznie z dotychczasową konfiguracją.
+RC10 przyjmuje i ignoruje stary wpis `factory_counter_backup:`. Możesz go
+usunąć po aktualizacji hosta. Zachowaj dotychczasowe pliki licznika Klippera
+wraz z dziennikiem synchronizacji. Jeśli firmware MCU nie udostępnia
+poleceń licznika podczas normalnej pracy, Klipper dalej zlicza nowy czas
+drukowania lokalnie.
 
 ## 3. Sprawdź instalację
 
@@ -77,8 +84,8 @@ QUERY_PROBE
 Potwierdź Ready, zgodność prędkości UART po obu stronach oraz wersję
 `1.0.5`, jeśli wgrano nowe MCU. Sprawdź [fabryczną rewizję i skalę Z](../en/HARDWARE_VARIANTS.md)
 swojej płyty, np. HW04/Z800 lub HW05/Z400. Gdy dysza nie styka się ze
-stołem, sonda powinna być otwarta. Jeżeli synchronizacja jest włączona,
-sprawdź [stan licznika](MCU_FIRMWARE_1.0.5.md#włączenie-i-odczyt).
+stołem, sonda powinna być otwarta. Zobacz, jak sprawdzić
+[stan automatycznej synchronizacji licznika](MCU_FIRMWARE_1.0.5.md#odczyt-licznika).
 
 Przed pomiarem stołu sprawdź układ pól poleceniem `BED_MESH PREVIEW=1`.
 [Mesh i poziomowanie](BED_MESH_AND_LEVELING.md) · [Procedury druku](PRINT_CONTROL.md) ·

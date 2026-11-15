@@ -1,7 +1,7 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.9 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.9).
+[fixed v1.0.0-rc.10 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10).
 This guide applies to a running M300 port. [Polski](../pl/INSTALL.md)
 
 ## 1. Update Klipper and Fluidd
@@ -52,14 +52,21 @@ changes in the [configuration audit](CONFIGURATION_AUDIT.md). The
 machine-specific `--qualified-first-print-z` option requires confirmed
 mechanical clearance and is unnecessary for routine updates.
 
-## 2. Update the MCU from SD
+## 2. Check the MCU version
 
-The host updater leaves the MCU application untouched. To pair RC9 with
-MCU 1.0.5, take `MCU/M300APP.M3B` from the full release, or extract it from
-`MCU/M300_SD.zip` or the separate [MCU SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
-Use your existing M300 bootloader's SD application update procedure.
-Earlier supported MCU firmware can still be used for local print-time
-accounting. [MCU installation and counter synchronization](MCU_FIRMWARE_1.0.5.md).
+If the printer already runs MCU 1.0.5, skip the SD update. Otherwise, to use
+the paired MCU version, take `MCU/M300APP.M3B` from the full release or
+extract it from `MCU/M300_SD.zip` or the separate
+[MCU SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
+Use the SD application update procedure of the bootloader already installed
+on your M300. [MCU 1.0.5 instructions](MCU_FIRMWARE_1.0.5.md).
+
+With MCU 1.0.5, synchronization runs automatically with the current
+configuration. RC10 accepts and ignores the old `factory_counter_backup:`
+setting. You can remove that entry after updating the host. Keep the existing
+Klipper print-time files, including the synchronization journal. If the MCU
+firmware lacks the runtime counter commands, Klipper continues counting new
+print time locally.
 
 ## 3. Verify the installation
 
@@ -78,8 +85,9 @@ QUERY_PROBE
 Confirm Ready, matching host and MCU UART rates, and MCU `1.0.5` if you
 flashed it. Verify the [factory hardware revision and Z scale](HARDWARE_VARIANTS.md)
 for your board, for example HW04/Z800 or HW05/Z400. With the nozzle clear of
-the contact plate, the probe should report open. If you enabled counter
-synchronization, use the [counter status checks](MCU_FIRMWARE_1.0.5.md#enable-and-inspect).
+the contact plate, the probe should report open. Use the
+[counter status checks](MCU_FIRMWARE_1.0.5.md#read-the-counter) to verify
+automatic synchronization.
 
 Before probing, use `BED_MESH PREVIEW=1` to check the configured pad layout.
 See the [contact geometry](LEVELING.md#measured-contact-rectangles) and

@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Identify the stock M300 and optionally synchronize its print-minute counter.
+"""Identify the stock M300 and synchronize its print-minute counter.
 
-Factory Flash updates are opt-in. A runtime-capable MCU accepts them while idle.
+The runtime-capable MCU writes factory Flash while idle.
 FILEOUTPUT deliberately does not invent a factory identity or update Flash.
 """
 import json
 import logging
 import math
-import os
 from secrets import randbits
 
 from .m300_counter_sync import (COMMIT_FORMAT, RESULT_FORMAT, STATE_FORMAT,
@@ -100,7 +99,8 @@ class M300Hardware:
         self.board, self.config = board, config
         self.printer, self.mcu = board.printer, board.mcu
         self.profile = config.getchoice('z_profile', ['factory', 'config'], 'factory')
-        self.counter_backup = config.get('factory_counter_backup', '').strip()
+        # Accept configurations from releases that required a Flash image.
+        config.get('factory_counter_backup', None)
         self.counter_sync = CounterSync()
         self.counter_legacy_state = None
         self.counter_legacy_error = None
@@ -117,11 +117,10 @@ class M300Hardware:
         self.applied = False
         self.printer.register_event_handler('klippy:mcu_identify', self._identify)
         self.printer.register_event_handler('klippy:ready', self._request_factory_info)
-        if self.counter_backup:
-            self.printer.register_event_handler('m300:runtime_checkpoint', self._queue_counter)
-            self.printer.register_event_handler('klippy:shutdown', self._stop_counter)
-            self.printer.register_event_handler('klippy:disconnect', self._stop_counter)
-            self.printer.register_event_handler('gcode:request_restart', self._stop_counter)
+        self.printer.register_event_handler('m300:runtime_checkpoint', self._queue_counter)
+        self.printer.register_event_handler('klippy:shutdown', self._stop_counter)
+        self.printer.register_event_handler('klippy:disconnect', self._stop_counter)
+        self.printer.register_event_handler('gcode:request_restart', self._stop_counter)
         board.gcode.register_command('ZORTRAX_HARDWARE_STATUS', self.cmd_status,
                                      when_not_ready=True)
 
@@ -159,7 +158,7 @@ class M300Hardware:
             self.factory_info_error = str(exc)
 
     def _request_factory_info(self):
-        if (self.counter_backup and self.counter_runtime_supported
+        if (self.counter_runtime_supported and self.counter_sync.banks != 'UNAVAILABLE'
                 and self.printer.lookup_object('m300_nvm', None) is not None):
             try:
                 reactor = self.printer.get_reactor()
@@ -190,19 +189,6 @@ class M300Hardware:
             reactor = self.printer.get_reactor()
             reactor.unregister_timer(self.counter_timer)
             self.counter_timer = None
-
-    def _counter_validator(self, nvm):
-        if not self.counter_backup:
-            return None
-        from .m300_counter_backup import validate_backup
-        path = os.path.expanduser(self.counter_backup)
-
-        def validator(serial):
-            if not os.path.isabs(path):
-                raise ValueError('factory_counter_backup must be an absolute path')
-            return nvm.executor.submit(validate_backup, path, serial)
-
-        return validator
 
     def _counter_has_backlog(self, snapshot):
         return (self.counter_sync.pending or
@@ -279,7 +265,7 @@ class M300Hardware:
                 return reactor.monotonic() + delay
             self.counter_sync.run(
                 snapshot, load, lambda data: nvm.executor.submit(journal.save, data), query,
-                commit, self._counter_validator(nvm), runtime=True)
+                commit, runtime=True)
             if self.counter_sync.status == 'RECOVERY_REQUIRED':
                 self.counter_sync.error = 'MCU factory counter transfer is pending read-back or recovery'
         except (CounterRecoveryError, OSError, ValueError) as exc:
@@ -318,9 +304,8 @@ class M300Hardware:
             and self.mcu.check_valid_response(RUNTIME_RESULT_FORMAT)
             and self.mcu.check_valid_response(RUNTIME_STATE_FORMAT))
         if nvm is None:
-            if self.counter_backup:
-                self.counter_sync.status = 'HOST_NVM_UNAVAILABLE'
             if supported:
+                self.counter_sync.status = 'HOST_NVM_UNAVAILABLE'
                 query = self.mcu.lookup_query_command('m300_factory_counter_query',
                                                       STATE_FORMAT)
                 bounded = self.board.startup_transport._bounded
@@ -345,25 +330,26 @@ class M300Hardware:
             except (OSError, ValueError) as exc:
                 self.counter_legacy_error = str(exc)
                 self.counter_sync.error = str(exc)
-            if self.counter_backup or self.counter_legacy_state or self.counter_legacy_error:
-                self.counter_sync.status = 'MCU_ABI_UNAVAILABLE'
+            self.counter_sync.status = 'MCU_ABI_UNAVAILABLE'
             return
         try:
             query = self.mcu.lookup_query_command('m300_factory_counter_query', STATE_FORMAT)
-            commit = self.mcu.lookup_query_command(COMMIT_FORMAT, RESULT_FORMAT)
             bounded = self.board.startup_transport._bounded
 
             def load():
-                if self.counter_backup:
-                    return nvm.executor.submit(journal.load_for_sync, self.counter_sync.pending)
-                return nvm.executor.submit(journal.load)
+                return nvm.executor.submit(journal.load_for_sync, self.counter_sync.pending)
+
+            def commit(args):
+                command = self.mcu.lookup_query_command(COMMIT_FORMAT, RESULT_FORMAT)
+                return bounded('m300_factory_counter_commit', lambda: command.send(args))
 
             self.counter_sync.run(
                 nvm.ui_snapshot(), load,
                 lambda data: nvm.executor.submit(journal.save, data),
                 lambda: bounded('m300_factory_counter_query', query.send),
-                lambda args: bounded('m300_factory_counter_commit',
-                                     lambda: commit.send(args)), self._counter_validator(nvm))
+                commit, allow_new=False)
+            if not self.counter_runtime_supported and self.counter_sync.status == 'AWAITING_IDLE':
+                self.counter_sync.status = 'MCU_ABI_UNAVAILABLE'
         except CounterRecoveryError as exc:
             self.counter_sync.status = 'RECOVERY_REQUIRED'
             self.counter_sync.error = str(exc)
