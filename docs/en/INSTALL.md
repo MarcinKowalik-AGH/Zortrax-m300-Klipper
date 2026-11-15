@@ -1,10 +1,10 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.10 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10).
+[fixed v1.0.0-rc.11 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.11).
 This guide applies to a running M300 port. [Polski](../pl/INSTALL.md)
 
-## 1. Update Klipper and Fluidd
+## 1. Update Klipper
 
 Wait for Klipper to be Ready, with no active or paused print, movement, or
 procedure. Turn both heater targets off. Run as the account that runs Klipper
@@ -22,28 +22,20 @@ else
   git clone --depth 1 --single-branch --no-tags --branch orange-pi \
     https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
 fi &&
-python3 "$m300_dir/install-orange-pi.py" --port 4480
+python3 "$m300_dir/install-orange-pi.py"
 ```
 
 To update from the fixed release instead, extract the complete verified ZIP
-and run `python3 install-orange-pi.py --port 4480` in its root. Check the ZIP and package
+and run `python3 install-orange-pi.py` in its root. Check the ZIP and package
 SHA-256 sums using [the download steps](FIRST_INSTALL.md#3-download-the-fixed-release-package).
-Use this updater for M300 Klipper and Fluidd.
+The standard command installs the Klipper host update. It preserves the UART
+configuration, saved PID, mesh, machine settings, Fluidd website and
+preferences, and nginx configuration.
 
-The installer checks the package hashes and the installed host baseline before
-applying changes. It preserves the configured UART, saved PID, mesh and
-machine settings. The command selects the existing Fluidd endpoint on port
-4480 and saves it beside `printer.cfg`. The endpoint must already be served
-by nginx. If detection is refused, check the running configuration with
-`sudo nginx -T`. For a custom nginx layout, also pass
-`--fluidd-root /absolute/path/to/fluidd`.
-[Port detection and CI retries](../pl/INSTALLATION_AND_CI.md).
-
-Look for `INSTALLED_M300_HOST` and check the reported `host_update`,
-`fluidd_port` and `fluidd_root`. Keep the `host_receipt` and `fluidd_backup`
-paths when present. If a newly updated host fails to start or reach Ready, the
-updater uses the host receipt to restore the prior files. If installation is
-refused, keep the error and review the reported file or state before retrying.
+Look for `INSTALLED_M300_HOST` and `host_update`. Keep the `host_receipt`
+path when present. If the updated host fails to start or reach Ready, the
+updater uses the receipt to restore its prior files. If installation is
+refused, review the reported file or state before retrying.
 
 For optional configuration cleanup, add `--organize-config` to the same
 command. It separates M300 procedures, temperature tables and saved PID
@@ -62,7 +54,7 @@ Use the SD application update procedure of the bootloader already installed
 on your M300. [MCU 1.0.5 instructions](MCU_FIRMWARE_1.0.5.md).
 
 With MCU 1.0.5, synchronization runs automatically with the current
-configuration. RC10 accepts and ignores the old `factory_counter_backup:`
+configuration. Klipper accepts and ignores the old `factory_counter_backup:`
 setting. You can remove that entry after updating the host. Keep the existing
 Klipper print-time files, including the synchronization journal. If the MCU
 firmware lacks the runtime counter commands, Klipper continues counting new
@@ -70,8 +62,8 @@ print time locally.
 
 ## 3. Verify the installation
 
-Open `http://<host-IP>:4480/` and reload Fluidd without the browser cache.
-In the console, run these read-only checks:
+In the existing Fluidd console at `http://<host-IP>:4480/`, run these
+read-only checks:
 
 ```gcode
 STATUS
@@ -94,6 +86,54 @@ See the [contact geometry](LEVELING.md#measured-contact-rectangles) and
 [print validation steps](PRINT_CONTEXT.md). [Models from SD](MODELS_SD.md) ·
 [OLED and Fluidd controls](RC1_UI.md) · [Illustrated OLED manual](../pl/OLED_FUNCTIONS.md)
 
+## Update or repair Fluidd
+
+Use this command when you explicitly want to update the website or repair a
+recognized M300 Fluidd deployment. It uses the existing nginx site on 4480
+and can run when Klipper or Moonraker is unavailable.
+
+```bash
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480
+```
+
+For an extracted release ZIP, run the same command with
+`python3 install-orange-pi.py` from its root. For a custom nginx layout,
+`--fluidd-root /absolute/path/to/fluidd` can point to the verified existing
+web directory. The update preserves the nginx configuration, `config.json`
+and Fluidd preferences. Look for `INSTALLED_M300_FLUIDD` and keep the
+`fluidd_root` and `fluidd_backup` paths. A matching, usable site may be
+reused, with `fluidd_backup` reported as `null`. When the local HTTP route
+can be verified, the installer checks the new HTML and JavaScript and
+restores the previous directory if that check fails.
+[Port detection and CI retries](../pl/INSTALLATION_AND_CI.md).
+
+## Diagnose a blank or unreachable Fluidd page
+
+Run these checks over SSH on the host:
+
+```bash
+base=http://127.0.0.1:4480
+curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
+  --write-out 'Fluidd: HTTP %{http_code}, %{size_download} bytes\n' "$base/"
+curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
+  --write-out 'Moonraker via nginx: HTTP %{http_code}\n' "$base/server/info"
+```
+
+- **HTTP 200 with 0 bytes for Fluidd** means the HTML response is empty.
+  Find the active 4480 site with `sudo nginx -T` and check its `index.html`.
+  For a recognized M300 deployment, run the explicit Fluidd repair above.
+- **HTTP 403 or 404 for Fluidd** calls for checking the 4480 site root,
+  the file's existence and whether the nginx worker can read it.
+- **HTTP 000 or a connection error** calls for checking nginx with
+  `sudo nginx -t`, `systemctl is-active nginx` and `sudo ss -ltnp`.
+  If the site binds to a specific LAN address, use it instead of
+  `127.0.0.1` in the checks.
+- **Fluidd HTML works but Moonraker returns 502** calls for checking
+  `systemctl is-active moonraker` and the site's Moonraker proxy.
+- **Fluidd HTML arrives but the browser is blank** calls for checking the
+  main `assets/index-*.js` request in the browser's Network panel. It
+  should return JavaScript. Test the URL in a private browser window.
+
 ## Restore a prior host update
 
 To restore the host manually while the printer is idle, take `root` and
@@ -113,7 +153,12 @@ fi
 For an extracted ZIP, use its `M300_HOST` directory instead. Confirm the
 rollback reports `ROLLED_BACK_M300_HOST`. If it restored `moonraker.conf`, run
 `sudo systemctl restart moonraker.service`. If it refused a later edit, preserve
-the edit and review the reported file before retrying. For a separate Fluidd
-rollback, use the reported `fluidd_backup`
-and `fluidd_root` paths. Move the current web directory aside, restore the
-saved directory to `fluidd_root`, then run `sudo systemctl reload nginx`.
+the edit and review the reported file before retrying.
+
+## Restore the previous Fluidd website
+
+Use the `fluidd_root` and nonempty `fluidd_backup` paths reported by the
+installer. Confirm that the backup contains the working `index.html` and
+`assets`. Move the current web directory aside and move the backup into
+`fluidd_root`. Then run `sudo nginx -t && sudo systemctl reload nginx` and
+repeat the HTTP checks above.

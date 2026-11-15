@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Install the verified M300 Classic host and Fluidd on an existing Orange Pi."""
+"""Update M300 Classic Klipper, with a separate opt-in Fluidd web update."""
 import argparse
+from contextlib import closing
 import hashlib
+from http.client import HTTPConnection, HTTPException
 import json
 import math
 import os
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -19,6 +22,9 @@ PACKAGE = Path(__file__).resolve().parent
 MOONRAKER = 'http://127.0.0.1:7125'
 DEFAULT_FLUIDD_PORT = 4480
 INSTALL_STATE_NAME = '.m300-installer.json'
+LEGACY_WEB_MARKER = '.m300-fluidd-build'
+HTML_CONTENT_TYPES = ('text/html',)
+JS_CONTENT_TYPES = ('application/javascript', 'text/javascript', 'application/x-javascript')
 OLD_PAD_GEOMETRY_ERROR = 'pad widths and edge_margin must leave a positive inset (width <= 100 mm)'
 BUGGY_MAINTENANCE_SHA256 = '16ca09b60c14c2503b5a77bce1c7f7b939938161b9953e55a4d06a9268da3a88'
 BUSY_OBJECTS = ('m300_job', 'm300_motion', 'm300_filament',
@@ -139,12 +145,15 @@ def nginx_root(config, port):
     return Path(root)
 
 
-def verified_web_root(path):
+def verified_web_root(path, *, repair_source=None):
     root = path.resolve(strict=True)
-    index = (root / 'index.html').read_text(encoding='utf-8').lower()
-    if '<title>fluidd</title>' not in index or len(root.parts) < 3 or (root / '.git').exists():
-        raise ValueError(f'Expected a dedicated Fluidd web directory at {root}')
-    return root
+    if len(root.parts) >= 3 and not (root / '.git').exists():
+        index = root / 'index.html'
+        if '<title>fluidd</title>' in index.read_text(encoding='utf-8').lower():
+            return root
+        if recoverable_web_files(root, repair_source):
+            return root
+    raise ValueError(f'Expected a dedicated Fluidd web directory at {root}')
 
 
 
@@ -180,25 +189,28 @@ def load_install_state(config_dir):
                          'to select the real endpoint again') from exc
 
 
-def select_fluidd(config, port=None, root=None, saved=None):
+def select_fluidd(config, port=None, root=None, saved=None, *, repair_source=None):
     """Explicit arguments > revalidated receipt > 4480 > one unique Fluidd.
 
     Never edit nginx, migrate ports, trust an unverified remembered directory,
     or guess when two installations are present. Legacy 4080/80 installations
     are accepted only if identification is unambiguous or explicitly requested.
     """
+    def verify(path):
+        return verified_web_root(path, repair_source=repair_source)
+
     if port is not None:
         port = valid_port(port)
-        candidate = verified_web_root(root or nginx_root(config, port))
+        candidate = verify(root or nginx_root(config, port))
         return candidate, port, 'explicit'
     if root is not None:
-        candidate = verified_web_root(root)
+        candidate = verify(root)
         matches = []
         for site in nginx_sites(config):
             for value in site['ports']:
                 try:
                     number = valid_port(value)
-                    if verified_web_root(nginx_root(config, number)) == candidate:
+                    if verify(nginx_root(config, number)) == candidate:
                         matches.append(number)
                 except (ValueError, OSError):
                     continue
@@ -212,7 +224,7 @@ def select_fluidd(config, port=None, root=None, saved=None):
     if saved is not None:
         number = valid_port(saved['fluidd_port'])
         try:
-            candidate = verified_web_root(nginx_root(config, number))
+            candidate = verify(nginx_root(config, number))
             if str(candidate) != saved['fluidd_root']:
                 raise ValueError('Saved web root changed')
         except (ValueError, OSError) as exc:
@@ -223,13 +235,13 @@ def select_fluidd(config, port=None, root=None, saved=None):
     if any(str(DEFAULT_FLUIDD_PORT) in site['ports'] for site in sites):
         # Ambiguity at the preferred port is an error, not a reason to silently
         # update an unrelated second server on a different port.
-        return (verified_web_root(nginx_root(config, DEFAULT_FLUIDD_PORT)),
+        return (verify(nginx_root(config, DEFAULT_FLUIDD_PORT)),
                 DEFAULT_FLUIDD_PORT, 'default-4480')
     candidates = set()
     for value in set().union(*(site['ports'] for site in sites)):
         try:
             number = valid_port(value)
-            candidate = verified_web_root(nginx_root(config, number))
+            candidate = verify(nginx_root(config, number))
             candidates.add((candidate, number))
         except (ValueError, OSError):
             continue
@@ -257,10 +269,108 @@ def save_install_state(config_dir, root, port):
         Path(name).unlink(missing_ok=True)
     return target
 
-def deploy_web(source, root, build_id, *, execute=run):
-    marker = root / '.m300-fluidd-build'
-    if marker.is_file() and marker.read_text().strip() == build_id:
+def extract_web(archive, destination):
+    with ZipFile(archive) as bundle:
+        for name in bundle.namelist():
+            if Path(name).is_absolute() or '..' in Path(name).parts:
+                raise ValueError('Unsafe Fluidd archive member')
+        bundle.extractall(destination)
+    source = verified_web_root(destination / 'fluidd-m300')
+    for path in source.rglob('*'):
+        path.chmod(0o755 if path.is_dir() else 0o644)
+    return source
+
+
+def same_web_contents(source, root, *, http_verified):
+    ignored = {Path(LEGACY_WEB_MARKER)}
+    if (root / 'config.json').is_file():
+        ignored.add(Path('config.json'))
+
+    def paths(directory):
+        return {path.relative_to(directory): path for path in directory.rglob('*')
+                if path.relative_to(directory) not in ignored}
+
+    try:
+        new, old = paths(source), paths(root)
+        if new.keys() != old.keys():
+            return False
+        for name, incoming in new.items():
+            existing = old[name]
+            required = 0o005 if incoming.is_dir() else 0o004
+            if (existing.is_symlink() or incoming.is_dir() != existing.is_dir()
+                    or (not http_verified and existing.stat().st_mode & required != required)):
+                return False
+            if incoming.is_file() and (not existing.is_file()
+                                       or incoming.read_bytes() != existing.read_bytes()):
+                return False
+    except OSError:
+        return False
+    return True
+
+
+def web_probe_files(root):
+    index = (root / 'index.html').read_bytes()
+    asset = re.search(rb'\bsrc=["\'](?:\./|/)?(assets/[\w.-]+-[\w-]+\.js)["\']', index)
+    if asset:
+        name = asset[1].decode('ascii')
+        return (('/', index, HTML_CONTENT_TYPES),
+                ('/' + name, (root / name).read_bytes(), JS_CONTENT_TYPES))
+    return ()
+
+
+def recoverable_web_files(root, source):
+    index = root / 'index.html'
+    if (source is None or index.is_symlink() or not index.is_file()
+            or index.stat().st_size != 0):
+        return ()
+    try:
+        files = web_probe_files(source)
+        if not files:
+            return ()
+        script, data, _ = files[1]
+        manifest = 'manifest.webmanifest'
+        for name, data in ((script.lstrip('/'), data), (manifest, (source / manifest).read_bytes())):
+            existing = root / name
+            if (existing.resolve() != existing or not existing.is_file()
+                    or existing.read_bytes() != data):
+                return ()
+    except OSError:
+        return ()
+    return (('/', b'', HTML_CONTENT_TYPES), files[1])
+
+
+def web_responds(host, port, files):
+    try:
+        with closing(HTTPConnection(host, port, timeout=2)) as connection:
+            for path, expected, content_types in files:
+                connection.request('GET', f'{path}?m300_probe={time.monotonic_ns()}',
+                                   headers={'Cache-Control': 'no-cache'})
+                with connection.getresponse() as response:
+                    if (response.status != 200 or response.headers.get_content_type() not in content_types
+                            or response.read(len(expected) + 1) != expected):
+                        return False
+    except (OSError, HTTPException):
+        return False
+    return bool(files)
+
+
+def local_web_host(root, port, *, repair_source=None):
+    if port is None:
         return None
+    try:
+        files = web_probe_files(root) or recoverable_web_files(root, repair_source)
+    except OSError:
+        return None
+    return next((host for host in ('127.0.0.1', '::1') if web_responds(host, port, files)), None)
+
+
+def deploy_web(source, root, *, port=None, execute=run):
+    local_host = local_web_host(root, port, repair_source=source)
+    if same_web_contents(source, root, http_verified=local_host is not None):
+        return None
+    expected = web_probe_files(source) if local_host is not None else ()
+    if local_host is not None and not expected:
+        raise ValueError('Missing a hashed Fluidd JavaScript entrypoint in the package')
     stage = Path(execute('sudo', 'mktemp', '-d', '--tmpdir=' + str(root.parent),
                          '.m300-fluidd.XXXXXX', capture=True).strip())
     backup = stage.with_name(stage.name + '.previous')
@@ -272,13 +382,24 @@ def deploy_web(source, root, build_id, *, execute=run):
         execute('sudo', 'chmod', '--reference=' + str(root), stage)
         execute('sudo', 'chown', '--reference=' + str(root), stage)
         execute('sudo', 'mv', '-T', '--', root, backup)
+        reloaded = False
         try:
             execute('sudo', 'mv', '-T', '--', stage, root)
             execute('sudo', 'systemctl', 'reload', 'nginx')
-        except (subprocess.CalledProcessError, KeyboardInterrupt):
+            reloaded = True
+            if local_host is not None:
+                for _ in range(3):
+                    if web_responds(local_host, port, expected):
+                        break
+                    time.sleep(.2)
+                else:
+                    raise ValueError(f'Fluidd did not serve the deployed page and JavaScript on port {port}')
+        except BaseException:
             if not stage.exists():
                 execute('sudo', 'mv', '-T', '--', root, stage)
             execute('sudo', 'mv', '-T', '--', backup, root)
+            if reloaded:
+                execute('sudo', 'systemctl', 'reload', 'nginx')
             raise
     finally:
         execute('sudo', 'rm', '-rf', '--', stage)
@@ -362,11 +483,36 @@ def wait_ready():
     raise ValueError(f'Klipper did not reach Ready after the host update: {reason}')
 
 
+def update_fluidd(args):
+    run('sudo', '-v')
+    config = run('sudo', 'nginx', '-T', capture=True)
+    saved = None
+    if args.port is None and args.fluidd_root is None:
+        try:
+            config_file = printer('/printer/info')['config_file']
+        except (OSError, ValueError, KeyError):
+            pass
+        else:
+            saved = load_install_state(Path(config_file).parent)
+    with tempfile.TemporaryDirectory(prefix='m300-fluidd-') as temp:
+        source = extract_web(PACKAGE / 'M300_FLUIDD.zip', Path(temp))
+        root, port, selection = select_fluidd(
+            config, args.port, args.fluidd_root, saved, repair_source=source)
+        print(json.dumps(dict(status='FLUIDD_ENDPOINT_SELECTED', fluidd_port=port,
+                              fluidd_root=str(root), source=selection)))
+        backup = deploy_web(source, root, port=port)
+    print(json.dumps(dict(status='INSTALLED_M300_FLUIDD', fluidd_root=str(root),
+                          fluidd_port=port, selection=selection,
+                          fluidd_backup=str(backup) if backup else None, mcu_flashed=False)))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--update-fluidd', action='store_true',
+                        help='Update the Fluidd web files only; leave Klipper and Moonraker alone')
     parser.add_argument('--port', type=valid_port, default=None,
-                        help='Existing Fluidd port (saved selection, then 4480, then unique nginx detection)')
-    parser.add_argument('--fluidd-root', type=Path, help='Override nginx web root detection')
+                        help='With --update-fluidd, select the existing Fluidd port (default 4480)')
+    parser.add_argument('--fluidd-root', type=Path, help='Override web root detection with --update-fluidd')
     parser.add_argument('--organize-config', action='store_true',
                         help='Organize current configuration, retaining hardware values and saved PID')
     parser.add_argument('--qualified-first-print-z', action='store_true',
@@ -374,12 +520,17 @@ def main():
     parser.add_argument('--repair-startup',action='store_true',
                         help='Repair the verified R29 early-status crash while Shutdown; no MCU reset')
     args = parser.parse_args()
+    if args.update_fluidd and (args.organize_config or args.qualified_first_print_z or args.repair_startup):
+        parser.error('--update-fluidd is a separate operation from Klipper host options')
     if not (PACKAGE / 'SHA256SUMS').is_file():
         parser.exit(1, 'Run this installer from the extracted GitHub Actions artifact.\n')
     if os.geteuid() == 0:
         parser.exit(1, 'Run as the Klipper account on the Orange Pi.\n')
     try:
         run('sha256sum', '-c', '--quiet', 'SHA256SUMS', cwd=PACKAGE)
+        if args.update_fluidd:
+            update_fluidd(args)
+            return
         info = require_idle(repair_startup=args.repair_startup)
         host = PACKAGE / 'M300_HOST'
         host_args = ('--root', info['klipper_path'], '--config', info['config_file'])
@@ -389,37 +540,14 @@ def main():
             host_args += ('--qualified-first-print-z',)
         plan = json.loads(run(sys.executable, 'install.py', *host_args, cwd=host, capture=True))
         run('sudo', '-v')
+        host_receipt = apply_host(host, host_args, plan, repair_startup=args.repair_startup)
         if args.repair_startup:
-            # Repair the host before requiring Ready or deploying the web UI.
-            # Hardware/MCU latches still require the operator's explicit reset.
-            host_receipt = apply_host(host,host_args,plan,repair_startup=True)
             print(json.dumps(dict(status='REPAIRED_M300_SERVICE_STARTUP',
                 next_command='FIRMWARE_RESTART',mcu_flashed=False,mcu_reset=False,
                 host_update=plan['host_update'],host_receipt=host_receipt)))
             return
-        config = run('sudo', 'nginx', '-T', capture=True)
-        config_dir = Path(info['config_file']).parent
-        saved = load_install_state(config_dir) if args.port is None and args.fluidd_root is None else None
-        root, fluidd_port, selection = select_fluidd(config, args.port, args.fluidd_root, saved)
-        print(json.dumps(dict(status='FLUIDD_ENDPOINT_SELECTED', fluidd_port=fluidd_port,
-                              fluidd_root=str(root), source=selection)))
-        archive = PACKAGE / 'M300_FLUIDD.zip'
-        build_id = hashlib.sha256(archive.read_bytes()).hexdigest()
-        with tempfile.TemporaryDirectory(prefix='m300-fluidd-') as temp:
-            with ZipFile(archive) as bundle:
-                bundle.extractall(temp)
-            source = verified_web_root(Path(temp) / 'fluidd-m300')
-            (source / '.m300-fluidd-build').write_text(build_id + '\n')
-            host_receipt = apply_host(host, host_args, plan)
-            run(sys.executable, 'setup_fluidd.py', '--apply', '--config-directory',
-                Path(info['config_file']).parent, cwd=host)
-            backup = deploy_web(source, root, build_id)
-        receipt = save_install_state(config_dir, root, fluidd_port)
-        print(json.dumps({'status': 'INSTALLED_M300_HOST', 'fluidd_root': str(root),
-                          'host_update': plan['host_update'], 'host_receipt': host_receipt,
-                          'fluidd_port': fluidd_port, 'selection': selection,
-                          'install_state': str(receipt),
-                          'fluidd_backup': str(backup) if backup else None, 'mcu_flashed': False}))
+        print(json.dumps(dict(status='INSTALLED_M300_HOST', host_update=plan['host_update'],
+                              host_receipt=host_receipt, mcu_flashed=False)))
     except (ValueError, OSError, KeyError, IndexError, TypeError, subprocess.CalledProcessError) as exc:
         parser.exit(1, f'M300 installation stopped: {exc}\n')
 

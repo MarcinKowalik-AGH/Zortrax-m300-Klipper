@@ -125,12 +125,14 @@ class FirstInstallTest(unittest.TestCase):
         self.prepare_runtime()
         calls=[]
         backup=fresh.install(self.package,self.root,self.data,Path('/python'),Path('/dev/ttyS1'),750000,
-                             self.web,execute=lambda *a,**kw:self.execute(calls,*a,**kw))
+                             self.web,fluidd_port=4480,execute=lambda *a,**kw:self.execute(calls,*a,**kw))
         self.assertEqual((backup/'klipper/klippy/klippy.py').read_text(),'stock')
         self.assertEqual((backup/'printer.cfg').read_text(),'[include fluidd.cfg]\n')
         self.assertIn('park_x: 300',(self.config.parent/'m300_services.cfg').read_text())
         self.assertIn('new',(self.web/'index.html').read_text())
         self.assertEqual((self.web/'config.json').read_text(),'{"custom":true}')
+        receipt = json.loads((self.config.parent/'.m300-installer.json').read_text())
+        self.assertEqual((receipt['fluidd_root'], receipt['fluidd_port']), (str(self.web), 4480))
         self.assertFalse(any(a and a[0] in ('G28','M104','M140','FIRMWARE_RESTART') for a in calls))
         self.assertNotIn('update_manager klipper',self.moon.read_text())
         pip = next(args for args in calls if args[1:4] == ('-m', 'pip', 'install'))

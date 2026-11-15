@@ -119,7 +119,11 @@ Nie wyłączaj silników, nie wykonuj bazowania i nie przestawiaj osi ręcznie p
 
 ## 8. Aktualizacja i kontrola wersji
 
-Zachowaj kopię konfiguracji. Przy Ready, bez wydruku i aktywnej procedury, użyj poleceń z [README](../../README_PL.md). Instalator nie aktualizuje firmware MCU samoczynnie. W razie komunikatu o nieznanych plikach przerwij, zachowaj raport i porównaj lokalne zmiany; nie obchodź kontroli sum.
+Poczekaj na stan Ready, zakończ wydruk i aktywne procedury oraz wyłącz cele
+grzania. Użyj [instrukcji aktualizacji Klippera](INSTALL.md). Standardowa
+aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
+MCU 1.0.5 wystarczy aktualizacja Klippera. W razie komunikatu o nieznanych
+plikach zachowaj raport i porównaj lokalne zmiany.
 
 Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
@@ -143,6 +147,9 @@ Nie uruchamiaj aktualizacji na podstawie samej informacji, że powstał commit l
 
 Publikacja wydania wymaga udanej budowy oraz kontroli paczki. Ta instrukcja **nie deklaruje stałego automatycznego naprawiania błędów** — funkcji tej nie dodają dzisiejsze zmiany frontendu. [Zakres weryfikacji](DOCUMENTATION_CHECK.md).
 
-## Aktualizacja zasad beta.23
+## Port Fluidd i ponawianie CI
 
-Port użytkownika to **4480**. Instalator zapisuje potwierdzony wybór poza repozytorium i ponownie porównuje go z nginx. Nowy [automat CI](INSTALLATION_AND_CI.md) ponawia wyłącznie rozpoznane przejściowe awarie, najwyżej dwa razy; nadal **nie deklaruje automatycznego naprawiania błędów kodu**. [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) rozdziela potwierdzenia użytkownika i testy programowe. Aktualny opis START 2Y + 2X jest w [PRINT_CONTROL](PRINT_CONTROL.md).
+Fluidd działa na porcie **4480**. Do zmiany plików strony służy osobna
+[aktualizacja albo naprawa Fluidd](INSTALL.md#zaktualizuj-lub-napraw-fluidd).
+[Automat CI](INSTALLATION_AND_CI.md) ponawia wyłącznie rozpoznane przejściowe
+awarie, najwyżej dwa razy, i **nie deklaruje automatycznego naprawiania błędów kodu**. [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) rozdziela potwierdzenia użytkownika i testy programowe. Aktualny opis START 2Y + 2X jest w [PRINT_CONTROL](PRINT_CONTROL.md).

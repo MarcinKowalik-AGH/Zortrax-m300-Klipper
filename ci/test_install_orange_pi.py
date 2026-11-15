@@ -1,11 +1,18 @@
 """Validate the deployment helper without changing a real web root or service."""
 from pathlib import Path
+from functools import partial
 import hashlib
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
+import stat
 import subprocess
+import sys
 import tempfile
+from threading import Thread
 import unittest
 from unittest.mock import patch
+from zipfile import ZipFile, ZipInfo
 
 import install_orange_pi as installer
 
@@ -126,6 +133,59 @@ class OrangePiInstallerTest(unittest.TestCase):
     def test_normal_update_does_not_select_qualified_geometry(self):
         self.check_geometry_flag(False)
 
+    def test_default_update_never_checks_or_changes_fluidd(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp)
+            (package / 'SHA256SUMS').touch()
+            info = {'klipper_path': '/home/klipper/klipper', 'config_file': '/config/printer.cfg'}
+            plan = {'status': 'PLAN_M300_HOST', 'host_update': '1.0.0-rc.11'}
+            with patch.object(installer, 'PACKAGE', package), \
+                 patch.object(installer.os, 'geteuid', return_value=1000), \
+                 patch.object(sys, 'argv', ['install-orange-pi.py', '--port', '4480']), \
+                 patch.object(installer, 'require_idle', return_value=info), \
+                 patch.object(installer, 'apply_host', return_value='/receipt.json') as apply, \
+                 patch.object(installer, 'update_fluidd') as web, \
+                 patch.object(installer, 'run', return_value=json.dumps(plan)) as run, \
+                 patch('builtins.print') as report:
+                installer.main()
+            web.assert_not_called()
+            apply.assert_called_once_with(package / 'M300_HOST', (
+                '--root', info['klipper_path'], '--config', info['config_file']),
+                plan, repair_startup=False)
+            self.assertEqual([call.args[:2] for call in run.call_args_list],
+                             [('sha256sum', '-c'), (sys.executable, 'install.py'), ('sudo', '-v')])
+            self.assertEqual(json.loads(report.call_args.args[0]), {
+                'status': 'INSTALLED_M300_HOST', 'host_update': '1.0.0-rc.11',
+                'host_receipt': '/receipt.json', 'mcu_flashed': False})
+
+    def test_explicit_fluidd_update_is_web_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp)
+            (package / 'SHA256SUMS').touch()
+            root = package / 'fluidd'
+            source = package / 'staged'
+            backup = package / '.m300-fluidd.123.previous'
+            arguments = ['install-orange-pi.py', '--update-fluidd', '--port', '4480']
+            with patch.object(installer, 'PACKAGE', package), \
+                 patch.object(installer.os, 'geteuid', return_value=1000), \
+                 patch.object(sys, 'argv', arguments), patch.object(installer, 'printer') as printer, \
+                 patch.object(installer, 'require_idle') as idle, \
+                 patch.object(installer, 'apply_host') as apply, \
+                 patch.object(installer, 'extract_web', return_value=source), \
+                 patch.object(installer, 'select_fluidd', return_value=(root, 4480, 'explicit')), \
+                 patch.object(installer, 'deploy_web', return_value=backup) as deploy, \
+                 patch.object(installer, 'run') as run, patch('builtins.print') as report:
+                installer.main()
+            for host_call in (printer, idle, apply):
+                host_call.assert_not_called()
+            deploy.assert_called_once_with(source, root, port=4480)
+            self.assertEqual([call.args[:2] for call in run.call_args_list],
+                             [('sha256sum', '-c'), ('sudo', '-v'), ('sudo', 'nginx')])
+            self.assertEqual(json.loads(report.call_args.args[0]), {
+                'status': 'INSTALLED_M300_FLUIDD', 'fluidd_root': str(root),
+                'fluidd_port': 4480, 'selection': 'explicit',
+                'fluidd_backup': str(backup), 'mcu_flashed': False})
+
     def check_geometry_flag(self, enabled):
         import sys
         from unittest.mock import patch
@@ -180,12 +240,12 @@ class OrangePiInstallerTest(unittest.TestCase):
     def test_web_update_preserves_config_and_backup_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             source, root = self.web_paths(Path(tmp))
-            backup = installer.deploy_web(source, root, 'new', execute=self.local_run)
+            backup = installer.deploy_web(source, root, execute=self.local_run)
             self.assertEqual((backup / 'index.html').read_text(), 'old')
             self.assertEqual((root / 'index.html').read_text(), 'new')
             self.assertEqual((root / 'config.json').read_text(), '{"custom":true}')
             with patch.object(installer, 'run') as run:
-                self.assertIsNone(installer.deploy_web(source, root, 'new', execute=run))
+                self.assertIsNone(installer.deploy_web(source, root, execute=run))
             run.assert_not_called()
 
     def test_failed_nginx_reload_restores_web_root(self):
@@ -198,17 +258,118 @@ class OrangePiInstallerTest(unittest.TestCase):
                 return self.local_run(sudo, *args, **kwargs)
 
             with self.assertRaises(subprocess.CalledProcessError):
-                installer.deploy_web(source, root, 'new', execute=fail_reload)
+                installer.deploy_web(source, root, execute=fail_reload)
             self.assertEqual((root / 'index.html').read_text(), 'old')
             self.assertEqual((root / 'config.json').read_text(), '{"custom":true}')
             self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ['new', 'web'])
+
+    def test_web_repack_normalizes_modes_and_skips_equal_healthy_contents(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            first, second = base / 'first.zip', base / 'second.zip'
+            index, asset = self.fixture_site()
+            for year, archive in ((2025, first), (2026, second)):
+                with ZipFile(archive, 'w') as bundle:
+                    bundle.writestr(ZipInfo('fluidd-m300/index.html', (year, 1, 1, 0, 0, 0)), index)
+                    bundle.writestr('fluidd-m300/' + asset, 'new JavaScript')
+            self.assertNotEqual(first.read_bytes(), second.read_bytes())
+            old_umask = os.umask(0o077)
+            try:
+                source = installer.extract_web(first, base / 'first')
+                identical = installer.extract_web(second, base / 'second')
+            finally:
+                os.umask(old_umask)
+            for name in ('index.html', asset):
+                self.assertEqual(stat.S_IMODE((source / name).stat().st_mode), 0o644)
+            self.assertEqual(stat.S_IMODE((source / 'assets').stat().st_mode), 0o755)
+            root = base / 'web'
+            root.mkdir(mode=0o755)
+            (root / 'index.html').write_text('old')
+            installer.deploy_web(source, root, execute=self.local_run)
+            (root / installer.LEGACY_WEB_MARKER).write_text('sha-of-the-previous-zip\n')
+            with patch.object(installer, 'run') as run:
+                self.assertIsNone(installer.deploy_web(identical, root, execute=run))
+            run.assert_not_called()
+            (root / asset).chmod(0o600)
+            (root / 'assets').chmod(0o700)
+            self.assertIsNotNone(installer.deploy_web(identical, root, execute=self.local_run))
+            self.assertEqual(stat.S_IMODE((root / asset).stat().st_mode), 0o644)
+            self.assertEqual(stat.S_IMODE((root / 'assets').stat().st_mode), 0o755)
+
+    def test_zero_byte_index_only_recovers_known_fluidd_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source, root = self.web_paths(Path(tmp))
+            index, asset = self.fixture_site()
+            for directory in (source, root):
+                (directory / 'assets').mkdir()
+                (directory / asset).write_text('packaged Fluidd JavaScript')
+                (directory / 'manifest.webmanifest').write_text('{"name":"Fluidd"}')
+            (source / 'index.html').write_text(index)
+            (root / 'index.html').write_bytes(b'')
+            config = f'server {{ listen 4480; root {root}; }}'
+            self.assertEqual(installer.select_fluidd(config, 4480, repair_source=source)[0], root)
+            (root / asset).write_text('foreign JavaScript')
+            with self.assertRaisesRegex(ValueError, 'dedicated Fluidd'):
+                installer.select_fluidd(config, 4480, repair_source=source)
+            (root / asset).write_text('packaged Fluidd JavaScript')
+            with patch.object(installer, 'web_responds', return_value=True) as responds:
+                installer.deploy_web(source, root, port=4480, execute=self.local_run)
+            before, after = [call.args[2] for call in responds.call_args_list]
+            self.assertEqual(before[0], ('/', b'', ('text/html',)))
+            self.assertEqual(after[0], ('/', index.encode(), ('text/html',)))
+            self.assertEqual(before[1], after[1])
+            self.assertEqual((root / 'index.html').read_text(), index)
+
+    def test_web_http_asset_failure_restores_prior_site_after_successful_reload(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source, root = self.web_paths(Path(tmp))
+            index, asset = self.fixture_site()
+            for directory in (source, root):
+                (directory / 'index.html').write_text(index)
+                (directory / 'assets').mkdir()
+                (directory / asset).write_text(directory.name)
+            reloads = []
+
+            class Handler(SimpleHTTPRequestHandler):
+                def log_message(self, *args):
+                    pass
+
+                def do_GET(self):
+                    if len(reloads) == 1 and self.path.startswith('/assets/'):
+                        self.send_error(403)
+                    else:
+                        super().do_GET()
+
+            def execute(sudo, *args, **kwargs):
+                if args[0] == 'systemctl':
+                    reloads.append(args)
+                return self.local_run(sudo, *args, **kwargs)
+
+            with ThreadingHTTPServer(('127.0.0.1', 0), partial(Handler, directory=root)) as server:
+                server_thread = Thread(target=server.serve_forever, daemon=True)
+                server_thread.start()
+                try:
+                    port = server.server_address[1]
+                    self.assertEqual(installer.local_web_host(root, port), '127.0.0.1')
+                    with self.assertRaisesRegex(ValueError, 'did not serve'):
+                        installer.deploy_web(source, root, port=port, execute=execute)
+                    self.assertEqual((root / asset).read_text(), 'web')
+                    self.assertEqual(installer.local_web_host(root, port), '127.0.0.1')
+                    self.assertEqual(len(reloads), 2)
+                finally:
+                    server.shutdown()
+                    server_thread.join()
+
+    @staticmethod
+    def fixture_site():
+        asset = 'assets/index-DJ1P78PQ.js'
+        return f'<title>Fluidd</title><script type="module" src="./{asset}"></script>', asset
 
     @staticmethod
     def web_paths(parent):
         source, root = parent / 'new', parent / 'web'
         source.mkdir()
         root.mkdir()
-        (source / '.m300-fluidd-build').write_text('new\n')
         (source / 'index.html').write_text('new')
         (root / 'index.html').write_text('old')
         (root / 'config.json').write_text('{"custom":true}')

@@ -133,13 +133,4 @@ class SelectionTests(unittest.TestCase):
             with self.subTest(value=v),self.assertRaises(ValueError):m.valid_port(v)
         for v in (1,4480,'4480',65535):self.assertEqual(m.valid_port(v),int(v))
 
-    def test_receipt_saved_only_after_deployment(self):
-        # Verify the actual entry point orders writes after deployment and readiness.
-        import inspect
-        source=inspect.getsource(m.main)
-        self.assertLess(source.index('backup = deploy_web('),source.index('receipt = save_install_state('))
-        self.assertLess(source.index('require_idle('),source.index('root, fluidd_port'))
-        self.assertIn("args.port is None and args.fluidd_root is None",source)
-
-
 if __name__=='__main__':unittest.main(verbosity=2)

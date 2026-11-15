@@ -1,10 +1,10 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.10](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.10).
+i użyj [paczki v1.0.0-rc.11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.11).
 Ta instrukcja dotyczy hosta z działającym portem M300. [English](../en/INSTALL.md)
 
-## 1. Zaktualizuj Klippera i Fluidd
+## 1. Zaktualizuj Klippera
 
 Poczekaj na stan Ready. Zakończ wydruk lub wstrzymaną sesję, zaczekaj na
 zakończenie ruchów i procedur, wyłącz oba cele grzania. Uruchom polecenia z
@@ -23,27 +23,20 @@ else
   git clone --depth 1 --single-branch --no-tags --branch orange-pi \
     https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
 fi &&
-python3 "$m300_dir/install-orange-pi.py" --port 4480
+python3 "$m300_dir/install-orange-pi.py"
 ```
 
 Aby zainstalować konkretną wersję, rozpakuj jej pełny ZIP i uruchom
-`python3 install-orange-pi.py --port 4480` w katalogu głównym paczki. Sprawdź sumy ZIP-a i
+`python3 install-orange-pi.py` w katalogu głównym paczki. Sprawdź sumy ZIP-a i
 jego zawartości zgodnie z [krokiem pobierania](FIRST_INSTALL.md#3-pobranie-wersjonowanej-paczki).
-Do aktualizacji Klippera i Fluidd używaj instalatora M300.
+Polecenie domyślne aktualizuje hosta Klippera i zachowuje konfigurację UART,
+zapisane PID, mesh, ustawienia maszyny, stronę i preferencje Fluidd oraz
+konfigurację nginx.
 
-Instalator sprawdza sumy i wersję plików hosta przed zapisem. Zachowuje
-konfigurację UART, zapisane PID, mesh i ustawienia maszyny. Polecenie wybiera
-działający Fluidd na porcie 4480 i zapisuje wybór obok `printer.cfg`.
-Nginx musi już udostępniać stronę na tym porcie. Jeśli instalator odmówi
-wyboru, sprawdź aktywną konfigurację przez `sudo nginx -T`. Niestandardowy
-układ może wymagać także `--fluidd-root /bezwzględna/ścieżka/do/fluidd`.
-[Wybór portu i ponawianie CI](INSTALLATION_AND_CI.md).
-
-Sprawdź wynik `INSTALLED_M300_HOST` oraz pola `host_update`, `fluidd_port` i
-`fluidd_root`. Zachowaj podane ścieżki `host_receipt` i `fluidd_backup`.
-Jeśli po wymianie plików host nie wystartuje lub nie osiągnie Ready,
-instalator przywraca poprzednie pliki hosta na podstawie `host_receipt`. W razie odmowy
-zachowaj komunikat i sprawdź wskazany plik lub stan drukarki przed kolejną próbą.
+Sprawdź wynik `INSTALLED_M300_HOST` i pole `host_update`. Zachowaj ścieżkę
+`host_receipt`, gdy została podana. Jeśli zaktualizowany host nie wystartuje
+lub nie osiągnie Ready, instalator przywraca poprzednie pliki na podstawie
+tego potwierdzenia. W razie odmowy sprawdź wskazany plik lub stan drukarki.
 
 Opcja `--organize-config` wydziela procedury M300, tabele temperatur i zapisane
 aliasy PID oraz usuwa rozpoznane, zbędne wpisy aktualizacji strony.
@@ -54,14 +47,14 @@ konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 ## 2. Sprawdź wersję MCU
 
 Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC10, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+dołączoną do RC11, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
 [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.
 [Instrukcja MCU 1.0.5](MCU_FIRMWARE_1.0.5.md).
 
 Z MCU 1.0.5 synchronizacja działa automatycznie z dotychczasową konfiguracją.
-RC10 przyjmuje i ignoruje stary wpis `factory_counter_backup:`. Możesz go
+Klipper przyjmuje i ignoruje stary wpis `factory_counter_backup:`. Możesz go
 usunąć po aktualizacji hosta. Zachowaj dotychczasowe pliki licznika Klippera
 wraz z dziennikiem synchronizacji. Jeśli firmware MCU nie udostępnia
 poleceń licznika podczas normalnej pracy, Klipper dalej zlicza nowy czas
@@ -69,8 +62,8 @@ drukowania lokalnie.
 
 ## 3. Sprawdź instalację
 
-Otwórz `http://<IP-hosta>:4480/` i odśwież stronę z pominięciem pamięci
-podręcznej. W konsoli wykonaj polecenia odczytu:
+W konsoli istniejącego Fluidd pod `http://<IP-hosta>:4480/` wykonaj
+polecenia odczytu:
 
 ```gcode
 STATUS
@@ -90,6 +83,55 @@ stołem, sonda powinna być otwarta. Zobacz, jak sprawdzić
 Przed pomiarem stołu sprawdź układ pól poleceniem `BED_MESH PREVIEW=1`.
 [Mesh i poziomowanie](BED_MESH_AND_LEVELING.md) · [Procedury druku](PRINT_CONTROL.md) ·
 [Import z SD](../en/MODELS_SD.md) · [Ilustrowana instrukcja OLED](OLED_FUNCTIONS.md)
+
+## Zaktualizuj lub napraw Fluidd
+
+Użyj tego polecenia, gdy chcesz osobno zaktualizować stronę lub naprawić
+rozpoznane wdrożenie Fluidd dla M300. Wykorzystuje istniejącą witrynę nginx
+na 4480. Można je wykonać także przy niedostępnym Klipperze lub Moonrakerze.
+
+```bash
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480
+```
+
+Z pełnej paczki uruchom to samo polecenie z `python3 install-orange-pi.py`
+w katalogu głównym ZIP-a. Przy niestandardowym układzie nginx opcja
+`--fluidd-root /bezwzględna/ścieżka/do/fluidd` wskazuje istniejący,
+zweryfikowany katalog strony. Instalator zachowuje konfigurację nginx,
+`config.json` i preferencje Fluidd. Sprawdź wynik
+`INSTALLED_M300_FLUIDD` i zachowaj ścieżki `fluidd_root` i `fluidd_backup`.
+Jeśli zgodna i działająca strona została na miejscu, `fluidd_backup` ma
+wartość `null`. Gdy instalator może zweryfikować lokalną trasę HTTP,
+sprawdza nowy HTML i JavaScript oraz przywraca poprzedni katalog po
+nieudanej kontroli. [Wybór portu i ponawianie CI](INSTALLATION_AND_CI.md).
+
+## Gdy Fluidd nie otwiera się lub pokazuje pustą stronę
+
+Połącz się przez SSH z hostem i wykonaj:
+
+```bash
+base=http://127.0.0.1:4480
+curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
+  --write-out 'Fluidd: HTTP %{http_code}, %{size_download} B\n' "$base/"
+curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
+  --write-out 'Moonraker przez nginx: HTTP %{http_code}\n' "$base/server/info"
+```
+
+- **HTTP 200 i 0 bajtów dla Fluidd** oznacza pustą odpowiedź HTML.
+  Przez `sudo nginx -T` znajdź aktywną witrynę na 4480 i sprawdź jej
+  `index.html`. Aby naprawić rozpoznane wdrożenie M300, uruchom
+  osobne polecenie Fluidd z poprzedniej sekcji.
+- **HTTP 403 lub 404 dla Fluidd** wymaga sprawdzenia katalogu witryny,
+  obecności pliku i uprawnień odczytu procesu nginx.
+- **HTTP 000 lub błąd połączenia** wymaga sprawdzenia nginx poleceniami
+  `sudo nginx -t`, `systemctl is-active nginx` i `sudo ss -ltnp`.
+  Jeśli witryna nasłuchuje tylko na określonym adresie LAN, podstaw go
+  za `127.0.0.1` w powyższych poleceniach.
+- **Fluidd zwraca HTML, a Moonraker zwraca 502**. Sprawdź
+  `systemctl is-active moonraker` i przekierowanie do Moonrakera w nginx.
+- **Fluidd zwraca HTML, a przeglądarka jest pusta**. W panelu Sieć
+  narzędzi deweloperskich sprawdź, czy główne żądanie
+  `assets/index-*.js` zwraca JavaScript. Otwórz też adres w oknie prywatnym.
 
 ## Przywróć poprzedni stan po aktualizacji hosta
 
@@ -111,6 +153,11 @@ Dla paczki ZIP użyj jej katalogu `M300_HOST`. Sprawdź, czy wycofanie zwrócił
 `ROLLED_BACK_M300_HOST`. Jeśli przywróciło `moonraker.conf`, wykonaj
 `sudo systemctl restart moonraker.service`. Jeżeli instalator odmówi
 nadpisania późniejszej edycji, zachowaj ją i sprawdź wskazany plik przed
-ponowną próbą. Aby przywrócić Fluidd, użyj zgłoszonych ścieżek `fluidd_backup`
-i `fluidd_root`. Przenieś bieżący katalog strony w inne miejsce, przywróć
-kopię pod `fluidd_root` i wykonaj `sudo systemctl reload nginx`.
+ponowną próbą.
+
+## Przywróć poprzednią stronę Fluidd
+
+Użyj ścieżek `fluidd_root` i `fluidd_backup` podanych przez instalator.
+Sprawdź, czy kopia zawiera działający `index.html` i katalog `assets`.
+Zmień nazwę bieżącego katalogu i przenieś kopię pod `fluidd_root`. Uruchom
+`sudo nginx -t && sudo systemctl reload nginx` i ponów powyższe kontrole HTTP.
