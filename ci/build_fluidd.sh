@@ -45,3 +45,4 @@ zip -qr "$archive" fluidd-m300 LICENSE m300-leveling.patch m300-tune.patch m300-
 cd "$root/dist/fluidd"
 sha256sum "$(basename -- "$archive")" > SHA256SUMS
 sha256sum -c SHA256SUMS
+python "$root/ci/check_fluidd_recovery.py" --archive "$archive" --output "$root/.ci/reports/FLUIDD_RECOVERY.json"

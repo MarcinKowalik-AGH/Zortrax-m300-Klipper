@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.11/docs/en/FIRST_INSTALL.md) · [RC11 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.11/docs/en/RELEASE_v1.0.0-rc.11.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.12/docs/en/FIRST_INSTALL.md) · [RC12 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.12/docs/en/RELEASE_v1.0.0-rc.12.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Install the SD application
 

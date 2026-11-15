@@ -16,8 +16,8 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480
 ```
 
 Instalator sprawdza porty `listen`, katalog `root` lub `alias` i tytuł Fluidd
-w `index.html`. Naprawa pustego indeksu wymaga zgodnego głównego pliku
-JavaScript i manifestu. IPv4 i IPv6 prowadzące do tego samego katalogu są
+w `index.html`. Naprawa pustego indeksu wymaga zgodnego manifestu i co najmniej trzech
+zgodnych plików startowych JavaScript lub CSS. IPv4 i IPv6 prowadzące do tego samego katalogu są
 jednym wyborem. Jeśli niestandardowego układu nginx nie można odczytać
 automatycznie, dodaj `--fluidd-root /bezwzględna/ścieżka` do powyższego
 polecenia. Wskaż katalog aktywnego Fluidd.

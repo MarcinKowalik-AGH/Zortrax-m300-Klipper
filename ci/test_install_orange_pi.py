@@ -1,4 +1,5 @@
 """Validate the deployment helper without changing a real web root or service."""
+from contextlib import contextmanager
 from pathlib import Path
 from functools import partial
 import hashlib
@@ -15,6 +16,11 @@ from unittest.mock import patch
 from zipfile import ZipFile, ZipInfo
 
 import install_orange_pi as installer
+
+
+class QuietHTTPHandler(SimpleHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
 
 
 class OrangePiInstallerTest(unittest.TestCase):
@@ -296,29 +302,69 @@ class OrangePiInstallerTest(unittest.TestCase):
             self.assertEqual(stat.S_IMODE((root / asset).stat().st_mode), 0o644)
             self.assertEqual(stat.S_IMODE((root / 'assets').stat().st_mode), 0o755)
 
-    def test_zero_byte_index_only_recovers_known_fluidd_directory(self):
+    def test_zero_byte_index_and_primary_js_are_repaired_on_the_known_fluidd_site(self):
         with tempfile.TemporaryDirectory() as tmp:
             source, root = self.web_paths(Path(tmp))
-            index, asset = self.fixture_site()
+            _, main = self.fixture_site()
+            others = ('assets/runtime-B0Z9INg1.js', 'assets/vendor-Cm_fBn2c.js',
+                      'assets/index-3NtwrhNh.css')
+            index = '<title>Fluidd</title><script type="module" src="./' + main + '"></script>'
+            index += ''.join(f'<link href="./{name}">' for name in others)
             for directory in (source, root):
                 (directory / 'assets').mkdir()
-                (directory / asset).write_text('packaged Fluidd JavaScript')
+                for name in (main, *others):
+                    (directory / name).write_text('packaged Fluidd startup asset ' + name)
                 (directory / 'manifest.webmanifest').write_text('{"name":"Fluidd"}')
             (source / 'index.html').write_text(index)
             (root / 'index.html').write_bytes(b'')
-            config = f'server {{ listen 4480; root {root}; }}'
-            self.assertEqual(installer.select_fluidd(config, 4480, repair_source=source)[0], root)
-            (root / asset).write_text('foreign JavaScript')
-            with self.assertRaisesRegex(ValueError, 'dedicated Fluidd'):
-                installer.select_fluidd(config, 4480, repair_source=source)
-            (root / asset).write_text('packaged Fluidd JavaScript')
-            with patch.object(installer, 'web_responds', return_value=True) as responds:
-                installer.deploy_web(source, root, port=4480, execute=self.local_run)
-            before, after = [call.args[2] for call in responds.call_args_list]
-            self.assertEqual(before[0], ('/', b'', ('text/html',)))
-            self.assertEqual(after[0], ('/', index.encode(), ('text/html',)))
-            self.assertEqual(before[1], after[1])
-            self.assertEqual((root / 'index.html').read_text(), index)
+            (root / main).write_bytes(b'')
+            with self.serving(root) as port:
+                config = f'server {{ listen {port}; root {root}; }}'
+                self.assertEqual(installer.select_fluidd(config, port, repair_source=source)[0], root)
+                self.assertEqual(installer.local_web_host(root, port, repair_source=source),
+                                 ('127.0.0.1', False))
+                for name in ('manifest.webmanifest', others[0]):
+                    (root / name).write_text('foreign data')
+                    with self.assertRaisesRegex(ValueError, 'dedicated Fluidd'):
+                        installer.select_fluidd(config, port, repair_source=source)
+                    (root / name).write_bytes((source / name).read_bytes())
+                backup = installer.deploy_web(source, root, port=port, execute=self.local_run)
+                self.assertEqual((backup / 'index.html').read_bytes(), b'')
+                self.assertEqual((backup / main).read_bytes(), b'')
+                self.assertEqual((root / 'config.json').read_text(), '{"custom":true}')
+                self.assertEqual(installer.local_web_host(root, port, repair_source=source),
+                                 ('127.0.0.1', True))
+
+    def test_identical_web_files_do_not_hide_degraded_http_startup_asset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source, root = self.web_paths(Path(tmp))
+            index, main = self.fixture_site()
+            css = 'assets/index-3NtwrhNh.css'
+            for directory in (source, root):
+                (directory / 'index.html').write_text(index + f'<link href="./{css}">')
+                (directory / 'assets').mkdir()
+                (directory / main).write_text('packaged code')
+                (directory / css).write_text('packaged styles')
+            reloaded = False
+
+            class Handler(QuietHTTPHandler):
+                def do_GET(self):
+                    if not reloaded and self.path.startswith('/' + css):
+                        self.send_error(403)
+                    else:
+                        super().do_GET()
+
+            def execute(sudo, *args, **kwargs):
+                nonlocal reloaded
+                if args[0] == 'systemctl':
+                    reloaded = True
+                return self.local_run(sudo, *args, **kwargs)
+
+            with self.serving(root, Handler) as port:
+                self.assertTrue(installer.same_web_contents(source, root, http_verified=False))
+                self.assertEqual(installer.local_web_host(root, port), ('127.0.0.1', False))
+                self.assertIsNotNone(installer.deploy_web(source, root, port=port, execute=execute))
+                self.assertEqual(installer.local_web_host(root, port), ('127.0.0.1', True))
 
     def test_web_http_asset_failure_restores_prior_site_after_successful_reload(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -330,10 +376,7 @@ class OrangePiInstallerTest(unittest.TestCase):
                 (directory / asset).write_text(directory.name)
             reloads = []
 
-            class Handler(SimpleHTTPRequestHandler):
-                def log_message(self, *args):
-                    pass
-
+            class Handler(QuietHTTPHandler):
                 def do_GET(self):
                     if len(reloads) == 1 and self.path.startswith('/assets/'):
                         self.send_error(403)
@@ -345,25 +388,30 @@ class OrangePiInstallerTest(unittest.TestCase):
                     reloads.append(args)
                 return self.local_run(sudo, *args, **kwargs)
 
-            with ThreadingHTTPServer(('127.0.0.1', 0), partial(Handler, directory=root)) as server:
-                server_thread = Thread(target=server.serve_forever, daemon=True)
-                server_thread.start()
-                try:
-                    port = server.server_address[1]
-                    self.assertEqual(installer.local_web_host(root, port), '127.0.0.1')
-                    with self.assertRaisesRegex(ValueError, 'did not serve'):
-                        installer.deploy_web(source, root, port=port, execute=execute)
-                    self.assertEqual((root / asset).read_text(), 'web')
-                    self.assertEqual(installer.local_web_host(root, port), '127.0.0.1')
-                    self.assertEqual(len(reloads), 2)
-                finally:
-                    server.shutdown()
-                    server_thread.join()
+            with self.serving(root, Handler) as port, patch.object(installer, 'WEB_RELOAD_TIMEOUT', 0):
+                self.assertEqual(installer.local_web_host(root, port), ('127.0.0.1', True))
+                with self.assertRaisesRegex(ValueError, 'did not serve'):
+                    installer.deploy_web(source, root, port=port, execute=execute)
+                self.assertEqual((root / asset).read_text(), 'web')
+                self.assertEqual(installer.local_web_host(root, port), ('127.0.0.1', True))
+                self.assertEqual(len(reloads), 2)
 
     @staticmethod
     def fixture_site():
         asset = 'assets/index-DJ1P78PQ.js'
         return f'<title>Fluidd</title><script type="module" src="./{asset}"></script>', asset
+
+    @staticmethod
+    @contextmanager
+    def serving(root, handler=QuietHTTPHandler):
+        with ThreadingHTTPServer(('127.0.0.1', 0), partial(handler, directory=root)) as server:
+            server_thread = Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            try:
+                yield server.server_address[1]
+            finally:
+                server.shutdown()
+                server_thread.join()
 
     @staticmethod
     def web_paths(parent):

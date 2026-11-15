@@ -1,8 +1,9 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.11 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.11).
-This guide applies to a running M300 port. [Polski](../pl/INSTALL.md)
+[fixed v1.0.0-rc.12 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.12).
+For a blank Fluidd page, [recover Fluidd before the host update](#recover-fluidd-then-update-klipper).
+[Polski](../pl/INSTALL.md).
 
 ## 1. Update Klipper
 
@@ -81,10 +82,33 @@ the contact plate, the probe should report open. Use the
 [counter status checks](MCU_FIRMWARE_1.0.5.md#read-the-counter) to verify
 automatic synchronization.
 
+To verify the counter on a physical printer, record the factory minutes in
+`ZORTRAX_HARDWARE_STATUS` before a normal print with at least one minute of model-print time.
+After the printer becomes idle and eligible to write, check for `factory_counter_sync: SYNCED`,
+`factory_counter_banks: NORMALIZED`, `factory_counter_pending: false` and
+an increase in `factory_print_minutes`. Check that value again after the
+next normal power cycle. The release tests simulate the Flash write and
+recovery.
+
 Before probing, use `BED_MESH PREVIEW=1` to check the configured pad layout.
 See the [contact geometry](LEVELING.md#measured-contact-rectangles) and
 [print validation steps](PRINT_CONTEXT.md). [Models from SD](MODELS_SD.md) ·
 [OLED and Fluidd controls](RC1_UI.md) · [Illustrated OLED manual](../pl/OLED_FUNCTIONS.md)
+
+## Recover Fluidd, then update Klipper
+
+For an existing checkout in `~/m300-orange-pi` and a machine that is idle
+and Ready, run over SSH as the Klipper user:
+
+```bash
+git -C "$HOME/m300-orange-pi" pull --ff-only &&
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480 &&
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+```
+
+The Fluidd step repairs the static site on 4480 and preserves `config.json`.
+The Klipper step installs the host update. Open `http://<host-IP>:4480/`
+and run the checks above.
 
 ## Update or repair Fluidd
 
@@ -102,9 +126,9 @@ For an extracted release ZIP, run the same command with
 web directory. The update preserves the nginx configuration, `config.json`
 and Fluidd preferences. Look for `INSTALLED_M300_FLUIDD` and keep the
 `fluidd_root` and `fluidd_backup` paths. A matching, usable site may be
-reused, with `fluidd_backup` reported as `null`. When the local HTTP route
-can be verified, the installer checks the new HTML and JavaScript and
-restores the previous directory if that check fails.
+reused, with `fluidd_backup` reported as `null`. For a proven local HTTP route, the installer checks the new HTML and
+its startup JavaScript and CSS. It restores the previous directory if
+that check fails.
 [Port detection and CI retries](../pl/INSTALLATION_AND_CI.md).
 
 ## Diagnose a blank or unreachable Fluidd page
@@ -131,8 +155,9 @@ curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
 - **Fluidd HTML works but Moonraker returns 502** calls for checking
   `systemctl is-active moonraker` and the site's Moonraker proxy.
 - **Fluidd HTML arrives but the browser is blank** calls for checking the
-  main `assets/index-*.js` request in the browser's Network panel. It
-  should return JavaScript. Test the URL in a private browser window.
+  main `assets/index-*.js` request in the browser's Network panel.
+  It should return a nonempty JavaScript file. Test the URL in a private
+  browser window.
 
 ## Restore a prior host update
 

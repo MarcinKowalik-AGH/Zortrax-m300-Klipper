@@ -1,8 +1,9 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.11](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.11).
-Ta instrukcja dotyczy hosta z działającym portem M300. [English](../en/INSTALL.md)
+i użyj [paczki v1.0.0-rc.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.12).
+Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
+[English](../en/INSTALL.md).
 
 ## 1. Zaktualizuj Klippera
 
@@ -47,7 +48,7 @@ konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 ## 2. Sprawdź wersję MCU
 
 Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC11, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+dołączoną do RC12, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
 [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.
@@ -80,9 +81,32 @@ swojej płyty, np. HW04/Z800 lub HW05/Z400. Gdy dysza nie styka się ze
 stołem, sonda powinna być otwarta. Zobacz, jak sprawdzić
 [stan automatycznej synchronizacji licznika](MCU_FIRMWARE_1.0.5.md#odczyt-licznika).
 
+Aby sprawdzić licznik na fizycznej drukarce, zanotuj minuty fabryczne przed
+zwykłym wydrukiem przez `ZORTRAX_HARDWARE_STATUS`. Wydruk musi mieć co
+najmniej minutę drukowania modelu. Gdy drukarka będzie bezczynna i spełni warunki zapisu, sprawdź `factory_counter_sync: SYNCED`,
+`factory_counter_banks: NORMALIZED`, `factory_counter_pending: false` i wzrost
+`factory_print_minutes`. Odczytaj tę wartość ponownie po następnym normalnym
+wyłączeniu i włączeniu drukarki. Testy wydania symulują zapis Flash i
+odzyskanie po przerwaniu zapisu.
+
 Przed pomiarem stołu sprawdź układ pól poleceniem `BED_MESH PREVIEW=1`.
 [Mesh i poziomowanie](BED_MESH_AND_LEVELING.md) · [Procedury druku](PRINT_CONTROL.md) ·
 [Import z SD](../en/MODELS_SD.md) · [Ilustrowana instrukcja OLED](OLED_FUNCTIONS.md)
+
+## Napraw Fluidd, a potem zaktualizuj Klippera
+
+Jeśli masz klon w `~/m300-orange-pi`, przy bezczynnej drukarce w stanie Ready
+uruchom przez SSH z konta Klippera:
+
+```bash
+git -C "$HOME/m300-orange-pi" pull --ff-only &&
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --update-fluidd --port 4480 &&
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+```
+
+Pierwsze wywołanie instalatora naprawia statyczną stronę na 4480 i zachowuje
+`config.json`. Drugie aktualizuje hosta Klippera. Otwórz
+`http://<IP-hosta>:4480/` i wykonaj powyższe kontrole.
 
 ## Zaktualizuj lub napraw Fluidd
 
@@ -102,7 +126,7 @@ zweryfikowany katalog strony. Instalator zachowuje konfigurację nginx,
 `INSTALLED_M300_FLUIDD` i zachowaj ścieżki `fluidd_root` i `fluidd_backup`.
 Jeśli zgodna i działająca strona została na miejscu, `fluidd_backup` ma
 wartość `null`. Gdy instalator może zweryfikować lokalną trasę HTTP,
-sprawdza nowy HTML i JavaScript oraz przywraca poprzedni katalog po
+sprawdza nowy HTML i wskazane w nim pliki JavaScript i CSS. Przywraca poprzedni katalog po
 nieudanej kontroli. [Wybór portu i ponawianie CI](INSTALLATION_AND_CI.md).
 
 ## Gdy Fluidd nie otwiera się lub pokazuje pustą stronę
@@ -131,7 +155,7 @@ curl --noproxy '*' --silent --show-error --max-time 5 --output /dev/null \
   `systemctl is-active moonraker` i przekierowanie do Moonrakera w nginx.
 - **Fluidd zwraca HTML, a przeglądarka jest pusta**. W panelu Sieć
   narzędzi deweloperskich sprawdź, czy główne żądanie
-  `assets/index-*.js` zwraca JavaScript. Otwórz też adres w oknie prywatnym.
+  `assets/index-*.js` zwraca niepusty plik JavaScript. Otwórz też adres w oknie prywatnym.
 
 ## Przywróć poprzedni stan po aktualizacji hosta
 
