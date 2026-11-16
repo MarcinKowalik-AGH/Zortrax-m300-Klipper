@@ -15,13 +15,16 @@ class ReleaseContracts(unittest.TestCase):
         fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='_purge_lines')
         namespace={}
         exec(compile(ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[])),str(ROOT),'exec'),namespace)
-        owner=types.SimpleNamespace(purge_height=.28,purge_length=250.,purge_filament=20.*250/350,
+        owner=types.SimpleNamespace(purge_height=.28,purge_length=250.,purge_filament=20.*250/350,e_speed=2.,
                                     _error=lambda text:ValueError(text))
         for length in (40,250,350,1000):
             lines=namespace['_purge_lines'](owner,[0,0,0],[300,305,315],length)
-            extrusion=[line for line in lines if line.startswith('G1 ') and ' E' in line]
+            extrusion=[line for line in lines if line.startswith(('G1 X','G1 Y')) and ' E' in line]
             self.assertEqual(len(extrusion),4)
             self.assertEqual([line.split()[1][0] for line in extrusion],['Y','Y','X','X'])
+            self.assertEqual([line for line in lines if line.startswith('G1 Z')],
+                             ['G1 Z5 F300','G1 Z0.28000 F300','G1 Z5 F300'])
+            self.assertLess(lines.index('G1 E6 F120.00000'),lines.index('G1 Z0.28000 F300'))
             for line in extrusion:
                 axis=line.split()[1];number=float(axis[1:])
                 self.assertLessEqual(number,300 if axis[0]=='Y' else 295)
@@ -59,7 +62,7 @@ class ReleaseContracts(unittest.TestCase):
                         self.assertNotIn('--port', command, path)
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-            self.assertIn('releases/download/v1.0.0-rc.13/',text)
+            self.assertIn('releases/download/v1.0.0-rc.14/',text)
             commands = [shlex.split(line) for line in text.splitlines()
                         if line.startswith('python3 install-fresh.py ')]
             self.assertEqual(len(commands), 2, lang)
@@ -70,9 +73,9 @@ class ReleaseContracts(unittest.TestCase):
 
     def test_host_release_and_numeric_mcu_identity(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.13')
+        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.14')
         self.assertEqual(meta['mcu_release'],'1.0.5')
-        self.assertEqual(meta['self_contained_host_tests'],907)
-        self.assertEqual(meta['print_control_revision'],'0.13.16.38-PRINT-DRAIN-XY-PURGE')
+        self.assertEqual(meta['self_contained_host_tests'],911)
+        self.assertEqual(meta['print_control_revision'],'0.13.16.39-PRINT-PREP')
 
 if __name__=='__main__':unittest.main(verbosity=2)

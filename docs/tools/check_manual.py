@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-rc.13'
+CURRENT_RELEASE = 'v1.0.0-rc.14'
 CURRENT_MCU = '1.0.5'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -121,14 +121,15 @@ def main():
         p = ROOT/image['file']
         check(p.is_file() and sha(p) == image['sha256'], 'Fluidd-demo:'+image['file'])
     source_baseline = json.loads((ROOT/'docs/reports/DOC_SOURCE_BASELINE.json').read_text())
-    # Historical image digests stay exact. RC7 changes the live accounting
-    # paths intentionally, so their historical source digests describe RC6.
-    runtime_accounting_sources = {
+    # Historical image digests stay exact. The reviewed RC7 and RC14 host
+    # changes have separate contracts from the RC6 illustration baseline.
+    updated_runtime_sources = {
         'host/klippy/extras/m300_print_control.py',
         'host/klippy/extras/m300_settings.py',
+        'host/klippy/extras/m300_native_motion.py',
     }
     for path, expected in source_baseline['files'].items():
-        if path in runtime_accounting_sources:
+        if path in updated_runtime_sources:
             continue
         p = ROOT/path
         check(p.is_file() and sha(p) == expected, 'source-baseline:'+path)

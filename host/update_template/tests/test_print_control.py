@@ -40,7 +40,8 @@ class Harness(oem.Harness):
         self.mesh=None
         self.objects['bed_mesh']=NS(get_mesh=lambda:self.mesh,set_mesh=self.set_mesh,
             pmgr=NS(get_profiles=lambda:{'m300_pads':{}},load_profile=self.load_mesh))
-        self.objects['m300_motion']=NS(home=self.home,is_busy=lambda:False)
+        self.objects['m300_motion']=NS(home=self.home,ensure_xy_clearance=self.clearance,
+                                       is_busy=lambda:False)
         self.objects['fan']=NS(set_speed=lambda time,value:self.events.append(('fan',value)))
         self.gcode.register_command('M107',lambda cmd:self.events.append(('fan',0.)))
         for name in ('M24','BED_MESH_CLEAR','SAVE_CONFIG','SET_GCODE_OFFSET','PROBE','PROBE_ACCURACY',
@@ -81,6 +82,10 @@ class Harness(oem.Harness):
     def set_mesh(self,value):self.mesh=value
     def load_mesh(self,name):
         self.events.append(('mesh',name));self.mesh=NS(mesh_offsets=[0.,0.])
+    def clearance(self,check):
+        check()
+        assert self.c.lease is None
+        self.events.append(('clearance',))
     def home(self):
         self.events.append(('home',self.hotend.target,self.bed.target))
         self.homed='xyz';self.position=[150.,158.,5.,self.position[3]]
@@ -222,19 +227,66 @@ class PrintControlTests(unittest.TestCase):
         self.assertEqual(h.position[:3],[300.,305.,15.])
         self.assertEqual(h.f._native_pause['target'],240.)
 
-    def test_start_heats_both_then_homes_loads_mesh_and_uses_native_purge(self):
-        h=self.h;h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
-        h.stop_worker();h.step_control();self.assertEqual((h.hotend.target,h.bed.target),(240.,60.))
+    def test_start_retracts_before_home_then_feeds_and_purges_without_crossing(self):
+        h = self.h
+        h.hotend.temperature = 25.
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.stop_worker()
+        h.step_control()
+        self.assertEqual((h.hotend.target,h.bed.target),(240.,60.))
+        h.step_control(4.)
+        self.assertFalse(any(event[0] in ('move', 'home') for event in h.events))
+        h.hotend.temperature = 240.
+        h.control_until('STARTING', 'RETRACT_DRAIN')
+        self.assertEqual(h.events[-1], ('move', (100., 110., 10., 7.), h.c.e_speed))
+        self.assertEqual(h.events[-2], ('clearance',))
+        h.step_control()
+        self.assertNotIn(('home', 240., 60.), h.events)
         h.control_until('IDLE')
-        self.assertIn(('home',240.,60.),h.events);self.assertIn(('mesh','m300_pads'),h.events)
-        self.assertLess(h.events.index(('home',240.,60.)),h.events.index(('mesh','m300_pads')))
-        self.assertEqual(h.sd.work_timer,'native');self.assertEqual(h.hotend.target,240.)
+        home = h.events.index(('home', 240., 60.))
+        mesh = h.events.index(('mesh', 'm300_pads'))
+        self.assertLess(home, mesh)
+        moves = [event for event in h.events[mesh:] if event[0] == 'move']
+        self.assertEqual(moves[1][1], (3., 10., 5., 7.))
+        self.assertEqual(moves[2], ('move', (3., 10., 5., 13.), h.c.e_speed))
+        self.assertEqual([event[1][:3] for event in moves[3:]], [
+            (3., 10., .28), (3., 270., .28), (3.5, 270., .28),
+            (3.5, 10., .28), (253.5, 10., .28), (253.5, 9.5, .28),
+            (3.5, 9.5, .28), (3.5, 9.5, 5.)])
+        self.assertEqual(moves[4][1][3], moves[5][1][3])
+        self.assertEqual(moves[7][1][3], moves[8][1][3])
+        self.assertEqual(h.sd.work_timer, 'native')
+        self.assertEqual(h.hotend.target, 240.)
 
     def test_missing_mesh_fails_before_heating_or_stopping_file(self):
         h=self.h
         with self.assertRaisesRegex(h.printer.command_error,'saved mesh'):
             h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 MESH=missing')
         self.assertEqual(h.c.state,'IDLE');self.assertFalse(h.sd.must_pause_work)
+
+    def test_start_validates_extrusion_requirements_before_taking_ownership(self):
+        h = self.h
+        h.hotend.target = 0.
+        with self.assertRaisesRegex(h.printer.command_error, 'requires a nozzle target'):
+            h.run('ZORTRAX_PRINT_START BED_TEMP=60')
+        h.toolhead.get_extruder = lambda: NS(max_e_dist=9.5)
+        with self.assertRaisesRegex(h.printer.command_error, 'max_extrude_only_distance'):
+            h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        self.assertEqual(h.c.state, 'IDLE')
+        self.assertFalse(h.sd.must_pause_work)
+
+    def test_start_waits_for_native_extrusion_threshold_inside_heat_tolerance(self):
+        h = self.h
+        h.hotend.temperature = 169.
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=170 BED_TEMP=60')
+        h.stop_worker()
+        for _ in range(12):
+            h.step_control()
+        self.assertEqual(h.c.state, 'STARTING')
+        self.assertFalse(any(event[0] in ('move', 'home') for event in h.events))
+        h.hotend.temperature = 170.
+        h.control_until('STARTING', 'RETRACT_DRAIN')
+        self.assertEqual(h.position[3], 7.)
 
     def test_start_supports_explicit_no_mesh(self):
         h=self.h;h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 MESH=NONE')
@@ -246,6 +298,19 @@ class PrintControlTests(unittest.TestCase):
         h.run('CANCEL_PRINT');h.control_until('IDLE')
         self.assertFalse(any(e[0] in ('home','native_resume') for e in h.events))
         self.assertEqual(h.print_state,'cancelled')
+
+    def test_cancel_during_start_retract_drain_never_homes_or_feeds_back(self):
+        h = self.h
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.stop_worker()
+        h.control_until('STARTING', 'RETRACT_DRAIN')
+        h.run('CANCEL_PRINT')
+        h.control_until('IDLE')
+        self.assertEqual(h.print_state, 'cancelled')
+        self.assertFalse(any(event[0] in ('home', 'mesh', 'native_resume') for event in h.events))
+        self.assertEqual(h.position[3], 7.)
+        self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
+        self.assertNotIn('M300_START_RETRACT', h.gmove.saved_states)
 
     def test_cancel_inside_yielding_native_home_revokes_stale_purge(self):
         h=self.h
@@ -335,7 +400,8 @@ class PrintControlTests(unittest.TestCase):
             h.shutdown=True;h.c._stop('native homing cancelled')
         h.objects['m300_motion'].home=home
         h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
-        for _ in range(15):h.step_control()
+        h.control_until('STARTING', 'RETRACT_DRAIN')
+        h.step_control(h.busy_until - h.now + .01)
         self.assertFalse(h.c.ready);self.assertNotIn(('native_resume',),h.events)
         self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
 
@@ -348,14 +414,18 @@ class PrintControlTests(unittest.TestCase):
         self.assertNotIn(('native_resume',),h.events)
 
     def test_start_purge_is_bounded_and_restores_existing_speed_and_flow(self):
-        h=self.h;h.run('M220 S150\nM221 S200')
+        h=self.h;h.run('G91\nM82\nG92 E8\nM220 S150\nM221 S200')
+        logical_e = h.gmove.get_status(h.now)['gcode_position'].e
         h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60');h.stop_worker()
         h.control_until('IDLE')
         self.assertAlmostEqual(h.gmove.speed_factor,1.5/60.)
         self.assertEqual(h.gmove.extrude_factor,2.)
+        self.assertAlmostEqual(h.gmove.get_status(h.now)['gcode_position'].e, logical_e)
+        self.assertFalse(h.gmove.absolute_coord)
+        self.assertTrue(h.gmove.allow_absolute_extrude)
         # Two Y legs of 260 mm and two X legs of 250 mm; M221=200 must
         # not double the metered dose. Native parser state is then restored.
-        expected=17.+(2.*260.+2.*250.)*h.c.purge_filament/h.c.purge_length
+        expected=17.-10.+6.+(2.*260.+2.*250.)*h.c.purge_filament/h.c.purge_length
         self.assertAlmostEqual(h.position[3],expected,places=4)
 
     def test_oled_offers_reheat_after_material_nozzle_off_then_confirmation_then_resume(self):

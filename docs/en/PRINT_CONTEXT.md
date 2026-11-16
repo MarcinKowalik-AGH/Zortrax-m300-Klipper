@@ -27,6 +27,23 @@ from the pause hold cannot select a row in the new menu. Ordinary menu
 navigation keeps its existing knob behavior.
 To pause from another OLED menu, return to Klipper status first.
 
+## START_PRINT and lighting
+
+After the heaters reach their targets and the selected stabilization finishes,
+`START_PRINT` retracts filament by 10 mm and waits for that move to finish
+before Z contact. After homing and mesh selection, the toolhead approaches
+the purge start at safe Z and feeds 6 mm. It then runs two long Y extrusion
+passes and two long X extrusion passes. The nozzle shifts sideways by 0.5 mm
+at each turnaround. The first X pass begins at the end of the return Y pass.
+The commanded purge height stays fixed across all passes and the active mesh
+can still compensate Z. The final lift and parser-state restore precede
+continuation of the print file. Standalone Home Z and Bed Mesh use their own
+measurement routines.
+
+Dynamic Light stays white during actual model printing, including temperature
+changes during the print. Preparation, pause and faults retain their status
+colors. [Lighting settings](SETTINGS_INFORMATION.md).
+
 ## Fluidd
 
 Pause, Resume and Cancel on the dashboard operate on native Klipper state.

@@ -95,9 +95,17 @@ Slicer powinien wywołać **jeden** `START_PRINT`, z temperaturami materiału, i
 START_PRINT EXTRUDER_TEMP=200 BED_TEMP=60 MESH=m300_pads
 ```
 
-To nie zalecenie temperatur dla wszystkich materiałów. Kontroler: wstrzymuje wykonywanie dalszych komend pliku, nagrzewa dyszę i stół, ewentualnie wygrzewa platformę, wykonuje bazowanie M300, ładuje profil mesh, drukuje **dwie linie w Y oraz dwie w X** i dopiero przekazuje wykonanie do reszty pliku.
+Po nagrzaniu i stabilizacji Klipper cofa filament o 10 mm przed kontaktem
+Z. Po bazowaniu aktywuje wybraną siatkę, dojeżdża do początku czyszczenia
+na bezpiecznej wysokości i podaje 6 mm. Następnie wykonuje dwa długie odcinki
+Y i dwa X bez dodatkowego odsunięcia Z między odcinkami. Ruch odbywa się na
+zadanej wysokości 0,28 mm przy domyślnej konfiguracji, z natywną kompensacją
+aktywnej siatki. Parametr `PURGE` określa żądaną długość, ograniczoną polem
+ruchu, a dawka filamentu jest proporcjonalna do odcinka.
+[Sekwencja i parametry START_PRINT](PRINT_CONTROL.md#kolejność-start_print).
 
-Wysokość linii w ustawieniach domyślnych to **0,28 mm**, nominalna długość 250 mm, z ograniczeniem do pola ruchu i marginesem przy dalszej krawędzi. Parametr `PURGE` zmienia długość, a dawka jest proporcjonalna. Nie skopiowano bez ograniczeń 350 mm z CR10S5. Linie korzystają z natywnej kompensacji mesh.
+W trybie Dynamic światło jest stale białe podczas drukowania modelu.
+Przygotowanie, pauza i błędy mają własne kolory.
 
 `MESH=AUTO` wybiera `m300_pads`, gdy istnieje, inaczej drukuje bez kompensacji. `MESH=m300_pads` wymaga profilu. `MESH=NONE` jawnie wyłącza siatkę. START nie mierzy mesh od nowa. Ustawienia i wcześniejsze tryby parsera są chronione; po sekwencji przywracane są m.in. tryby współrzędnych i mnożniki.
 
@@ -129,7 +137,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.5 wystarczy aktualizacja Klippera. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.38-PRINT-DRAIN-XY-PURGE`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.39-PRINT-PREP`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ## 9. Rozpoznawanie problemów
 
