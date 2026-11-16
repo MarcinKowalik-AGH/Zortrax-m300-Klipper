@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.12/docs/pl/FIRST_INSTALL.md) · [Opis RC12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.12/docs/pl/RELEASE_v1.0.0-rc.12.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.13/docs/pl/FIRST_INSTALL.md) · [Opis RC13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.13/docs/pl/RELEASE_v1.0.0-rc.13.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Wgraj aplikację z karty SD
 

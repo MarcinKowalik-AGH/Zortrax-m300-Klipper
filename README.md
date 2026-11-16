@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.12
+# Zortrax M300 Classic — Klipper 1.0.0-rc.13
 
-**RC12** pairs automatic MCU print-time synchronization with a tested recovery procedure for Fluidd on port 4480. Klipper synchronizes the factory print-time counter directly with MCU 1.0.5, without a Flash dump. [Release notes](docs/en/RELEASE_v1.0.0-rc.12.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC13** allows filament load and unload from the OLED and Fluidd while native Bed Mesh is active. Klipper synchronizes the factory print-time counter directly with MCU 1.0.5, without a Flash dump. [Release notes](docs/en/RELEASE_v1.0.0-rc.13.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**Twelfth release candidate for the classic M300**, using its original controller,
+**Thirteenth release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.12) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.13) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -36,7 +36,7 @@ git -C "$HOME/m300-orange-pi" pull --ff-only &&
 python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
-This updates Klipper and preserves the existing Fluidd site and settings.
+This updates Klipper and preserves the existing Fluidd site on port 4480 and its settings.
 If MCU 1.0.5 is already installed, the host update completes the upgrade.
 If Fluidd is blank, use the [recovery procedure](docs/en/INSTALL.md#recover-fluidd-then-update-klipper) to repair the website
 before updating Klipper. [Full update guide](docs/en/INSTALL.md) ·

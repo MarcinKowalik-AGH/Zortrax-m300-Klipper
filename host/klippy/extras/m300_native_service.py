@@ -39,7 +39,8 @@ def require_idle_print(printer, now):
         raise printer.command_error('M300 pad mesh owns motion')
 
 
-def native_service_frame(printer, gcode_move, toolhead, *, paused_extrusion=False):
+def native_service_frame(printer, gcode_move, toolhead, *, extruder_only=False):
+    """Allow active native Bed Mesh for toolhead moves that preserve XYZ."""
     transform = gcode_move.move_transform
     if transform in (None, toolhead):
         return True
@@ -47,7 +48,7 @@ def native_service_frame(printer, gcode_move, toolhead, *, paused_extrusion=Fals
     bedmesh = printer.lookup_object('bed_mesh',None)
     if bedmesh is None and pad_mesh is not None:bedmesh=pad_mesh.bedmesh
     return (bedmesh is not None and transform is bedmesh
-            and (paused_extrusion or transform.get_mesh() is None))
+            and (extruder_only or transform.get_mesh() is None))
 
 
 def lock_command(gcode,name,wrapper):

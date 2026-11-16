@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.12](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.12).
+i użyj [paczki v1.0.0-rc.13](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.13).
 Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [English](../en/INSTALL.md).
 
@@ -48,7 +48,7 @@ konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 ## 2. Sprawdź wersję MCU
 
 Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC12, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+dołączoną do RC13, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
 [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.

@@ -241,6 +241,52 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertEqual(h.hotend.target,0.)
         h.assert_restored(self)
 
+    def test_standalone_material_operations_preserve_active_native_bed_mesh(self):
+        for operation, wait_state, endpoint in (('LOAD', 'WAIT_INSERT', 147.),
+                                                ('UNLOAD', 'WAIT_UNLOAD', -93.)):
+            with self.subTest(operation=operation):
+                h = Harness()
+                active_mesh = object()
+
+                def logical_position():
+                    position = h.toolhead.get_position()
+                    position[2] -= .4
+                    return position
+
+                def transformed_move(position, speed):
+                    self.fail('E-only service called the Bed Mesh move transform')
+
+                mesh = NS(get_mesh=lambda: active_mesh, get_position=logical_position,
+                          move=transformed_move)
+                h.objects['bed_mesh'] = mesh
+                h.gmove.set_move_transform(mesh)
+                h.gmove.reset_last_position()
+                h.run('G91\nM83\nG92 E3')
+                before = h.gmove.get_status(h.now)
+
+                if operation == 'UNLOAD':
+                    menu, _ = menu_fixture()
+                    menu.page, menu.gcode, menu.reactor = 'material', h.gcode, h.reactor
+                    action = menu.rows(h.now)[1][1][1]
+                    menu.select(action, h.now)
+                    h.callbacks.pop()(h.now)
+                else:
+                    h.run('ZORTRAX_LOAD')
+
+                h.heat(h.f, wait_state)
+                view = h.p.view(h.now)
+                h.p.action(view['view_id'], 'CONFIRM')
+                h.until(h.f, 'COMPLETE')
+                moves = [event[1] for event in h.events if event[0] == 'move']
+                self.assertTrue(moves)
+                self.assertTrue(all(move[:3] == (150., 158., 5.) for move in moves))
+                self.assertEqual(h.position, [150., 158., 5., endpoint])
+                self.assertIs(h.gmove.move_transform, mesh)
+                self.assertIs(h.gmove.move_with_transform, transformed_move)
+                self.assertIs(mesh.get_mesh(), active_mesh)
+                self.assertEqual(h.gmove.get_status(h.now)['gcode_position'], before['gcode_position'])
+                self.assertEqual(h.hotend.target, 0.)
+
     def test_native_printing_or_paused_rejects_material_and_maintenance_before_heat(self):
         for state in ('printing','paused'):
             for command in ('ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP'):
