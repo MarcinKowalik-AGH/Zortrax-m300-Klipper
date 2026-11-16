@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.14
+# Zortrax M300 Classic — Klipper 1.0.0-rc.15
 
-**RC14** retracts filament before Z contact during print start, purges in four passes at one commanded Z height and keeps Dynamic lighting white while the model prints. Klipper synchronizes the factory print-time counter directly with MCU 1.0.5, without a Flash dump. [Release notes](docs/en/RELEASE_v1.0.0-rc.14.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC15** keeps Dynamic lighting white after the active print file completes `START_PRINT`. The four startup purge passes retain one commanded Z height. Klipper synchronizes the factory print-time counter directly with MCU 1.0.5, without a Flash dump. [Release notes](docs/en/RELEASE_v1.0.0-rc.15.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
-**Fourteenth release candidate for the classic M300**, using its original controller,
+**Fifteenth release candidate for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC14](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.14) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC15](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.15) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

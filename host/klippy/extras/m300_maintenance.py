@@ -498,6 +498,8 @@ class M300Maintenance:
         if paused:
             return 'PAUSE'
         if printing and control_state == 'IDLE':
+            if getattr(control, 'model_print_ready', False):
+                return 'WORKING'
             models = self.printer.lookup_object('m300_models', None)
             if models is not None and models.runtime_deposited and not models.runtime_ended:
                 return 'WORKING'
