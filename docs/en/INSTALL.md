@@ -1,7 +1,7 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.13 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.13).
+[fixed v1.0.0-rc.14 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.14).
 For a blank Fluidd page, [recover Fluidd before the host update](#recover-fluidd-then-update-klipper).
 [Polski](../pl/INSTALL.md).
 

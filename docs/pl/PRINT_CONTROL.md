@@ -2,10 +2,9 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Stan instrukcji: RC1, z zachowaniem ustaleń testu z 11 listopada 2026.** Kontroler druku pozostaje
-`0.13.16.38-PRINT-DRAIN-XY-PURGE`; niniejsza aktualizacja porządkuje opis,
-nie zmienia ruchów drukarki. [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
-i [makra](../../host/config/m300_operations.cfg) są źródłem parametrów.
+**Procedura RC14.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
+oraz parametry ruchu.
 
 Opis starszego kontrolera `.29`, pojedynczej linii 40 mm i dawnych wartości
 znajduje się w [archiwum](PRINT_CONTROL_LEGACY_R16_29.md). **Nie należy już
@@ -41,26 +40,33 @@ Nie powielaj w profilu slicera dodatkowego G28, grzania i czterech linii, gdy
 wywołujesz wspólny START_PRINT. Dla świadomego wymagania konkretnej siatki użyj
 `MESH=m300_pads`; dla świadomego druku bez kompensacji `MESH=NONE`.
 
-## Obecna kolejność START_PRINT: dwie linie Y i dwie X
+## Kolejność START_PRINT
 
 1. Sprawdzenie temperatur, dostępności profilu i braku konkurencyjnej procedury.
-2. Przygotowanie natywnego pliku oraz nagrzewanie dyszy i stołu do zadanych celów.
-   Włączone Full platform preheating dodaje skonfigurowaną stabilizację (domyślnie
-   60 s); nie jest pomiarem temperatury każdego miejsca powierzchni stołu.
-3. Wspólne bazowanie M300. Z korzysta z dotychczasowej procedury kontaktowej i
-   minimum 180°C, nie obniżając wyższego celu drukowania.
-4. **Po bazowaniu** załadowanie i aktywacja wybranego profilu bed_mesh. `AUTO`
-   oznacza `m300_pads`, gdy profil istnieje; przy jego braku **NONE, bez kompensacji**.
-   Jawna nieistniejąca nazwa jest odrzucana przed rozpoczęciem operacji.
-5. **Cztery odcinki z ekstruzją: Y tam i z powrotem, następnie X tam i z powrotem
-   (2Y + 2X).** Pomiędzy parami wykonywane jest uniesienie/odsunięcie Z.
-6. Odtworzenie trybów parsera, mnożników i wznowienie wykonania właściwego pliku.
+2. Przygotowanie pliku oraz nagrzewanie dyszy i stołu. Włączone Full platform
+   preheating dodaje ustawioną stabilizację stołu, domyślnie 60 s.
+3. Po osiągnięciu temperatur i stabilizacji Klipper cofa filament o 10 mm
+   i czeka na zakończenie ruchu przed kontaktem Z.
+4. Wspólne bazowanie M300. Bazowanie Z korzysta z procedury kontaktowej
+   i minimum 180°C, z zachowaniem wyższego celu drukowania.
+5. Po bazowaniu Klipper aktywuje wybrany profil mesh. `AUTO` wybiera
+   `m300_pads`, jeśli istnieje, a w przeciwnym razie drukuje bez kompensacji.
+   Jawną nieistniejącą nazwę odrzuca przed rozpoczęciem operacji.
+6. Klipper dojeżdża do początku czyszczenia na wysokości bezpiecznej,
+   podaje 6 mm filamentu i przechodzi na wysokość czyszczenia.
+7. Wykonuje cztery długie odcinki z ekstruzją, dwa w osi Y i dwa w osi X
+   (2Y + 2X). Na końcach par są przejścia o 0,5 mm bez ekstruzji. Pierwszy odcinek X
+   rusza z końca powrotnego odcinka Y. Wszystkie odcinki pracują na jednej
+   zadanej wysokości Z.
+   Po ostatnim odcinku Klipper odsuwa Z, odtwarza stan parsera i przekazuje
+   wykonanie do właściwego pliku modelu.
 
-Ruchy rozruchowe przechodzą przez natywny G-code i aktywną transformację mesh.
-To nie jest obejście kompensacji przez bezpośrednie manual_move. Podczas rozruchu
-używane są G90, M83 i mnożniki M220/M221 = 100%; wcześniejszy stan parsera jest
-odtwarzany również przy przerwaniu. Nowy pomiar 25 pozycji **nie jest wykonywany
-przy każdym wydruku**.
+Natywny G-code stosuje wybraną kompensację mesh podczas czyszczenia. Stała
+zadana wysokość pozwala siatce nadal korygować fizyczne położenie Z.
+Rozruch używa G90, M83 i mnożników M220/M221 = 100%. Klipper odtwarza
+poprzednie tryby parsera także przy przerwaniu. Cykl cofnięcia i podania
+10/6 mm należy do `START_PRINT`. Samodzielne Home Z i Bed Mesh korzystają
+z własnego cyklu pomiarowego.
 
 ### Domyślna geometria w kodzie, nie nakaz nadpisania własnych nastaw
 
@@ -71,15 +77,15 @@ przy każdym wydruku**.
 | `purge_height` | 0,28 mm |
 | `PURGE` w komendzie | Żądana długość, dalej ograniczana do rzeczywistego pola osi |
 | Początek pary Y | `X_min+3`, `Y_min+10`; powrót z przesunięciem X o 0,5 mm |
-| Początek pary X | `X_min+3`, `Y_min+20`; powrót z przesunięciem Y o 0,5 mm |
+| Początek pary X | `X_min+3,5`, `Y_min+10` na końcu drugiego odcinka Y; powrót z przesunięciem Y o −0,5 mm |
 | Daleka krawędź | Nie bliżej niż 5 mm od rzeczywistego maksimum osi |
-| Z przed przemieszczeniem | 5 mm w układzie użytym przez procedurę; dodatnie Z odsuwa stół |
+| Bezpieczna wysokość Z | 5 mm przy dojeździe do początku i po ostatnim odcinku |
+| Cofnięcie i podanie przed czyszczeniem | 10 mm cofnięcia i 6 mm podania z prędkością `retract_speed`, domyślnie 2 mm/s |
 
-Dawka jest proporcjonalna do **faktycznej długości każdego odcinka**, a nie
-stała po skróceniu do granic M300. `PURGE=350` nie robi z M300 stołu CR-10 S5.
-Początek Y i odniesienie końca Y różnią się o 10 mm, dlatego nie należy obiecywać
-czterech odcinków dokładnie po 250 mm. Istniejące własne nastawy pozostają
-w konfiguracji; ta aktualizacja dokumentacji ich nie zmienia.
+Dawka jest proporcjonalna do **faktycznej długości każdego odcinka** po
+ograniczeniu do pola ruchu. Przy domyślnych granicach i `purge_length=250`
+odcinki Y mają po 260 mm, a odcinki X po 250 mm. Zmniejszone pole ruchu lub
+własne nastawy mogą skrócić odcinki.
 
 ## Pauza, wznowienie, zakończenie
 
@@ -102,9 +108,18 @@ bezpieczne wznowienie. Nie odblokowuj go przez ręczne nadpisywanie PAUSE_STATE.
 Zabezpieczenia grzania, autonomiczne chłodzenie MCU i sygnalizacja błędów
 pozostają niezależne od wyłączenia nawiewu modelu.
 
+## Światło podczas druku
+
+W trybie Dynamic światło jest stale białe podczas wykonywania pliku modelu,
+także gdy grzałki utrzymują temperaturę albo zmienia się jej cel. Sygnały
+przygotowania, pauzy i błędów wynikają z osobnych stanów pracy drukarki.
+Wybór Disabled i ustawiona jasność obowiązują zgodnie z polityką światła.
+[Kolory i ustawienia](../en/SETTINGS_INFORMATION.md).
+
 ## Kontrola i odbiór
 
-`PRINT_CONTROL_STATUS` podaje bieżącą fazę i cele. `BED_MESH_OUTPUT` pozwala
+`PRINT_CONTROL_STATUS` podaje bieżącą fazę, cele i rewizję
+`0.13.16.39-PRINT-PREP`. `BED_MESH_OUTPUT` pozwala
 odczytać aktywną siatkę bez nowego sondowania. Sam kolorowy podgląd profilu we
 Fluidd nie jest dowodem włączenia kompensacji. Rejestrowanie rzeczywistych prób
 odbywa się w [rejestrze](ACCEPTANCE_REGISTER.md): start, pauza, wznowienie,

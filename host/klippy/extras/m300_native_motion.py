@@ -165,10 +165,10 @@ class M300NativeMotion:
             raise self.printer.command_error('M300 homing CLEARANCE: expected Z homing toward the minimum')
         unhomed = 'z' not in kin.get_status(self.reactor.monotonic())['homed_axes']
         position = self.toolhead.get_position()
-        signature = (tuple(position),not unhomed)
+        signature = (tuple(position[:3]), not unhomed)
         if not active and getattr(self,'_xy_clearance_position',None) == signature:
-            # Reuse only the unchanged, electrically open position just
-            # prepared by a parent wizard; never accumulate another retreat.
+            # Reuse the same verified XYZ after a parent wizard or an E-only
+            # move. The contact must still be open before any XY travel.
             return dict(commanded_distance_mm=0.,clearance_reused=True,
                         physical_contact_checked=True,pc7_open=True)
         self._xy_clearance_position = None
@@ -199,7 +199,7 @@ class M300NativeMotion:
         if active:
             raise self.printer.command_error(
                 'M300 homing NO_RELEASE: PC7 is still closed after the initial Z clearance; XY was not started')
-        self._xy_clearance_position = (tuple(self.toolhead.get_position()),not unhomed)
+        self._xy_clearance_position = (tuple(self.toolhead.get_position()[:3]), not unhomed)
         return dict(commanded_distance_mm=target-start,temporary_z_frame=unhomed,
                     physical_contact_checked=True,pc7_open=True)
 
@@ -372,7 +372,7 @@ class M300NativeMotion:
                 # a changed Z position, a released stepper or a failure.
                 self._check_z_contact(token)
                 self._xy_clearance_position = (
-                    tuple(self.toolhead.get_position()),
+                    tuple(self.toolhead.get_position()[:3]),
                     'z' in kin.get_status(self.reactor.monotonic())['homed_axes'])
             if 'z' in axes:
                 self._phase('Z_CONTACT_POSITION')

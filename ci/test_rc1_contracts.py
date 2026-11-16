@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.13'
+VERSION='v1.0.0-rc.14'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -31,26 +31,24 @@ class Rc1Contracts(unittest.TestCase):
         report=json.loads((ROOT/'docs/reports/RC6_REVIEW.json').read_text())
         self.assertFalse(report['physical_tests_performed'])
         self.assertGreaterEqual(len(report['protected_sha256']),14)
-        controller = 'host/klippy/extras/m300_print_control.py'
         oled = 'host/klippy/extras/m300_oled.py'
         native_service = 'host/klippy/extras/m300_native_service.py'
-        drain_observer = (
-            "        nvm = self.printer.lookup_object('m300_nvm', None)\n"
-            "        if nvm is not None:\n"
-            "            nvm.runtime_drained(self.reactor.monotonic())\n"
-        ).encode()
-        end_observer = (
-            "            models = self.printer.lookup_object('m300_models', None)\n"
-            "            if models is not None:\n"
-            "                models.runtime_end()\n"
-        ).encode()
+        # RC14 prepares clearance before retract and uses a continuous purge.
+        rc14_updates = {
+            'host/klippy/extras/m300_print_control.py': (
+                'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
+                'f7fbc0020059e0706690171a7ac81681db0486c3a47f6233d74798758162e804'),
+            'host/klippy/extras/m300_native_motion.py': (
+                '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
+                '55be76180b91a75df8d497c60a69814b6418c643b3a269e19b85655ce92b0acd'),
+        }
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
                 data = (ROOT/path).read_bytes()
-                if path == controller:
-                    for observer, count in ((drain_observer, 2), (end_observer, 1)):
-                        self.assertEqual(data.count(observer), count)
-                        data = data.replace(observer, b'')
+                if path in rc14_updates:
+                    historical, current = rc14_updates[path]
+                    self.assertEqual(expected, historical)
+                    expected = current
                 if path == oled:
                     # RC9 removes the development RLE command. The repository
                     # AST contract separately checks the production OLED methods.
@@ -65,7 +63,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],907)
+        self.assertEqual(meta['self_contained_host_tests'],911)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

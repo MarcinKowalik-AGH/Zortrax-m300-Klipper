@@ -52,7 +52,8 @@ def deposited_moves(h):
         pos = list(item[1])
         if pos[3] > old[3]:
             axes = ''.join(axis for i, axis in enumerate('xyz') if pos[i] != old[i])
-            result.append((axes, old, pos))
+            if axes:
+                result.append((axes, old, pos))
         old = pos
     return result
 

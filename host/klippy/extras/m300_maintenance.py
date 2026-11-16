@@ -445,6 +445,7 @@ class M300Maintenance:
             return 'ERROR'
         busy = self.is_busy()
         paused = False
+        printing = False
         heating = self.state == 'HEATING'
         stats = self.printer.lookup_object('print_stats', None)
         if stats is not None:
@@ -453,13 +454,14 @@ class M300Maintenance:
                 if native_state == 'error':
                     return 'ERROR'
                 paused = native_state == 'paused'
-                busy = busy or native_state == 'printing'
+                printing = native_state == 'printing'
             except Exception:
                 return 'ERROR'
         native_pause = self.printer.lookup_object('pause_resume', None)
-        control=self.printer.lookup_object('m300_print_control',None)
-        if control is not None and control.state in ('STARTING','ENDING','CANCELLING'):
-            paused=False  # Native SD worker barrier is not an operator pause.
+        control = self.printer.lookup_object('m300_print_control', None)
+        control_state = 'IDLE' if control is None else control.state
+        if control_state in ('STARTING', 'ENDING', 'CANCELLING'):
+            paused = False  # Native SD worker barrier is not an operator pause.
         paused = paused or bool(getattr(native_pause, 'is_paused', False))
         for name in ('m300_job', 'm300_filament', 'm300_calibration',
                      'm300_motion', 'm300_sd', 'm300_nvm', 'm300_fans',
@@ -495,9 +497,13 @@ class M300Maintenance:
             return 'ERROR'
         if paused:
             return 'PAUSE'
+        if printing and control_state == 'IDLE':
+            models = self.printer.lookup_object('m300_models', None)
+            if models is not None and models.runtime_deposited and not models.runtime_ended:
+                return 'WORKING'
         if heating:
             return 'HEATING'
-        if busy:
+        if busy or printing:
             return 'WORKING'
         return 'HEATING' if targets else 'READY'
 

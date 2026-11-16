@@ -15,8 +15,9 @@ import os
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.38-PRINT-DRAIN-XY-PURGE'
+REVISION = '0.13.16.39-PRINT-PREP'
 PERIOD = .25
+START_RETRACT_MM = 10.
 
 
 class M300PrintControl:
@@ -570,6 +571,10 @@ class M300PrintControl:
     def cmd_start(self,gcmd):
         target=self._temperature_target(gcmd,'EXTRUDER_TEMP',self.hotend,
             self.hotend.get_temp(self.reactor.monotonic())[1],self.hotend.min_extrude_temp)
+        if target <= 0.:
+            raise self._error('print start requires a nozzle target for filament retraction')
+        if self.toolhead.get_extruder().max_e_dist < START_RETRACT_MM:
+            raise self._error('startup retraction exceeds native max_extrude_only_distance')
         bed=self._temperature_target(gcmd,'BED_TEMP',self.bed,
             self.bed.get_temp(self.reactor.monotonic())[1])
         mesh=gcmd.get('MESH','AUTO')
@@ -612,6 +617,26 @@ class M300PrintControl:
             for pos in plan['park_moves']:self.steps.append(('move',pos))
             self.steps.append(('ended',None));self._phase('END_PARK')
 
+    def _start_retract(self):
+        token = self.generation
+        self._phase('START_CLEARANCE')
+        self._release()
+        self.motion.ensure_xy_clearance(lambda: self._guard(token))
+        self._guard(token)
+        self._lease()
+        state = {'NAME': 'M300_START_RETRACT'}
+        self.gcode_move.cmd_SAVE_GCODE_STATE(self._command('SAVE_GCODE_STATE', state))
+        try:
+            self._e(-START_RETRACT_MM)
+        finally:
+            # Preserve the logical E coordinate across this physical move.
+            if self.ready and not self.printer.is_shutdown():
+                restore = self._command('RESTORE_GCODE_STATE', dict(state, MOVE='0'))
+                self.gcode_move.cmd_RESTORE_GCODE_STATE(restore)
+            self.gcode_move.saved_states.pop(state['NAME'], None)
+        self._guard(token)
+        self._phase('RETRACT_DRAIN')
+
     def _start_home(self):
         token=self.generation
         self._release();self._phase('HOMING',self.heat_timeout)
@@ -646,23 +671,24 @@ class M300PrintControl:
         # Its 350 mm path cannot be copied to a 300 mm M300 unbounded.
         # Keep both lanes inside native travel with a 5 mm far-edge margin.
         x,y=low[0]+3.,low[1]+10.
-        cross_y=low[1]+20.
-        x_end=min(x+length,high[0]-5.)
-        y_end=min(cross_y+length,high[1]-5.)
-        if (x_end <= x or y_end <= cross_y+.5 or x+.5 > high[0]-5.
+        x_return, y_return = x + .5, y - .5
+        x_end = min(x_return + length, high[0] - 5.)
+        y_end = min(y + 10. + length, high[1] - 5.)
+        if (x_end <= x_return or y_end <= y
                 or not low[2] <= self.purge_height <= high[2] or high[2] < 5.):
             raise self._error('four purge lines do not fit native travel')
         dose=self.purge_filament/self.purge_length
         ey=(y_end-y)*dose
-        ex=(x_end-x)*dose
+        ex=(x_end-x_return)*dose
+        # Turn directly from the Y return into the X run. Both 0.5 mm
+        # offsets stay on the outside so the nozzle does not cross a bead.
         return ('G1 Z5 F300',f'G1 X{x:.5f} Y{y:.5f} F6000',
+                f'G1 E6 F{60. * self.e_speed:.5f}',
                 f'G1 Z{self.purge_height:.5f} F300',
                 f'G1 Y{y_end:.5f} E{ey:.5f} F1000',
-                f'G1 X{x+.5:.5f} F5000',f'G1 Y{y:.5f} E{ey:.5f} F1000',
-                'G1 Z5 F300',f'G1 X{x:.5f} Y{cross_y:.5f} F6000',
-                f'G1 Z{self.purge_height:.5f} F300',
+                f'G1 X{x_return:.5f} F5000',f'G1 Y{y:.5f} E{ey:.5f} F1000',
                 f'G1 X{x_end:.5f} E{ex:.5f} F1000',
-                f'G1 Y{cross_y+.5:.5f} F5000',f'G1 X{x:.5f} E{ex:.5f} F1000',
+                f'G1 Y{y_return:.5f} F5000',f'G1 X{x_return:.5f} E{ex:.5f} F1000',
                 'G1 Z5 F300')
 
     def _script(self,line):
@@ -741,11 +767,13 @@ class M300PrintControl:
                     elif self.state=='STARTING' and self.phase in ('HEATING','PLATFORM_SOAK'):
                         if self._temperatures_ready(self.operation['targets'],now):
                             if now-self.stable_since >= 2.+self.operation['soak_seconds']:
-                                self._start_home()
+                                if self.hotend.can_extrude:
+                                    self._start_retract()
                             elif self.phase=='HEATING':
                                 # Keep the original bounded heating deadline. A
                                 # temperature excursion resets continuous soak.
                                 self._phase('PLATFORM_SOAK',max(.001,self.deadline-now))
+                    elif self.phase=='RETRACT_DRAIN':self._start_home()
                     elif self.steps:self._step()
         except Exception as exc:
             logging.exception('M300 print control failed')

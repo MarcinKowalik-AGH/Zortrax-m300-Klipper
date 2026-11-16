@@ -485,6 +485,37 @@ class IndicatorAndSleepTests(unittest.TestCase):
             h.print_state='error';h.m._indicators(h.now)
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,0.,0.])
 
+    def test_dynamic_light_stays_white_during_print_temperature_changes(self):
+        with session() as h:
+            control = NS(state='STARTING', phase='HEATING', busy=True)
+            control.get_status = lambda now: vars(control)
+            h.objects['m300_print_control'] = control
+            models = NS(runtime_deposited=False, runtime_ended=False)
+            h.objects['m300_models'] = models
+            h.settings.set_option('led_brightness', 8)
+            h.print_state = 'printing'
+            h.hotend.temperature, h.hotend.target = 205., 240.
+            h.bed.temperature, h.bed.target = 55., 65.
+
+            def rgb():
+                h.m._indicators(h.now)
+                return [h.pins['m300_led_' + c] for c in 'rgb']
+
+            self.assertEqual(rgb(), [.5, 0., 0.])
+            control.state, control.phase, control.busy = 'IDLE', 'IDLE', False
+            self.assertEqual(rgb(), [.5, 0., 0.])
+            models.runtime_deposited = True
+            for nozzle, bed in ((205., 55.), (240., 65.), (235., 65.), (240., 61.)):
+                h.hotend.temperature, h.bed.temperature = nozzle, bed
+                self.assertEqual(rgb(), [.5, .5, .5])
+            h.run('ZORTRAX_LIGHT MODE=DISABLED')
+            self.assertEqual(rgb(), [0., 0., 0.])
+            h.run('ZORTRAX_LIGHT MODE=DYNAMIC')
+            h.print_state = 'paused'
+            self.assertEqual(rgb(), [.5, 0., .5])
+            h.print_state = 'error'
+            self.assertEqual(rgb(), [.5, 0., 0.])
+
     def test_independent_brightness_choices_apply_and_persist(self):
         with session() as h:
             _, display = attach_display(h)
@@ -688,7 +719,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.13');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.14');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

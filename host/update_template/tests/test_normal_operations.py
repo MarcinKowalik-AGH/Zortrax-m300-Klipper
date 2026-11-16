@@ -72,9 +72,11 @@ class NormalHomingTests(unittest.TestCase):
         m=motion_fixture()
         m.toolhead.set_position([150.,158.,310.,17.])
         m.ensure_xy_clearance(lambda:m._check(m.token))
+        m.toolhead.manual_move([None,None,None,7.], 2.)
         m.home(axes='xyz')
         self.assertEqual([event[1][2] for event in m.events if event[0]=='move' and event[1][2] is not None],[315.,5.])
         self.assertTrue(m.result['initial_clearance']['clearance_reused'])
+        self.assertEqual(m.toolhead.get_position()[3], 7.)
 
     def test_z_disable_invalidates_the_prepared_clearance(self):
         m=motion_fixture()

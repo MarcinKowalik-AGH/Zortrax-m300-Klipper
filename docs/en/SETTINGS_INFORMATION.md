@@ -67,11 +67,13 @@ printer through one state policy, independently of the open OLED or Fluidd menu:
 | Ready, including passive cooling after a completed procedure | Green |
 | Nozzle/bed heating, homing preheat or thermal test/PID heating | Red |
 | Pause, pausing or resuming; includes material heating while paused | Purple |
-| Printing and other active procedures once temperature is ready | White |
+| Actual model printing, including temperature changes during the print | Steady white |
+| Other active procedures once temperature is ready | White |
 | Failed procedure, native print error or MCU shutdown | Red → green → blue, five seconds per color, repeated |
 
-Priority is error, pause, heating, active work, Ready. A manual temperature
-target remains red when no print or other procedure is active. Opening a menu
+Priority is error, pause, actual model printing, heating, other active work
+and Ready. A manual temperature target remains red when the printer is
+waiting to heat outside active model printing. Opening a menu
 does not change this state. Homing, OEM leveling, the 25-point pad mesh,
 material handling and fan tests all use the same observer. Normal fixed White,
 Disabled and sleep-light choices remain available; an error overrides them.
