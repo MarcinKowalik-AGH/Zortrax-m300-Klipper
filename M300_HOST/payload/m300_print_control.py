@@ -15,7 +15,7 @@ import os
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.39-PRINT-PREP'
+REVISION = '0.13.16.40-PRINT-LIGHT'
 PERIOD = .25
 START_RETRACT_MM = 10.
 
@@ -68,6 +68,7 @@ class M300PrintControl:
         self._material_was_busy = False
         self._cancel_park = False
         self._pending_file = None
+        self._prepared_stream = None
         self.operation = None
         self._internal = False
         self._display_owned = False
@@ -144,6 +145,11 @@ class M300PrintControl:
     def busy(self):
         return self.state not in ('IDLE','PAUSED','FAILED')
 
+    @property
+    def model_print_ready(self):
+        return (self._prepared_stream is not None
+                and self._prepared_stream is self.sd.current_file)
+
     def _ready(self):
         self.ready = True
 
@@ -207,9 +213,11 @@ class M300PrintControl:
     def _stop(self, reason):
         active=self.busy or self.context is not None
         self.ready=False
+        self._prepared_stream = None
         self._drop(reason,off=active)
 
     def _file_reset(self,*args):
+        self._prepared_stream = None
         if self.context is not None or self.busy:
             self._drop('native file reset')
 
@@ -491,6 +499,7 @@ class M300PrintControl:
 
     def _request_cancel(self,reason):
         if self.state=='CANCELLING':return
+        self._prepared_stream = None
         self._cancel_park=self.context is not None or self.operation is not None or self.sd.current_file is not None
         self.generation += 1;self.steps.clear();self.waiting=False
         self._release()
@@ -561,6 +570,7 @@ class M300PrintControl:
                 raise self._error(name+' owns resources')
         self.board.require_motion();self.board.require_heating()
         self.generation+=1;self.steps.clear();self.waiting=False;self.last_error=''
+        self._prepared_stream = None
         self.state=state
         self.operation=dict(file=None,stream=id(self.sd.current_file) if self.sd.current_file else None,
                             resume=self.sd.work_timer is not None)
@@ -702,8 +712,12 @@ class M300PrintControl:
         if end:self._off();self._fan_off()
         self._guard(token)
         resume=op['resume']
+        stream = self.sd.current_file if resume and not end else None
         self._drop('end' if end else 'start',off=False)
-        if resume:self.sd.do_resume()  # Native worker still owns EOF/completion.
+        if resume:
+            self.sd.do_resume()  # Native worker still owns EOF/completion.
+            # The same stream completed START_PRINT and can now print the model.
+            self._prepared_stream = stream
 
     def _step(self):
         kind,value=self.steps.popleft()
@@ -728,6 +742,7 @@ class M300PrintControl:
 
     def _fail(self,reason):
         self.last_error=str(reason)
+        self._prepared_stream = None
         self.steps.clear();self.waiting=False
         self._release();self._off()
         if self.context is not None:self.context['invalid']=self.last_error
@@ -784,6 +799,7 @@ class M300PrintControl:
         ctx=self.context
         measured,target=self.hotend.get_temp(now) if hasattr(self,'hotend') else (0.,0.)
         return dict(revision=REVISION,state=self.state,phase=self.phase,busy=self.busy,
+            model_print_ready=self.model_print_ready,
             session_token=self.generation,park_xy=list(self.park_xy),last_error=self.last_error,
             notice=self.notice,paused=bool(ctx),targets=copy.deepcopy(ctx['targets']) if ctx else None,
             start=copy.deepcopy({key:self.operation.get(key) for key in

@@ -2,7 +2,7 @@
 """Public distribution identity; protocol/firmware IDs remain separate."""
 import re
 
-VERSION = '1.0.0-rc.14'
+VERSION = '1.0.0-rc.15'
 
 
 def display_mcu_version(raw):
