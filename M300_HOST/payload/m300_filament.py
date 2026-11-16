@@ -323,7 +323,7 @@ class M300Filament:
             if self.job.machine.state not in JOB_IDLE or self.job.machine.active:
                 raise self._error('M02 job owns resources')
             if not native_service_frame(self.printer, self.gcode_move, self.toolhead,
-                                        paused_extrusion=parent is not None):
+                                        extruder_only=True):
                 raise self._error('native filament requires untransformed Cartesian motion')
             if self.job.m04_service_busy():
                 raise self._error('another OEM service owns resources')
