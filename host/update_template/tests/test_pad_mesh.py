@@ -850,6 +850,6 @@ class PadMeshTests(unittest.TestCase):
         self.assertTrue(native_service_frame(printer, parser, toolhead))
         mesh.get_mesh = object
         self.assertFalse(native_service_frame(printer, parser, toolhead))
-        self.assertTrue(native_service_frame(printer, parser, toolhead, paused_extrusion=True))
+        self.assertTrue(native_service_frame(printer, parser, toolhead, extruder_only=True))
         parser.move_transform = object()
-        self.assertFalse(native_service_frame(printer, parser, toolhead, paused_extrusion=True))
+        self.assertFalse(native_service_frame(printer, parser, toolhead, extruder_only=True))

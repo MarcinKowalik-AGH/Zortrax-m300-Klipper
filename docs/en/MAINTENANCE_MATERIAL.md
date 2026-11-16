@@ -61,6 +61,8 @@ A short press confirms the currently acknowledged dialog. A long press
 cancels it. Fluidd buttons carry that same phase identity. A stale or repeated
 confirmation cannot advance a new phase. Starting Heat/Load/Unload/Change from
 a macro or console opens the same OLED dialog as starting from the menu.
+With an active native Klipper Bed Mesh, load and unload move only the
+extruder and leave the mesh active afterward.
 Completion closes the Fluidd prompt and returns to Maintenance, Material or
 the paused native Print status, as appropriate.
 

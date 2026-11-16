@@ -79,6 +79,10 @@ Ordinary Z używa pięciu kolejnych kontaktów/zwolnień; końcowe odniesienie p
 
 `ZORTRAX_LOAD` i `ZORTRAX_UNLOAD` prowadzą operatora przez nagrzewanie i potwierdzenia. Domyślna temperatura proceduralna wynosi **240°C**, a nominalne długości LOAD/UNLOAD to **130/110 mm**. To parametry procedury portu, nie uniwersalne zalecenie temperaturowe dla każdego filamentu. Wariant wymiany w pauzie wykorzystuje 110 mm wycofania i 150 mm podania.
 
+Podczas załadunku i rozładunku z OLED lub Fluidd może pozostać aktywna
+natywna siatka stołu Klippera. Procedura porusza wyłącznie ekstruderem
+i pozostawia profil aktywny po zakończeniu.
+
 ![Menu ładowania materiału](../img/oled/material_load@3x.png)
 
 Temperaturę dobierz w granicach materiału i konfiguracji, korzystając z obsługiwanych parametrów. Nie forsuj podawania, gdy materiał się zacina. Dalsza ekstruzja, potwierdzenie i anulowanie zależą od aktualnej fazy; stary przycisk nie jest zgodą na kolejną fazę. Zmiana podczas druku: PAUSE → `ZORTRAX_CHANGE` → potwierdzenie prawidłowego przepływu → jawne RESUME.
