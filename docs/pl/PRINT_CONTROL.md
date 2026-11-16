@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Procedura RC14.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+**Procedura RC15.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
 oraz parametry ruchu.
 
@@ -110,20 +110,39 @@ pozostają niezależne od wyłączenia nawiewu modelu.
 
 ## Światło podczas druku
 
-W trybie Dynamic światło jest stale białe podczas wykonywania pliku modelu,
-także gdy grzałki utrzymują temperaturę albo zmienia się jej cel. Sygnały
+W trybie Dynamic światło jest białe od zakończenia `START_PRINT` dla
+bieżącego pliku SD. Zmiany temperatur, w tym przejście od raftu do modelu
+w tym samym pliku, nie zmieniają koloru na czerwony. Sygnały
 przygotowania, pauzy i błędów wynikają z osobnych stanów pracy drukarki.
 Wybór Disabled i ustawiona jasność obowiązują zgodnie z polityką światła.
 [Kolory i ustawienia](../en/SETTINGS_INFORMATION.md).
 
 ## Kontrola i odbiór
 
-`PRINT_CONTROL_STATUS` podaje bieżącą fazę, cele i rewizję
-`0.13.16.39-PRINT-PREP`. `BED_MESH_OUTPUT` pozwala
-odczytać aktywną siatkę bez nowego sondowania. Sam kolorowy podgląd profilu we
-Fluidd nie jest dowodem włączenia kompensacji. Rejestrowanie rzeczywistych prób
-odbywa się w [rejestrze](ACCEPTANCE_REGISTER.md): start, pauza, wznowienie,
-anulowanie w różnych fazach, wymiana i zakończenie mają osobne pozycje.
+Te polecenia odczytu pomagają ustalić przyczynę zmiany koloru lub ruchu Z:
+
+```gcode
+PRINT_CONTROL_STATUS
+ZORTRAX_MAINTENANCE_STATUS
+ZORTRAX_ERROR_STATUS
+BED_MESH_OUTPUT
+```
+
+Sprawdź rewizję `0.13.16.40-PRINT-LIGHT`, fazę i aktywną siatkę. W RC15
+`model_print_ready: true` potwierdza zakończenie czyszczenia w bieżącym
+pliku SD. Rewizja
+`0.13.16.38-PRINT-DRAIN-XY-PURGE` miała dodatkowe odsunięcie do Z5 pomiędzy
+parami Y i X. Od `0.13.16.39-PRINT-PREP` przejście Y→X utrzymuje zadaną
+wysokość czyszczenia, domyślnie Z0,28. Aktywna siatka nadal koryguje
+fizyczne Z w zależności od XY. `BED_MESH_OUTPUT` odczytuje siatkę bez
+sondowania, a kolorowy podgląd zapisanego profilu we Fluidd sam nie potwierdza
+aktywnej kompensacji.
+
+Przy czerwonym świetle odczytaj `status_led.state` i `status_led.rgb` z
+`ZORTRAX_MAINTENANCE_STATUS`. Stan `HEATING` oznacza grzanie, a
+`ERROR` wskazuje sygnalizację błędu. `ZORTRAX_ERROR_STATUS` pokazuje
+bieżące zdarzenie i stan raportowany przez MCU.
+[Rejestr prób](ACCEPTANCE_REGISTER.md).
 
 Programowe testy i udana kompilacja nie są odbiorem ruchów ani pierwszej warstwy
 na Twojej drukarce. Wpis bez potwierdzenia użytkownika pozostaje oczekujący.

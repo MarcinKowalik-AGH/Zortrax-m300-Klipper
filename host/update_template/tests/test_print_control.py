@@ -258,6 +258,49 @@ class PrintControlTests(unittest.TestCase):
         self.assertEqual(h.sd.work_timer, 'native')
         self.assertEqual(h.hotend.target, 240.)
 
+    def test_completed_start_keeps_light_white_for_its_native_file_without_accounting(self):
+        h = self.h
+        h.objects['m300_motion'].get_status = lambda now: dict(state='IDLE', busy=False)
+        self.assertNotIn('m300_nvm', h.objects)
+        self.assertNotIn('m300_models', h.objects)
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.stop_worker()
+        h.step_control()
+        self.assertFalse(h.c.get_status(h.now)['model_print_ready'])
+        self.assertEqual(h.m.status_led_rgb(h.now), (1, 0, 0))
+        h.control_until('IDLE')
+        h.hotend.temperature -= 5.
+        self.assertTrue(h.c.get_status(h.now)['model_print_ready'])
+        self.assertEqual(h.m.status_led_rgb(h.now), (1, 1, 1))
+        h.pause.is_paused = True
+        self.assertEqual(h.m.status_led_rgb(h.now), (1, 0, 1))
+        h.pause.is_paused = False
+        h.objects['m300_errors'] = NS(current={'fatal': True})
+        self.assertEqual(h.m.status_led_rgb(h.now), (1, 0, 0))
+
+    def test_start_completion_belongs_to_one_file_and_resets_on_end(self):
+        h = self.h
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.stop_worker()
+        h.control_until('IDLE')
+        stream = h.sd.current_file
+        with open(stream.name) as other_stream:
+            h.sd.current_file = other_stream
+            self.assertFalse(h.c.model_print_ready)
+            h.sd.current_file = stream
+        h.emit('virtual_sdcard:reset_file')
+        self.assertFalse(h.c.model_print_ready)
+
+        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.stop_worker()
+        h.control_until('IDLE')
+        self.assertTrue(h.c.model_print_ready)
+        h.run('ZORTRAX_PRINT_END')
+        self.assertFalse(h.c.model_print_ready)
+        h.stop_worker()
+        h.control_until('IDLE')
+        self.assertFalse(h.c.model_print_ready)
+
     def test_missing_mesh_fails_before_heating_or_stopping_file(self):
         h=self.h
         with self.assertRaisesRegex(h.printer.command_error,'saved mesh'):

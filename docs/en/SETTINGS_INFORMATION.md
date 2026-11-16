@@ -67,12 +67,12 @@ printer through one state policy, independently of the open OLED or Fluidd menu:
 | Ready, including passive cooling after a completed procedure | Green |
 | Nozzle/bed heating, homing preheat or thermal test/PID heating | Red |
 | Pause, pausing or resuming; includes material heating while paused | Purple |
-| Actual model printing, including temperature changes during the print | Steady white |
+| Active SD print after completing `START_PRINT`, including changes in heater targets | Steady white |
 | Other active procedures once temperature is ready | White |
 | Failed procedure, native print error or MCU shutdown | Red → green → blue, five seconds per color, repeated |
 
-Priority is error, pause, actual model printing, heating, other active work
-and Ready. A manual temperature target remains red when the printer is
+Priority is error, operator pause, active printing after `START_PRINT`,
+heating, other active work and Ready. A manual temperature target remains red when the printer is
 waiting to heat outside active model printing. Opening a menu
 does not change this state. Homing, OEM leveling, the 25-point pad mesh,
 material handling and fan tests all use the same observer. Normal fixed White,
@@ -82,6 +82,8 @@ after the preceding error has cleared. It sends pin updates only on a color or
 brightness change. No status-color UART polling or new heating/motion owner
 is introduced. `ZORTRAX_MAINTENANCE_STATUS` includes `status_led` revision
 `0.13.16.21-STATUS-LED`, the last applied RGB and alarm timing.
+For a red indicator, compare `status_led.state` with `ZORTRAX_ERROR_STATUS`
+to distinguish heating from a fault signal.
 
 MCU R14.17 repeats the error sequence locally at full brightness after shutdown,
 including host loss while the MCU guard is armed. It uses the permanent task

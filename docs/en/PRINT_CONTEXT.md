@@ -40,9 +40,18 @@ can still compensate Z. The final lift and parser-state restore precede
 continuation of the print file. Standalone Home Z and Bed Mesh use their own
 measurement routines.
 
-Dynamic Light stays white during actual model printing, including temperature
-changes during the print. Preparation, pause and faults retain their status
-colors. [Lighting settings](SETTINGS_INFORMATION.md).
+Dynamic Light stays white after the active SD file finishes `START_PRINT`,
+including changes in heater targets during a raft-to-model transition.
+Preparation, operator pause and faults retain their status colors.
+[Lighting settings](SETTINGS_INFORMATION.md).
+
+Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.40-PRINT-LIGHT`
+and `model_print_ready: true` after purge for the active SD file. The legacy `0.13.16.38-PRINT-DRAIN-XY-PURGE` commanded a Z5 lift between the Y
+and X pairs. From `0.13.16.39-PRINT-PREP`, the crossover uses the commanded
+purge height, usually Z0.28. Bed Mesh can still move physical Z as XY
+changes. `BED_MESH_OUTPUT` reads the active mesh. If the light turns red,
+check `status_led.state` and `status_led.rgb` in `ZORTRAX_MAINTENANCE_STATUS`
+and check the reported event in `ZORTRAX_ERROR_STATUS`.
 
 ## Fluidd
 

@@ -104,8 +104,10 @@ aktywnej siatki. Parametr `PURGE` określa żądaną długość, ograniczoną po
 ruchu, a dawka filamentu jest proporcjonalna do odcinka.
 [Sekwencja i parametry START_PRINT](PRINT_CONTROL.md#kolejność-start_print).
 
-W trybie Dynamic światło jest stale białe podczas drukowania modelu.
+W trybie Dynamic światło jest białe po zakończeniu `START_PRINT` dla
+bieżącego pliku SD, także podczas przejścia od raftu do modelu.
 Przygotowanie, pauza i błędy mają własne kolory.
+[Odczyt fazy, siatki i stanu światła](PRINT_CONTROL.md#kontrola-i-odbiór).
 
 `MESH=AUTO` wybiera `m300_pads`, gdy istnieje, inaczej drukuje bez kompensacji. `MESH=m300_pads` wymaga profilu. `MESH=NONE` jawnie wyłącza siatkę. START nie mierzy mesh od nowa. Ustawienia i wcześniejsze tryby parsera są chronione; po sekwencji przywracane są m.in. tryby współrzędnych i mnożniki.
 
@@ -137,7 +139,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.5 wystarczy aktualizacja Klippera. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.39-PRINT-PREP`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.40-PRINT-LIGHT`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ## 9. Rozpoznawanie problemów
 

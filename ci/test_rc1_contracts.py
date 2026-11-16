@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.14'
+VERSION='v1.0.0-rc.15'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -33,11 +33,11 @@ class Rc1Contracts(unittest.TestCase):
         self.assertGreaterEqual(len(report['protected_sha256']),14)
         oled = 'host/klippy/extras/m300_oled.py'
         native_service = 'host/klippy/extras/m300_native_service.py'
-        # RC14 prepares clearance before retract and uses a continuous purge.
-        rc14_updates = {
+        # Reviewed startup motion and active-file indicator updates in RC14/RC15.
+        updated_runtime = {
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
-                'f7fbc0020059e0706690171a7ac81681db0486c3a47f6233d74798758162e804'),
+                'd6170fb21e61b3d159002109b43913a21254436e34d118c174e16945f3e58ee6'),
             'host/klippy/extras/m300_native_motion.py': (
                 '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
                 '55be76180b91a75df8d497c60a69814b6418c643b3a269e19b85655ce92b0acd'),
@@ -45,8 +45,8 @@ class Rc1Contracts(unittest.TestCase):
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
                 data = (ROOT/path).read_bytes()
-                if path in rc14_updates:
-                    historical, current = rc14_updates[path]
+                if path in updated_runtime:
+                    historical, current = updated_runtime[path]
                     self.assertEqual(expected, historical)
                     expected = current
                 if path == oled:
@@ -63,7 +63,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],911)
+        self.assertEqual(meta['self_contained_host_tests'],913)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
