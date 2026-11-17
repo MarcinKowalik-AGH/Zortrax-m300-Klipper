@@ -27,6 +27,8 @@ render_config(package,config,data.resolve(),Path('/dev/ttyS1'),750000,'M300_FIRS
 source=args.output/'input.gcode'
 source.write_text('ZORTRAX_NATIVE_STATUS\nZORTRAX_SETTINGS_STATUS\nZORTRAX_PAD_MESH_STATUS\nPRINT_CONTROL_STATUS\nZORTRAX_OLED_STATUS\n')
 log=args.output/'klippy.log'
+# Klippy appends to an existing log. Each validation must inspect this boot only.
+log.unlink(missing_ok=True)
 result=subprocess.run([sys.executable,str(args.root/'klippy/klippy.py'),str(config/'printer.cfg'),
     '-i',str(source),'-o',str(args.output/'protocol.bin'),'-d',str(args.dictionary),'-l',str(log)],
     capture_output=True,text=True,timeout=30)
