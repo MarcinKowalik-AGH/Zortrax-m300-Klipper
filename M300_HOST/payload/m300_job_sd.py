@@ -914,8 +914,12 @@ class JobSD:
             # Invalidate first; the native worker observes this stop flag at
             # its next boundary. Keep its cursor until it exits, otherwise a
             # cancellation inside G1 makes upstream seek a detached reader.
-            self.v_sd.must_pause_work = True
-            native = self.v_sd.current_file
+            # On a native M300 the legacy adapter exists but did not install
+            # its worker. Klippy owns that file, cursor and timer.
+            native = None
+            if self.installed:
+                self.v_sd.must_pause_work = True
+                native = self.v_sd.current_file
             for stream in (native, self.prepared, self.selected):
                 if stream is not None:
                     stream.close()
@@ -923,7 +927,7 @@ class JobSD:
             self._feeder = None
             self._session = self._started = self._paused = False
             self._pause_requested = True
-            if not self._in_worker:
+            if self.installed and not self._in_worker:
                 self._detach_native()
         finally:
             self._closing = False

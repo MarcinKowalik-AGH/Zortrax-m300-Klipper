@@ -52,14 +52,33 @@ def _validate_journal(data):
     return data
 
 
+def _can_follow(older, newer):
+    """Compare valid records in one printer's forward-only accounting history."""
+    if older == newer:
+        return True
+    if (older['serial'], older['machine_id']) != (newer['serial'], newer['machine_id']):
+        return False
+    gained = newer['committed'] - older['committed']
+    if not 0 <= gained <= newer['last_minutes'] - older['last_minutes']:
+        return False
+    pending = older['pending']
+    if pending is not None:
+        # A different transaction cannot supersede unacknowledged minutes.
+        return (gained >= pending['target'] - pending['expected']
+                and newer['last_minutes'] >= pending['target'])
+    return True
+
+
 class CounterJournal:
     def __init__(self, store):
         self.path = store.path + '.runtime-sync'
+        self.checkpoint = self.path + '.checkpoint'
         self.atomic_replace = store._atomic_replace
 
-    def load(self):
+    @staticmethod
+    def _read(path):
         try:
-            raw = _read_regular(self.path, 4096)
+            raw = _read_regular(path, 4096)
         except FileNotFoundError:
             return None
         document = json.loads(raw, object_pairs_hook=_unique_pairs)
@@ -69,17 +88,62 @@ class CounterJournal:
             raise ValueError('factory counter journal checksum mismatch')
         return _validate_journal(document['data'])
 
+    @staticmethod
+    def _latest(first, second):
+        if first is None:
+            return second
+        if second is None or first == second:
+            return first
+        if _can_follow(first, second):
+            return second
+        if _can_follow(second, first):
+            return first
+        raise ValueError('factory counter journal and checkpoint have conflicting histories')
+
+    def load(self):
+        return self._latest(self._read(self.path), self._read(self.checkpoint))
+
+    def _write(self, path, data):
+        checksum = hashlib.sha256(_canonical(data)).hexdigest()
+        self.atomic_replace(path, _canonical(dict(data=data, sha256=checksum)))
+
     def load_for_sync(self, was_pending):
-        data = self.load()
-        if data is not None and (was_pending or data['pending'] is not None):
-            # An earlier rename may have succeeded before directory fsync failed.
-            _sync_directory(self.path)
+        first, second = self._read(self.path), self._read(self.checkpoint)
+        data = self._latest(first, second)
+        if data is not None:
+            # Rebuild a missing or stale copy before any MCU write. This also
+            # enrolls an existing RC7–16 journal on first connection.
+            if first != data:
+                self._write(self.path, data)
+            if second != data:
+                self._write(self.checkpoint, data)
+            if was_pending or data['pending'] is not None:
+                # An earlier rename may have succeeded before directory fsync failed.
+                _sync_directory(self.path)
         return data
+
+    def reconcile(self, serial, machine, minutes, total, committed):
+        if not _uint(committed, MAX_UINT - 1) or committed > min(total // 60, minutes):
+            raise ValueError('COMMITTED_MINUTES exceeds the host or factory total')
+        previous = self.load()
+        if previous is not None and (
+                previous['pending'] is not None or previous['serial'] != serial
+                or previous['machine_id'] != machine or previous['last_minutes'] >= minutes
+                or previous['committed'] >= total // 60 or committed < previous['committed']
+                or committed - previous['committed'] > minutes - previous['last_minutes']):
+            raise ValueError('existing factory counter transaction is incompatible with reconciliation')
+        self.save(dict(serial=serial, machine_id=machine, last_minutes=minutes,
+                       committed=committed, pending=None))
 
     def save(self, data):
         _validate_journal(data)
-        checksum = hashlib.sha256(_canonical(data)).hexdigest()
-        self.atomic_replace(self.path, _canonical(dict(data=data, sha256=checksum)))
+        previous = self.load()
+        if previous is not None and not _can_follow(previous, data):
+            raise ValueError('factory counter journal update would discard accounted minutes')
+        # Both atomic replacements and directory syncs finish before commit.
+        # A cut between them leaves comparable records with an absolute target.
+        self._write(self.path, data)
+        self._write(self.checkpoint, data)
 
 
 def decode_state(result):
@@ -115,6 +179,11 @@ class CounterSync:
         self.active_bank = 'AB'[source] if state == 1 else None
         return packet
 
+    def _history_required(self, message):
+        self.status = 'RECONCILIATION_REQUIRED'
+        self.display_blocked = True
+        self.error = message + '; verify previously credited minutes before ZORTRAX_COUNTER_RECONCILE'
+
     def run(self, snapshot, load, save, query, commit, *, runtime=False, allow_new=True):
         self.status = 'CHECKING'
         self.error = None
@@ -142,8 +211,13 @@ class CounterSync:
 
         fresh = data is None
         if fresh:
+            if total >= 60:
+                self._history_required('missing factory counter receipts for existing host print time')
+                return
             data = dict(serial=self.serial, machine_id=machine, committed=0,
                         last_minutes=minutes, pending=None)
+            # Establish a zero-credit baseline before the first minute accrues.
+            save(data)
         elif data['serial'] != self.serial or data['machine_id'] != machine:
             self.display_blocked = True
             error = CounterRecoveryError if state == 2 else ValueError
@@ -163,12 +237,19 @@ class CounterSync:
             raise CounterRecoveryError('interrupted MCU factory banks have no matching host transaction')
         if pending is None:
             whole_minutes = int(total // 60) - data['committed']
+            if minutes > data['last_minutes']:
+                if whole_minutes:
+                    # Even two matching receipts can be an old directory restore.
+                    # ID0 alone cannot separate stock work from prior host credits.
+                    self._history_required('MCU and host advanced beyond the recorded baseline')
+                    return
+                # Nothing from this host remains to charge. Capture stock work
+                # at startup, before a subsequent print accumulates more time.
+                save(dict(data, last_minutes=minutes))
             if not allow_new:
                 self.status = 'AWAITING_IDLE' if whole_minutes else 'CURRENT'
                 return
             if not whole_minutes:
-                if fresh or minutes != data['last_minutes']:
-                    save(dict(data, last_minutes=minutes))
                 self.status = 'CURRENT'
                 return
             target = minutes + whole_minutes
