@@ -19,6 +19,7 @@ class KlipperStatus:
     draw_progress_bar = PrinterLCD.draw_progress_bar
 
     def __init__(self, config):
+        self.printer = config.get_printer()
         templates = lookup_display_templates(config)
         self.display_templates = templates.get_display_templates()
         self.group = templates.get_display_data_groups()[self.group_name]
@@ -43,14 +44,18 @@ class KlipperStatus:
         self.footer_text = ''
         self.group.show(self, self.display_templates, eventtime)
         pages = tuple(bytes(page) for page in self.lcd_chip.vram)
-        key = (pages, self.footer_text)
+        control = self.printer.lookup_object('m300_print_control', None)
+        mesh_line = None
+        if control is not None and (control.model_print_ready or control.phase == 'PURGE_DRAIN'):
+            mesh_line = 'Mesh: ' + (control.active_mesh_profile or 'NONE')
+        key = (pages, self.footer_text, mesh_line)
         self.changed = key != self._previous
         if self.changed:
             # One source pixel maps to two adjacent 4-bit pixels: 0x00/0xff.
             # The original native bitmap and placements are not rearranged.
             self._wire = b''.join(page.translate(table)
                                   for page in pages for table in _BIT_PLANES)
-            self._wire = self._wire[:48*128] + klipper_footer(self.footer_text)
+            self._wire = self._wire[:48*128] + klipper_footer(self.footer_text, mesh_line)
             self._previous = key
         return self._wire
 

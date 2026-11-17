@@ -66,7 +66,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
 
     def start(self, args=''):
         h = self.h
-        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 ' + args)
+        h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 ' + args)
         h.stop_worker()
         h.control_until('IDLE')
 
@@ -164,7 +164,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
 
     def test_end_does_not_stall_in_idle_clock_drain(self):
         h = self.h
-        h.run('ZORTRAX_PRINT_END')
+        h.file_command('ZORTRAX_PRINT_END')
         h.stop_worker()
         h.control_until('IDLE')
         self.assertEqual(h.position[:3], [300., 305., 310.])
@@ -207,7 +207,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
         for value in ('nan', 'inf', '-1', '0', '1001'):
             with self.subTest(value=value):
                 with self.assertRaises(h.printer.command_error):
-                    h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 PURGE='+value)
+                    h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 PURGE='+value)
                 self.assertEqual(h.c.state, 'IDLE')
                 self.assertFalse(h.sd.must_pause_work)
 
@@ -215,7 +215,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
         h = self.h
         text = ENV.from_string(templates()['START_PRINT']).render(
             params={'PURGE':'350'}, printer=NS(extruder=h.hotend,heater_bed=h.bed))
-        h.run(text)
+        h.file_command(text)
         self.assertEqual(h.c.operation['targets'], {'hotend':240., 'bed':60.})
         self.assertEqual(h.c.operation['purge_length'], 350.)
 
@@ -224,7 +224,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
         text = ENV.from_string(templates()['START_PRINT']).render(
             params={'EXTRUDER_TEMP':'230','BED_TEMP':'50'},
             printer=NS(extruder=h.hotend,heater_bed=h.bed))
-        h.run(text)
+        h.file_command(text)
         self.assertEqual(h.c.operation['targets'], {'hotend':230., 'bed':50.})
 
     def test_exact_beta14_start_macro_migrates_idempotently(self):
@@ -254,7 +254,7 @@ gcode:
             return original(pos,speed)
         h.toolhead.move = fail_extrusion
         h.gmove.move_with_transform = fail_extrusion
-        h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
+        h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60')
         h.stop_worker()
         for _ in range(40):h.step_control()
         self.assertEqual(h.c.state, 'FAILED')

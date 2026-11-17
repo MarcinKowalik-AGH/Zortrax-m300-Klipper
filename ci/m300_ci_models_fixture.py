@@ -19,6 +19,7 @@ class ModelsFixture:
         self.started = False
         self.resumed = False
         self.mesh=config.getboolean('mesh',False)
+        self.mesh_profile=config.get('mesh_profile', '')
         self.soak=config.getboolean('soak',False)
         self.control_phases=[]
 
@@ -49,7 +50,11 @@ class ModelsFixture:
         if view['format']=='Z-code' and self.printer.lookup_object('m300_print_control',None) is not None:
             from .m300_ci_print_fixture import prepare, saved_mesh
             prepare(self.printer)
-            if self.mesh:saved_mesh(self.printer)
+            if self.mesh:
+                saved_mesh(self.printer)
+                if self.mesh_profile:
+                    profiles = self.printer.lookup_object('bed_mesh').pmgr.profiles
+                    profiles[self.mesh_profile] = profiles.pop('m300_pads')
             if self.soak:self.printer.lookup_object('m300_nvm').set_setting('full_platform_preheat',True)
             control=self.printer.lookup_object('m300_print_control')
             previous=control._phase

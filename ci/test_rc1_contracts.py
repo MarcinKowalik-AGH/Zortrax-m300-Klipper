@@ -7,7 +7,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.16'
+VERSION='v1.0.0-rc.17'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -33,14 +33,17 @@ class Rc1Contracts(unittest.TestCase):
         self.assertGreaterEqual(len(report['protected_sha256']),14)
         oled = 'host/klippy/extras/m300_oled.py'
         native_service = 'host/klippy/extras/m300_native_service.py'
-        # Reviewed startup, print lighting and pause/end motion updates through RC16.
+        # Reviewed startup, print lighting and pause/end motion updates through RC17.
         updated_runtime = {
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
-                '2ab9573d215f9c032727336cf9b59c28fbbc5492ae41c99d5284ee3dba0e90a7'),
+                '228eb9c11e07a8c6c5b6d98da1c7b85659d4082e054534aa43829c6cf9b22200'),
             'host/klippy/extras/m300_native_motion.py': (
                 '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
-                '55be76180b91a75df8d497c60a69814b6418c643b3a269e19b85655ce92b0acd'),
+                'a4857c0b5dd7f7e9390ad92ab7f5885002a834a2d997160d6ec0e7a23517faff'),
+            'host/klippy/extras/m300_pad_mesh.py': (
+                'd7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836',
+                '34bf981bc1a7265abee980573b55000ee9e1f5862163e8bec7d7e5e77e053fec'),
         }
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
@@ -63,7 +66,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],919)
+        self.assertEqual(meta['self_contained_host_tests'],936)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

@@ -46,7 +46,7 @@ class PadMeshTests(unittest.TestCase):
             def set_temp(target):
                 events.append(('heat',name,target))
                 temps[name]=(temps[name][0],target)
-            return NS(set_temp=set_temp,get_temp=lambda now:temps[name],
+            return NS(set_temp=set_temp,get_temp=lambda now:temps[name], can_extrude=True,
                       min_temp=0.,max_temp=300. if name=='hotend' else 120.)
         job = NS(board=board,service_busy=lambda:False,get_status=lambda now:dict(busy=False),
                  _temperatures=lambda now:dict(temps),hotend=heater('hotend'),bed=heater('bed'))
@@ -59,7 +59,8 @@ class PadMeshTests(unittest.TestCase):
         active_mesh = [None]
         def set_mesh(value):active_mesh[0]=value;events.append('clear_mesh')
         bedmesh = NS(get_mesh=lambda:active_mesh[0],set_mesh=set_mesh)
-        def home(axes):
+        def home(axes, *, filament_prepared):
+            self.assertTrue(filament_prepared)
             events.append(('home',axes))
             limits['homed_axes']=''.join(axis for axis in 'xyz' if axis in limits['homed_axes']+axes)
             if 'z' in axes:position[2]=5.
@@ -67,7 +68,8 @@ class PadMeshTests(unittest.TestCase):
         objects = {'m300_job':job,'toolhead':toolhead,'gcode_move':NS(move_transform=bedmesh),
             'probe':NS(get_offsets=lambda:(0.,0.,0.),
                        mcu_probe=NS(mcu_endstop=endstop,homing_helper=NS(z_min_position=0.))),
-            'm300_motion':NS(home=home,z_home_hotend_target=180.,ensure_xy_clearance=lambda check:check())}
+            'm300_motion':NS(home=home,z_home_hotend_target=180.,ensure_xy_clearance=lambda check:check(),
+                             move_contact_filament=lambda distance,check:(check(),events.append(('filament',distance))))}
         mesh.bedmesh = bedmesh
         mesh.gcode = NS(respond_info=lambda message:events.append(message))
         mesh.printer = NS(lookup_object=lambda name,default=None:objects.get(name,default),
@@ -99,6 +101,7 @@ class PadMeshTests(unittest.TestCase):
                 case.temps.update(hotend=(measured,0.),bed=(25.,0.))
                 self.complete_command(mesh,case)
                 self.assertEqual(mesh.state,'COMPLETE')
+                self.assertEqual([event for event in case.events if isinstance(event,tuple) and event[0]=='filament'], [('filament',-10.),('filament',10.)])
                 self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(0.,0.))
                 self.assertEqual(mesh.targets['hotend'],max(measured,180.))
 
@@ -120,6 +123,7 @@ class PadMeshTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'publication failed'):
             self.complete_command(mesh,case,reject)
         self.assertEqual(mesh.state,'FAILED')
+        self.assertEqual([event for event in case.events if isinstance(event,tuple) and event[0]=='filament'], [('filament',-10.)])
         self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(0.,0.))
 
     def test_unhomed_pad_measurement_uses_native_homing_then_checks_clearance(self):
@@ -189,14 +193,14 @@ class PadMeshTests(unittest.TestCase):
                              start_probe=lambda cmd:self.fail('probe started after a failed home'))
         gcmd=NS(get=lambda key,default:default,get_command_parameters=dict,
                 get_int=lambda key,default,**kw:default,get_float=lambda key,default:default)
-        def failed_home(axes):raise ValueError('native homing failed')
+        def failed_home(axes, **kwargs):raise ValueError('native homing failed')
         case.objects['m300_motion'].home=failed_home
         with self.assertRaisesRegex(ValueError,'native homing failed'):mesh.cmd_calibrate(gcmd)
         self.assertFalse(mesh.busy)
         self.assertEqual(mesh.report,{'profile':'previous'})
         self.assertEqual(case.temps['hotend'][1],0.)
         self.assertEqual(case.temps['bed'][1],0.)
-        case.objects['m300_motion'].home=lambda axes:None
+        case.objects['m300_motion'].home=lambda axes, **kwargs:None
         with self.assertRaisesRegex(ValueError,'did not establish XYZ'):mesh.cmd_calibrate(gcmd)
         self.assertFalse(mesh.busy)
         self.assertEqual(mesh.report,{'profile':'previous'})
@@ -581,6 +585,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.shift, mesh.horizontal_z = 1., 6.
         mesh._error = ValueError
         mesh._preflight = lambda: None
+        mesh.motion = NS(move_contact_filament=lambda distance, check:check())
         mesh._prepare = lambda token: None
         mesh._check_session = lambda token: None
         mesh.printer = NS(is_shutdown=lambda: False, lookup_object=lambda name, default=None: default)
@@ -672,6 +677,7 @@ class PadMeshTests(unittest.TestCase):
         mesh.points = geometry_points(mesh.geometry)
         mesh.shift, mesh.horizontal_z, mesh.max_pad_spread, mesh.max_bed_span = 1., 6., None, .5
         mesh._error, mesh._preflight, mesh._check_clear = ValueError, lambda:None, lambda:None
+        mesh.motion = NS(move_contact_filament=lambda distance, check:check())
         mesh._prepare = lambda token:None
         mesh._check_session = lambda token:None
         mesh.printer = NS(is_shutdown=lambda:False, lookup_object=lambda name,default=None:default)

@@ -113,6 +113,14 @@ def main():
         'native_models_zcode_mesh': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
         'native_models_zcode_soak': ('Model binary.zcode', binary_print_fixture(), 'Z-code'),
     }
+    arc_cases = ('native_arc_clockwise', 'native_arc_counterclockwise')
+    for case, arc, extrusion in zip(arc_cases, ('G2', 'G3'), ('M82', 'M83')):
+        # A tiny circle below the configured segment resolution is physically
+        # only one E move. Neither it nor a travel arc starts model timing.
+        lines = ('G90', 'G28', 'G1 X155 Y158 Z5 F600', extrusion, 'G92 E0',
+                 f'{arc} I5', f'{arc} I0.01 E0.1', 'ZORTRAX_CI_DEPOSITION ACTIVE=0',
+                 f'{arc} I5 E2', 'ZORTRAX_CI_DEPOSITION ACTIVE=1', 'M400')
+        model_fixtures[case] = ('Arc.gcode', '\n'.join(lines).encode(), 'G-code')
     shutil.copy2(Path(__file__).with_name('m300_ci_models_fixture.py'),
                  args.root / 'klippy/extras/m300_ci_models_fixture.py')
     model_script = 'ZORTRAX_NATIVE_STATUS\nZORTRAX_BROWSER_LIST SOURCE=HOST\nZORTRAX_CI_RUN_MODEL\n'
@@ -168,8 +176,10 @@ def main():
         ('native_300_thermal_display_planning','ZORTRAX_NATIVE_STATUS\nSET_KINEMATIC_POSITION X=150 Y=150 Z=5\nM104 S180\nM140 S60\nM106 S128\nG90\nG1 X250 F18000\nTEST_ZORTRAX_XY SPEED=60\nZORTRAX_DISPLAY_STATUS\nTURN_OFF_HEATERS\nM107\nZORTRAX_MOTION_STATUS\n',True,None),
     ]
     cases.extend((name, model_script, False, None) for name in model_fixtures)
+    print_cases = ('native_print_lifecycle', 'native_print_cancel', 'native_print_cancel_soak',
+                   'native_print_file_guards', 'native_print_high_m600')
     cases.extend((name,'ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_RUN\n',False,None)
-                 for name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'))
+                 for name in print_cases)
     # These identities are synthetic, never read from or sent to a printer.
     factory_cases = {
         'factory_hw04_800': (0xe4, 0xaabb0103, 'factory', 800),
@@ -206,6 +216,7 @@ def main():
         cp.add_section('m300_ci_runtime_bindings')
         if name == 'native_early_moonraker_status':
             cp.add_section('m300_ci_early_status')
+        if name == 'native_early_moonraker_status' or name in arc_cases:
             if not cp.has_section('gcode_arcs'):
                 cp.add_section('gcode_arcs')
         for section in ('stepper_x', 'stepper_y', 'stepper_z', 'extruder'):
@@ -246,18 +257,18 @@ def main():
                 cp.set('m300_ci_models_fixture', 'replay', 'True')
             if model_fixtures[name][2]=='Z-code':
                 cp.set('stepper_y','position_max','305')
-            if name=='native_models_zcode_mesh':
                 cp.set('m300_ci_models_fixture','mesh','True')
+                if not name.endswith('_mesh'):
+                    cp.set('m300_ci_models_fixture', 'mesh_profile', 'plate_a')
                 cp.read_dict({'bed_mesh':{'mesh_min':'0,0','mesh_max':'300,305',
                                         'probe_count':'3,3','algorithm':'lagrange'}})
             if name=='native_models_zcode_soak':
                 cp.set('m300_ci_models_fixture','soak','True')
                 cp.set('m300_print_control','platform_soak_seconds','2')
             assert not cp.getboolean('m300_job', 'workflow_qualified')
-        if name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'):
+        if name in print_cases:
             cp.add_section('m300_ci_print_fixture')
-            cp.set('m300_ci_print_fixture','mode',
-                   'cancel_soak' if name.endswith('cancel_soak') else 'cancel' if name.endswith('cancel') else 'lifecycle')
+            cp.set('m300_ci_print_fixture', 'mode', name.removeprefix('native_print_'))
             if name.endswith('cancel_soak'):cp.set('m300_print_control','platform_soak_seconds','2')
             cp.set('stepper_y','position_max','305')
             if not cp.has_section('bed_mesh'):
@@ -417,17 +428,26 @@ def main():
                 assert result['position'][:3] == [300.,305.,cp.getfloat('stepper_z','position_max')],result
                 phases=result['control_phases']
                 start=next(p['start'] for p in phases if p['phase']=='HEATING')
-                assert start['mesh']==('m300_pads' if name.endswith('_mesh') else 'NONE'),result
+                assert start['mesh']==('m300_pads' if name.endswith('_mesh') else 'plate_a'),result
                 assert start['requested_mesh']=='AUTO',result
                 names=[p['phase'] for p in phases]
                 assert names.index('HEATING')<names.index('HOMING')<names.index('END_PARK'),result
                 assert ('PLATFORM_SOAK' in names)==name.endswith('_soak'),result
-        if name in ('native_print_lifecycle','native_print_cancel','native_print_cancel_soak'):
+        if name in print_cases:
             result=next(json.loads(line.split('M300_CI_PRINT ',1)[1])
                         for line in text.splitlines() if 'M300_CI_PRINT ' in line)
             assert result['targets']==[0.,0.] and result['file_consumed'],result
             assert result['control']['state']=='IDLE' and not result['control']['paused'],result
-            if name.endswith('cancel_soak'):
+            if name == 'native_print_file_guards':
+                assert result['state'] == 'complete' and result['marks'] == ['MODEL','TRAILER','NEXT'],result
+                assert result['refusals'] == ['G28','ZORTRAX_HOME','START_PRINT','END_PRINT','G0','G1'],result
+                assert result['mark_positions']['NEXT'][:2] == [130.,120.],result
+            elif name == 'native_print_high_m600':
+                assert result['state'] == 'complete' and result['marks'] == ['MODEL','RESUMED','TRAILER'],result
+                assert result['pause_positions']['MODEL'] == [100.,100.,300.],result
+                assert result['mark_positions']['RESUMED'] == result['mark_positions']['MODEL'],result
+                assert result['actions'] == ['RESUME'],result
+            elif name.endswith('cancel_soak'):
                 assert result['state']=='cancelled' and result['marks']==[],result
                 assert result['position'][:3]==[0.,0.,0.],result
             elif name.endswith('cancel'):

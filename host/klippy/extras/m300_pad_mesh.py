@@ -8,6 +8,7 @@ import re
 import statistics
 
 from .m300_calibration_state import POINTS
+from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_native_service import require_idle_print
 
 PATTERN = ((0, 0), (-1, -1), (1, -1), (1, 1), (-1, 1))
@@ -476,6 +477,7 @@ class M300PadMesh:
         self.job.hotend.set_temp(self.targets['hotend'])
         self.job.bed.set_temp(self.targets['bed'])
         self._wait_temperatures(token)
+        self.motion.move_contact_filament(-CONTACT_RETRACT_MM, lambda: self._check_session(token))
         self.phase = 'HOMING'
         limits = self.kin.get_status(self.reactor.monotonic())
         missing = ''.join(axis for axis in 'xyz'
@@ -487,7 +489,7 @@ class M300PadMesh:
                 if self.endstop.query_endstop(self.toolhead.get_last_move_time()):
                     axes = 'xyz'  # Native XYZ releases a closed PC7 before XY travel.
             self.gcode.respond_info('Pad mesh: homing %s before probing' % axes.upper())
-            self.motion.home(axes=axes)
+            self.motion.home(axes=axes, filament_prepared=True)
             self._check_session(token)
             self.phase = 'STABILIZING'
             self._wait_temperatures(token)
@@ -593,7 +595,11 @@ class M300PadMesh:
             shifted = False
             self._publish(profile, readings)
             self._check_session(token)
+            self.motion.move_contact_filament(CONTACT_RETRACT_MM, lambda: self._check_session(token))
             self._restore_targets(token)
+            control = self.printer.lookup_object('m300_print_control', None)
+            if control is not None:
+                control.remember_mesh_profile(profile)
             self.report = dict(profile=profile, pads=pads, run_id=self.run_id,
                                points=[[x, y, z] for (x, y), z in zip(self.points, readings)])
             if self.last_attempt is not None:
@@ -619,7 +625,7 @@ class M300PadMesh:
                 self.state = 'COMPLETE' if completed else 'FAILED'
                 self.phase = self.state
                 self._notify_view()
-        gcmd.respond_info('Measured 25 pad positions. Load %s for printing; use SAVE_CONFIG to keep it.'
+        gcmd.respond_info('Measured 25 pad positions. START_PRINT AUTO will load %s; use SAVE_CONFIG to keep the mesh.'
                           % profile)
 
     def _geometry_travel(self, limits):

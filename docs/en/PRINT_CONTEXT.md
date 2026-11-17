@@ -43,15 +43,14 @@ passes and two long X extrusion passes. The nozzle shifts sideways by 0.5 mm
 at each turnaround. The first X pass begins at the end of the return Y pass.
 The commanded purge height stays fixed across all passes and the active mesh
 can still compensate Z. The final lift and parser-state restore precede
-continuation of the print file. Standalone Home Z and Bed Mesh use their own
-measurement routines.
+continuation of the print file. Standalone Home Z and Bed Mesh retract 10 mm after heating and restore 10 mm on successful completion.
 
 Dynamic Light stays white after the active SD file finishes `START_PRINT`,
 including changes in heater targets during a raft-to-model transition.
 Preparation, operator pause and faults retain their status colors.
 [Lighting settings](SETTINGS_INFORMATION.md).
 
-Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.41-END-PARK`
+Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.42-AUDIT`
 and `model_print_ready: true` after purge for the active SD file. The legacy `0.13.16.38-PRINT-DRAIN-XY-PURGE` commanded a Z5 lift between the Y
 and X pairs. From `0.13.16.39-PRINT-PREP`, the crossover uses the commanded
 purge height, usually Z0.28. Bed Mesh can still move physical Z as XY

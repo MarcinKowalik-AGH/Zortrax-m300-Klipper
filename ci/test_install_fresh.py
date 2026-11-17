@@ -10,6 +10,7 @@ from unittest.mock import patch
 import zipfile
 
 import install_fresh as fresh
+import test_install_orange_pi as webtest
 from project import ROOT, manifest, stage_host_update
 
 
@@ -38,7 +39,8 @@ class FirstInstallTest(unittest.TestCase):
         self.web=self.base/'web';self.web.mkdir();(self.web/'index.html').write_text('<title>fluidd</title>old')
         (self.web/'config.json').write_text('{"custom":true}')
         with zipfile.ZipFile(self.package/'M300_FLUIDD.zip','w') as z:
-            z.writestr('fluidd-m300/index.html','<title>fluidd</title>new')
+            z.writestr('fluidd-m300/index.html','<title>fluidd</title>new<script src="./assets/index-ABCD.js"></script>')
+            z.writestr('fluidd-m300/assets/index-ABCD.js','packaged')
 
     def tearDown(self):self.temp.cleanup()
 
@@ -124,15 +126,16 @@ class FirstInstallTest(unittest.TestCase):
     def test_apply_replaces_only_empty_setup_and_keeps_backup(self):
         self.prepare_runtime()
         calls=[]
-        backup=fresh.install(self.package,self.root,self.data,Path('/python'),Path('/dev/ttyS1'),750000,
-                             self.web,fluidd_port=4480,execute=lambda *a,**kw:self.execute(calls,*a,**kw))
+        with webtest.OrangePiInstallerTest.serving(self.web) as port:
+            backup=fresh.install(self.package,self.root,self.data,Path('/python'),Path('/dev/ttyS1'),750000,
+                                 self.web,fluidd_port=port,execute=lambda *a,**kw:self.execute(calls,*a,**kw))
         self.assertEqual((backup/'klipper/klippy/klippy.py').read_text(),'stock')
         self.assertEqual((backup/'printer.cfg').read_text(),'[include fluidd.cfg]\n')
         self.assertIn('park_x: 300',(self.config.parent/'m300_services.cfg').read_text())
         self.assertIn('new',(self.web/'index.html').read_text())
         self.assertEqual((self.web/'config.json').read_text(),'{"custom":true}')
         receipt = json.loads((self.config.parent/'.m300-installer.json').read_text())
-        self.assertEqual((receipt['fluidd_root'], receipt['fluidd_port']), (str(self.web), 4480))
+        self.assertEqual((receipt['fluidd_root'], receipt['fluidd_port']), (str(self.web), port))
         self.assertFalse(any(a and a[0] in ('G28','M104','M140','FIRMWARE_RESTART') for a in calls))
         self.assertNotIn('update_manager klipper',self.moon.read_text())
         pip = next(args for args in calls if args[1:4] == ('-m', 'pip', 'install'))
@@ -165,9 +168,10 @@ class FirstInstallTest(unittest.TestCase):
                         raise subprocess.CalledProcessError(1, args)
                     return self.execute(calls, *args, **kwargs)
 
-                # An invalid port fails after the successful web swap, when saving state.
-                port = 4480 if service else 0
-                with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                if service is None:
+                    (self.config.parent / '.m300-installer.json').mkdir()
+                with webtest.OrangePiInstallerTest.serving(self.web) as port, \
+                     self.assertRaises((OSError, subprocess.CalledProcessError)):
                     fresh.install(self.package, self.root, self.data, Path('/python'),
                                   Path('/dev/ttyS1'), 750000, self.web,
                                   fluidd_port=port, execute=execute)

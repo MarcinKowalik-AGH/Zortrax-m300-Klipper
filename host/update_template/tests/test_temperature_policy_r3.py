@@ -87,7 +87,7 @@ class NativeIntegrationR3(unittest.TestCase):
         from test_print_control import Harness
         h=Harness();self.addCleanup(h.close);h.bed.m300_target_max=105.
         before=(h.hotend.target,h.bed.target,list(h.position))
-        with self.assertRaises(Exception):h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=106')
+        with self.assertRaises(Exception):h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=106')
         self.assertEqual(h.c.state,'IDLE');self.assertIsNone(h.c.operation)
         self.assertEqual(before,(h.hotend.target,h.bed.target,list(h.position)))
         self.assertFalse(any(e[0]=='native_pause' for e in h.events))

@@ -38,16 +38,16 @@ class Thermal305105Tests(unittest.TestCase):
   from test_print_control import Harness
   h=Harness();self.addCleanup(h.close);h.hotend.max_temp=310;h.hotend.m300_target_max=305;h.bed.max_temp=120;h.bed.m300_target_max=105
   h.hotend.temperature=305;h.bed.temperature=105
-  h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=305 BED_TEMP=105');h.stop_worker();h.control_until('IDLE')
+  h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=305 BED_TEMP=105');h.stop_worker();h.control_until('IDLE')
   self.assertIn(('native_resume',),h.events);self.assertEqual((h.hotend.target,h.bed.target),(305,105))
   h.pause_print();h.run('RESUME');h.control_until('IDLE');self.assertEqual((h.hotend.target,h.bed.target),(305,105))
-  h.run('ZORTRAX_PRINT_END');h.stop_worker();h.control_until('IDLE');self.assertEqual((h.hotend.target,h.bed.target),(0,0))
+  h.file_command('ZORTRAX_PRINT_END');h.stop_worker();h.control_until('IDLE');self.assertEqual((h.hotend.target,h.bed.target),(0,0))
  def test_start_invalid_temp_before_heat_and_motion(self):
   from test_print_control import Harness
   for hot,bed in [(305.01,105),(400,105),(305,105.01)]:
    h=Harness();self.addCleanup(h.close);h.hotend.max_temp=310;h.hotend.m300_target_max=305;h.bed.max_temp=120;h.bed.m300_target_max=105
    before=(h.hotend.target,h.bed.target,list(h.position))
-   with self.assertRaises(Exception):h.run('ZORTRAX_PRINT_START EXTRUDER_TEMP=%s BED_TEMP=%s'%(hot,bed))
+   with self.assertRaises(Exception):h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=%s BED_TEMP=%s'%(hot,bed))
    self.assertEqual((h.hotend.target,h.bed.target,list(h.position)),before);self.assertIsNone(h.c.operation)
 
 class Configuration305105Tests(unittest.TestCase):

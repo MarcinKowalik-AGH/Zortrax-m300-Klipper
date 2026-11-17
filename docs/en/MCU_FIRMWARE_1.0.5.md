@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.16/docs/en/FIRST_INSTALL.md) · [RC16 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.16/docs/en/RELEASE_v1.0.0-rc.16.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.17/docs/en/FIRST_INSTALL.md) · [RC17 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.17/docs/en/RELEASE_v1.0.0-rc.17.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Install the SD application
 
@@ -42,3 +42,15 @@ The 1.0.5 build removes the development OLED RLE timing command. The counter
 ABI and motion/thermal write guards retain their existing behavior. Simulated
 Flash interruptions exercise bank recovery, and an on-board power-loss test
 remains pending.
+
+### When the host cannot reconcile previous transfers
+
+`RECONCILIATION_REQUIRED` suspends automatic counter writes. Printing remains available. RC17 keeps a second receipt alongside `.runtime-sync`. Preserve both with the printer settings. The synchronizer checks receipts before writing when one copy is missing or older.
+
+Read `ZORTRAX_HARDWARE_STATUS`. If reconciliation remains necessary, use the command below only with an independently established accounting baseline. Supply the current serial, `factory_counter_observed_minutes`, and the whole minutes of this host's history already credited to ID0. Zero is appropriate only when the retained history has never been credited. An earlier `DISABLED` status does not establish what happened afterwards. Leave an uncertain baseline unresolved.
+
+```text
+ZORTRAX_COUNTER_RECONCILE SERIAL=<serial> MCU_MINUTES=<observed_ID0> COMMITTED_MINUTES=<previously_credited_host_minutes>
+```
+
+The command records the accounting baseline. The MCU writes any outstanding minutes during an eligible idle period. Verify the ID0 increase, normalized banks, cleared pending status and retention after a normal cold restart.

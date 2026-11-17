@@ -46,6 +46,8 @@ class PrintFixture:
         self.gcode=self.printer.lookup_object('gcode')
         self.mode=config.get('mode','lifecycle')
         self.running=False;self.marks=[];self.actions=[];self.flow=False
+        self.refusals = []
+        self.second_job = False
         self.mark_positions = {}
         self.pause_positions = {}
         self.timer=self.reactor.register_timer(self.tick)
@@ -58,6 +60,42 @@ class PrintFixture:
         name = gcmd.get('VALUE')
         self.marks.append(name)
         self.mark_positions[name] = self.printer.lookup_object('toolhead').get_position()[:3]
+
+        if self.mode == 'file_guards' and name == 'MODEL':
+            assert self.printer.lookup_object('m300_models').runtime_deposited
+            self.reactor.register_callback(self.external_guards)
+        if self.mode == 'file_guards' and name == 'TRAILER':
+            assert self.sd.is_cmd_from_sd()
+            for command in ('G0 X80', 'G1 X80'):
+                self.expect_refusal(self.gcode.run_script_from_command, command, 'follows END_PRINT')
+
+    def expect_refusal(self, dispatch, command, reason):
+        toolhead = self.printer.lookup_object('toolhead')
+        heaters = self.printer.lookup_object('heaters')
+        def snapshot():
+            return (self.sd.current_file, self.sd.file_position, self.control.state,
+                    tuple(toolhead.get_position()), tuple(heaters.lookup_heater(name).target_temp
+                                                          for name in ('extruder','heater_bed')))
+        before = snapshot()
+        # Debug-input mode otherwise exits Klippy on every rejected command.
+        # Use live-console error reporting only for this expected rejection.
+        fileinput = self.gcode.is_fileinput
+        self.gcode.is_fileinput = False
+        try:
+            dispatch(command)
+        except self.printer.command_error as exc:
+            assert reason in str(exc), (command, exc)
+        else:
+            raise AssertionError(f'Unexpectedly accepted {command}')
+        finally:
+            self.gcode.is_fileinput = fileinput
+        assert snapshot() == before, command
+        self.refusals.append(command.split()[0])
+
+    def external_guards(self, now):
+        assert self.sd.is_active() and not self.sd.is_cmd_from_sd()
+        for command in ('G28', 'ZORTRAX_HOME', 'START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60', 'END_PRINT'):
+            self.expect_refusal(self.gcode.run_script, command, 'must come from the active print file')
 
     def run(self,gcmd):
         prepare(self.printer)
@@ -76,6 +114,19 @@ class PrintFixture:
                 'M600\nZORTRAX_CI_PRINT_MARK VALUE=CHANGED\n'
                 'G1 X120 Y120 F6000\nEND_PRINT\n'
                 'ZORTRAX_CI_PRINT_MARK VALUE=ENDED\n')
+        if self.mode in ('file_guards', 'high_m600'):
+            height = 298 if self.mode == 'high_m600' else 10
+            script = (f'START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60\nG90\nG1 X100 Y100 Z{height} F6000\n'
+                      'M83\nG1 X101 E0.2 F600\nG1 X100 F600\nZORTRAX_CI_PRINT_MARK VALUE=MODEL\n')
+            if self.mode == 'file_guards':
+                # Crossing a native SD read block yields to a genuine external command.
+                script += '; allow the native file reader to yield\n' * 600
+                (path.parent/'Next.gcode').write_text(
+                    'START_PRINT EXTRUDER_TEMP=220 BED_TEMP=60\nG1 X130 Y120 F6000\n'
+                    'ZORTRAX_CI_PRINT_MARK VALUE=NEXT\nEND_PRINT\n')
+            else:
+                script += 'M600\nZORTRAX_CI_PRINT_MARK VALUE=RESUMED\n'
+            script += 'END_PRINT\nZORTRAX_CI_PRINT_MARK VALUE=TRAILER\n'
         path.write_text(script)
         self.running=True;self.pending=None
         self.gcode.run_script_from_command('SDCARD_PRINT_FILE FILENAME="Print lifecycle.gcode"')
@@ -100,6 +151,12 @@ class PrintFixture:
             if c.state == 'PAUSED' and c.phase == 'PAUSED' and self.marks:
                 position = self.printer.lookup_object('toolhead').get_position()[:3]
                 self.pause_positions.setdefault(self.marks[-1], position)
+                if self.mode == 'high_m600':
+                    assert c.context and not c.context['invalid'] and not c.context['change_required']
+                    assert 'Resume remains available' in c.notice and not self.filament.is_busy()
+                    heaters = self.printer.lookup_object('heaters')
+                    assert [heaters.lookup_heater(n).target_temp for n in ('extruder','heater_bed')] == [220.,60.]
+                    assert self.printer.lookup_object('m300_maintenance').status_led_rgb(now) == (1,0,1)
         if self.mode=='cancel_soak' and c.phase=='PLATFORM_SOAK':
             self._submit('CANCEL_PRINT')
         elif self.mode=='cancel' and c.state=='PAUSED':
@@ -124,9 +181,14 @@ class PrintFixture:
         if self.sd.work_timer is not None or self.control.busy or self.filament.is_busy():return False
         stats=self.sd.print_stats.get_status(self.reactor.monotonic())
         if stats['state']=='paused':return False
+        if self.mode == 'file_guards' and stats['state'] == 'complete' and 'NEXT' not in self.marks:
+            if not self.second_job:
+                self.second_job = True
+                self._submit('SDCARD_PRINT_FILE FILENAME="Next.gcode"')
+            return False
         self.running=False;self.reactor.update_timer(self.timer,self.reactor.NEVER)
         heaters=self.printer.lookup_object('heaters')
-        result=dict(mode=self.mode,state=stats['state'],marks=self.marks,actions=self.actions,
+        result=dict(mode=self.mode,refusals=self.refusals,state=stats['state'],marks=self.marks,actions=self.actions,
             mark_positions=self.mark_positions,pause_positions=self.pause_positions,
             position=self.printer.lookup_object('toolhead').get_position(),
             targets=[heaters.lookup_heater(n).target_temp for n in ('extruder','heater_bed')],
