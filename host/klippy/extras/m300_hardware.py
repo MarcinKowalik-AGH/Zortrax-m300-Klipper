@@ -12,7 +12,7 @@ from secrets import randbits
 from .m300_counter_sync import (COMMIT_FORMAT, RESULT_FORMAT, STATE_FORMAT,
                                 RUNTIME_COMMIT_FORMAT, RUNTIME_RESULT_FORMAT,
                                 RUNTIME_QUERY_FORMAT, RUNTIME_STATE_FORMAT,
-                                CounterJournal, CounterRecoveryError, CounterSync)
+                                CounterJournal, CounterRecoveryError, CounterSync, decode_state)
 from .m300_maintenance import other_service
 
 REVISION = '0.13.15.7-FACTORY-Z'
@@ -121,6 +121,7 @@ class M300Hardware:
         self.printer.register_event_handler('klippy:shutdown', self._stop_counter)
         self.printer.register_event_handler('klippy:disconnect', self._stop_counter)
         self.printer.register_event_handler('gcode:request_restart', self._stop_counter)
+        board.gcode.register_command('ZORTRAX_COUNTER_RECONCILE', self.cmd_counter_reconcile)
         board.gcode.register_command('ZORTRAX_HARDWARE_STATUS', self.cmd_status,
                                      when_not_ready=True)
 
@@ -232,7 +233,7 @@ class M300Hardware:
         if nvm is None:
             return reactor.NEVER
         snapshot = nvm.ui_snapshot()
-        if not self._counter_has_backlog(snapshot):
+        if self.counter_sync.status == 'RECONCILIATION_REQUIRED' or not self._counter_has_backlog(snapshot):
             return reactor.NEVER
         mutex = self.board.gcode.get_mutex()
         journal = CounterJournal(nvm.store)
@@ -318,6 +319,7 @@ class M300Hardware:
                     raise self.config.error(self.counter_sync.error)
             return
         journal = CounterJournal(nvm.store)
+        snapshot = nvm.ui_snapshot()
         if not supported:
             self.counter_sync.banks = 'UNAVAILABLE'
             try:
@@ -344,7 +346,7 @@ class M300Hardware:
                 return bounded('m300_factory_counter_commit', lambda: command.send(args))
 
             self.counter_sync.run(
-                nvm.ui_snapshot(), load,
+                snapshot, load,
                 lambda data: nvm.executor.submit(journal.save, data),
                 lambda: bounded('m300_factory_counter_query', query.send),
                 commit, allow_new=False)
@@ -479,6 +481,7 @@ class M300Hardware:
                 'factory_print_minutes': self.factory_print_minutes,
                 'factory_info_error': self.factory_info_error,
                 'factory_counter_sync': self.counter_sync.status,
+                'factory_counter_observed_minutes': self.counter_sync.minutes,
                 'factory_counter_runtime_supported': self.counter_runtime_supported,
                 'factory_counter_error': self.counter_sync.error,
                 'factory_counter_pending': self.counter_sync.pending,
@@ -492,6 +495,36 @@ class M300Hardware:
                 'factory_profile_applied': self.applied,
                 'factory_flash_written': self.counter_sync.flash_written,
                 'physical_scale_measured': False}
+
+    def cmd_counter_reconcile(self, gcmd):
+        sync = self.counter_sync
+        if sync.status != 'RECONCILIATION_REQUIRED' or self.counter_runtime is None:
+            raise gcmd.error('counter reconciliation requires an ambiguous host history and a live MCU')
+        serial = gcmd.get('SERIAL').upper()
+        expected = gcmd.get_int('MCU_MINUTES', minval=0)
+        committed = gcmd.get_int('COMMITTED_MINUTES', minval=0)
+        nvm = self.printer.lookup_object('m300_nvm')
+        if not self._counter_idle(nvm, self.printer.get_reactor().monotonic()):
+            raise gcmd.error('wait for an idle and checkpointed printer')
+        try:
+            observed = self.counter_runtime.query()
+            board_id, state, _, minutes, _ = decode_state(observed)
+            if state != 1 or serial != 'Z%08X' % board_id or minutes != expected:
+                raise ValueError('serial, factory minutes or normalized banks do not match the live MCU')
+            snapshot = nvm.ui_snapshot()
+            journal = CounterJournal(nvm.store)
+            nvm.executor.submit(journal.reconcile, serial, snapshot['identity']['machine_id'],
+                                minutes, snapshot['counters']['print_seconds'], committed)
+        except (ValueError, OSError) as exc:
+            raise gcmd.error(str(exc)) from exc
+        sync.observe(observed)
+        sync.committed_seconds = committed * 60
+        sync.display_blocked = False
+        sync.error = None
+        sync.status = ('AWAITING_IDLE' if self._counter_has_backlog(snapshot) else 'CURRENT')
+        self._publish_counter_observation()
+        self._queue_counter()
+        gcmd.respond_info('M300 host counter baseline recorded; factory minutes read back: %d' % minutes)
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('M300_HARDWARE ' + json.dumps(self.get_status(), sort_keys=True))

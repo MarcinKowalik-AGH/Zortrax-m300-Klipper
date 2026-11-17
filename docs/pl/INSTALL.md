@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.16).
+i użyj [paczki v1.0.0-rc.17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.17).
 Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [English](../en/INSTALL.md).
 
@@ -45,10 +45,24 @@ aliasy PID oraz usuwa rozpoznane, zbędne wpisy aktualizacji strony.
 `--qualified-first-print-z` wymaga sprawdzonego mechanicznie prześwitu
 konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 
+## Aktualizacja po błędzie Git „corrupt loose object”
+
+Pozostaw uszkodzony katalog na miejscu. Przy bezczynnej drukarce pobierz nową kopię do osobnego katalogu na Orange Pi. Instalator nadal używa istniejącej konfiguracji drukarki. Poniższe polecenie pobiera aktualnie opublikowaną gałąź wdrożeniową.
+
+```bash
+m300_src=$(mktemp -d "$HOME/m300-rc17.XXXXXX") &&
+git clone --depth 1 --single-branch --no-tags --branch orange-pi \
+  https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_src" &&
+(cd "$m300_src" && sha256sum -c --quiet SHA256SUMS) &&
+python3 "$m300_src/install-orange-pi.py"
+```
+
+Zachowaj nową ścieżkę, aby używać jej przy kolejnych aktualizacjach. Pełny ZIP oznaczony wersją umożliwia instalację dokładnie RC17. Po osobnej naprawie Fluidd sprawdź pole `fluidd_http_verified` i otwórz menu na porcie 4480.
+
 ## 2. Sprawdź wersję MCU
 
 Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC15, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+dołączoną do RC17, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
 [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.
@@ -122,12 +136,14 @@ Z pełnej paczki uruchom to samo polecenie z `python3 install-orange-pi.py`
 w katalogu głównym ZIP-a. Przy niestandardowym układzie nginx opcja
 `--fluidd-root /bezwzględna/ścieżka/do/fluidd` wskazuje istniejący,
 zweryfikowany katalog strony. Instalator zachowuje konfigurację nginx,
-`config.json` i preferencje Fluidd. Sprawdź wynik
-`INSTALLED_M300_FLUIDD` i zachowaj ścieżki `fluidd_root` i `fluidd_backup`.
-Jeśli zgodna i działająca strona została na miejscu, `fluidd_backup` ma
-wartość `null`. Gdy instalator może zweryfikować lokalną trasę HTTP,
-sprawdza nowy HTML i wskazane w nim pliki JavaScript i CSS. Przywraca poprzedni katalog po
-nieudanej kontroli. [Wybór portu i ponawianie CI](INSTALLATION_AND_CI.md).
+`config.json` i preferencje Fluidd. Wynik `INSTALLED_M300_FLUIDD` z
+`fluidd_http_verified: true` potwierdza, że nginx zwrócił przez HTTP
+właściwy HTML oraz startowe pliki JavaScript i CSS. Instalator sprawdza
+adres nasłuchu wybranej witryny, w tym adres LAN. Zachowaj ścieżki
+`fluidd_root` i `fluidd_backup`. Wartość `null` przy kopii oznacza, że
+zweryfikowano już zgodną stronę. Przy błędzie `FLUIDD_HTTP_UNVERIFIED`
+polecenie kończy się błędem. Jeśli nastąpiła podmiana, instalator wymienia
+katalogi z powrotem. Następnie sprawdź nginx i żądania HTTP opisane poniżej. [Wybór portu i ponawianie CI](INSTALLATION_AND_CI.md).
 
 ## Gdy Fluidd nie otwiera się lub pokazuje pustą stronę
 
@@ -181,7 +197,17 @@ ponowną próbą.
 
 ## Przywróć poprzednią stronę Fluidd
 
-Użyj ścieżek `fluidd_root` i `fluidd_backup` podanych przez instalator.
-Sprawdź, czy kopia zawiera działający `index.html` i katalog `assets`.
-Zmień nazwę bieżącego katalogu i przenieś kopię pod `fluidd_root`. Uruchom
-`sudo nginx -t && sudo systemctl reload nginx` i ponów powyższe kontrole HTTP.
+Skopiuj **bezwzględną ścieżkę `fluidd_backup`** z potwierdzenia tej witryny.
+Wartość `null` oznacza, że przy danej aktualizacji nie utworzono kopii.
+W poniższym poleceniu zastąp przykładową ścieżkę tą z potwierdzenia.
+
+```bash
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480 --restore-fluidd '/ścieżka/z/potwierdzenia/.m300-fluidd.ABC123.previous'
+```
+
+Instalator identyfikuje bieżący katalog witryny oraz sąsiednią kopię,
+przywraca pliki statyczne i zachowuje bieżący `config.json`. Wymiana
+katalogów jest atomowa. Po wyniku `RESTORED_M300_FLUIDD` sprawdź
+`fluidd_http_verified: true` i otwórz menu Fluidd na porcie 4480.
+Wskazana kopia pozostaje dostępna. Ponowienie z tą samą kopią sprawdza
+już przywróconą wersję.

@@ -283,6 +283,26 @@ class HostNVM:
         self._published = _defaults(self.identity)
         self.source, self.warnings = 'defaults', warnings
 
+    def load_mesh_profile(self):
+        try:
+            raw = _read_regular(self.path + '.mesh-profile', 4096)
+        except FileNotFoundError:
+            return None
+        preference = json.loads(raw)
+        if (not isinstance(preference, dict) or preference.keys() != {'identity', 'profile'}
+                or not isinstance(preference['identity'], dict)):
+            raise NVMError('invalid saved mesh preference')
+        name = preference['profile']
+        if not isinstance(name, str) or not (name.strip() and name.isprintable() and len(name) <= 128):
+            raise NVMError('invalid saved mesh name')
+        return name if preference['identity'] == self.identity else None
+
+    def save_mesh_profile(self, name):
+        if not isinstance(name, str) or not (name.strip() and name.isprintable() and len(name) <= 128):
+            raise NVMError('invalid saved mesh name')
+        raw = _canonical(dict(identity=self.identity, profile=name))
+        self._atomic_replace(self.path + '.mesh-profile', raw)
+
     def _atomic_replace(self, path, raw):
         directory = os.path.dirname(path)
         os.makedirs(directory, mode=0o700, exist_ok=True)
@@ -437,6 +457,12 @@ class M300NVM:
                                  config.get('mechanics_id', 'UNQUALIFIED_MECHANICS'))
         except (NVMError, TypeError) as exc:
             raise config.error('M300 NVM: ' + str(exc))
+        self.mesh_profile_error = None
+        try:
+            self.mesh_profile = self.store.load_mesh_profile()
+        except (ValueError, OSError) as exc:
+            self.mesh_profile = None
+            self.mesh_profile_error = str(exc)
         self.executor = self.printer.load_object(config, 'aio_executor').allocate_executor('m300-nvm')
         self._busy = False
         self._deferred_settings = {}
@@ -467,6 +493,17 @@ class M300NVM:
 
     def get_ownership_status(self, eventtime):
         return dict(state='WRITING' if self._busy else 'IDLE',busy=self._busy)
+
+    def remember_mesh_profile(self, name):
+        if name == self.mesh_profile and self.mesh_profile_error is None:
+            return
+        try:
+            self.executor.submit(self.store.save_mesh_profile, name)
+        except (ValueError, OSError) as exc:
+            self.mesh_profile_error = str(exc)
+            raise self.printer.command_error('Could not remember M300 mesh: ' + str(exc))
+        self.mesh_profile = name
+        self.mesh_profile_error = None
 
     def get_setting(self, name, default=None):
         if name == 'language':

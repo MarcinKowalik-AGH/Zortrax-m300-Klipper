@@ -179,17 +179,18 @@ class OrangePiInstallerTest(unittest.TestCase):
                  patch.object(installer, 'apply_host') as apply, \
                  patch.object(installer, 'extract_web', return_value=source), \
                  patch.object(installer, 'select_fluidd', return_value=(root, 4480, 'explicit')), \
+                 patch.object(installer, 'nginx_probe_hosts', return_value=('192.168.4.157',)), \
                  patch.object(installer, 'deploy_web', return_value=backup) as deploy, \
                  patch.object(installer, 'run') as run, patch('builtins.print') as report:
                 installer.main()
             for host_call in (printer, idle, apply):
                 host_call.assert_not_called()
-            deploy.assert_called_once_with(source, root, port=4480)
+            deploy.assert_called_once_with(source, root, port=4480, hosts=('192.168.4.157',))
             self.assertEqual([call.args[:2] for call in run.call_args_list],
                              [('sha256sum', '-c'), ('sudo', '-v'), ('sudo', 'nginx')])
             self.assertEqual(json.loads(report.call_args.args[0]), {
                 'status': 'INSTALLED_M300_FLUIDD', 'fluidd_root': str(root),
-                'fluidd_port': 4480, 'selection': 'explicit',
+                'fluidd_port': 4480, 'selection': 'explicit', 'fluidd_http_verified': True,
                 'fluidd_backup': str(backup), 'mcu_flashed': False})
 
     def check_geometry_flag(self, enabled):
@@ -396,6 +397,111 @@ class OrangePiInstallerTest(unittest.TestCase):
                 self.assertEqual(installer.local_web_host(root, port), ('127.0.0.1', True))
                 self.assertEqual(len(reloads), 2)
 
+    def test_http_503_cannot_report_success_for_identical_files(self):
+        class Offline(QuietHTTPHandler):
+            def do_GET(self):
+                self.send_error(503)
+        with tempfile.TemporaryDirectory() as tmp:
+            source, root = self.web_paths(Path(tmp))
+            index, js = self.fixture_site()
+            for directory in (source, root):
+                (directory / 'index.html').write_text(index)
+                (directory / 'assets').mkdir()
+                (directory / js).write_text('packaged')
+            with self.serving(root, Offline) as port:
+                with self.assertRaisesRegex(ValueError, 'FLUIDD_HTTP_UNVERIFIED'):
+                    installer.deploy_web(source, root, port=port, execute=self.local_run)
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ['new', 'web'])
+
+    def test_verify_site_bound_only_to_selected_address(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source, root = self.web_paths(Path(tmp))
+            index, js = self.fixture_site()
+            (source / 'index.html').write_text(index)
+            (source / 'assets').mkdir()
+            (source / js).write_text('bundle')
+            with self.serving(root, address='127.0.0.2') as port:
+                conf = f'server {{ listen 127.0.0.2:{port}; root "{root}"; }}'
+                hosts = installer.nginx_probe_hosts(conf, port, root)
+                self.assertEqual(hosts, ('127.0.0.2',))
+                backup = installer.deploy_web(source, root, port=port, hosts=hosts,
+                                              execute=self.local_run)
+                self.assertTrue(backup.is_dir())
+                self.assertEqual(installer.local_web_host(root, port, hosts=hosts),
+                                 ('127.0.0.2', True))
+
+    def test_web_backup_restore_uses_verified_site_and_http_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            package = Path(tmp)
+            source, root = self.web_paths(package)
+            index, js = self.fixture_site()
+            for directory in (root, source):
+                (directory / 'index.html').write_text(index)
+                (directory / 'assets').mkdir()
+                (directory / js).write_text(directory.name)
+            with self.serving(root) as port:
+                previous = installer.deploy_web(source, root, port=port, execute=self.local_run)
+                (root / 'config.json').write_text('{"custom":"edited after update"}')
+                self.assertEqual(installer.rollback_web_source(previous, root), previous)
+                alias = previous.with_name('.m300-fluidd.AAAAAA.previous')
+                alias.symlink_to(previous)
+                for bad in (Path(previous.name), source, root, alias):
+                    with self.assertRaises(ValueError):
+                        installer.rollback_web_source(bad, root)
+                real_deploy, real_run = installer.deploy_web, installer.run
+                def execute(sudo, *args, **kwargs):
+                    if args[0] not in ('systemctl', 'chown'):
+                        return real_run(*args, **kwargs)
+                def deploy(*args, **kwargs):
+                    return real_deploy(*args, execute=execute, **kwargs)
+                def command(*args, **kwargs):
+                    if args[:2] == ('sudo', 'nginx'):
+                        return f'server {{ listen 127.0.0.1:{port}; root "{root}"; }}'
+                    self.assertIn(args[:2], (('sha256sum','-c'), ('sudo','-v')))
+                (package/'SHA256SUMS').touch()
+                argv = ['installer', '--restore-fluidd', str(previous), '--port', str(port)]
+                with patch.object(installer,'PACKAGE',package), patch.object(sys,'argv',argv), \
+                     patch.object(installer.os,'geteuid',return_value=1000), \
+                     patch.object(installer,'run',command), patch.object(installer,'deploy_web',deploy), \
+                     patch.object(installer,'extract_web',return_value=source), patch('builtins.print') as output:
+                    installer.main()
+                    receipt = json.loads(output.call_args.args[0])
+                    self.assertEqual(receipt['status'], 'RESTORED_M300_FLUIDD')
+                    self.assertTrue(receipt['fluidd_http_verified'])
+                    self.assertEqual((Path(receipt['fluidd_backup']) / js).read_text(), source.name)
+                    self.assertEqual((root / js).read_text(), 'web')
+                    self.assertEqual((previous / js).read_text(), 'web')
+                    self.assertEqual((root / 'config.json').read_text(), '{"custom":"edited after update"}')
+                    installer.main()
+                    self.assertIsNone(json.loads(output.call_args.args[0])['fluidd_backup'])
+
+    def test_interrupt_before_or_after_atomic_exchange_preserves_site(self):
+        for after_exchange in (False, True):
+            with self.subTest(after_exchange=after_exchange), tempfile.TemporaryDirectory() as tmp:
+                source, root = self.web_paths(Path(tmp))
+
+                def cut(sudo, *args, **kwargs):
+                    exchange = installer.EXCHANGE_DIRS in args
+                    if exchange and not after_exchange:
+                        os._exit(71)
+                    result = self.local_run(sudo, *args, **kwargs)
+                    if exchange:
+                        os._exit(72)
+                    return result
+
+                pid = os.fork()
+                if not pid:
+                    try:
+                        installer.deploy_web(source, root, execute=cut)
+                    finally:
+                        os._exit(1)
+                _, status = os.waitpid(pid, 0)
+                self.assertEqual(os.waitstatus_to_exitcode(status), 72 if after_exchange else 71)
+                self.assertEqual((root / 'index.html').read_text(), 'new' if after_exchange else 'old')
+                self.assertEqual((root / 'config.json').read_text(), '{"custom":true}')
+                installer.deploy_web(source, root, execute=self.local_run)
+                self.assertEqual((root / 'index.html').read_text(), 'new')
+
     @staticmethod
     def fixture_site():
         asset = 'assets/index-DJ1P78PQ.js'
@@ -403,8 +509,8 @@ class OrangePiInstallerTest(unittest.TestCase):
 
     @staticmethod
     @contextmanager
-    def serving(root, handler=QuietHTTPHandler):
-        with ThreadingHTTPServer(('127.0.0.1', 0), partial(handler, directory=root)) as server:
+    def serving(root, handler=QuietHTTPHandler, address='127.0.0.1'):
+        with ThreadingHTTPServer((address, 0), partial(handler, directory=root)) as server:
             server_thread = Thread(target=server.serve_forever, daemon=True)
             server_thread.start()
             try:

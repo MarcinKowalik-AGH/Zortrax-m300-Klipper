@@ -10,7 +10,7 @@ from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_RELEASE = 'v1.0.0-rc.16'
+CURRENT_RELEASE = 'v1.0.0-rc.17'
 CURRENT_MCU = '1.0.5'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -96,7 +96,7 @@ def main():
     check('GRID_COUNT = 61' in src, '61x61-interpolated-grid-not-3721-measurements')
     start = (ROOT/'host/klippy/extras/m300_print_control.py').read_text()
     check("mesh=gcmd.get('MESH','AUTO')" in start and 'pmgr.load_profile(mesh)' in start, 'start-mesh-load-source')
-    check("else 'NONE')" in start, 'auto-without-profile-is-none')
+    check('select a saved bed mesh with BED_MESH_PROFILE LOAD=' in start, 'auto-requires-saved-profile')
     guide = (ROOT/'docs/pl/BED_MESH_AND_LEVELING.md').read_text()
     check('X rośnie w prawo, Y do góry' in guide and 'nieaktywny' in guide, 'mesh-orientation-and-inactive-preview-explicit')
     planner = (ROOT/'docs/pl/PRINT_LIMITS_AND_PLANNER.md').read_text()
@@ -128,7 +128,12 @@ def main():
         'host/klippy/extras/m300_settings.py',
         'host/klippy/extras/m300_native_motion.py',
     }
+    current_plate_sources = {
+        'host/klippy/extras/m300_klipper_status.py': '6bde411f82ee2f1a86e53b40b967000d715bc4f10ee656521493a7a2e8ae45c1',
+        'host/klippy/extras/m300_pad_mesh.py': '34bf981bc1a7265abee980573b55000ee9e1f5862163e8bec7d7e5e77e053fec',
+    }
     for path, expected in source_baseline['files'].items():
+        expected = current_plate_sources.get(path, expected)
         if path in updated_runtime_sources:
             continue
         p = ROOT/path

@@ -10,6 +10,9 @@ import logging
 import math
 
 
+CONTACT_RETRACT_MM = 10.
+
+
 class M300NativeMotion:
     HOMING_UI_ABI = 2
     normal_control = True
@@ -60,6 +63,7 @@ class M300NativeMotion:
         if not self.board.native_control:
             raise self.config.error('M300 normal motion requires native board initialization')
         self.toolhead = self.printer.lookup_object('toolhead')
+        self.gcode_move = self.printer.lookup_object('gcode_move')
         self.heaters = self.printer.lookup_object('heaters')
         self.hotend = self.heaters.lookup_heater('extruder')
         if not self.hotend.min_temp < self.z_home_hotend_target < target_limit(self.hotend):
@@ -144,6 +148,27 @@ class M300NativeMotion:
                     'M300 homing preheat timed out after %.0f s (%.1f / %.1f C)'
                     % (self.z_home_heat_timeout, measured, target))
             now = self.reactor.pause(min(now + 1., deadline))
+
+    def move_contact_filament(self, distance, check):
+        """Move only E, preserving the physical-to-G-code E offset even on abort."""
+        check()
+        if not self.hotend.can_extrude or self.hotend.get_temp(self.reactor.monotonic())[1] <= 0.:
+            raise self.printer.command_error('M300 contact preparation requires a hot nozzle')
+        if not self.board.mcu.is_fileoutput():
+            self.board.require_motion()
+        control = self.printer.lookup_object('m300_print_control', None)
+        speed = control.e_speed if control is not None else 2.
+        before = self.toolhead.get_position()[3]
+        try:
+            self.toolhead.manual_move([None, None, None, before + distance], speed)
+        finally:
+            # Klipper's manual_move resynchronizes last_position. Shift the E
+            # base by the accepted physical displacement, as RESTORE_GCODE_STATE
+            # does, without restoring an obsolete XYZ frame after contact homing.
+            self.gcode_move.reset_last_position()
+            self.gcode_move.base_position[3] += self.toolhead.get_position()[3] - before
+        self.toolhead.wait_moves()
+        check()
 
     def _native_home(self, axes):
         params = {axis.upper(): '0' for axis in axes}
@@ -303,7 +328,8 @@ class M300NativeMotion:
     def home_oem(self, contact_xy):
         return self.home(axes='xyz',oem_leveling=True,contact_xy=contact_xy)
 
-    def home(self, owner_job=None, job_token=None, axes='xyz',oem_leveling=False,contact_xy=None):
+    def home(self, owner_job=None, job_token=None, axes='xyz',oem_leveling=False,contact_xy=None,
+             *, filament_prepared=False):
         control=self.printer.lookup_object('m300_print_control',None)
         if control is not None and control.context is not None:
             raise self.printer.command_error('Cancel the protected print before homing')
@@ -344,6 +370,8 @@ class M300NativeMotion:
         self.native_z_checks = []
         previous_target, owned_target = None, None
         reference = None
+        prepare_filament = ('z' in axes and owner_job is None and not oem_leveling
+                            and not filament_prepared)
         try:
             self._phase('Z_INITIAL_CLEARANCE')
             initial_clearance = self.ensure_xy_clearance(lambda:self._check(token))
@@ -357,6 +385,8 @@ class M300NativeMotion:
                 self._preheat(token, target, oem_leveling)
                 self._phase('Z_CHECK_CONTACT')
                 self._check_z_contact(token)
+                if prepare_filament:
+                    self.move_contact_filament(-CONTACT_RETRACT_MM, lambda: self._check(token))
             # Both OEM G28/Z-code and M07 home Y before X.
             for axis in 'yx':
                 if axis in axes:
@@ -414,6 +444,8 @@ class M300NativeMotion:
                 self.toolhead.manual_move([None, None, target], self.lift_speed)
                 self.toolhead.wait_moves()
                 self._check(token)
+            if prepare_filament:
+                self.move_contact_filament(CONTACT_RETRACT_MM, lambda: self._check(token))
             self.state = 'COMPLETE'
             self._phase('COMPLETE')
             self.result = {'axes': axes, 'position': list(self.toolhead.get_position()),
@@ -483,6 +515,9 @@ class M300NativeMotion:
                 'physical_hardware_tests_by_CI': False}
 
     def cmd_home(self, gcmd):
+        control = self.printer.lookup_object('m300_print_control', None)
+        if control is not None:
+            control.check_home_command()
         self.home(axes=gcmd.get('AXES', 'XYZ'))
 
     def cmd_cancel(self, gcmd):

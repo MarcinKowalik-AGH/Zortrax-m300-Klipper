@@ -1,7 +1,7 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.16 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.16).
+[fixed v1.0.0-rc.17 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.17).
 For a blank Fluidd page, [recover Fluidd before the host update](#recover-fluidd-then-update-klipper).
 [Polski](../pl/INSTALL.md).
 
@@ -44,6 +44,20 @@ aliases, and removes recognized unused stock web update entries. Review the
 changes in the [configuration audit](CONFIGURATION_AUDIT.md). The
 machine-specific `--qualified-first-print-z` option requires confirmed
 mechanical clearance and is unnecessary for routine updates.
+
+## Update after a Git corrupt loose object error
+
+Leave the damaged checkout in place. With the printer idle, clone the published deployment branch into a new directory on the Orange Pi. The installer uses the existing printer configuration.
+
+```bash
+m300_src=$(mktemp -d "$HOME/m300-rc17.XXXXXX") &&
+git clone --depth 1 --single-branch --no-tags --branch orange-pi \
+  https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_src" &&
+(cd "$m300_src" && sha256sum -c --quiet SHA256SUMS) &&
+python3 "$m300_src/install-orange-pi.py"
+```
+
+Keep the new path for subsequent updates. Use the versioned full ZIP to install exactly RC17. After a separate Fluidd repair check `fluidd_http_verified` and open the menu on port 4480.
 
 ## 2. Check the MCU version
 
@@ -124,11 +138,14 @@ For an extracted release ZIP, run the same command with
 `python3 install-orange-pi.py` from its root. For a custom nginx layout,
 `--fluidd-root /absolute/path/to/fluidd` can point to the verified existing
 web directory. The update preserves the nginx configuration, `config.json`
-and Fluidd preferences. Look for `INSTALLED_M300_FLUIDD` and keep the
-`fluidd_root` and `fluidd_backup` paths. A matching, usable site may be
-reused, with `fluidd_backup` reported as `null`. For a proven local HTTP route, the installer checks the new HTML and
-its startup JavaScript and CSS. It restores the previous directory if
-that check fails.
+and Fluidd preferences. The `INSTALLED_M300_FLUIDD` receipt with
+`fluidd_http_verified: true` confirms that nginx served the expected HTML
+and startup JavaScript and CSS over HTTP. The installer checks the selected
+site's listen address, including a LAN-only bind. Keep the `fluidd_root`
+and `fluidd_backup` paths. A `null` backup means the existing site passed
+verification with identical files. A `FLUIDD_HTTP_UNVERIFIED` error exits
+with failure. If a swap took place, the installer exchanges the directories
+back. Check nginx and the HTTP requests described below.
 [Port detection and CI retries](../pl/INSTALLATION_AND_CI.md).
 
 ## Diagnose a blank or unreachable Fluidd page
@@ -182,8 +199,17 @@ the edit and review the reported file before retrying.
 
 ## Restore the previous Fluidd website
 
-Use the `fluidd_root` and nonempty `fluidd_backup` paths reported by the
-installer. Confirm that the backup contains the working `index.html` and
-`assets`. Move the current web directory aside and move the backup into
-`fluidd_root`. Then run `sudo nginx -t && sudo systemctl reload nginx` and
-repeat the HTTP checks above.
+Copy the **absolute `fluidd_backup` path** from this site's installation
+receipt. A `null` value means that update created no backup. Replace the
+example path with the one from the receipt.
+
+```bash
+python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480 --restore-fluidd '/path/from/receipt/.m300-fluidd.ABC123.previous'
+```
+
+The installer checks the live site directory and its sibling backup,
+restores the static files, and preserves the current `config.json`.
+It exchanges the directories atomically. After `RESTORED_M300_FLUIDD`,
+check `fluidd_http_verified: true` and open the Fluidd menu on port 4480.
+The selected backup remains available. Repeating the command with the same
+backup verifies the restored version.

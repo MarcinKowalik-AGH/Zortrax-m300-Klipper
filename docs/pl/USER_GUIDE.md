@@ -109,7 +109,7 @@ bieżącego pliku SD, także podczas przejścia od raftu do modelu.
 Przygotowanie, pauza i błędy mają własne kolory.
 [Odczyt fazy, siatki i stanu światła](PRINT_CONTROL.md#kontrola-i-odbiór).
 
-`MESH=AUTO` wybiera `m300_pads`, gdy istnieje, inaczej drukuje bez kompensacji. `MESH=m300_pads` wymaga profilu. `MESH=NONE` jawnie wyłącza siatkę. START nie mierzy mesh od nowa. Ustawienia i wcześniejsze tryby parsera są chronione; po sekwencji przywracane są m.in. tryby współrzędnych i mnożniki.
+`MESH=AUTO` wybiera zapamiętany profil płyty. Przy pierwszym użyciu może wybrać `m300_pads` lub jedyny zapisany profil. Brak wymaganego profilu zatrzymuje start. `MESH=m300_pads` wymaga profilu. `MESH=NONE` jawnie wyłącza siatkę. START nie mierzy mesh od nowa. Ustawienia i wcześniejsze tryby parsera są chronione; po sekwencji przywracane są m.in. tryby współrzędnych i mnożniki.
 
 `END_PRINT` opuszcza stół o maksymalnie 300 mm od ostatniej pozycji, do limitu osi Z. Gdy stół się zatrzyma i prześwit jest wystarczający (domyślnie co najmniej 5 mm), głowica parkuje przy X300 Y305. Potem sterownik wyłącza cele grzałek i nawiew modelu. Po odczytaniu końca pliku OLED pokazuje **PRINTING DONE**. Chłodzeniem hotendu nadal steruje temperatura.
 

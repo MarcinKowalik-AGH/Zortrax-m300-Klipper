@@ -12,12 +12,12 @@ import logging
 import math
 import os
 
+from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.41-END-PARK'
+REVISION = '0.13.16.42-AUDIT'
 PERIOD = .25
-START_RETRACT_MM = 10.
 END_BED_DROP_MM = 300.
 
 
@@ -69,8 +69,10 @@ class M300PrintControl:
         self._cancel_park = False
         self._pending_file = None
         self._prepared_stream = None
+        self._ended_stream = None
         self.operation = None
         self._internal = False
+        self._session_mesh_profile = None
         self._display_owned = False
         self._display_previous = self._display_message = None
         self._timer = self.reactor.register_timer(self._tick)
@@ -109,7 +111,7 @@ class M300PrintControl:
         self.command_backends = {}
         for name in ('M24','M23','SDCARD_PRINT_FILE','SDCARD_RESET_FILE','SET_KINEMATIC_POSITION',
                      'FORCE_MOVE','STEPPER_BUZZ','BED_MESH_CLEAR','BED_MESH_PROFILE','BED_MESH_OFFSET',
-                     'BED_MESH_CALIBRATE','SET_GCODE_OFFSET','SAVE_CONFIG','G0','G1',
+                     'BED_MESH_CALIBRATE','SET_GCODE_OFFSET','SAVE_CONFIG','G0','G1','G2','G3',
                      'PROBE','PROBE_ACCURACY','PROBE_CALIBRATE','SCREWS_TILT_CALCULATE',
                      'Z_TILT_ADJUST','QUAD_GANTRY_LEVEL','PID_CALIBRATE',
                      'SET_EXTRUDER_ROTATION_DISTANCE','SYNC_EXTRUDER_MOTION'):
@@ -117,8 +119,24 @@ class M300PrintControl:
             if previous is None:continue
             self.command_backends[name]=previous
             def guarded(gcmd, previous=previous, name=name):
+                if (self._ended_stream is not None and self.sd.current_file is self._ended_stream
+                        and name in ('G0','G1','G2','G3') and self.sd.is_cmd_from_sd()):
+                    raise gcmd.error('M300 print: ' + name + ' follows END_PRINT in this file')
                 if (self.busy or self.context is not None) and not self._internal:
                     raise gcmd.error('M300 protected print: use RESUME or CANCEL_PRINT; '+name+' refused')
+                if (name in ('BED_MESH_PROFILE', 'BED_MESH_CLEAR')
+                        and self.sd.is_active() and not self.sd.is_cmd_from_sd()):
+                    raise gcmd.error('M300: keep the active mesh while a file is printing')
+                if name == 'BED_MESH_PROFILE' and gcmd.get('LOAD', None) is not None:
+                    bed = self.printer.lookup_object('bed_mesh')
+                    old_mesh = bed.get_mesh()
+                    result = previous(gcmd)
+                    try:
+                        self.remember_mesh_profile(bed.get_mesh().get_profile_name())
+                    except Exception:
+                        bed.set_mesh(old_mesh)
+                        raise
+                    return result
                 return previous(gcmd)
             record = lock_command(self.gcode,name,guarded)
             if record:self.command_guards.append(record)
@@ -213,11 +231,11 @@ class M300PrintControl:
     def _stop(self, reason):
         active=self.busy or self.context is not None
         self.ready=False
-        self._prepared_stream = None
+        self._prepared_stream = self._ended_stream = None
         self._drop(reason,off=active)
 
     def _file_reset(self,*args):
-        self._prepared_stream = None
+        self._prepared_stream = self._ended_stream = None
         if self.context is not None or self.busy:
             self._drop('native file reset')
 
@@ -363,6 +381,12 @@ class M300PrintControl:
             raise self._error('position or file changed before pause drained')
         park_xy = ctx['origin'][:2] if self._pending_change is None else self.park_xy
         ctx['plan'] = self._plan(park_xy=park_xy)
+        if self._pending_change is not None and not self._can_park_for_material(ctx['plan']):
+            # The bounded plan keeps the original XY when the park is unreachable.
+            # Refuse the exchange, then finish a normal, resumable pause.
+            self._pending_change = None
+            self.notice += '. Material change skipped; Resume remains available'
+            self.gcode.respond_info('M300: ' + self.notice)
         self.steps.clear()
         measured,target=self.hotend.get_temp(self.reactor.monotonic())
         if self.retract and measured >= self.hotend.min_extrude_temp and target > 0:
@@ -461,13 +485,15 @@ class M300PrintControl:
         ctx['flow_confirmed']=True
         gcmd.respond_info('M300: filament flow confirmed; press Resume')
 
+    def _can_park_for_material(self, plan):
+        return plan['xy_allowed'] and tuple(plan['target'][:2]) == self.park_xy
+
     def material_begin(self):
         if self.context is None or self.busy:
             raise self._error('material change requires a protected settled pause')
         self._guard(self.generation)
         plan = self.context['plan']
-        if (not plan['xy_allowed'] or tuple(plan['target'][:2]) != self.park_xy
-                or not self._position_is(plan['target'])):
+        if not self._can_park_for_material(plan) or not self._position_is(plan['target']):
             raise self._error('not enough clearance for a material-change park')
         self.context.update(change_required=True,material_success=False,flow_confirmed=False)
         return self.context['targets']['hotend']
@@ -494,7 +520,7 @@ class M300PrintControl:
         # Plan from the saved print position. A plain PAUSE has already made
         # the vertical move; only XY may move now, and only at that clearance.
         plan = self._plan(origin=ctx['origin'])
-        if not plan['xy_allowed'] or tuple(plan['target'][:2]) != self.park_xy:
+        if not self._can_park_for_material(plan):
             raise self._error('not enough clearance for a material-change park')
         if plan['target'] == ctx['plan']['target']:
             self._begin_change(options)
@@ -517,9 +543,28 @@ class M300PrintControl:
             return  # Timed nozzle cooling is owned by this module, not M84.
         self.gcode.run_script_from_command('TURN_OFF_HEATERS\nZORTRAX_IDLE_RELEASE_XYE')
 
-    def cmd_G28(self,gcmd):
-        if self.context is not None or self.busy:
+    def _check_file_command(self, command):
+        stream = self.sd.current_file
+        if stream is None:
+            return
+        if self.sd.work_timer is None and self.sd.print_stats.state not in ('printing', 'paused'):
+            return
+        if not self.sd.is_cmd_from_sd():
+            raise self._error(command + ' must come from the active print file')
+        if stream is self._ended_stream:
+            raise self._error(command + ' follows END_PRINT in this file')
+        if command != 'END_PRINT':
+            models = self.printer.lookup_object('m300_models', None)
+            if self.model_print_ready or getattr(models, 'runtime_deposited', False):
+                raise self._error(command + ' is unavailable after print preparation or model extrusion')
+
+    def check_home_command(self):
+        if self.context is not None or self.busy or self.state == 'FAILED':
             raise self._error('homing is unavailable during a protected print operation')
+        self._check_file_command('G28')
+
+    def cmd_G28(self,gcmd):
+        self.check_home_command()
         return self.original_home(gcmd)
 
     def cmd_clear(self,gcmd):
@@ -590,7 +635,7 @@ class M300PrintControl:
         if (self.context is not None or self.busy or self.state=='FAILED'
                 or self.pause.is_paused or self._material_busy()):
             raise self._error('finish or cancel the current print procedure')
-        # A running native file is allowed; unrelated OEM/mesh work is not.
+        self._check_file_command('START_PRINT' if state == 'STARTING' else 'END_PRINT')
         for name in ('m300_motion','m300_pad_mesh','m300_calibration','m300_maintenance',
                      'm300_fans','m300_thermal'):
             obj=self.printer.lookup_object(name,None)
@@ -612,29 +657,62 @@ class M300PrintControl:
         self._phase('WAIT_START' if state=='STARTING' else 'WAIT_END')
         self._lease();self._wake()
 
+    @property
+    def active_mesh_profile(self):
+        bed = self.printer.lookup_object('bed_mesh', None)
+        mesh = bed.get_mesh() if bed is not None else None
+        return getattr(mesh, 'profile_name', None)
+
+    @property
+    def selected_mesh_profile(self):
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        return getattr(nvm, 'mesh_profile', self._session_mesh_profile)
+
+    def remember_mesh_profile(self, name):
+        nvm = self.printer.lookup_object('m300_nvm', None)
+        if nvm is not None:
+            nvm.remember_mesh_profile(name)
+        self._session_mesh_profile = name
+
+    def _resolve_start_mesh(self, request):
+        if request.upper() == 'NONE':
+            return None
+        bed = self.printer.lookup_object('bed_mesh', None)
+        profiles = bed.pmgr.get_profiles() if bed is not None else {}
+        name = request
+        if request.upper() == 'AUTO':
+            nvm = self.printer.lookup_object('m300_nvm', None)
+            if getattr(nvm, 'mesh_profile_error', None):
+                raise self._error('saved mesh selection is unreadable; explicitly load a saved profile')
+            name = self.selected_mesh_profile or self.active_mesh_profile
+            if name is None and 'm300_pads' in profiles:
+                name = 'm300_pads'
+            if name is None and len(profiles) == 1:
+                name = next(iter(profiles))
+            if name is None:
+                raise self._error('select a saved bed mesh with BED_MESH_PROFILE LOAD=<name>, '
+                                  'measure the plate, or explicitly use MESH=NONE')
+        if name not in profiles:
+            raise self._error('saved mesh '+name+' is unavailable; measure/save it or use MESH=NONE')
+        return name
+
     def cmd_start(self,gcmd):
         target=self._temperature_target(gcmd,'EXTRUDER_TEMP',self.hotend,
             self.hotend.get_temp(self.reactor.monotonic())[1],self.hotend.min_extrude_temp)
         if target <= 0.:
             raise self._error('print start requires a nozzle target for filament retraction')
-        if self.toolhead.get_extruder().max_e_dist < START_RETRACT_MM:
+        if self.toolhead.get_extruder().max_e_dist < CONTACT_RETRACT_MM:
             raise self._error('startup retraction exceeds native max_extrude_only_distance')
         bed=self._temperature_target(gcmd,'BED_TEMP',self.bed,
             self.bed.get_temp(self.reactor.monotonic())[1])
-        mesh=gcmd.get('MESH','AUTO')
-        bedmesh=self.printer.lookup_object('bed_mesh',None)
-        requested_mesh=mesh
-        if mesh.upper()=='AUTO':
-            mesh=('m300_pads' if bedmesh is not None and 'm300_pads' in bedmesh.pmgr.get_profiles()
-                  else 'NONE')
-        if mesh.upper()!='NONE' and (bedmesh is None or mesh not in bedmesh.pmgr.get_profiles()):
-            raise self._error('saved mesh '+mesh+' is unavailable; measure/save it or use MESH=NONE')
+        requested_mesh=gcmd.get('MESH','AUTO')
+        mesh=self._resolve_start_mesh(requested_mesh)
         nvm=self.printer.lookup_object('m300_nvm',None)
         full_preheat=bool(nvm is not None and nvm.get_setting('full_platform_preheat',False))
         purge=gcmd.get_float('PURGE',self.purge_length,above=0.,maxval=1000.)
         if not math.isfinite(purge):raise self._error('invalid PURGE')
         self._begin_operation('STARTING')
-        self.operation.update(targets=dict(hotend=target,bed=bed),mesh=mesh,
+        self.operation.update(targets=dict(hotend=target,bed=bed),mesh=mesh if mesh is not None else 'NONE',
                               purge_length=purge,requested_mesh=requested_mesh,
                               soak_seconds=self.platform_soak_seconds if full_preheat and bed>0. else 0.)
 
@@ -671,7 +749,7 @@ class M300PrintControl:
         state = {'NAME': 'M300_START_RETRACT'}
         self.gcode_move.cmd_SAVE_GCODE_STATE(self._command('SAVE_GCODE_STATE', state))
         try:
-            self._e(-START_RETRACT_MM)
+            self._e(-CONTACT_RETRACT_MM)
         finally:
             # Preserve the logical E coordinate across this physical move.
             if self.ready and not self.printer.is_shutdown():
@@ -684,14 +762,15 @@ class M300PrintControl:
     def _start_home(self):
         token=self.generation
         self._release();self._phase('HOMING',self.heat_timeout)
-        self.printer.lookup_object('m300_motion').home()
+        self.printer.lookup_object('m300_motion').home(filament_prepared=True)
         self._guard(token)  # Homing yields to cancellation/shutdown.
         self._lease()
         mesh=self.operation['mesh']
-        if mesh.upper()=='NONE':
+        if self.operation['requested_mesh'].upper()=='NONE':
             bedmesh=self.printer.lookup_object('bed_mesh',None)
             if bedmesh is not None:bedmesh.set_mesh(None)
         else:self.printer.lookup_object('bed_mesh').pmgr.load_profile(mesh)
+        self.gcode.respond_info('M300 print mesh: ' + (self.active_mesh_profile or 'NONE'))
         # Use native G-code moves here: the active bed-mesh transform must
         # compensate purge height. Physical manual_move would bypass it.
         self._release()
@@ -746,12 +825,15 @@ class M300PrintControl:
         if end:self._off();self._fan_off()
         self._guard(token)
         resume=op['resume']
-        stream = self.sd.current_file if resume and not end else None
+        stream = self.sd.current_file
         self._drop('end' if end else 'start',off=False)
         if resume:
             self.sd.do_resume()  # Native worker still owns EOF/completion.
             # The same stream completed START_PRINT and can now print the model.
-            self._prepared_stream = stream
+            if end:
+                self._ended_stream = stream
+            else:
+                self._prepared_stream = stream
 
     def _step(self):
         kind,value=self.steps.popleft()
@@ -837,6 +919,7 @@ class M300PrintControl:
         measured,target=self.hotend.get_temp(now) if hasattr(self,'hotend') else (0.,0.)
         return dict(revision=REVISION,state=self.state,phase=self.phase,busy=self.busy,
             model_print_ready=self.model_print_ready,
+            active_mesh_profile=self.active_mesh_profile, selected_mesh_profile=self.selected_mesh_profile,
             session_token=self.generation,park_xy=list(self.park_xy),last_error=self.last_error,
             notice=self.notice,paused=bool(ctx),targets=copy.deepcopy(ctx['targets']) if ctx else None,
             start=copy.deepcopy({key:self.operation.get(key) for key in

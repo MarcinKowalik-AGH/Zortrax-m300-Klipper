@@ -111,8 +111,8 @@ BED_MESH_OUTPUT
 
 | Parametr | Zachowanie |
 |---|---|
-| Domyślne `MESH=AUTO`, jest `m300_pads` | Po bazowaniu wczytuje ten profil, przed czterema liniami startowymi |
-| `MESH=AUTO`, nie ma `m300_pads` | Wybiera brak kompensacji i po bazowaniu usuwa ewentualny aktywny mesh |
+| `MESH=AUTO`, operator wybrał profil | Wczytuje go po bazowaniu przed liniami. Wybór zapisuje m.in. `BED_MESH_PROFILE LOAD=nazwa`. |
+| `MESH=AUTO`, brak wcześniejszego wyboru | Używa `m300_pads` albo jedynego zapisanego profilu. Przy braku lub niejednoznaczności zatrzymuje start przed ruchem. |
 | `MESH=m300_pads` | Wymaga tego profilu, przy braku zgłasza błąd |
 | `MESH=inna_nazwa` | Wymaga wskazanego profilu; nie szuka najnowszego według daty |
 | `MESH=NONE` | Celowo nie używa kompensacji |

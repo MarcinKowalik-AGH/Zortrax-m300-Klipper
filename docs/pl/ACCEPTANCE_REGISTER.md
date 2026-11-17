@@ -30,14 +30,14 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | CANCEL w druku, przygotowaniu i pauzie | 0.13.16.38 / test 11.11.2026 | CANCEL_PRINT po nieudanym starcie | Obserwacja częściowa: Głowica zaparkowała; STATUS Ready, PRINT_CONTROL_STATUS IDLE i busy=false. | Pozostałe fazy anulowania i RESUME wymagają osobnego testu. |
 | END i ponowne zadanie | beta.22 / konfiguracja egzemplarza | Normalne ukończenie i uruchomienie kolejnego pliku | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Zmiana filamentu w pauzie | beta.22 / konfiguracja egzemplarza | Wycofanie, ładowanie, wypływ, osobne RESUME | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
-| Stabilność dłuższego wydruku | beta.22 / konfiguracja egzemplarza | Ruch, grzanie, OLED, Fluidd i kontrola logów łącza | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
+| Stabilność dłuższego wydruku | Wersja hosta podczas wydruku nieodczytana | 3DBenchy_M300_0p4_0p28.gcode | Obserwacja częściowa: Użytkownik ukończył wydruk. Fluidd pokazał Actual 30 h 37 min 4 s. | Odbiór dotyczy ukończenia tego zadania. |
 | Przepływ i profile Orca | beta.22 / konfiguracja egzemplarza | Pomiary dla konkretnego materiału, dyszy i temperatury | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Rzeczywista karta SD i pliki Z-Suite M300 | beta.22 / konfiguracja egzemplarza | Import i nadzorowany druk reprezentatywnych plików | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Nowy instalator i zapamiętanie portu | beta.23 | Aktualizacja → odczyt FLUIDD_ENDPOINT_SELECTED → ponowne wywołanie | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Kwalifikowany wariant Z pierwszego wydruku | 0.13.16.38 / test 11.11.2026 | Nastawy istniejącego egzemplarza | Uzgodniona konfiguracja: position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1. | Nie jest globalnym standardem dla innych egzemplarzy. |
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
-| Automatyczny zapis licznika ID0 w MCU | RC8 / MCU 1.0.4 | Synchronizacja po wydruku i odzyskanie po zaniku zasilania podczas zapisu | Oczekuje na test: Próba sprzętowa zapisu i odczytu po zapisie oczekuje. | Wymaga potwierdzenia na płycie M300 Classic. |
+| Automatyczny zapis licznika ID0 w MCU | RC17 / MCU 1.0.5 | Dwa kolejne zapisy ID0 i normalne ponowne włączenie | Oczekuje na test: Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu. | Próba fizyczna oczekuje. |
 
 ## Historia i źródła potwierdzeń
 
@@ -223,6 +223,14 @@ Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji
 
 Podstawa wersji: `conversation_context_not_device_report`.
 
+**2026-11-17 · Wersja hosta podczas wydruku nieodczytana · Obserwacja częściowa**
+
+Użytkownik ukończył wydruk. Fluidd pokazał Actual 30 h 37 min 4 s.
+
+Zapis użytkownika / treść przesłanego zrzutu: „Actual 30h 37m 4s”.
+
+Podstawa wersji: `Zapis rozmowy przejrzany 17.11.2026.`.
+
 ### FLOW_PROFILE — Przepływ i profile Orca
 
 **2026-11-10 · beta.22 / konfiguracja egzemplarza · Oczekuje na test**
@@ -286,6 +294,20 @@ Podstawa wersji: `user_report_stock_version_and_successful_launch`.
 Próba sprzętowa zapisu i odczytu po zapisie oczekuje.
 
 Podstawa wersji: `release_candidate_not_device_readback`.
+
+**2026-11-17 · RC9 / MCU 1.0.5 · Obserwacja częściowa**
+
+ID0 286732 min, nierozliczone 135691,9 s.
+
+Zapis użytkownika / treść przesłanego zrzutu: „"factory_counter_sync": "DISABLED"”.
+
+Podstawa wersji: `Zapis rozmowy przejrzany 17.11.2026.`.
+
+**2026-11-17 · RC17 / MCU 1.0.5 · Oczekuje na test**
+
+Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu.
+
+Podstawa wersji: `Zapis rozmowy przejrzany 17.11.2026.`.
 
 ## Jak aktualizować
 

@@ -15,7 +15,8 @@ class Fixture:
         self.serial = 0x12345678
         self.snapshot = {'identity': {'machine_id': 'm300'},
                          'counters': {'print_seconds': total}}
-        self.data = None
+        self.data = dict(serial='Z12345678', machine_id='m300', committed=0,
+                         last_minutes=minutes, pending=None)
         self.minutes = minutes
         self.source = 0
         self.crc = 0x12349876

@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Procedura RC15.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+**Procedura RC17.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
 oraz parametry ruchu.
 
@@ -49,8 +49,9 @@ wywołujesz wspólny START_PRINT. Dla świadomego wymagania konkretnej siatki u�
    i czeka na zakończenie ruchu przed kontaktem Z.
 4. Wspólne bazowanie M300. Bazowanie Z korzysta z procedury kontaktowej
    i minimum 180°C, z zachowaniem wyższego celu drukowania.
-5. Po bazowaniu Klipper aktywuje wybrany profil mesh. `AUTO` wybiera
-   `m300_pads`, jeśli istnieje, a w przeciwnym razie drukuje bez kompensacji.
+5. Po bazowaniu Klipper aktywuje zapamiętany profil płyty. Przy pierwszym wyborze
+   `AUTO` może użyć domyślnego `m300_pads` albo jedynego zapisanego profilu.
+   Brak wymaganego profilu lub niejednoznaczny wybór zatrzymuje start przed ruchem.
    Jawną nieistniejącą nazwę odrzuca przed rozpoczęciem operacji.
 6. Klipper dojeżdża do początku czyszczenia na wysokości bezpiecznej,
    podaje 6 mm filamentu i przechodzi na wysokość czyszczenia.
@@ -65,8 +66,7 @@ Natywny G-code stosuje wybraną kompensację mesh podczas czyszczenia. Stała
 zadana wysokość pozwala siatce nadal korygować fizyczne położenie Z.
 Rozruch używa G90, M83 i mnożników M220/M221 = 100%. Klipper odtwarza
 poprzednie tryby parsera także przy przerwaniu. Cykl cofnięcia i podania
-10/6 mm należy do `START_PRINT`. Samodzielne Home Z i Bed Mesh korzystają
-z własnego cyklu pomiarowego.
+10/6 mm należy do `START_PRINT`. Samodzielne Home Z i Bed Mesh cofają gorący filament o 10 mm i po poprawnym zakończeniu podają z powrotem 10 mm.
 
 ### Domyślna geometria w kodzie, nie nakaz nadpisania własnych nastaw
 
@@ -127,7 +127,7 @@ ZORTRAX_ERROR_STATUS
 BED_MESH_OUTPUT
 ```
 
-Sprawdź rewizję `0.13.16.41-END-PARK`, fazę i aktywną siatkę. W RC15
+Sprawdź rewizję `0.13.16.42-AUDIT`, fazę i aktywną siatkę. W RC17
 `model_print_ready: true` potwierdza zakończenie czyszczenia w bieżącym
 pliku SD. Rewizja
 `0.13.16.38-PRINT-DRAIN-XY-PURGE` miała dodatkowe odsunięcie do Z5 pomiędzy

@@ -150,7 +150,7 @@ def require_unused_klipper(printer):
         raise ValueError('First install expects an unused, unconfigured KIAUH instance')
 
 
-def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=None, execute=run):
+def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=None, web_hosts=None, execute=run):
     config = data/'config/printer.cfg'
     refuse_existing(config, root)
     data.mkdir(parents=True,exist_ok=True)
@@ -209,7 +209,8 @@ def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=
             updater.atomic_write(moon,updated_moon.encode())
             execute('sudo','systemctl','start','klipper.service')
             execute('sudo','systemctl','restart','moonraker.service')
-            web_backup = deploy.deploy_web(web,web_root,port=fluidd_port,execute=execute)
+            web_backup = deploy.deploy_web(web,web_root,port=fluidd_port,execute=execute,
+                                         hosts=web_hosts or deploy.LOOPBACK_HOSTS)
             if fluidd_port is not None:
                 deploy.save_install_state(config.parent,web_root,fluidd_port)
         except BaseException:
@@ -260,8 +261,8 @@ def main():
         check_service(data,root,python)
         deploy=module('m300_first_deploy_plan',PACKAGE/'install-orange-pi.py')
         run('sudo','-v')
-        web,fluidd_port,selection=deploy.select_fluidd(
-            run('sudo','nginx','-T',capture=True),args.port,args.fluidd_root)
+        nginx_config = run('sudo','nginx','-T',capture=True)
+        web,fluidd_port,selection=deploy.select_fluidd(nginx_config,args.port,args.fluidd_root)
         # Moonraker's server status is available while stock Klipper is stopped.
         require_unused_klipper(deploy.printer)
         plan=dict(status='PLAN_FIRST_M300_INSTALL',source_commit=provenance['github_commit'],
@@ -270,7 +271,8 @@ def main():
                   mcu_flashed=False,motion_or_heating_sent=False)
         if args.apply:
             plan['backup']=str(install(PACKAGE,root,data,python,args.serial,args.baud,web,
-                                       fluidd_port=fluidd_port))
+                                       fluidd_port=fluidd_port,
+                                       web_hosts=deploy.nginx_probe_hosts(nginx_config,fluidd_port,web)))
             plan['status']='INSTALLED_FIRST_M300_CHECK_READY'
         print(json.dumps(plan,indent=2))
     except (ValueError,OSError,KeyError,subprocess.CalledProcessError) as exc:

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Update M300 Classic Klipper, with a separate opt-in Fluidd web update."""
 import argparse
-from contextlib import closing
+from contextlib import closing, contextmanager
+import fcntl
 import hashlib
 from http.client import HTTPConnection, HTTPException
+from ipaddress import ip_address
 import json
 import math
 import os
@@ -27,6 +29,7 @@ HTML_CONTENT_TYPES = ('text/html',)
 JS_CONTENT_TYPES = ('application/javascript', 'text/javascript', 'application/x-javascript')
 WEB_ASSET = re.compile(
     rb'''\b(src|href)\s*=\s*["'](?:\./|/)?(assets/[\w.-]+-[\w-]+\.(js|css))["']''', re.I)
+LOOPBACK_HOSTS = ('127.0.0.1', '::1')
 MIN_REPAIR_ASSETS = 3
 WEB_RELOAD_TIMEOUT = 5
 OLD_PAD_GEOMETRY_ERROR = 'pad widths and edge_margin must leave a positive inset (width <= 100 mm)'
@@ -114,7 +117,7 @@ def nginx_sites(config):
             if token == '{':
                 site = stack[-1][1] if stack else None
                 if words == ['server']:
-                    site = {'ports': set(), 'roots': set()}
+                    site = {'ports': set(), 'roots': set(), 'listen': set()}
                     sites.append(site)
                 stack.append((words, site))
             elif token == '}':
@@ -124,6 +127,7 @@ def nginx_sites(config):
                     block, site = stack[-1]
                     if site is not None and block == ['server'] and words[0] == 'listen':
                         site['ports'].add(words[1].rsplit(':', 1)[-1])
+                        site['listen'].add(words[1])
                     serves_index = (block == ['server'] or
                                     block in (['location', '/'], ['location', '=', '/'],
                                               ['location', '=', '/index.html'],
@@ -147,6 +151,25 @@ def nginx_root(config, port):
     if '$' in root or not Path(root).is_absolute():
         raise ValueError('Fluidd web root must be an absolute directory; use --fluidd-root')
     return Path(root)
+
+
+def nginx_probe_hosts(config, port, root):
+    """Probe the selected site's numeric listen addresses, including LAN-only sites."""
+    hosts = []
+    for site in nginx_sites(config):
+        if not any(Path(path).resolve() == root for path in site['roots']):
+            continue
+        for endpoint in sorted(site['listen']):
+            address, separator, number = endpoint.rpartition(':')
+            if endpoint == str(port) or (number == str(port) and address in ('*', '0.0.0.0')):
+                hosts.append('127.0.0.1')
+            elif separator and number == str(port):
+                try:
+                    ip = ip_address(address.strip('[]'))
+                except ValueError:
+                    continue
+                hosts.append('::1' if ip.is_unspecified else str(ip))
+    return tuple(dict.fromkeys(hosts)) or LOOPBACK_HOSTS
 
 
 def verified_web_root(path, *, repair_source=None):
@@ -373,7 +396,7 @@ def matching_web_files(host, port, files):
     return matching
 
 
-def local_web_host(root, port, *, repair_source=None):
+def local_web_host(root, port, *, repair_source=None, hosts=LOOPBACK_HOSTS):
     if port is None:
         return None, False
     try:
@@ -381,7 +404,7 @@ def local_web_host(root, port, *, repair_source=None):
     except OSError:
         return None, False
     degraded = None
-    for host in ('127.0.0.1', '::1'):
+    for host in hosts:
         observed = matching_web_files(host, port, files)
         nonempty = {path for path, body, _ in files if body and path in observed}
         if files and len(nonempty) == len(files):
@@ -393,16 +416,68 @@ def local_web_host(root, port, *, repair_source=None):
     return degraded, False
 
 
-def deploy_web(source, root, *, port=None, execute=run):
-    local_host, healthy = local_web_host(root, port, repair_source=source)
-    if (local_host is None or healthy) and same_web_contents(source, root, http_verified=healthy):
-        return None
-    expected = web_probe_files(source) if local_host is not None else ()
-    if local_host is not None and (not expected or any(not body for _, body, _ in expected)):
+# Linux renameat2(RENAME_EXCHANGE) keeps the nginx path populated at every
+# instant. Run this fixed helper under the system Python for protected roots.
+EXCHANGE_DIRS = """
+import ctypes
+import os
+import sys
+
+parent = os.open(os.path.dirname(sys.argv[1]), os.O_RDONLY | os.O_DIRECTORY)
+try:
+    rename = ctypes.CDLL(None, use_errno=True).renameat2
+    left, right = (os.fsencode(os.path.basename(path)) for path in sys.argv[1:])
+    if rename(parent, left, parent, right, 2) != 0:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    os.fsync(parent)
+finally:
+    os.close(parent)
+"""
+
+
+def exchange_web(root, backup, execute):
+    if root.parent != backup.parent:
+        raise ValueError('Fluidd backup and site must be in the same directory')
+    execute('sudo', '/usr/bin/python3', '-I', '-c', EXCHANGE_DIRS, root, backup)
+
+
+@contextmanager
+def web_lock(root):
+    descriptor = os.open(root.parent, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError('Another Fluidd update is in progress') from exc
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def deploy_web(source, root, *, port=None, execute=run, hosts=LOOPBACK_HOSTS):
+    with web_lock(root):
+        return _deploy_web(source, root, port, execute, hosts)
+
+
+def _deploy_web(source, root, port, execute, hosts):
+    local_host, healthy = local_web_host(root, port, repair_source=source, hosts=hosts)
+    expected = web_probe_files(source) if port is not None else ()
+    if port is not None and (not expected or any(not body for _, body, _ in expected)):
         raise ValueError('Missing or empty Fluidd startup asset in the package')
+    identical = same_web_contents(source, root, http_verified=healthy)
+    if identical and (healthy or port is None):
+        return None
+    if identical and local_host is None:
+        raise ValueError(f'FLUIDD_HTTP_UNVERIFIED: files match but nginx did not serve '
+                         f'the Fluidd index and startup assets on {hosts} port {port}')
+
+    # The candidate becomes the retained previous site in the very same
+    # syscall that activates it. Interrupted cleanup can only leave a backup.
     stage = Path(execute('sudo', 'mktemp', '-d', '--tmpdir=' + str(root.parent),
-                         '.m300-fluidd.XXXXXX', capture=True).strip())
-    backup = stage.with_name(stage.name + '.previous')
+                         '--suffix=.previous', '.m300-fluidd.XXXXXX', capture=True).strip())
+    candidate = stage.stat()
+    original = root.stat()
     try:
         execute('sudo', 'cp', '-a', '--', str(source) + '/.', stage)
         config = root / 'config.json'
@@ -410,44 +485,41 @@ def deploy_web(source, root, *, port=None, execute=run):
             execute('sudo', 'cp', '-pL', '--', config, stage / config.name)
         execute('sudo', 'chmod', '--reference=' + str(root), stage)
         execute('sudo', 'chown', '--reference=' + str(root), stage)
-        execute('sudo', 'mv', '-T', '--', root, backup)
+        execute('sudo', 'sync', '-f', stage)
         reloaded = False
         try:
-            execute('sudo', 'mv', '-T', '--', stage, root)
+            exchange_web(root, stage, execute)
             execute('sudo', 'systemctl', 'reload', 'nginx')
             reloaded = True
-            if local_host is not None:
+            if port is not None:
                 deadline = time.monotonic() + WEB_RELOAD_TIMEOUT
                 while True:
-                    if len(matching_web_files(local_host, port, expected)) == len(expected):
+                    if any(len(matching_web_files(host, port, expected)) == len(expected)
+                           for host in hosts):
                         break
                     if time.monotonic() >= deadline:
-                        raise ValueError(f'Fluidd did not serve the deployed page and startup assets on port {port}')
+                        raise ValueError(f'FLUIDD_HTTP_UNVERIFIED: nginx did not serve '
+                                         f'the deployed page and startup assets on {hosts} port {port}')
                     time.sleep(.2)
         except BaseException:
-            if not stage.exists():
-                execute('sudo', 'mv', '-T', '--', root, stage)
-            execute('sudo', 'mv', '-T', '--', backup, root)
-            if reloaded:
-                execute('sudo', 'systemctl', 'reload', 'nginx')
+            if os.path.samestat(original, stage.stat()):
+                exchange_web(root, stage, execute)
+                if reloaded:
+                    execute('sudo', 'systemctl', 'reload', 'nginx')
             raise
     finally:
-        execute('sudo', 'rm', '-rf', '--', stage)
-    return backup
+        if os.path.samestat(candidate, stage.stat()):
+            execute('sudo', 'rm', '-rf', '--', stage)
+    return stage
 
 
 def restore_web(root, backup, *, execute=run):
     if backup is None:
         return
-    replaced = backup.with_suffix('')
-    execute('sudo', 'mv', '-T', '--', root, replaced)
-    try:
-        execute('sudo', 'mv', '-T', '--', backup, root)
-    except BaseException:
-        execute('sudo', 'mv', '-T', '--', replaced, root)
-        raise
-    execute('sudo', 'rm', '-rf', '--', replaced)
-    execute('sudo', 'systemctl', 'reload', 'nginx')
+    with web_lock(root):
+        exchange_web(root, backup, execute)
+        execute('sudo', 'systemctl', 'reload', 'nginx')
+        execute('sudo', 'rm', '-rf', '--', backup)
 
 
 def restore_host(host, args, receipt, *, restart_moonraker=False):
@@ -513,6 +585,15 @@ def wait_ready():
     raise ValueError(f'Klipper did not reach Ready after the host update: {reason}')
 
 
+def rollback_web_source(backup, root):
+    if (not backup.is_absolute() or backup.is_symlink()
+            or not re.fullmatch(r'\.m300-fluidd\.[A-Za-z0-9]{6}\.previous', backup.name)
+            or backup.parent.resolve(strict=True) != root.parent
+            or backup.resolve(strict=True) == root):
+        raise ValueError('Select the absolute fluidd_backup directory beside this Fluidd site')
+    return verified_web_root(backup)
+
+
 def update_fluidd(args):
     run('sudo', '-v')
     config = run('sudo', 'nginx', '-T', capture=True)
@@ -530,15 +611,22 @@ def update_fluidd(args):
             config, args.port, args.fluidd_root, saved, repair_source=source)
         print(json.dumps(dict(status='FLUIDD_ENDPOINT_SELECTED', fluidd_port=port,
                               fluidd_root=str(root), source=selection)))
-        backup = deploy_web(source, root, port=port)
-    print(json.dumps(dict(status='INSTALLED_M300_FLUIDD', fluidd_root=str(root),
-                          fluidd_port=port, selection=selection,
+        restoring = args.restore_fluidd is not None
+        if restoring:
+            source = rollback_web_source(args.restore_fluidd, root)
+        backup = deploy_web(source, root, port=port, hosts=nginx_probe_hosts(config, port, root))
+    status = 'RESTORED_M300_FLUIDD' if restoring else 'INSTALLED_M300_FLUIDD'
+    print(json.dumps(dict(status=status, fluidd_root=str(root),
+                          fluidd_port=port, selection=selection, fluidd_http_verified=True,
                           fluidd_backup=str(backup) if backup else None, mcu_flashed=False)))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--update-fluidd', action='store_true',
+    web = parser.add_mutually_exclusive_group()
+    web.add_argument('--restore-fluidd', type=Path, metavar='BACKUP',
+                     help='Restore static Fluidd files from a previous installer backup')
+    web.add_argument('--update-fluidd', action='store_true',
                         help='Update the Fluidd web files only; leave Klipper and Moonraker alone')
     parser.add_argument('--port', type=valid_port, default=None,
                         help='With --update-fluidd, select the existing Fluidd port (default 4480)')
@@ -550,15 +638,16 @@ def main():
     parser.add_argument('--repair-startup',action='store_true',
                         help='Repair the verified R29 early-status crash while Shutdown; no MCU reset')
     args = parser.parse_args()
-    if args.update_fluidd and (args.organize_config or args.qualified_first_print_z or args.repair_startup):
-        parser.error('--update-fluidd is a separate operation from Klipper host options')
+    web_only = args.update_fluidd or args.restore_fluidd is not None
+    if web_only and (args.organize_config or args.qualified_first_print_z or args.repair_startup):
+        parser.error('Fluidd web operations are separate from Klipper host options')
     if not (PACKAGE / 'SHA256SUMS').is_file():
         parser.exit(1, 'Run this installer from the extracted GitHub Actions artifact.\n')
     if os.geteuid() == 0:
         parser.exit(1, 'Run as the Klipper account on the Orange Pi.\n')
     try:
         run('sha256sum', '-c', '--quiet', 'SHA256SUMS', cwd=PACKAGE)
-        if args.update_fluidd:
+        if web_only:
             update_fluidd(args)
             return
         info = require_idle(repair_startup=args.repair_startup)

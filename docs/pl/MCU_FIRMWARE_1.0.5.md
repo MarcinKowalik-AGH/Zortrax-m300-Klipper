@@ -1,6 +1,6 @@
 # M300 Classic MCU 1.0.5
 
-[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.16/docs/pl/FIRST_INSTALL.md) · [Opis RC16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.16/docs/pl/RELEASE_v1.0.0-rc.16.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
+[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.17/docs/pl/FIRST_INSTALL.md) · [Opis RC17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.17/docs/pl/RELEASE_v1.0.0-rc.17.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5)
 
 ## Wgraj aplikację z karty SD
 
@@ -40,3 +40,15 @@ Kompilacja 1.0.5 usuwa deweloperskie polecenie pomiaru czasu OLED RLE.
 Interfejs licznika oraz warunki ruchu i temperatury przed zapisem zachowują
 dotychczasowe działanie. Symulowane przerwania zapisu sprawdzają odzyskiwanie
 banków. Próba odcięcia zasilania na drukarce pozostaje do wykonania.
+
+### Gdy host nie może rozstrzygnąć historii licznika
+
+`RECONCILIATION_REQUIRED` wstrzymuje automatyczne dopisywanie minut. Drukowanie jest dostępne. W RC17 host zapisuje również drugie potwierdzenie obok pliku `.runtime-sync`. Zachowaj oba razem z ustawieniami. Gdy jedna kopia z bieżącej instalacji zaginie albo będzie starsza, synchronizator porówna dostępne potwierdzenia przed zapisem w MCU.
+
+Odczytaj `ZORTRAX_HARDWARE_STATUS`. Jeżeli zapis pozostaje wstrzymany, polecenie poniżej służy do jednorazowego uzgodnienia na podstawie znanego wcześniejszego rozliczenia. Podstaw bieżący numer seryjny, wartość `factory_counter_observed_minutes` oraz liczbę pełnych minut Klippera, które zostały już dopisane do ID0. Wartość 0 jest poprawna tylko wtedy, gdy wiadomo, że żadnej minuty z zachowanej historii hosta wcześniej nie przeniesiono. Pojedynczy dawny status `DISABLED` nie mówi, co mogło zostać zapisane później. Przy nieznanej historii zachowaj stan do wyjaśnienia.
+
+```text
+ZORTRAX_COUNTER_RECONCILE SERIAL=<numer> MCU_MINUTES=<odczyt_ID0> COMMITTED_MINUTES=<potwierdzone_minuty_Klippera>
+```
+
+Polecenie ustala podstawę rozliczenia. Właściwy zapis przez MCU następuje w bezczynności. Po nim sprawdź przyrost ID0, `NORMALIZED`, `pending=false` i trwałość po normalnym ponownym włączeniu drukarki.

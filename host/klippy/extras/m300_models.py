@@ -353,12 +353,8 @@ class M300Models:
             return
         # Observe native dispatch rather than interpreting a slicer's E mode,
         # extrusion factor or arcs independently of Klipper's parser.
-        for name in ('G0', 'G1', 'G2', 'G3'):
-            previous = self.gcode.ready_gcode_handlers.get(name)
-            if previous is None:
-                continue
-
-            def watch(gcmd, previous=previous):
+        def observer(previous):
+            def watch(gcmd):
                 if (not self.ready or not self.runtime_started or self.runtime_deposited
                         or self.runtime_ended or not self.v_sd.cmd_from_sd):
                     return previous(gcmd)
@@ -371,8 +367,16 @@ class M300Models:
                     self.runtime_deposited = True
                     self.runtime.runtime_start(now)
                 return result
+            return watch
 
-            lock_command(self.gcode, name, watch)
+        for name in ('G0', 'G1'):
+            previous = self.gcode.ready_gcode_handlers.get(name)
+            if previous is not None:
+                lock_command(self.gcode, name, observer(previous))
+        if self.printer.lookup_object('gcode_arcs', None) is not None:
+            # The pinned arc planner dispatches each accepted segment directly
+            # to this method. A complete circle ends at its starting XYZ.
+            move.cmd_G1 = observer(move.cmd_G1)
 
     def _watch_heater_waits(self, stats):
         for name in ('M109', 'M190', 'TEMPERATURE_WAIT'):

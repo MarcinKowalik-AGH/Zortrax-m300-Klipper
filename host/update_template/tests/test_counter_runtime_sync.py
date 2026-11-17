@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 from test_counter_sync import Fixture
 from test_hardware import fixture as hardware_fixture
 from test_native_oem_services import Mutex
-from payload.m300_counter_sync import (COMMIT_FORMAT, CounterJournal, RUNTIME_COMMIT_FORMAT,
+from payload.m300_counter_sync import (COMMIT_FORMAT, CounterJournal, CounterSync, RUNTIME_COMMIT_FORMAT,
                                       RUNTIME_QUERY_FORMAT, RUNTIME_RESULT_FORMAT,
                                       RUNTIME_STATE_FORMAT)
 from payload.m300_hardware import (COUNTER_TIMEOUT, COUNTER_WINDOW,
@@ -85,7 +85,7 @@ class RuntimeTransportTests(unittest.TestCase):
 
 
 class RuntimeSynchronizationTests(unittest.TestCase):
-    def setup_controller(self, *, legacy_backup=None):
+    def setup_controller(self, *, legacy_backup=None, enrolled=True):
         hw, _, _ = hardware_fixture(legacy_backup=legacy_backup)
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
@@ -114,6 +114,8 @@ class RuntimeSynchronizationTests(unittest.TestCase):
                      update_timer=Mock(), unregister_timer=Mock())
         hw.printer.get_reactor = lambda: reactor
         journal = CounterJournal(store)
+        if enrolled:
+            journal.save(fixture.data)
 
         def commit(args):
             self.assertTrue(mutex.test())
@@ -124,6 +126,12 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         return NS(hw=hw, nvm=nvm, reactor=reactor, fixture=fixture, journal=journal,
                   transport=transport, commit=commit, heat=heat, pwm=pwm, mutex=mutex,
                   objects=objects, print_state=print_state)
+
+    def reconcile(self, h, minutes, committed, serial='Z12345678'):
+        values = dict(SERIAL=serial, MCU_MINUTES=minutes, COMMITTED_MINUTES=committed)
+        gcmd = NS(get=values.__getitem__, get_int=lambda name, **kw: values[name],
+                  respond_info=Mock(), error=ValueError)
+        h.hw.cmd_counter_reconcile(gcmd)
 
     def startup(self, h, *, runtime):
         def commit(args):
@@ -138,10 +146,74 @@ class RuntimeSynchronizationTests(unittest.TestCase):
                                         M300_FACTORY_COUNTER_RUNTIME_ABI=int(runtime)))
         return send
 
+    def test_clean_host_establishes_baseline_before_first_print(self):
+        h = self.setup_controller(enrolled=False)
+        h.nvm.store.update(lambda d: d['counters'].update(print_seconds=0.))
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertEqual(h.hw.counter_sync.status, 'CURRENT')
+        self.assertEqual(h.journal.load()['committed'], 0)
+        h.nvm.store.update(lambda d: d['counters'].update(print_seconds=125.))
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.fixture.minutes, 302)
+
+    def test_missing_both_receipts_requires_verified_credit_before_writing(self):
+        h = self.setup_controller(enrolled=False)
+        self.startup(h, runtime=True).assert_not_called()
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'RECONCILIATION_REQUIRED')
+        self.assertEqual(h.hw.get_status()['factory_counter_observed_minutes'], 300)
+        self.assertIsNone(h.hw.get_status()['factory_print_minutes'])
+        for serial, minutes, credited in [('Z12345679',300,0), ('Z12345678',301,0),
+                                           ('Z12345678',300,3)]:
+            with self.assertRaises(ValueError):
+                self.reconcile(h, minutes, credited, serial)
+        self.assertIsNone(h.journal.load())
+        h.transport.commit.assert_not_called()
+        self.reconcile(h, 300, 2)
+        self.assertEqual(h.hw.counter_sync.status, 'CURRENT')
+        self.assertEqual(h.journal.load()['committed'], 2)
+        h.hw._runtime_counter_tick(10.)
+        h.transport.commit.assert_not_called()
+
+    def test_restoring_both_older_receipts_cannot_count_same_print_twice(self):
+        h = self.setup_controller()
+        old = Path(h.journal.path).read_bytes()
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        for path in (h.journal.path, h.journal.checkpoint):
+            Path(path).write_bytes(old)
+        h.hw.counter_sync = CounterSync()
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertEqual(h.hw.counter_sync.status, 'RECONCILIATION_REQUIRED')
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.fixture.minutes, 302)
+        h.transport.commit.assert_called_once()
+        self.reconcile(h, 302, 2)
+        self.assertEqual(h.hw.counter_sync.status, 'CURRENT')
+
+    def test_unmirrored_stale_rc16_receipt_and_factory_advance_requires_reconciliation(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        Path(h.journal.checkpoint).unlink()
+        h.fixture.minutes += 2
+        h.nvm.store.update(lambda d: d['counters'].update(print_seconds=245.))
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertEqual(h.hw.counter_sync.status, 'RECONCILIATION_REQUIRED')
+        self.assertEqual(h.journal.load()['committed'], 2)
+        with self.assertRaises(ValueError):
+            self.reconcile(h, 304, 1)
+        self.reconcile(h, 304, 4)
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.fixture.minutes, 304)
+        h.transport.commit.assert_called_once()
+
     def test_ready_and_post_job_checkpoint_queue_sync_without_restart(self):
         h = self.setup_controller()
         self.startup(h, runtime=True).assert_not_called()
-        self.assertIsNone(h.journal.load())
+        self.assertEqual(h.journal.load()['committed'], 0)
         self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'AWAITING_IDLE')
         with patch('payload.m300_hardware.RuntimeCounterTransport', return_value=h.transport):
             h.hw._request_factory_info()
@@ -157,17 +229,86 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertEqual(h.journal.load()['committed'], 3)
 
     def test_old_config_path_is_ignored_when_synchronizing_existing_backlog(self):
-        h = self.setup_controller(legacy_backup='removed/old-flash-dump.bin')
+        h = self.setup_controller(legacy_backup='removed/old-flash-dump.bin', enrolled=False)
         h.fixture.minutes = 286732
         h.nvm.store.update(lambda data: data['counters'].update(print_seconds=135660.5))
         self.startup(h, runtime=True).assert_not_called()
         with patch('payload.m300_hardware.RuntimeCounterTransport', return_value=h.transport):
             h.hw._request_factory_info()
         self.assertEqual(h.hw.counter_timer(10.), h.reactor.NEVER)
+        self.assertEqual(h.hw.counter_sync.status, 'RECONCILIATION_REQUIRED')
+        h.transport.commit.assert_not_called()
+        self.reconcile(h, 286732, 0)
+        self.assertEqual(h.hw.counter_timer(10.), h.reactor.NEVER)
         h.transport.commit.assert_called_once_with([h.fixture.serial, 0, 286732, 288993,
                                                     h.fixture.crc])
         self.assertEqual(h.hw.get_status()['factory_print_minutes'], 288993)
         self.assertEqual(h.journal.load()['committed'], 2261)
+
+    def test_missing_journal_after_settlement_does_not_charge_again(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.fixture.minutes, 302)
+        Path(h.journal.path).unlink()
+        h.hw.counter_sync = CounterSync()
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertTrue(Path(h.journal.path).is_file())
+        self.assertEqual(h.hw.counter_sync.committed_seconds, 120)
+        h.hw._runtime_counter_tick(10.)
+        h.transport.commit.assert_called_once()
+        self.assertEqual((h.fixture.minutes, h.fixture.source), (302, 1))
+
+    def test_stale_primary_or_checkpoint_excludes_already_paid_minutes(self):
+        for stale in ('path', 'checkpoint'):
+            with self.subTest(stale=stale):
+                h = self.setup_controller()
+                h.hw.counter_runtime = h.transport
+                h.hw._runtime_counter_tick(10.)
+                copy = Path(getattr(h.journal, stale))
+                old_receipt = copy.read_bytes()
+                h.nvm.store.update(lambda data: data['counters'].update(print_seconds=245.))
+                h.hw._runtime_counter_tick(10.)
+                self.assertEqual((h.fixture.minutes, h.fixture.source), (304, 0))
+                copy.write_bytes(old_receipt)
+                h.hw.counter_sync = CounterSync()
+                self.startup(h, runtime=True).assert_not_called()
+                self.assertEqual(h.hw.counter_sync.committed_seconds, 240)
+                h.hw._runtime_counter_tick(10.)
+                self.assertEqual(h.transport.commit.call_count, 2)
+                self.assertEqual(h.fixture.minutes, 304)
+                # OEM increments and subsequent new host work are additive.
+                h.fixture.minutes += 9
+                self.startup(h, runtime=True).assert_not_called()
+                h.nvm.store.update(lambda data: data['counters'].update(print_seconds=305.))
+                h.hw._runtime_counter_tick(10.)
+                self.assertEqual((h.fixture.minutes, h.fixture.source), (314, 1))
+
+    def test_pending_checkpoint_recovers_after_lost_reply_and_journal_loss(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+
+        def lose_reply(args):
+            h.commit(args)
+            raise TimeoutError('lost acknowledgement')
+
+        h.transport.commit.side_effect = lose_reply
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.fixture.minutes, 302)
+        Path(h.journal.path).unlink()
+        h.hw.counter_sync = CounterSync()
+        self.startup(h, runtime=True).assert_called_once()
+        self.assertEqual((h.fixture.minutes, h.fixture.source), (302, 1))
+        self.assertEqual(h.hw.counter_sync.committed_seconds, 120)
+
+    def test_single_legacy_receipt_is_mirrored_even_without_backlog(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        h.hw._runtime_counter_tick(10.)
+        Path(h.journal.checkpoint).unlink()
+        self.startup(h, runtime=True).assert_not_called()
+        self.assertEqual(Path(h.journal.path).read_bytes(), Path(h.journal.checkpoint).read_bytes())
+        self.assertEqual(h.hw.counter_sync.committed_seconds, 120)
 
     def test_startup_only_firmware_keeps_new_backlog_on_host(self):
         h = self.setup_controller()
@@ -176,7 +317,7 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertEqual(h.hw.get_status()['factory_print_minutes'], 300)
         self.assertEqual(h.hw.get_status()['factory_counter_sync'], 'MCU_ABI_UNAVAILABLE')
         self.assertIsNone(h.hw.counter_timer)
-        self.assertIsNone(h.journal.load())
+        self.assertEqual(h.journal.load()['committed'], 0)
 
     def test_startup_only_firmware_can_complete_preexisting_intent(self):
         h = self.setup_controller()
@@ -190,7 +331,7 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         self.assertIsNone(h.journal.load()['pending'])
 
     def test_runtime_startup_rejects_another_printers_journal(self):
-        h = self.setup_controller()
+        h = self.setup_controller(enrolled=False)
         h.journal.save(dict(serial='Z87654321', machine_id='m300', committed=2,
                             last_minutes=302, pending=None))
         self.startup(h, runtime=True).assert_not_called()
@@ -219,7 +360,7 @@ class RuntimeSynchronizationTests(unittest.TestCase):
             self.assertEqual(h.hw.counter_sync.status, 'AWAITING_IDLE')
         h.transport.query.assert_not_called()
         h.transport.commit.assert_not_called()
-        self.assertIsNone(h.journal.load())
+        self.assertEqual(h.journal.load()['committed'], 0)
         h.nvm.runtime_is_checkpointed.return_value = True
         h.objects['pause_resume'] = NS(is_paused=True)
         self.assertLess(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
@@ -327,7 +468,8 @@ class RuntimeSynchronizationTests(unittest.TestCase):
             nonlocal directory_calls
             if stat.S_ISDIR(os.fstat(fd).st_mode):
                 directory_calls += 1
-                if directory_calls == 2:
+                # Two durable intent copies precede the first settlement copy.
+                if directory_calls == 3:
                     raise OSError('settlement directory sync failed after rename')
             fsync(fd)
 

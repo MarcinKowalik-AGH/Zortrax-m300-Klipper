@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-13",
+  "updated": "2026-11-17",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -373,6 +373,19 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-17",
+          "version": "Wersja hosta podczas wydruku nieodczytana",
+          "version_basis": "Zapis rozmowy przejrzany 17.11.2026.",
+          "test": "3DBenchy_M300_0p4_0p28.gcode",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Użytkownik ukończył wydruk. Fluidd pokazał Actual 30 h 37 min 4 s.",
+          "problem": "Odbiór dotyczy ukończenia tego zadania.",
+          "evidence": {
+            "kind": "user_screenshot",
+            "quote": "Actual 30h 37m 4s"
+          }
         }
       ]
     },
@@ -502,6 +515,31 @@
           "status": "AWAITING_TEST",
           "result": "Próba sprzętowa zapisu i odczytu po zapisie oczekuje.",
           "problem": "Wymaga potwierdzenia na płycie M300 Classic.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        },
+        {
+          "date": "2026-11-17",
+          "version": "RC9 / MCU 1.0.5",
+          "version_basis": "Zapis rozmowy przejrzany 17.11.2026.",
+          "test": "Odczyt fabrycznego licznika",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "ID0 286732 min, nierozliczone 135691,9 s.",
+          "problem": "W chwili odczytu synchronizacja była wyłączona.",
+          "evidence": {
+            "kind": "user_test_log",
+            "quote": "\"factory_counter_sync\": \"DISABLED\""
+          }
+        },
+        {
+          "date": "2026-11-17",
+          "version": "RC17 / MCU 1.0.5",
+          "version_basis": "Zapis rozmowy przejrzany 17.11.2026.",
+          "test": "Dwa kolejne zapisy ID0 i normalne ponowne włączenie",
+          "status": "AWAITING_TEST",
+          "result": "Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu.",
+          "problem": "Próba fizyczna oczekuje.",
           "evidence": {
             "kind": "no_hardware_confirmation"
           }

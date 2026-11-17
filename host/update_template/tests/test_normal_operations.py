@@ -25,7 +25,8 @@ def motion_fixture():
     motion.reactor = NS(monotonic=lambda: 1.)
     motion.events, motion.homed = [], set('xy')
     position = [100., 100., 299., 17.]
-    hotend = NS(target=0., measured=180., check_busy=lambda now: False)
+    hotend = NS(target=0., measured=180., can_extrude=True, check_busy=lambda now: False)
+    motion.gcode_move = NS(base_position=[0.]*4, reset_last_position=lambda:None)
     hotend.get_temp = lambda now: (hotend.measured, hotend.target)
     motion.hotend = hotend
     def set_temperature(heater, target, wait=False):
@@ -246,11 +247,25 @@ class NormalHomingTests(unittest.TestCase):
         m = motion_fixture()
         m.homed.clear()
         m.home(axes='xyz')
-        self.assertEqual(m.events, [('move',(None,None,304.),5.),('heat', 180., False), ('home', 'Y'), ('home', 'X'),
+        self.assertEqual(m.events, [('move',(None,None,304.),5.),('heat', 180., False),
+            ('move',(None,None,None,7.),2.), ('home', 'Y'), ('home', 'X'),
             ('move', (150., 158., None), 50.), ('home', 'Z'),
-            ('move', (None, None, 5.), 5.), ('heat', 0., False)])
+            ('move', (None, None, 5.), 5.), ('move',(None,None,None,17.),2.), ('heat', 0., False)])
         self.assertEqual(m.toolhead.get_position()[3], 17.)
         self.assertEqual(m.get_status(1.)['homed_axes'], 'xyz')
+
+    def test_cancelled_contact_retreat_preserves_logical_e_and_never_feeds(self):
+        m = motion_fixture()
+        m.gcode_move.base_position[3] = 5.
+        def wait():
+            if m.toolhead.get_position()[3] == 7.:
+                m._stop('restart')
+        m.toolhead.wait_moves = wait
+        with self.assertRaisesRegex(RuntimeError, 'session ended'):
+            m.home(axes='z')
+        self.assertEqual(m.toolhead.get_position()[3], 7.)
+        self.assertEqual(7. - m.gcode_move.base_position[3], 12.)
+        self.assertFalse(any(event[0]=='home' for event in m.events))
 
     def test_repeated_z_home_finishes_at_five_mm_without_accumulating_clearance(self):
         m = motion_fixture()
@@ -271,10 +286,10 @@ class NormalHomingTests(unittest.TestCase):
         m.precision.endstop.query_endstop.side_effect = query
         m.home(axes='xyz')
         self.assertEqual(z_homed_at_query, [False] * 4)
-        self.assertEqual(m.events[:4], [('move', (None, None, 304.), 5.),
-            ('heat', 180., False), ('home', 'Y'), ('home', 'X')])
-        self.assertEqual(m.events[-3:], [('home', 'Z'),
-            ('move', (None, None, 5.), 5.), ('heat', 0., False)])
+        self.assertEqual(m.events[:5], [('move', (None, None, 304.), 5.),
+            ('heat', 180., False), ('move',(None,None,None,7.),2.), ('home', 'Y'), ('home', 'X')])
+        self.assertEqual(m.events[-4:], [('home', 'Z'),
+            ('move', (None, None, 5.), 5.), ('move',(None,None,None,17.),2.), ('heat', 0., False)])
         self.assertEqual(m.get_status(1.)['homed_axes'], 'xyz')
 
     def test_persistent_pc7_without_known_z_stops_after_one_retreat(self):
@@ -300,7 +315,7 @@ class NormalHomingTests(unittest.TestCase):
                         m.home(axes='z')
                     self.assertEqual(len(m.events), 1)
                 self.assertEqual(m.events[0], ('move', (None, None, 304.), 5.))
-                m.board.require_motion.assert_called_once()
+                self.assertEqual(m.board.require_motion.call_count, 3 if reopens else 1)
 
     def test_contact_that_closes_at_center_stops_before_native_z_seek(self):
         m = motion_fixture()
@@ -309,7 +324,7 @@ class NormalHomingTests(unittest.TestCase):
             m.home(axes='z')
         self.assertNotIn(('home','Z'),m.events)
         self.assertEqual([event for event in m.events if event[0]=='move'],[
-            ('move',(None,None,304.),5.),('move',(150.,158.,None),50.)])
+            ('move',(None,None,304.),5.),('move',(None,None,None,7.),2.),('move',(150.,158.,None),50.)])
 
     def test_contact_reclosed_after_retreat_refuses_xy_and_another_retreat(self):
         m = motion_fixture()
