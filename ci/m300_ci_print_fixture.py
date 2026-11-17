@@ -46,13 +46,18 @@ class PrintFixture:
         self.gcode=self.printer.lookup_object('gcode')
         self.mode=config.get('mode','lifecycle')
         self.running=False;self.marks=[];self.actions=[];self.flow=False
+        self.mark_positions = {}
+        self.pause_positions = {}
         self.timer=self.reactor.register_timer(self.tick)
         self.gcode.register_command('ZORTRAX_CI_PRINT_RUN',self.run)
         self.gcode.register_command('ZORTRAX_CI_PRINT_PREPARE',lambda gcmd:prepare(self.printer))
         self.gcode.register_command('ZORTRAX_CI_PRINT_MARK',self.mark)
         self.printer.register_event_handler('gcode:debuginput_exit',self.report)
 
-    def mark(self,gcmd):self.marks.append(gcmd.get('VALUE'))
+    def mark(self,gcmd):
+        name = gcmd.get('VALUE')
+        self.marks.append(name)
+        self.mark_positions[name] = self.printer.lookup_object('toolhead').get_position()[:3]
 
     def run(self,gcmd):
         prepare(self.printer)
@@ -92,6 +97,9 @@ class PrintFixture:
         if key!=getattr(self,'last_phase',None):
             self.last_phase=key
             self.gcode.respond_info('M300_CI_PRINT_PHASE '+str(key))
+            if c.state == 'PAUSED' and c.phase == 'PAUSED' and self.marks:
+                position = self.printer.lookup_object('toolhead').get_position()[:3]
+                self.pause_positions.setdefault(self.marks[-1], position)
         if self.mode=='cancel_soak' and c.phase=='PLATFORM_SOAK':
             self._submit('CANCEL_PRINT')
         elif self.mode=='cancel' and c.state=='PAUSED':
@@ -119,6 +127,7 @@ class PrintFixture:
         self.running=False;self.reactor.update_timer(self.timer,self.reactor.NEVER)
         heaters=self.printer.lookup_object('heaters')
         result=dict(mode=self.mode,state=stats['state'],marks=self.marks,actions=self.actions,
+            mark_positions=self.mark_positions,pause_positions=self.pause_positions,
             position=self.printer.lookup_object('toolhead').get_position(),
             targets=[heaters.lookup_heater(n).target_temp for n in ('extruder','heater_bed')],
             control=self.control.get_status(self.reactor.monotonic()),

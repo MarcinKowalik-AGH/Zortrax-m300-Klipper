@@ -1,9 +1,12 @@
 # Native print contexts on OLED and Fluidd
 
-The current `[m300_print_control]` adds a shared bounded pause park at
-**X300 Y305**, a 5 mm Z lift, bed/motor hold, nozzle standby at 600 seconds
-and nozzle OFF at 1800 seconds. Resume first restores the original print
-temperatures. See the [parameters and compatibility audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/PRINT_CONTROL.md).
+An ordinary pause drains queued moves, holds the current XY and lowers the bed
+by 5 mm by default. The motors retain position and the bed holds its target.
+The nozzle goes to standby after 600 seconds and turns off after 1800 seconds.
+Resume restores the print temperatures and position before continuing the same file.
+A material change parks at **X300 Y305** before material transport.
+If the operator requests it from an existing pause, the head travels at the
+clearance already reached. [Print control settings](../pl/PRINT_CONTROL.md)
 
 | OLED context | Operator action | Shared native behavior |
 |---|---|---|
@@ -13,8 +16,11 @@ temperatures. See the [parameters and compatibility audit](https://github.com/Ma
 | PAUSE MENU | Stop the print → Yes, stop the print | CANCEL_PRINT turns off the heaters and delegates cancellation to native Klipper. Fluidd Cancel uses the same command. |
 | PRINTING DONE | Remove the model, then hold for 10 seconds to reprint | Starts the retained copy as a new native job. A short press closes the OLED notice. |
 
-The OLED waits for native EOF and for queued motion to drain before showing
-PRINTING DONE. A completed job with an eligible snapshot offers reprint.
+`END_PRINT` lowers the bed by up to 300 mm from the last print position,
+bounded by the configured Z maximum. The head then parks at the rear right.
+If less than the configured clearance remains (5 mm by default), the bed
+uses the available travel and the head stays in XY. The OLED shows PRINTING
+DONE after motion drains and the native reader reaches EOF. A completed job with an eligible snapshot offers reprint.
 A cancel, error, incomplete read or restart leaves no eligible copy. The
 10-second thresholds are the requested host policy. The recovered stock
 pause and completion handlers use different timing and separate confirmation
@@ -45,7 +51,7 @@ including changes in heater targets during a raft-to-model transition.
 Preparation, operator pause and faults retain their status colors.
 [Lighting settings](SETTINGS_INFORMATION.md).
 
-Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.40-PRINT-LIGHT`
+Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.41-END-PARK`
 and `model_print_ready: true` after purge for the active SD file. The legacy `0.13.16.38-PRINT-DRAIN-XY-PURGE` commanded a Z5 lift between the Y
 and X pairs. From `0.13.16.39-PRINT-PREP`, the crossover uses the commanded
 purge height, usually Z0.28. Bed Mesh can still move physical Z as XY

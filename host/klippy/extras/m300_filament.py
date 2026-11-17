@@ -854,8 +854,18 @@ class M300Filament:
 
     def cmd_change(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LOAD_LENGTH', 'UNLOAD_LENGTH'})
-        self.start('CHANGE', temperature=gcmd.get_float('TEMP', None),
-                   load_length=gcmd.get_float('LOAD_LENGTH', None), unload_length=gcmd.get_float('UNLOAD_LENGTH', None), gcmd=gcmd)
+        temperature = gcmd.get_float('TEMP', None)
+        load = gcmd.get_float('LOAD_LENGTH', None)
+        unload = gcmd.get_float('UNLOAD_LENGTH', None)
+        control = self.printer.lookup_object('m300_print_control', None)
+        if self.native_mode and control is not None and control.context is not None:
+            # Reject invalid material settings before moving away from a plain pause.
+            self._profile('CHANGE', None, load, unload)
+            if temperature is not None:
+                self._validate_temperature(temperature)
+            control.request_change(gcmd, temperature, load_length=load, unload_length=unload)
+            return
+        self.start('CHANGE', temperature=temperature, load_length=load, unload_length=unload, gcmd=gcmd)
 
     def cmd_m600(self, gcmd):
         # The pinned native parser retains the traditional opcode as M=600.

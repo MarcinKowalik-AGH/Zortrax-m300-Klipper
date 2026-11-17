@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.15](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.15).
+i użyj [paczki v1.0.0-rc.16](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.16).
 Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [English](../en/INSTALL.md).
 

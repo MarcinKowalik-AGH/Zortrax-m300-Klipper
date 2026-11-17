@@ -16,7 +16,7 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | Makro | Grupa funkcjonalna | Działanie | Parametry / uwagi |
 |---|---|---|---|
 | [`START_PRINT`](../../host/config/m300_operations.cfg) | Druk | Przygotowanie druku: grzanie, natywne bazowanie, profil mesh, 2Y + 2X linii startowych. | EXTRUDER_TEMP i BED_TEMP: cele aktualne, gdy pominięte; MESH=AUTO; PURGE opcjonalny (domyślnie 250 mm w module). |
-| [`END_PRINT`](../../host/config/m300_operations.cfg) | Druk | Zakończenie: drenaż ruchów, parkowanie, wyłączenie celów grzałek i wentylatora modelu. | Bez parametrów makra. |
+| [`END_PRINT`](../../host/config/m300_operations.cfg) | Druk | Po ostatnim ruchu opuszcza stół o maksymalnie 300 mm do limitu Z, parkuje głowicę przy dostatecznym prześwicie i wyłącza cele grzałek oraz nawiew modelu. | Bez parametrów makra. |
 | [`CANCEL_PRINT`](../../host/config/m300_operations.cfg) | Druk | Publiczne anulowanie; moduł m300_print_control wiąże finalną obsługę, zamyka plik i czyści pauzę przed ewentualnym parkowaniem. | Bez parametrów; nie utożsamiać z M112 ani samym ciałem makra bazowego. |
 | [`ZORTRAX_REPRINT`](../../host/config/m300_operations.cfg) | Druk | Potwierdzenie usunięcia modelu i ponowny wydruk zapamiętanego zakończonego zadania. | Wymaga prawidłowego zakończonego zadania. |
 | [`ZORTRAX_STATUS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt stanu MCU, łącza i ruchu. | Bez ruchu/grzania. |
