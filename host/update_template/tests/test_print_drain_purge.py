@@ -97,14 +97,14 @@ class PrintDrainPurgeTests(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual((self.clock.reads, self.clock.flushes), (1, 1))
 
-    def test_fluidd_pause_endpoint_parks_after_worker_and_motion_drain(self):
+    def test_fluidd_pause_endpoint_lowers_bed_in_place_after_worker_and_motion_drain(self):
         h = self.h
         h.web._endpoints['pause_resume/pause'](None)
         h.step_control()
         self.assertEqual(h.position[:3], [100., 110., 10.])
         h.stop_worker()
         h.control_until('PAUSED')
-        self.assertEqual(h.position[:3], [300., 305., 15.])
+        self.assertEqual(h.position[:3], [100., 110., 15.])
         self.assertTrue(h.pause.is_paused)
         self.assertEqual(h.sd.file_position, 123)
 
@@ -167,7 +167,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
         h.run('ZORTRAX_PRINT_END')
         h.stop_worker()
         h.control_until('IDLE')
-        self.assertEqual(h.position[:3], [300., 305., 15.])
+        self.assertEqual(h.position[:3], [300., 305., 310.])
         self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
         self.assertEqual(h.sd.work_timer, 'native')  # EOF still native-owned
 

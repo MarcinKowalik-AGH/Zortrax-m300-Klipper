@@ -104,6 +104,11 @@ class Harness(oem.Harness):
     def pause_print(self):
         self.run('PAUSE');self.stop_worker();self.control_until('PAUSED')
 
+    def pause_at_material_park(self):
+        self.position[:2] = self.c.park_xy
+        self.gmove.reset_last_position()
+        self.pause_print()
+
 
 class PrintControlTests(unittest.TestCase):
     def setUp(self):self.h=Harness();self.addCleanup(self.h.close)
@@ -114,10 +119,9 @@ class PrintControlTests(unittest.TestCase):
         h.step_control(2.);self.assertFalse(any(e[0]=='move' for e in h.events))
         h.stop_worker();h.busy_until=h.now+4.;h.step_control(2.)
         self.assertFalse(any(e[0]=='move' for e in h.events))
-        h.control_until('PAUSED');self.assertEqual(h.position[:3],[300.,305.,15.])
+        h.control_until('PAUSED');self.assertEqual(h.position[:3],[100.,110.,15.])
         moves=[e[1] for e in h.events if e[0]=='move']
-        self.assertEqual(moves[1][:3],(100.,110.,15.))
-        self.assertEqual(moves[2][:3],(300.,305.,15.))
+        self.assertEqual(moves, [(100.,110.,10.,15.), (100.,110.,15.,15.)])
 
     def test_duplicate_pause_does_not_replace_native_saved_state(self):
         h=self.h;h.pause_print();saved=copy.deepcopy(h.c.context['saved']);h.run('PAUSE')
@@ -130,7 +134,11 @@ class PrintControlTests(unittest.TestCase):
 
     def test_older_travel_does_not_silently_clip_configured_park(self):
         h=self.h;h.c.park_xy=(999.,305.);h.pause_print()
-        self.assertEqual(h.position[:2],[100.,110.]);self.assertIn('outside XY',h.c.notice)
+        self.assertEqual(h.position[:2],[100.,110.])
+        with self.assertRaisesRegex(h.printer.command_error,'material-change park'):
+            h.run('M600')
+        self.assertIn('outside XY',h.c.notice)
+        h.run('RESUME');h.control_until('IDLE')
 
     def test_paused_idle_holds_bed_and_all_motors(self):
         h=self.h;h.pause_print();h.run('ZORTRAX_PAUSE_IDLE')
@@ -152,7 +160,7 @@ class PrintControlTests(unittest.TestCase):
         h=self.h;h.pause_print();h.hotend.temperature=30.;h.hotend.target=0.
         h.run('RESUME');self.assertEqual(h.hotend.target,240.)
         for _ in range(20):h.step_control()
-        self.assertEqual(h.position[:3],[300.,305.,15.]);self.assertIsNone(h.sd.work_timer)
+        self.assertEqual(h.position[:3],[100.,110.,15.]);self.assertIsNone(h.sd.work_timer)
         h.hotend.temperature=240.;h.control_until('IDLE')
         self.assertEqual(h.position[:3],[100.,110.,10.]);self.assertFalse(h.pause.is_paused)
         self.assertEqual(h.sd.work_timer,'native');self.assertEqual(h.bed.target,60.)
@@ -208,7 +216,7 @@ class PrintControlTests(unittest.TestCase):
         self.assertIsNone(h.sd.work_timer)
 
     def test_material_confirmation_requires_success_and_hot_visible_flow(self):
-        h=self.h;h.pause_print();self.assertEqual(h.c.material_begin(),240.)
+        h=self.h;h.pause_at_material_park();self.assertEqual(h.c.material_begin(),240.)
         with self.assertRaisesRegex(h.printer.command_error,'complete the material'):h.run('FILAMENT_READY')
         h.c.material_complete(True);h.hotend.temperature=25.;h.hotend.target=0.
         with self.assertRaisesRegex(h.printer.command_error,'heat the nozzle'):h.run('FILAMENT_READY')
@@ -216,7 +224,7 @@ class PrintControlTests(unittest.TestCase):
         self.assertIsNone(h.sd.work_timer);h.run('FILAMENT_READY\nRESUME');h.control_until('IDLE')
 
     def test_failed_material_change_never_resumes_or_confirms(self):
-        h=self.h;h.pause_print();h.c.material_begin();h.c.material_complete(False)
+        h=self.h;h.pause_at_material_park();h.c.material_begin();h.c.material_complete(False)
         for command in ('RESUME','FILAMENT_READY'):
             with self.assertRaises(h.printer.command_error):h.run(command)
 
@@ -364,9 +372,74 @@ class PrintControlTests(unittest.TestCase):
 
     def test_end_parks_turns_off_and_leaves_real_eof_to_native_worker(self):
         h=self.h;h.run('ZORTRAX_PRINT_END');h.stop_worker();h.control_until('IDLE')
-        self.assertEqual(h.position[:3],[300.,305.,15.]);self.assertEqual(h.sd.work_timer,'native')
+        # The fixture has 315 mm travel and starts at Z10: request a relative 300 mm.
+        moves = [event[1][:3] for event in h.events if event[0] == 'move']
+        self.assertEqual(moves, [(100.,110.,10.), (100.,110.,310.), (300.,305.,310.)])
+        self.assertEqual(h.sd.work_timer,'native')
         self.assertEqual(h.print_state,'printing');self.assertIsNotNone(h.sd.current_file)
         self.assertEqual((h.hotend.target,h.bed.target),(0.,0.));self.assertIn(('fan',0.),h.events)
+
+    def test_end_clamps_drop_and_skips_xy_if_model_clearance_is_unavailable(self):
+        for start_z, expected_xy in ((200., (300.,305.)), (310., (300.,305.)),
+                                     (313., (100.,110.)), (315., (100.,110.))):
+            with self.subTest(z=start_z):
+                h = Harness()
+                self.addCleanup(h.close)
+                h.position[2] = start_z
+                h.gmove.reset_last_position()
+                h.run('ZORTRAX_PRINT_END')
+                h.stop_worker()
+                h.control_until('IDLE')
+                self.assertEqual(h.position[:3], [*expected_xy, 315.])
+                self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
+                self.assertEqual(h.sd.work_timer, 'native')
+
+    def test_end_waits_for_slow_z_descent_before_xy_then_eof(self):
+        h = self.h
+        h.c.z_speed = 1.
+        h.run('ZORTRAX_PRINT_END')
+        h.stop_worker()
+        h.control_until('ENDING', 'END_PARK')
+        h.step_control()
+        h.step_control(2.)
+        self.assertEqual(h.position[:3], [100.,110.,310.])
+        h.step_control(150.)
+        self.assertEqual(h.c.state, 'ENDING')
+        self.assertEqual(h.position[:2], [100.,110.])
+        self.assertIsNone(h.sd.work_timer)
+        h.step_control(151.)
+        self.assertEqual(h.position[:3], [300.,305.,310.])
+        self.assertIsNone(h.sd.work_timer)
+        h.control_until('IDLE')
+        self.assertEqual(h.sd.work_timer, 'native')
+
+    def test_cancel_during_final_descent_revokes_end_and_never_resumes_the_file(self):
+        h = self.h
+        h.c.z_speed = 1.
+        h.run('ZORTRAX_PRINT_END')
+        h.stop_worker()
+        h.control_until('ENDING', 'END_PARK')
+        h.step_control()
+        h.step_control(2.)
+        self.assertTrue(h.c.waiting)
+        h.run('CANCEL_PRINT')
+        h.step_control()
+        self.assertIsNone(h.sd.current_file)
+        h.step_control(180.)
+        self.assertEqual(h.c.phase, 'WAIT_CANCEL_DRAIN')
+        h.control_until('IDLE')
+        self.assertEqual(h.print_state, 'cancelled')
+        self.assertNotIn(('native_resume',), h.events)
+
+    def test_unhomed_z_refuses_end_motion_and_eof(self):
+        h = self.h
+        h.homed = 'xy'
+        h.run('ZORTRAX_PRINT_END')
+        h.stop_worker()
+        h.step_control()
+        self.assertEqual(h.c.state, 'FAILED')
+        self.assertFalse(any(e[0] in ('move', 'native_resume') for e in h.events))
+        self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
 
     def test_nonfinite_resume_and_start_temperatures_rejected(self):
         h=self.h
@@ -376,7 +449,7 @@ class PrintControlTests(unittest.TestCase):
 
     def test_m25_uses_the_same_protected_pause(self):
         h=self.h;h.run('M25');h.stop_worker();h.control_until('PAUSED')
-        self.assertEqual(h.position[:3],[300.,305.,15.])
+        self.assertEqual(h.position[:3],[100.,110.,15.])
 
     def test_dry_xy_only_file_resumes_without_inventing_nozzle_heat(self):
         h=self.h;h.hotend.target=0.;h.hotend.temperature=25.
@@ -386,7 +459,7 @@ class PrintControlTests(unittest.TestCase):
     def test_bed_must_also_stabilize_before_return(self):
         h=self.h;h.pause_print();h.bed.temperature=40.;h.run('RESUME')
         h.step_control(4.);self.assertEqual(h.c.state,'RESUMING')
-        self.assertEqual(h.position[:3],[300.,305.,15.]);self.assertIsNone(h.sd.work_timer)
+        self.assertEqual(h.position[:3],[100.,110.,15.]);self.assertIsNone(h.sd.work_timer)
         h.bed.temperature=60.;h.control_until('IDLE')
 
     def test_replaced_file_content_invalidates_resume(self):
@@ -401,10 +474,10 @@ class PrintControlTests(unittest.TestCase):
     def test_material_uses_original_target_after_standby(self):
         h=self.h;h.pause_print();h.step_control(600.)
         self.assertEqual(h.hotend.target,150.)
-        h.run('ZORTRAX_CHANGE');self.assertEqual(h.f.target,240.)
+        h.run('ZORTRAX_CHANGE');h.control_until('PAUSED');self.assertEqual(h.f.target,240.)
 
     def test_pause_cooling_does_not_override_material_service_temperature(self):
-        h=self.h;h.pause_print();h.run('ZORTRAX_CHANGE TEMP=250')
+        h=self.h;h.pause_print();h.run('ZORTRAX_CHANGE TEMP=250');h.control_until('PAUSED')
         self.assertEqual(h.hotend.target,250.);h.step_control(700.)
         self.assertEqual(h.hotend.target,250.)
 
@@ -417,6 +490,38 @@ class PrintControlTests(unittest.TestCase):
         with self.assertRaises(h.printer.command_error):h.run('M600')
         h.stop_worker();h.control_until('PAUSED');self.assertEqual(h.f.target,250.)
 
+    def test_change_from_plain_pause_reaches_corner_before_starting_with_custom_lengths(self):
+        h = self.h
+        h.pause_print()
+        with self.assertRaisesRegex(h.printer.command_error, 'material-change park'):
+            h.c.material_begin()
+        with self.assertRaises(h.printer.command_error):
+            h.run('CHANGE_FILAMENT LOAD_LENGTH=-1')
+        self.assertEqual(h.c.state, 'PAUSED')
+        h.run('CHANGE_FILAMENT TEMP=250 LOAD_LENGTH=30 UNLOAD_LENGTH=20')
+        self.assertFalse(h.f.is_busy())
+        h.step_control()
+        self.assertEqual(h.position[:3], [300.,305.,15.])
+        self.assertFalse(h.f.is_busy())
+        h.control_until('PAUSED')
+        self.assertTrue(h.f.is_busy())
+        self.assertEqual(h.f.target, 250.)
+        plan = h.f.machine.plan
+        self.assertEqual(plan['planned_mm']['load'], 30.)
+        self.assertEqual(plan['planned_mm']['unload'], 20.)
+        self.assertEqual(h.c.context['plan']['return_moves'], [[100.,110.,15.], [100.,110.,10.]])
+
+    def test_cancel_during_material_park_never_starts_the_change_wizard(self):
+        h = self.h
+        h.pause_print()
+        h.run('M600')
+        h.step_control()
+        h.run('CANCEL_PRINT')
+        h.control_until('IDLE')
+        self.assertEqual(h.print_state, 'cancelled')
+        self.assertFalse(h.f.is_busy())
+        self.assertNotIn(('native_resume',), h.events)
+
     def test_fluidd_cancel_revokes_heat_without_waiting_for_gcode_mutex(self):
         h=self.h;h.pause_print();h.hotend.temperature=25.;h.run('RESUME')
         def forbidden(script):raise AssertionError('cancel waited on G-code dispatch')
@@ -426,7 +531,7 @@ class PrintControlTests(unittest.TestCase):
         h.control_until('IDLE');self.assertEqual(h.print_state,'cancelled')
 
     def test_oled_uses_native_status_while_busy_and_invalidates_old_pause_view(self):
-        h=self.h;ui=M300PrintUI(h.config);ui._ready();h.pause_print()
+        h=self.h;ui=M300PrintUI(h.config);ui._ready();h.pause_at_material_park()
         first=ui.view(h.now)[0]
         h.c.material_begin();h.c.material_complete(True)
         self.assertNotEqual(ui.view(h.now)[0],first)
@@ -472,7 +577,7 @@ class PrintControlTests(unittest.TestCase):
         self.assertAlmostEqual(h.position[3],expected,places=4)
 
     def test_oled_offers_reheat_after_material_nozzle_off_then_confirmation_then_resume(self):
-        h=self.h;ui=M300PrintUI(h.config);ui._ready();h.pause_print()
+        h=self.h;ui=M300PrintUI(h.config);ui._ready();h.pause_at_material_park()
         h.c.material_begin();h.c.material_complete(True)
         hot_key=ui.view(h.now)[0]
         self.assertEqual(ui.pause_rows(h.now)[0],('Confirm material flow','ready'))

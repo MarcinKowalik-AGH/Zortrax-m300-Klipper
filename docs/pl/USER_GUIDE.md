@@ -111,7 +111,7 @@ Przygotowanie, pauza i błędy mają własne kolory.
 
 `MESH=AUTO` wybiera `m300_pads`, gdy istnieje, inaczej drukuje bez kompensacji. `MESH=m300_pads` wymaga profilu. `MESH=NONE` jawnie wyłącza siatkę. START nie mierzy mesh od nowa. Ustawienia i wcześniejsze tryby parsera są chronione; po sekwencji przywracane są m.in. tryby współrzędnych i mnożniki.
 
-`END_PRINT` kończy ruchy, parkuje w dopuszczalnym zakresie, wyłącza cele grzałek i wentylator modelu. Chłodzenie hotendu pozostaje pod kontrolą polityki temperaturowej — wyłączenie wydruku nie oznacza wyłączenia wszystkich wentylatorów.
+`END_PRINT` opuszcza stół o maksymalnie 300 mm od ostatniej pozycji, do limitu osi Z. Gdy stół się zatrzyma i prześwit jest wystarczający (domyślnie co najmniej 5 mm), głowica parkuje przy X300 Y305. Potem sterownik wyłącza cele grzałek i nawiew modelu. Po odczytaniu końca pliku OLED pokazuje **PRINTING DONE**. Chłodzeniem hotendu nadal steruje temperatura.
 
 Źródła: [makra START/END](../../host/config/m300_operations.cfg), [kontroler druku](../../host/klippy/extras/m300_print_control.py).
 
@@ -119,7 +119,8 @@ Przygotowanie, pauza i błędy mają własne kolory.
 
 | Działanie | Oczekiwany przebieg |
 |---|---|
-| PAUSE z Fluidd lub OLED | Zatrzymanie czytania pliku, bezpieczne zakończenie zaplanowanych ruchów, zapamiętanie stanu, ewentualna retrakcja, 5 mm odsunięcia Z i parkowanie przy X300/Y305, o ile jest bezpieczne |
+| PAUSE z Fluidd lub OLED | Sterownik zapamiętuje pozycję druku. Po dokończeniu zaplanowanych ruchów wykonuje gorącą retrakcję i opuszcza stół domyślnie o 5 mm. Głowica pozostaje w bieżącym XY, silniki trzymają pozycję. |
+| Wymiana materiału w pauzie | Głowica przejeżdża na odsuniętym stole do punktu serwisowego X300 Y305. Po zakończeniu wymiany operator potwierdza wypływ i wybiera RESUME. |
 | Dłuższa pauza | Stół utrzymuje dotychczasowy cel; po 600 s domyślnie obniżenie celu dyszy do 150°C, po 1800 s wyłączenie celu dyszy |
 | RESUME | Kontrola zgodności pliku i stanu, przywrócenie wymaganej temperatury, powrót i wznowienie; wymiana materiału może wymagać potwierdzenia przepływu |
 | CANCEL_PRINT | Zatrzymanie pracownika SD, zamknięcie pliku, skasowanie pauzy, wyłączenie grzania i wentylatora modelu; ewentualne parkowanie nie może blokować samego anulowania |
@@ -139,7 +140,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.5 wystarczy aktualizacja Klippera. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.40-PRINT-LIGHT`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.41-END-PARK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ## 9. Rozpoznawanie problemów
 

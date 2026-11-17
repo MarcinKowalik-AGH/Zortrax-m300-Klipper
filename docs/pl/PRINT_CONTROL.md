@@ -91,14 +91,13 @@ własne nastawy mogą skrócić odcinki.
 
 | Wywołanie | Zachowanie |
 |---|---|
-| PAUSE / przycisk Fluidd / odpowiednik OLED | Zatrzymanie czytnika, zapis PAUSE_STATE, opróżnienie rzeczywistej kolejki, gorąca retrakcja, odsunięcie i parkowanie |
+| PAUSE / M25 / M601 / przycisk Fluidd lub OLED | Dokończenie zaplanowanych ruchów, zapamiętanie pozycji i pozostawienie głowicy w bieżącym XY. Stół opuszcza się domyślnie o 5 mm, silniki trzymają pozycję. |
 | RESUME | Przywrócenie celów, dogrzanie, bezpieczny powrót i odtworzenie stanu tego samego pliku; brak automatycznego G28 nad modelem |
 | CANCEL_PRINT | Przerwanie operacji i wyłączenie celów grzania; zamknięcie zatrzymanego pliku i usunięcie pauzy **nie czekają na parkowanie**; parkowanie jest etapem warunkowym |
-| END_PRINT | Opróżnienie kolejki, zakończenie, parkowanie w granicach ważnej pozycji, grzałki i nawiew modelu OFF |
-| M600 / ZORTRAX_CHANGE | Wspólna pauza, wymiana, potwierdzenie wypływu i dopiero osobne RESUME |
+| END_PRINT | Po ostatnim ruchu modelu stół opuszcza się o 300 mm lub do limitu Z. Po zakończeniu tego ruchu głowica parkuje w prawym tylnym rogu przy dostatecznym prześwicie. Następuje wyłączenie grzania i nawiewu modelu, odczyt końca pliku i komunikat PRINTING DONE. |
+| M600 / ZORTRAX_CHANGE | Po odsunięciu stołu głowica parkuje w miejscu serwisowym. Przy wymianie wybranej podczas zwykłej pauzy dojeżdża tam na już osiągniętej wysokości. Po wymianie potwierdź wypływ i wybierz RESUME. |
 
-Domyślne parkowanie to X300/Y305, odsunięcie Z o 5 mm i gorąca retrakcja 2 mm.
-Przy braku bezpiecznego prześwitu nie należy wymuszać przejazdu nad modelem.
+Domyślny narożnik to X300 Y305. Ruch stołu jest względny i ograniczony do `position_max` osi Z. Przy Z250 i limicie Z300 stół może zjechać jeszcze o 50 mm. Jeżeli dostępny ruch jest mniejszy od `min_park_clearance` (domyślnie 5 mm), głowica pozostaje w XY. Gorąca retrakcja ma domyślnie 2 mm.
 Pauza zachowuje stół i pozycję; domyślnie po 600 s obniża wyższy cel dyszy do
 150°C, a po 1800 s wyłącza jej cel. To parametry konfigurowalne, nie obietnica
 nieskończonego bezpiecznego pozostawiania rozgrzanej drukarki bez nadzoru.
@@ -128,7 +127,7 @@ ZORTRAX_ERROR_STATUS
 BED_MESH_OUTPUT
 ```
 
-Sprawdź rewizję `0.13.16.40-PRINT-LIGHT`, fazę i aktywną siatkę. W RC15
+Sprawdź rewizję `0.13.16.41-END-PARK`, fazę i aktywną siatkę. W RC15
 `model_print_ready: true` potwierdza zakończenie czyszczenia w bieżącym
 pliku SD. Rewizja
 `0.13.16.38-PRINT-DRAIN-XY-PURGE` miała dodatkowe odsunięcie do Z5 pomiędzy

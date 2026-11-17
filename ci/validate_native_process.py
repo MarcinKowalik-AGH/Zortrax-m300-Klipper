@@ -414,7 +414,7 @@ def main():
             elif kind=='G-code':
                 assert result['position'][:3] == [155.,158.,5.],result
             else:
-                assert result['position'][:2] == [300.,305.] and 14.<result['position'][2]<16.,result
+                assert result['position'][:3] == [300.,305.,cp.getfloat('stepper_z','position_max')],result
                 phases=result['control_phases']
                 start=next(p['start'] for p in phases if p['phase']=='HEATING')
                 assert start['mesh']==('m300_pads' if name.endswith('_mesh') else 'NONE'),result
@@ -437,6 +437,13 @@ def main():
                 assert result['position'][:2]==[300.,305.],result
                 assert result['state']=='complete',result
                 assert result['marks']==['STARTED','RESUMED','CHANGED','ENDED'],result
+                positions = result['mark_positions']
+                paused = result['pause_positions']
+                x, y, z = positions['STARTED']
+                assert paused['STARTED'] == [x, y, z + 5.],result
+                assert paused['RESUMED'] == [300., 305., z + 5.],result
+                assert positions['RESUMED'] == positions['CHANGED'] == [x, y, z],result
+                assert positions['ENDED'] == [300.,305.,cp.getfloat('stepper_z','position_max')],result
                 assert 'FILAMENT_READY' in result['actions'] and result['actions'].count('RESUME')==2,result
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
