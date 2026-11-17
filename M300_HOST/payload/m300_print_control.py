@@ -15,9 +15,10 @@ import os
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.40-PRINT-LIGHT'
+REVISION = '0.13.16.41-END-PARK'
 PERIOD = .25
 START_RETRACT_MM = 10.
+END_BED_DROP_MM = 300.
 
 
 class M300PrintControl:
@@ -63,8 +64,7 @@ class M300PrintControl:
         self.waiting = False
         self.deadline = self.stable_since = None
         self.last_error, self.notice = '', ''
-        self._change_pending = False
-        self._change_temperature = None
+        self._pending_change = None
         self._material_was_busy = False
         self._cancel_park = False
         self._pending_file = None
@@ -200,7 +200,7 @@ class M300PrintControl:
         self._release()
         self.context,self._pending_file = None,None
         self.operation = None
-        self._change_pending = False
+        self._pending_change = None
         self._cancel_park = False
         self.state,self.phase = 'IDLE','IDLE'
         if off:self._off()
@@ -270,7 +270,7 @@ class M300PrintControl:
         mesh=bedmesh.get_mesh() if bedmesh is not None else None
         return (id(transform),id(mesh),tuple(getattr(mesh,'mesh_offsets',())))
 
-    def _drained(self, now):
+    def _motion_clock(self, now):
         # get_last_move_time() is NOT a passive status read. Native Klipper
         # primes an idle motion clock to estimated_print_time + 250 ms.
         # Calling it on every tick prevents PAUSE/CANCEL/END from draining.
@@ -280,32 +280,47 @@ class M300PrintControl:
         if not empty:
             self.toolhead.get_last_move_time()
             print_time,estimated,empty=self.toolhead.check_busy(now)
+        return print_time, estimated, empty
+
+    def _drained(self, now):
+        print_time, estimated, empty = self._motion_clock(now)
         return empty and print_time <= estimated
 
     def _position_is(self, expected):
         return all(abs(a-b) <= .01 for a,b in zip(self.toolhead.get_position()[:3],expected))
 
-    def _plan(self, hop=None, clearance=None):
+    def _plan(self, *, origin=None, park_xy=None, hop=None):
         low,high,homed=self._bounds()
         if not set('xyz') <= set(homed):raise self._error('known XYZ position is required')
-        park=self.park_xy
+        if origin is None:
+            origin = self.toolhead.get_position()
+        park = self.park_xy if park_xy is None else park_xy
         self.notice=''
         if not all(low[i] <= park[i] <= high[i] for i in (0,1)):
-            park=tuple(self.toolhead.get_position()[:2])
-            self.notice='Configured park is outside XY travel; paused in place'
-        result=bounded_park(self.toolhead.get_position(),low,high,park,
-                            self.z_hop if hop is None else hop,
-                            self.clearance if clearance is None else clearance)
+            park = origin[:2]
+            self.notice='Configured park is outside XY travel; XY park skipped'
+        result=bounded_park(origin,low,high,park,self.z_hop if hop is None else hop,self.clearance)
         if not result['xy_allowed']:
             self.notice='Insufficient Z clearance; XY park skipped'
         return result
 
     def _move(self, position, speed, *, extrusion=False):
-        self._guard(self.generation)
+        token = self.generation
+        self._guard(token)
         if len(position)==3:position=[*position,self.toolhead.get_position()[3]]
         self.lease.move(position,speed,extruder_only=extrusion)
+        self._guard(token)
         self.waiting=True
         self.deadline=self.reactor.monotonic()+self.move_timeout
+        if self.state == 'ENDING':
+            self._allow_queued_travel()
+
+    def _allow_queued_travel(self):
+        # Budget the actual planner time once. A slow Z axis may need several
+        # minutes for the final descent, even with a healthy motion queue.
+        now = self.reactor.monotonic()
+        finish, estimated, _ = self._motion_clock(now)
+        self.deadline = now + max(0., finish - estimated) + self.move_timeout
 
     def _e(self, amount):
         measured,target=self.hotend.get_temp(self.reactor.monotonic())
@@ -346,7 +361,8 @@ class M300PrintControl:
         ctx['file']=self._file()
         if id(self.sd.current_file) != self._pending_file or not self._position_is(ctx['origin']):
             raise self._error('position or file changed before pause drained')
-        ctx['plan']=self._plan()
+        park_xy = ctx['origin'][:2] if self._pending_change is None else self.park_xy
+        ctx['plan'] = self._plan(park_xy=park_xy)
         self.steps.clear()
         measured,target=self.hotend.get_temp(self.reactor.monotonic())
         if self.retract and measured >= self.hotend.min_extrude_temp and target > 0:
@@ -449,7 +465,9 @@ class M300PrintControl:
         if self.context is None or self.busy:
             raise self._error('material change requires a protected settled pause')
         self._guard(self.generation)
-        if not self.context['plan']['xy_allowed'] or self.notice.startswith('Configured park'):
+        plan = self.context['plan']
+        if (not plan['xy_allowed'] or tuple(plan['target'][:2]) != self.park_xy
+                or not self._position_is(plan['target'])):
             raise self._error('not enough clearance for a material-change park')
         self.context.update(change_required=True,material_success=False,flow_confirmed=False)
         return self.context['targets']['hotend']
@@ -461,23 +479,38 @@ class M300PrintControl:
         if success:self.context['retracted']=0.  # The existing wizard has primed the new material.
         self._wake()
 
-    def request_change(self,gcmd,temperature=None):
-        if self.context is not None and (self.busy or self._material_busy()):
+    def request_change(self,gcmd,temperature=None,*,load_length=None,unload_length=None):
+        if self.busy or self._material_busy():
             raise self._error('wait for the active material/pause operation')
-        self._change_temperature=temperature
-        if self.context is None:
-            self._change_pending=True
-            try:self.cmd_PAUSE(self._command('PAUSE'))
-            except Exception:
-                self._change_pending=False
-                raise
-        else:self._begin_change()
+        options = dict(temperature=temperature, load_length=load_length, unload_length=unload_length)
+        ctx = self.context
+        if ctx is None:
+            self.cmd_PAUSE(self._command('PAUSE'))
+            self._pending_change = options
+            return
+        self._guard(self.generation)
+        if not self._position_is(ctx['plan']['target']):
+            raise self._error('parked position changed')
+        # Plan from the saved print position. A plain PAUSE has already made
+        # the vertical move; only XY may move now, and only at that clearance.
+        plan = self._plan(origin=ctx['origin'])
+        if not plan['xy_allowed'] or tuple(plan['target'][:2]) != self.park_xy:
+            raise self._error('not enough clearance for a material-change park')
+        if plan['target'] == ctx['plan']['target']:
+            self._begin_change(options)
+            return
+        self._lease()
+        ctx['plan'] = plan
+        self._pending_change = options
+        self.state = 'PAUSING'
+        self.steps.extend((('move', plan['target']), ('paused', None)))
+        self._phase('MATERIAL_PARK')
+        self._wake()
 
-    def _begin_change(self):
-        self._change_pending=False
+    def _begin_change(self, options):
         obj=self._material()
         if obj is None:raise self._error('material service is not configured')
-        obj.start('CHANGE',temperature=self._change_temperature)
+        obj.start('CHANGE', **options)
 
     def cmd_idle(self,gcmd):
         if self.context is not None or self.busy:
@@ -510,7 +543,7 @@ class M300PrintControl:
         self._off()
         self.sd.must_pause_work=True
         if not self.ready or self.printer.is_shutdown():return
-        self.context=None;self.operation=None;self._change_pending=False
+        self.context=None;self.operation=None;self._pending_change=None
         self.state='CANCELLING';self._phase('WAIT_CANCEL');self._wake()
 
     def _cancel_native_file(self):
@@ -524,6 +557,7 @@ class M300PrintControl:
         # The worker has stopped, so close it and clear PAUSE immediately;
         # only the subsequent park waits for the queued motion to drain.
         self._phase('WAIT_CANCEL_DRAIN')
+        self._allow_queued_travel()
 
     def _cancel_drained(self):
         nvm = self.printer.lookup_object('m300_nvm', None)
@@ -620,7 +654,7 @@ class M300PrintControl:
             models = self.printer.lookup_object('m300_models', None)
             if models is not None:
                 models.runtime_end()
-            plan=self._plan()
+            plan=self._plan(hop=END_BED_DROP_MM)
             measured,target=self.hotend.get_temp(self.reactor.monotonic())
             if self.retract and measured>=self.hotend.min_extrude_temp and target>0:
                 self.steps.append(('e',-self.retract))
@@ -729,7 +763,9 @@ class M300PrintControl:
         elif kind=='paused':
             self._release();self.state='PAUSED';self._phase('PAUSED')
             self.context['thermal_since']=self.reactor.monotonic()
-            if self._change_pending:self._begin_change()
+            if self._pending_change is not None:
+                options, self._pending_change = self._pending_change, None
+                self._begin_change(options)
         elif kind=='resume':
             token=self.generation
             self._guard(token)
@@ -743,6 +779,7 @@ class M300PrintControl:
     def _fail(self,reason):
         self.last_error=str(reason)
         self._prepared_stream = None
+        self._pending_change = None
         self.steps.clear();self.waiting=False
         self._release();self._off()
         if self.context is not None:self.context['invalid']=self.last_error
