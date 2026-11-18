@@ -564,6 +564,52 @@ class SettingsTreeTests(unittest.TestCase):
             self.assertEqual(h.nvm.get_setting('led_brightness'), 13)
             self.assertEqual(h.oled.selection, 13)
 
+    def test_setting_sliders_stop_at_first_value_and_save_that_value_on_click(self):
+        from test_temperature_editor import event, pixel
+        for key in ('oled_brightness', 'led_brightness', 'oled_dim_minutes', 'oled_sleep_minutes'):
+            for reverse in (False, True):
+                with self.subTest(key=key, reverse=reverse), session() as h:
+                    is_brightness = key.endswith('_brightness')
+                    if is_brightness:
+                        h.run('ZORTRAX_UI_SETTING NAME=%s VALUE=8' % key)
+                    else:
+                        _, display = attach_display(h)
+                        display.timers.apply((8, 8))
+                        display.timers.select = Mock()
+                    page = 'setting_' + key
+                    h.settings.show(page)
+                    h.oled.menu_reverse = reverse
+                    direction = 1 if reverse else -1
+                    def render():
+                        h.oled._render(h.now)
+                        h.panel_display.pump()
+                    render()
+                    event(h, 1)
+                    for sequence, turns in enumerate((7, 8, 12), 2):
+                        event(h, sequence, nav=direction * turns)
+                        render()
+                        segments = [pixel(h.oled._render_wire, 20 + 10*i, 58)
+                                    for i in range(16)]
+                        self.assertEqual(segments, [15] + [0]*15)
+                        self.assertEqual((h.menu.page, h.oled.selection), (page, 1))
+                    if is_brightness:
+                        self.assertEqual(h.settings.brightness_levels()[key], 1)
+                        self.assertEqual(h.nvm.get_setting(key), 8)
+                    event(h, 5, nav=direction * 12, shorts=1)
+                    self.assertEqual(h.menu.page, page)
+                    if is_brightness:
+                        self.assertEqual(h.nvm.get_setting(key), 1)
+                    else:
+                        expected = (1, 8) if key == 'oled_dim_minutes' else (8, 1)
+                        display.timers.select.assert_called_once_with(*expected)
+                    event(h, 6, nav=direction * 11, shorts=1)
+                    self.assertEqual(h.oled.selection, 2)
+                    render()
+                    event(h, 7, nav=direction * 11, shorts=1, longs=1)
+                    self.assertEqual(h.menu.page, 'settings')
+                    row = h.oled._rows(h.now)[1][h.oled.selection]
+                    self.assertEqual(row[1], ('setting', key))
+
     def test_cosmetic_deferred_save_and_noop_save_keep_web_navigation_and_remote_value(self):
         with session() as h:
             h.settings.show('setting_led_brightness')
@@ -853,7 +899,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.23');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.24');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

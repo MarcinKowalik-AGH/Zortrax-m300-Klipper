@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.23
+# Zortrax M300 Classic — Klipper 1.0.0-rc.24
 
-**RC23** gives each OLED timer its own slider and returns the cursor to the selected menu item. Shortening SLEEP temporarily limits DIM. Extending SLEEP restores the preferred DIM. [Release notes](docs/en/RELEASE_v1.0.0-rc.23.md).
+**RC24** keeps the OLED brightness slider at one segment when the knob is turned past its minimum. Fluidd automatically reconnects and refreshes the printer panel after an outage. [Release notes](docs/en/RELEASE_v1.0.0-rc.24.md).
 
 **MCU 1.0.8:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.8.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
@@ -8,7 +8,7 @@
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC23](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.23) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC24](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.24) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

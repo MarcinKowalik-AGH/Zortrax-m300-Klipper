@@ -1,0 +1,246 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300-panel-recovery.patch - Przywraca panel Fluidd po utracie połączenia z Moonrakerem lub Klipperem.
+diff --git a/src/plugins/socketClient.ts b/src/plugins/socketClient.ts
+--- a/src/plugins/socketClient.ts
++++ b/src/plugins/socketClient.ts
+@@ -6,8 +6,9 @@
+
+ const LOG_PREFIX = '[WEBSOCKET]'
+
+-const ALLOWED_RETRIES = 3
+-const EXPONENTIAL_BACKOFF = 1.4
++const MAX_RETRY_MS = 30_000
++const QUIET_SOCKET_MS = 30_000
++const PROBE_TIMEOUT_MS = 10_000
+
+ const FAST_NOTIFY_KEYS = [
+   'motion_report'
+@@ -44,12 +45,16 @@
+   private retryCount = 0
+   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+
++  private watchdog: ReturnType<typeof setTimeout> | null = null
++  private lastMessageAt = 0
++
+   constructor (options: SocketPluginOptions) {
+     this.store = options.store
+   }
+
+   close () {
+     this.cancelReconnect()
++    this.stopWatchdog()
+     if (this.connection) {
+       this.clearCacheAndRequests()
+       this.connection.onopen = null
+@@ -57,11 +62,12 @@
+       this.connection.onerror = null
+       this.connection.onclose = null
+       this.connection.close()
++      this.connection = null
+     }
+   }
+
+   connect () {
+-    this.cancelReconnect()
++    this.close()
+     this.retryCount = 0
+     this.openSocket()
+   }
+@@ -78,9 +84,12 @@
+       }
+
+       this.store.typedDispatch('socket/onSetStatus', 'connecting')
+-      this.connection = new WebSocket(url)
+-
+-      this.connection.onopen = () => {
++      const socket = new WebSocket(url)
++      this.connection = socket
++
++      socket.onopen = () => {
++        this.lastMessageAt = Date.now()
++        this.watchSocket(socket)
+         this.retryCount = 0
+         this.store.typedDispatch('socket/onSetStatus', 'identifying')
+       }
+@@ -94,7 +103,8 @@
+         consola.error(`${LOG_PREFIX} Connection error:`, event)
+       }
+
+-      this.connection.onmessage = async (message) => {
++      socket.onmessage = async (message) => {
++        this.lastMessageAt = Date.now()
+         // Parse the data packet.
+         const socketResponse = JSON.parse(message.data) as SocketResponse
+
+@@ -190,22 +200,47 @@
+     // If the socket is already marked disconnected, there is nothing left to do.
+     if (this.store.state.socket.status === 'disconnected') return
+
+-    // retryCount counts failed opens in a chain; ws.onopen zeroes it on any
+-    // successful open, so we just increment here and give up at the cap.
+-    this.retryCount += 1
+-
+-    if (this.retryCount > ALLOWED_RETRIES) {
+-      this.store.typedDispatch('socket/onSetStatus', 'disconnected')
+-      this.clearCacheAndRequests()
+-      this.connection = null
+-      return
+-    }
++    this.stopWatchdog()
++    this.clearCacheAndRequests()
++    this.connection = null
++    const delay = Math.min(MAX_RETRY_MS, 1000 * 1.4 ** Math.min(++this.retryCount, 11))
+
+     this.store.typedDispatch('socket/onSetStatus', 'connecting')
+     this.reconnectTimeout = setTimeout(() => {
+       this.reconnectTimeout = null
+       this.openSocket()
+-    }, EXPONENTIAL_BACKOFF ** this.retryCount * 1000)
++    }, delay)
++  }
++
++  private stopWatchdog () {
++    if (this.watchdog !== null) {
++      clearTimeout(this.watchdog)
++      this.watchdog = null
++    }
++  }
++
++  private watchSocket (socket: WebSocket) {
++    this.stopWatchdog()
++    this.watchdog = setTimeout(() => {
++      if (socket !== this.connection) return
++      if (this.store.state.socket.status !== 'ready' || Date.now() - this.lastMessageAt < QUIET_SOCKET_MS) {
++        this.watchSocket(socket)
++        return
++      }
++
++      // Ordinary throttled tabs may be quiet. Confirm with a read-only RPC.
++      this.watchdog = setTimeout(() => {
++        if (socket !== this.connection) return
++        this.close()
++        this.handleClose()
++      }, PROBE_TIMEOUT_MS)
++      this.emit('server.info', { suppressError: true }).then(() => {
++        if (socket === this.connection) this.watchSocket(socket)
++      }, () => {
++        // Any RPC response demonstrates a live connection, including an error.
++        if (socket === this.connection && socket.readyState === WebSocket.OPEN) this.watchSocket(socket)
++      })
++    }, QUIET_SOCKET_MS)
+   }
+
+   private cancelReconnect () {
+diff --git a/src/store/socket/actions.ts b/src/store/socket/actions.ts
+--- a/src/store/socket/actions.ts
++++ b/src/store/socket/actions.ts
+@@ -160,6 +160,7 @@
+
+     switch (next) {
+       case 'connecting':
++        commit('console/setResetPromptDialog', '', { root: true })
+         commit('setAcceptNotifications', false)
+         commit('setConnectionId', null)
+
+@@ -342,7 +343,8 @@
+   /**
+    * This is fired when, for example - the service is stopped.
+    */
+-  async notifyKlippyDisconnected ({ dispatch }) {
++  async notifyKlippyDisconnected ({ commit, dispatch }) {
++    commit('console/setResetPromptDialog', '', { root: true })
+     await dispatch('resetKlippy', undefined, { root: true })
+
+     SocketActions.serverInfo()
+@@ -351,12 +353,14 @@
+   /**
+    * This is fired when, for example - an estop is emitted.
+    */
+-  async notifyKlippyShutdown () {
++  async notifyKlippyShutdown ({ commit }) {
++    commit('console/setResetPromptDialog', '', { root: true })
+     SocketActions.serverInfo()
+   },
+
+   async notifyKlippyReady () {
+     consola.debug('Klippy Ready')
++    SocketActions.serverInfo()
+   },
+
+   async notifyFilelistChanged ({ dispatch }, payload: Moonraker.NotificationPayload<'notify_filelist_changed'>) {
+diff --git a/src/App.vue b/src/App.vue
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -94,6 +94,7 @@
+ import { Component, Mixins, Watch } from 'vue-property-decorator'
+ import { EventBus } from '@/eventBus'
+ import StateMixin from '@/mixins/state'
++import { M300PanelRecovery } from '@/util/m300-panel-recovery'
+ import FilesMixin from '@/mixins/files'
+ import BrowserMixin from '@/mixins/browser'
+ import type { LinkPropertyHref, MetaPropertyName } from 'vue-meta'
+@@ -134,6 +135,24 @@
+   toolsdrawer: boolean | null = null
+   navdrawer: boolean | null = null
+   dragState = false
++  private panelRecovery = new M300PanelRecovery()
++
++  @Watch('socketReady')
++  restoreReconnectedPanel (ready: boolean, previous: boolean) {
++    if (!ready) this.clearDragOverlay()
++    this.panelRecovery.observe('socket', this.$typedState.config.socketUrl, ready, previous)
++  }
++
++  @Watch('klippyReady')
++  restoreKlippyPanel (ready: boolean, previous: boolean) {
++    if (!ready) this.clearDragOverlay()
++    this.panelRecovery.observe('klippy', this.$typedState.config.socketUrl, ready, previous)
++  }
++
++  clearDragOverlay () {
++    this.dragState = false
++  }
++
+   customBackgroundImageStyle: Record<string, string> = {}
+
+   flashMessageState: FlashMessage = {
+@@ -352,6 +371,8 @@
+   }
+
+   mounted () {
++    window.addEventListener('dragend', this.clearDragOverlay)
++    window.addEventListener('blur', this.clearDragOverlay)
+     window.addEventListener('dragover', this.handleDragOver)
+     window.addEventListener('dragenter', this.handleDragOver)
+     window.addEventListener('dragleave', this.handleDragLeave)
+@@ -387,6 +408,8 @@
+   }
+
+   beforeDestroy () {
++    window.removeEventListener('dragend', this.clearDragOverlay)
++    window.removeEventListener('blur', this.clearDragOverlay)
+     window.removeEventListener('dragover', this.handleDragOver)
+     window.removeEventListener('dragenter', this.handleDragOver)
+     window.removeEventListener('dragleave', this.handleDragLeave)
+@@ -422,8 +445,8 @@
+       event.preventDefault()
+
+       if (
+-        event.target instanceof HTMLElement &&
+-        event.target.className.includes('fluidd')
++        event.relatedTarget === null ||
++        (event.target instanceof Element && event.target.classList.contains('fluidd'))
+       ) {
+         this.dragState = false
+       }
+diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
+--- a/src/components/common/ActionCommandPromptDialog.vue
++++ b/src/components/common/ActionCommandPromptDialog.vue
+@@ -169,6 +169,7 @@
+
+   set open (value: boolean) {
+     if (!value) {
++      this.$store.commit('console/setPromptDialogOpen', false)
+       this.sendGcode('RESPOND TYPE=command MSG="action:prompt_end"')
+     }
+   }

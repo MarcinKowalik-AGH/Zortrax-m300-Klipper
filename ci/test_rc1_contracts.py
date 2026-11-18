@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.23'
+VERSION='v1.0.0-rc.24'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -73,7 +73,7 @@ class Rc1Contracts(unittest.TestCase):
                     # AST contract separately checks the production OLED methods.
                     # RC23 also preserves the invoking menu row after Back.
                     self.assertEqual(expected, 'e4575a52869ad6cf2937da8ba19f9a09c83338e0bff4326900c0c84a03c0bb9a')
-                    expected = '0d5dddbe047512cef1e0e9f1b3d8af990a4afa9dfaf2e98ba078d6a18c4dd219'
+                    expected = 'a77e63b610b5bf73955959ff94d4caf1796103e3038230acb4e807aaf2aee666'
                 if path == native_service:
                     # RC13 allows active native Bed Mesh for E-only filament moves.
                     # Preserve the RC6 reference and pin the reviewed RC13 code.
@@ -83,7 +83,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],954)
+        self.assertEqual(meta['self_contained_host_tests'],955)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
