@@ -12,7 +12,7 @@ import re
 import shutil
 import subprocess
 from tempfile import TemporaryDirectory
-from threading import Thread
+from threading import Event, Thread
 from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
@@ -22,6 +22,16 @@ from install_orange_pi import deploy_web, extract_web, select_fluidd
 
 
 class StaticHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if (self.server.missing_view.is_set()
+                and re.search(r'/assets/Console-[^/]+\.js$', self.path)):
+            self.server.missing_view.clear()
+            self.send_response(404)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            return
+        super().do_GET()
+
     def log_message(self, format, *args):
         pass
 
@@ -62,7 +72,7 @@ def main():
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--chromium-executable')
-    parser.add_argument('--browsers', default='chromium,firefox')
+    parser.add_argument('--browsers', default='chromium,firefox,webkit')
     args = parser.parse_args()
     versions = {}
     with TemporaryDirectory(prefix='m300-fluidd-recovery-') as folder:
@@ -83,6 +93,7 @@ def main():
 
         with ThreadingHTTPServer(('127.0.0.1', 0),
                                  partial(StaticHandler, directory=root)) as server:
+            server.missing_view = Event()
             worker = Thread(target=server.serve_forever, daemon=True)
             worker.start()
             try:
@@ -108,7 +119,7 @@ def main():
                         browser = getattr(driver, name).launch(**options)
                         try:
                             check_browser(browser, url, javascript)
-                            check_sidebar(browser, url)
+                            check_sidebar(browser, url, server.missing_view)
                             versions[name] = browser.version
                         finally:
                             browser.close()

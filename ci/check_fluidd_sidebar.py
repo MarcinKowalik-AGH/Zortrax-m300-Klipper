@@ -5,7 +5,7 @@ import re
 from urllib.parse import urlsplit
 
 
-def check_sidebar(browser, url):
+def check_sidebar(browser, url, missing_view):
     context = browser.new_context(service_workers='block', viewport={'width': 1440, 'height': 950})
     try:
         page = context.new_page()
@@ -32,6 +32,8 @@ def check_sidebar(browser, url):
                     'printer.info': {'state': 'ready', 'software_version': 'v0.13.0'},
                     'printer.objects.list': {'objects': ['print_stats']},
                     'printer.objects.subscribe': {'eventtime': 1, 'status': {'print_stats': {'state': 'paused'}}},
+                    'printer.gcode.help': {},
+                    'server.temperature_store': {},
                     'server.gcode_store': {'gcode_store': []},
                     'server.history.list': {'count': 0, 'jobs': []},
                     'server.history.totals': {'job_totals': {}, 'auxiliary_totals': []},
@@ -61,22 +63,26 @@ def check_sidebar(browser, url):
 
         # One stale lazy module while the old dashboard remains alive. The next
         # document must open the chosen route, keeping the selected printer.
-        page.route(re.compile(r'/assets/Console-[^/]+\.js$'), lambda route: route.abort(), times=1)
-        link('console').click()
+        missing_view.set()
+        with page.expect_event('domcontentloaded'):
+            link('console').click()
+        assert not missing_view.is_set()
         loaded(2)
         page.wait_for_url(re.compile(r'#/console$'))
         assert link('console').get_attribute('aria-current') == 'page'
 
         for count, name in ((3, 'settings'), (4, 'history')):
             # No WebSocket close; both restarts occur inside the RC24 cooldown.
-            connections[-1].send(json.dumps({'jsonrpc': '2.0', 'method': 'notify_klippy_disconnected'}))
-            connections[-1].send(json.dumps({'jsonrpc': '2.0', 'method': 'notify_klippy_ready'}))
+            with page.expect_event('domcontentloaded'):
+                connections[-1].send(json.dumps({'jsonrpc': '2.0', 'method': 'notify_klippy_disconnected'}))
+                connections[-1].send(json.dumps({'jsonrpc': '2.0', 'method': 'notify_klippy_ready'}))
             loaded(count)
             link(name).click()
             page.wait_for_url(re.compile(r'#/' + name + '$'))
             assert link(name).get_attribute('aria-current') == 'page'
 
-        page.locator('[data-m300-panel-reload]').click()
+        with page.expect_event('domcontentloaded'):
+            page.locator('[data-m300-panel-reload]').click()
         loaded(5)
         assert link('history').get_attribute('aria-current') == 'page'
         assert not any(method in ('printer.gcode.script', 'printer.restart', 'printer.firmware_restart',

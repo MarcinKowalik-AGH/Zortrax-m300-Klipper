@@ -37,7 +37,7 @@ pnpm run type-check
 # production helper with explicit options for the actual browser raster test.
 pnpm exec tsc --ignoreConfig --target ES2022 --module ES2022 --lib ES2022,DOM --skipLibCheck --outDir "$root/.ci/oled-browser" src/util/m300-oled-pixels.ts
 python -m pip install --quiet playwright==1.57.0 Pillow==11.3.0
-python -m playwright install --with-deps chromium firefox
+python -m playwright install --with-deps chromium firefox webkit
 python "$root/ci/check_oled_pixels.py" --module "$root/.ci/oled-browser" --output "$root/.ci/reports/OLED_PIXELS.json"
 python "$root/ci/check_oled_zoom_layout.py" --component "$root/frontend/fluidd/navigation/M300OledPreview.vue" --module "$root/.ci/oled-browser" --output "$root/.ci/reports/OLED_ZOOM_LAYOUT.json"
 pnpm run build
