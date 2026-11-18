@@ -98,6 +98,23 @@ class M300MenuUI:
     def cursor_for(self, page):
         return getattr(self, '_return_cursors', {}).get(page)
 
+    def return_position(self, page, child, now):
+        # A remote macro can enter a page without visiting its Settings row.
+        # Prefer that named row, then the invoking position for other routes.
+        saved = self.cursor_for(page)
+        rows = self.oled._rows(now)[1]
+        matches = [('page', child), ('oled', child)]
+        if child.startswith('setting_'):
+            matches.append(('setting', child[8:]))
+        if child in ('temperature_HOTEND', 'temperature_BED'):
+            matches.append(('temperatures', child[12:], page))
+        for i, (_, action) in enumerate(rows):
+            if action in matches:
+                if saved is not None and 0 <= saved < len(rows) and rows[saved][1] in matches:
+                    return saved
+                return i
+        return max(0, min(saved or 0, len(rows) - 1))
+
     def language(self):
         return 'EN'
 
@@ -279,7 +296,7 @@ class M300MenuUI:
                     display = self.printer.lookup_object('m300_display', None)
                     if not hasattr(display, 'timers'):
                         return menu_frame(('Back', 'Display unavailable'), (), 0, frame_type, sprite)
-                    pair = display.timers.pair()
+                    pair = display.timers.preferences()
                     wire = timers_frame(pair, TIMER_KEYS.index(key), selected, frame_type, sprite)
                     self._brightness_presented = self.menu.generation, selected, wire
                     self._remember_editor_frame('_brightness_frames', selected, wire)
@@ -341,7 +358,7 @@ class M300MenuUI:
         if key in TIMER_KEYS:
             display = self.printer.lookup_object('m300_display', None)
             if hasattr(display, 'timers'):
-                return display.timers.pair()[TIMER_KEYS.index(key)]
+                return display.timers.preferences()[TIMER_KEYS.index(key)]
             return None
         return self.menu.nvm.get_setting(key) if key in BRIGHTNESS_KEYS else None
 

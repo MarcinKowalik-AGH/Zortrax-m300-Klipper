@@ -134,18 +134,13 @@ def notice_frame(title, message, frame_type, sprite=None):
 @lru_cache(maxsize=32)
 def timers_frame(pair, active, selected, frame_type, sprite=None):
     frame = frame_type()
-    minutes = list(pair)
-    if selected:
-        minutes[active] = selected
-    for row, (label, value) in enumerate(zip(('DIM', 'SLEEP'), minutes)):
-        top = row * 24
-        draw_text(frame, 16, top, '%s  %d min' % (label, value))
-        if row == active and selected:
-            draw_text(frame, 2, top, '>')
-        _segmented_bar(frame, (16 * value + 59) // 60, top + 14)
-    hint = 'Press to save' if selected else 'Press to go back'
-    if minutes[0] > minutes[1]:
-        hint = 'DIM exceeds SLEEP'
-    draw_text(frame, 16, 50, hint)
+    value = selected or pair[active]
+    shown = min(value, pair[1]) if active == 0 else value
+    title = 'OLED dim time' if active == 0 else 'OLED sleep time'
+    draw_text(frame, 16, 0, title)
+    draw_text(frame, 16, 14, '%d min' % shown)
+    draw_text(frame, 16, 27, ('Set %d min' % value if shown != value else 'Turn to adjust'))
+    draw_text(frame, 16, 40, 'Press to save' if selected else 'Press to go back')
+    _segmented_bar(frame, (16 * shown + 59) // 60, 55)
     _draw_display_icon(frame, sprite)
     return frame.wire_bytes()

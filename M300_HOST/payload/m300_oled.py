@@ -90,6 +90,7 @@ class M300OLED:
         self.menu_reverse = config.getboolean('menu_reverse', True)
         self.page = 'status'
         self.selection = 0
+        self._panel_cursors = {}
         self.message = None
         self.job_token = None
         self.cancel_token = None
@@ -182,6 +183,7 @@ class M300OLED:
         self.generation += 1
         self.connected = True
         self.encoder.reset()
+        self._panel_cursors = {}
         self.page, self.selection, self.message = 'status', 0, None
         self._clear_job_view()
         self._clear_filament_view()
@@ -415,12 +417,20 @@ class M300OLED:
                            menu.page in ('temperature_HOTEND', 'temperature_BED'))
             if events['longs']:
                 if temperature:
+                    child = menu.page
                     menu._navigate(menu._return_page, remember=False)
-                    cursor = getattr(received_ui, 'cursor_for', lambda page: None)(menu.page)
-                    self.selection = cursor if cursor is not None else 0
+                    self.selection = received_ui.return_position(menu.page, child, now)
                 elif brightness:
+                    child = menu.page
                     menu._navigate('settings', remember=False)
+                    self.selection = received_ui.return_position('settings', child, now)
+                elif (not self.message and current_view and presented_actions
+                      and self.page in ('home', 'm04') and menu is not None
+                      and menu.page not in ('procedure', 'fan_test')
+                      and isinstance(presented_actions[0], tuple)
+                      and presented_actions[0][0] in ('page', 'ui_back', 'browse', 'oled')):
                     self.selection = 0
+                    self._select(now, presented_actions=presented_actions)
                 else:
                     self._show_status()
             elif self.message:
@@ -1077,7 +1087,7 @@ class M300OLED:
                 or index >= len(presented_actions)
                 or presented_actions[index] != action):
             self.message = ('View changed', 'Review the current view and select again.')
-            self.selection = 0
+            self.selection = index
             return
         if action in ('status', ('oled', 'status')):
             self._show_status()
@@ -1091,32 +1101,38 @@ class M300OLED:
             ui = self.printer.lookup_object('m300_menu_ui', None)
             if ui is not None and hasattr(ui, 'remember_cursor'):
                 ui.remember_cursor(previous_page, previous_selection)
+            ancestors = tuple(getattr(getattr(ui, 'history', None), 'stack', ()))
+            previous_directory = getattr(menu, '_directory', None)
             page = menu.select(action, now)
             if page == '_procedure_view_restored':
                 return
-            # OEM fan and Settings choices redraw in place with the same cursor.
-            homing_choice = (isinstance(action, tuple) and bool(action) and (
-                action[0] in ('motion_home_x','motion_home_y','motion_home_z',
-                              'motion_home_xy','motion_home_xyz') or
-                (action[0] == 'native_gcode' and len(action) > 1
-                 and action[1] in ('ZORTRAX_HOME_X','ZORTRAX_HOME_Y',
-                                  'ZORTRAX_HOME_Z','ZORTRAX_HOME_XY',
-                                  'ZORTRAX_HOME_ALL'))))
-            in_place = previous_page == menu.page and not menu.reason and (
-                menu.page == 'fan_test' or homing_choice or
-                (menu.page.startswith('setting_') and action and action[0] == 'set'))
-            self.page, self.selection = 'm04', previous_selection if in_place else 0
+            self.page = 'm04'
+            self.selection = 0
+            if previous_page == menu.page:
+                current_rows = self._rows(now)[1]
+                if index < len(current_rows):
+                    current = current_rows[index][1]
+                    # Fan toggles keep their row but issue a new confirmation token.
+                    same_toggle = (previous_page == 'fan_test' and action and current
+                                   and action[0] == current[0] == 'procedure_action'
+                                   and action[-1] == current[-1]
+                                   and action[-1] in ('TOGGLE_UPPER', 'TOGGLE_LOWER'))
+                    if current == action or same_toggle:
+                        self.selection = index
+            if previous_page == menu.page == 'browser' and previous_directory != menu._directory:
+                self.selection = 0
+                if action[0] == 'browse':
+                    # A refreshed parent listing may have been reordered.
+                    for pos, (_, entry) in enumerate(menu.rows(now)[1]):
+                        if entry and entry[:3] == ('directory', menu._source, previous_directory):
+                            self.selection = pos
+                            break
             if previous_page != menu.page:
-                # Back and temperature-choice returns preserve the selected
-                # parent row without replaying the action or trusting a stale token.
-                returning = (isinstance(action, tuple) and bool(action)
-                             and (action[0] in ('ui_back', 'temp')
-                                  or (action[0] == 'page' and index == 0
-                                      and str(rows[index][0]).strip().lower() in ('back', 'up'))))
-                if returning and ui is not None and hasattr(ui, 'cursor_for'):
-                    position = ui.cursor_for(menu.page)
-                    if position is not None:
-                        self.selection = position
+                returning = (menu.page in ancestors or (action and (
+                    action[0] in ('ui_back', 'temp', 'model_cancel', 'set')
+                    or (index == 0 and action[0] == 'page'))))
+                if returning and ui is not None and hasattr(ui, 'return_position'):
+                    self.selection = ui.return_position(menu.page, previous_page, now)
                 brightness_selection = getattr(ui, 'brightness_selection', None)
                 if brightness_selection is not None:
                     brightness = brightness_selection()
@@ -1127,6 +1143,8 @@ class M300OLED:
                     temperature = temperature_selection()
                     if temperature is not None:
                         self.selection = temperature
+            if page is not None:
+                self.selection = 0
             if page == 'job':
                 status = self._job_status(now)
                 self.job_token = status.get('session_token') if status.get('available') else None
@@ -1145,17 +1163,21 @@ class M300OLED:
                 # Present their result immediately, without relocating actions.
                 self.message = ('Notice', menu.reason)
             return
+        if action is not None:
+            self._panel_cursors[self.page] = index
         if action in ('job_pause', 'job_resume', 'job_cancel'):
             self._job_action(action[4:].upper(), now)
         elif action == 'job_confirm':
             self._job_action('CANCEL', now, confirm=True)
         elif action == 'job_back':
-            self.page, self.selection, self.cancel_token = 'job', 0, None
+            self.page, self.selection, self.cancel_token = 'job', self._panel_cursors.get('job', 0), None
         elif action == 'oled_link_back':
-            self.page, self.selection = 'm04', 0
+            self.page = 'm04'
+            ui = self.printer.lookup_object('m300_menu_ui', None)
+            self.selection = ui.return_position(menu.page, 'oled_link', now) if ui and menu else 0
         elif action == 'oled_link_reinit':
             self._reinitialize(now)
-            self.page, self.selection = 'oled_link', 0
+            self.page, self.selection = 'oled_link', index
         elif action == 'job':
             self._clear_filament_view()
             status = self._job_status(now)
@@ -1167,7 +1189,7 @@ class M300OLED:
         elif action == 'filament_cancel_confirm':
             self._filament_action('CANCEL', now, confirm=True)
         elif action == 'filament_back':
-            self.page, self.selection, self.filament_cancel_token = 'filament', 0, None
+            self.page, self.selection, self.filament_cancel_token = 'filament', self._panel_cursors.get('filament', 0), None
         elif action == 'filament_refresh':
             self._filament_refresh(now)
         elif action == 'filament':
@@ -1181,7 +1203,14 @@ class M300OLED:
             self.filament_cancel_token, self.filament_notice = None, None
             self.page, self.selection = 'filament', 0
         elif action is not None:
+            child = self.page
             self.page, self.selection = action, 0
+            if index == 0:
+                ui = self.printer.lookup_object('m300_menu_ui', None)
+                if action in ('m04', 'home') and menu and ui:
+                    self.selection = ui.return_position(menu.page, child, now)
+                else:
+                    self.selection = self._panel_cursors.get(action, 0)
             self._clear_job_view()
             self._clear_filament_view()
 

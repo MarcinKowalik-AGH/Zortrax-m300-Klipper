@@ -13,6 +13,14 @@ def valid(dim, sleep):
     return type(dim) is int and type(sleep) is int and 1 <= dim <= sleep <= 60
 
 
+def valid_preference(dim, sleep):
+    return all(type(n) is int and 1 <= n <= 60 for n in (dim, sleep))
+
+
+def effective(pair):
+    return min(pair), pair[1]
+
+
 class OledTimers:
     def __init__(self, display):
         self.display = display
@@ -23,6 +31,9 @@ class OledTimers:
         self.serial = None
         self.status = 'STARTING'
         self.desired = self.observed = None
+        self.applied_preference = None
+        self.mirror_has_preference_mcu = False
+        self.preference_mcu = False
         self.saving = False
         self.mirror = None
         self.error = None
@@ -41,13 +52,16 @@ class OledTimers:
         if self.mcu.get_constants().get('M300_OLED_IDLE_ABI') != 1:
             self.status = 'MCU_UPDATE_REQUIRED'
             return
-        self.read = self.mcu.lookup_query_command('m300_oled_idle_query token=%u', STATE)
+        self.preference_mcu = self.mcu.get_constants().get('M300_OLED_PREF_ABI') == 1
+        prefix = 'm300_oled_pref' if self.preference_mcu else 'm300_oled_idle'
+        self.read = self.mcu.lookup_query_command(prefix + '_query token=%u', STATE)
         self.write = self.mcu.lookup_query_command(
-            'm300_oled_idle_store token=%u dim=%c sleep=%c deadline=%u', STATE)
+            prefix + '_store token=%u dim=%c sleep=%c deadline=%u', STATE)
         self.reactor.update_timer(self.timer, self.reactor.monotonic() + 1.)
 
     def stop(self):
         self.status = 'DISCONNECTED'
+        self.applied_preference = None
         self.serial = self.observed = self.desired = self.mirror = None
         self.read = self.write = None
         self.reactor.update_timer(self.timer, self.reactor.NEVER)
@@ -57,11 +71,18 @@ class OledTimers:
         return tuple(max(1, min(60, round(seconds / 60))) for seconds in
                      (d.timeout, d.sleep_timeout))
 
+    def preferences(self):
+        return self.desired or (self.applied_preference or self.pair()[0], self.pair()[1])
+
     def apply(self, pair):
         previous = self.pair()
+        old_preference = self.applied_preference
+        self.applied_preference = pair[0]
+        pair = effective(pair)
         self.display.timeout, self.display.sleep_timeout = (n * 60 for n in pair)
         for key, old, new in zip(KEYS, previous, pair):
-            if old != new:
+            if old != new or (key == KEYS[0] and old_preference is not None
+                              and old_preference != self.applied_preference):
                 self.printer.send_event('m300:setting_changed', key, new)
 
     def path(self):
@@ -80,17 +101,23 @@ class OledTimers:
             raise ValueError('Invalid saved OLED timers')
         if type(record['pending']) is not bool:
             raise ValueError('Invalid OLED timer receipt')
-        return pair, record['pending']
+        preferred = record.get('preferred_dim', pair[0])
+        raw = (preferred, pair[1])
+        if not valid_preference(*raw) or effective(raw) != pair:
+            raise ValueError('Invalid saved OLED preference')
+        self.mirror_has_preference_mcu = record.get('preference_mcu') is True
+        return raw, record['pending']
 
     def remember(self, serial, pair, pending):
-        raw = json.dumps(dict(serial=serial, dim=pair[0], sleep=pair[1],
-                              pending=pending)).encode()
+        raw = json.dumps(dict(serial=serial, dim=min(pair), preferred_dim=pair[0], sleep=pair[1],
+                              pending=pending, preference_mcu=self.preference_mcu)).encode()
         self.nvm.executor.submit(self.nvm.store._atomic_replace, self.path(), raw)
+        self.mirror_has_preference_mcu = self.preference_mcu
         self.mirror = (pair, pending)
 
     def select(self, dim, sleep):
-        if not valid(dim, sleep):
-            raise self.printer.command_error('Use 1 <= DIM <= SLEEP <= 60 minutes')
+        if not valid_preference(dim, sleep):
+            raise self.printer.command_error('Use 1 to 60 minutes for each OLED timer')
         if not self.serial or not self.write or self.saving:
             raise self.printer.command_error('OLED timer storage unavailable: ' + self.status)
         pair = (dim, sleep)
@@ -116,7 +143,10 @@ class OledTimers:
         try:
             self.token = (self.token + 1) & 0xffffffff
             token = self.token
-            if self.serial and self.desired and self.desired != self.observed:
+            target = self.desired
+            if target and not self.preference_mcu:
+                target = effective(target)
+            if self.serial and target and target != self.observed:
                 mutex = self.display.gcode.get_mutex()
                 if mutex.test():
                     return now + 2.
@@ -125,7 +155,7 @@ class OledTimers:
                         return now + 2.
                     deadline = self.mcu.print_time_to_clock(
                         self.mcu.estimated_print_time(self.reactor.monotonic()) + .35)
-                    packet = self.write.send([token, *self.desired, deadline & 0xffffffff])
+                    packet = self.write.send([token, *target, deadline & 0xffffffff])
             else:
                 packet = self.read.send([token])
             if not self.read:
@@ -144,15 +174,18 @@ class OledTimers:
             if code not in (0, 1) or not serial:
                 raise ValueError('Invalid MCU OLED timer reply')
             observed = None if code == 0 else (packet['dim'], packet['sleep'])
-            if observed is not None and not valid(*observed):
+            validate = valid_preference if self.preference_mcu else valid
+            if observed is not None and not validate(*observed):
                 raise ValueError('Invalid MCU OLED timer values')
             if self.serial is None:
                 mirror = self.nvm.executor.submit(self.load, serial)
                 if not self.read:
                     return self.reactor.NEVER
                 self.mirror = mirror
-                self.desired = (mirror[0] if mirror and (mirror[1] or not observed)
-                                else observed)
+                self.desired = observed
+                if mirror and (mirror[1] or not observed or (
+                        not self.mirror_has_preference_mcu and effective(mirror[0]) == observed)):
+                    self.desired = mirror[0]
                 self.serial = serial
             elif self.serial != serial:
                 raise ValueError('MCU identity changed')
@@ -160,15 +193,19 @@ class OledTimers:
             if self.desired:
                 self.apply(self.desired)
             self.error = None
-            if self.desired != observed:
+            target = self.desired
+            if target and not self.preference_mcu:
+                target = effective(target)
+            if target != observed:
                 self.status = 'PENDING'
                 return now + 2.
-            if observed and self.mirror != (observed, False):
+            if observed and (self.mirror != (self.desired, False)
+                             or self.mirror_has_preference_mcu != self.preference_mcu):
                 if self.saving:
                     return now + 2.
                 self.saving = True
                 try:
-                    self.remember(serial, observed, False)
+                    self.remember(serial, self.desired, False)
                 finally:
                     self.saving = False
             self.status = 'SYNCED' if observed else 'DEFAULT'
