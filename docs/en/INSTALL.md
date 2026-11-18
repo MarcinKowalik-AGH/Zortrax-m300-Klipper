@@ -1,9 +1,11 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.17 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.17).
+[fixed v1.0.0-rc.18 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.18).
 For a blank Fluidd page, [recover Fluidd before the host update](#recover-fluidd-then-update-klipper).
 [Polski](../pl/INSTALL.md).
+
+If a previous update rolled back with a missing counter reply, see [RC18 startup recovery](RELEASE_v1.0.0-rc.18.md).
 
 ## 1. Update Klipper
 
@@ -50,14 +52,14 @@ mechanical clearance and is unnecessary for routine updates.
 Leave the damaged checkout in place. With the printer idle, clone the published deployment branch into a new directory on the Orange Pi. The installer uses the existing printer configuration.
 
 ```bash
-m300_src=$(mktemp -d "$HOME/m300-rc17.XXXXXX") &&
+m300_src=$(mktemp -d "$HOME/m300-rc18.XXXXXX") &&
 git clone --depth 1 --single-branch --no-tags --branch orange-pi \
   https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_src" &&
 (cd "$m300_src" && sha256sum -c --quiet SHA256SUMS) &&
 python3 "$m300_src/install-orange-pi.py"
 ```
 
-Keep the new path for subsequent updates. Use the versioned full ZIP to install exactly RC17. After a separate Fluidd repair check `fluidd_http_verified` and open the menu on port 4480.
+Keep the new path for subsequent updates. Use the versioned full ZIP to install exactly RC18. After a separate Fluidd repair check `fluidd_http_verified` and open the menu on port 4480.
 
 ## 2. Check the MCU version
 

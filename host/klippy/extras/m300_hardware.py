@@ -116,6 +116,8 @@ class M300Hardware:
         self.effective_steps = None
         self.applied = False
         self.printer.register_event_handler('klippy:mcu_identify', self._identify)
+        if not self.mcu.is_fileoutput():
+            self.mcu.register_config_callback(self._configure_counter)
         self.printer.register_event_handler('klippy:ready', self._request_factory_info)
         self.printer.register_event_handler('m300:runtime_checkpoint', self._queue_counter)
         self.printer.register_event_handler('klippy:shutdown', self._stop_counter)
@@ -294,6 +296,12 @@ class M300Hardware:
             self.factory_print_minutes = (None if self.counter_sync.display_blocked
                                           else self.counter_sync.minutes)
 
+    def _configure_counter(self):
+        # Native Klipper enters config callbacks only after mcu_identify and
+        # a successful get_config shutdown check, before sending config bytes.
+        self._sync_factory_counter(self.mcu.get_constants())
+        logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
+
     def _sync_factory_counter(self, constants):
         nvm = self.printer.lookup_object('m300_nvm', None)
         supported = (constants.get('M300_MODEL') == 'M300_CLASSIC'
@@ -417,7 +425,6 @@ class M300Hardware:
                               'explicitly keeps an operator-selected Z configuration')
                 raise self.config.error(self.error)
             self._configure_factory_info(constants)
-            self._sync_factory_counter(constants)
             return
         try:
             self._apply_identity(self._query_factory())
@@ -425,8 +432,6 @@ class M300Hardware:
             self.state, self.error = 'ERROR', str(exc)
             raise self.config.error('M300 hardware identity: ' + self.error) from None
         self._configure_factory_info(constants)
-        self._sync_factory_counter(constants)
-        logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
 
     def _apply_identity(self, response):
         """Shared with software tests; caller must be in MCU identification."""

@@ -19,7 +19,7 @@ def main():
     args = parser.parse_args()
     sys.path[:0] = [str(args.root / 'klippy'), str(args.package), str(args.package / 'tests')]
     from mcu import MCURestartHelper, MCUConfigHelper, error
-    from test_lifecycle import fixture
+    from test_lifecycle import fixture, NativeRestartRequested
 
     rows = []
     for name, values in (
@@ -56,6 +56,38 @@ def main():
             fresh.query.send.assert_not_called()
             fresh.helper._check_restart.assert_not_called()
         rows.append({'case': name, 'PASS': True, 'native_restart_requested': requested})
+
+    # Reproduce counter replay during identification with the real native
+    # shutdown check. The counter callback must be unreachable on a latch.
+    from test_hardware import fixture as make_hardware
+    for fault in (1, 3, 4):
+        hw, _, _ = make_hardware()
+        hw._sync_factory_counter = Mock(side_effect=AssertionError('premature counter replay'))
+        hw._identify()
+        link = fixture(configured=1, fault=fault)
+        if fault == 1:
+            try:
+                link.life._startup_identify()
+            except NativeRestartRequested:
+                assert link.life.startup_reconnect['decision'] == 'NATIVE_RESET_REQUESTED'
+            link.helper._check_restart.assert_called_once()
+        else:
+            link.life._startup_identify()
+            assert link.life.startup_reconnect['previous_guard']['fault'] == fault
+            config = MCUConfigHelper.__new__(MCUConfigHelper)
+            config._name = 'mcu'
+            config._mcu = NS(is_fileoutput=lambda: False, lookup_query_command=lambda *a:
+                             NS(send=lambda: dict(is_shutdown=1, is_config=1)))
+            config._conn_helper = NS(is_shutdown=lambda: False, get_restart_helper=Mock())
+            config._finalize_config = hw.mcu.register_config_callback.call_args.args[0]
+            try:
+                config._connect()
+            except error as exc:
+                assert 'shutdown' in str(exc)
+            else:
+                raise AssertionError('Native shutdown check unexpectedly passed')
+        hw._sync_factory_counter.assert_not_called()
+        rows.append({'case': 'counter_after_guard_%d' % fault, 'PASS': True})
 
     # A reset which did not actually reset the MCU must stop in the native
     # configuration helper; it must not trigger an endless recovery loop.

@@ -37,7 +37,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Kwalifikowany wariant Z pierwszego wydruku | 0.13.16.38 / test 11.11.2026 | Nastawy istniejącego egzemplarza | Uzgodniona konfiguracja: position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1. | Nie jest globalnym standardem dla innych egzemplarzy. |
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
-| Automatyczny zapis licznika ID0 w MCU | RC17 / MCU 1.0.5 | Dwa kolejne zapisy ID0 i normalne ponowne włączenie | Oczekuje na test: Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu. | Próba fizyczna oczekuje. |
+| Automatyczny zapis licznika ID0 w MCU | RC18 / MCU 1.0.5 | Powrót do Ready na HW05, odczyt po dwóch zapisach ID0 i po normalnym ponownym włączeniu | Oczekuje na test: Oczekuje na próbę na drukarce i odczyt minut oraz aktywnego banku. | Brak potwierdzenia z fizycznej płyty. |
 
 ## Historia i źródła potwierdzeń
 
@@ -308,6 +308,20 @@ Podstawa wersji: `Zapis rozmowy przejrzany 17.11.2026.`.
 Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu.
 
 Podstawa wersji: `Zapis rozmowy przejrzany 17.11.2026.`.
+
+**2026-11-18 · RC13 / próba RC17 / MCU 1.0.5 · Obserwacja częściowa**
+
+O 15:18 aktywny bank B, 286732 minuty, 149531,14 s nierozliczone. Instalator przywrócił 13 plików. O 15:39 brak potwierdzenia zapisu po restarcie usługi.
+
+Zapis użytkownika / treść przesłanego zrzutu: „Unable to obtain 'm300_factory_counter_result' response”.
+
+Podstawa wersji: `Status hosta przed instalacją i wynik wycofania aktualizacji na M300 Classic HW05.`.
+
+**2026-11-18 · RC18 / MCU 1.0.5 · Oczekuje na test**
+
+Oczekuje na próbę na drukarce i odczyt minut oraz aktywnego banku.
+
+Podstawa wersji: `Testy programu po zmianie kolejności rozruchu hosta.`.
 
 ## Jak aktualizować
 

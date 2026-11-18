@@ -32,7 +32,7 @@ def fixture(profile='factory', fileoutput=False, *, legacy_backup=None):
     config.options = dict(config.options)
     if legacy_backup is not None:
         config.options['factory_counter_backup'] = legacy_backup
-    mcu = NS(is_fileoutput=lambda: fileoutput,
+    mcu = NS(is_fileoutput=lambda: fileoutput, register_config_callback=Mock(),
              _config_helper=NS(is_config_finalized=lambda: False),
              get_constants=lambda: {'M300_FACTORY_ABI': 1,
                                     'M300_FACTORY_HW_ADDRESS': FACTORY_ADDRESS,
@@ -115,6 +115,17 @@ class HardwareTests(unittest.TestCase):
         hw._queue_counter()
         self.assertIsNone(hw.counter_timer)
 
+    def test_counter_replay_is_registered_after_identify_at_native_config_only(self):
+        hw, _, _ = fixture()
+        hw._sync_factory_counter = Mock()
+        hw._identify()
+        hw._sync_factory_counter.assert_not_called()
+        hw.mcu.register_config_callback.assert_called_once_with(hw._configure_counter)
+        hw.mcu.register_config_callback.call_args.args[0]()
+        hw._sync_factory_counter.assert_called_once_with(hw.mcu.get_constants())
+        offline, _, _ = fixture(fileoutput=True)
+        offline.mcu.register_config_callback.assert_not_called()
+
     def test_optional_factory_info_queries_once_and_keeps_field_validity_separate(self):
         hw, _, _ = fixture()
         constants = dict(hw.mcu.get_constants(), M300_FACTORY_INFO_ABI=1)
@@ -156,8 +167,10 @@ class HardwareTests(unittest.TestCase):
                                       print_minutes=0, settings_crc=0))
         hw.mcu.lookup_query_command = Mock(return_value=NS(send=query))
         hw.board.startup_transport = NS(_bounded=lambda name, operation: operation())
+        hw._identify()
+        query.assert_not_called()
         with self.assertRaisesRegex(RuntimeError, 'requires the original host NVM'):
-            hw._identify()
+            hw.mcu.register_config_callback.call_args.args[0]()
         self.assertEqual(hw.get_status()['factory_counter_banks'], 'RECOVERY_REQUIRED')
         query.assert_called_once()
 

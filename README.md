@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.17
+# Zortrax M300 Classic — Klipper 1.0.0-rc.18
 
-**RC17** protects active prints against unintended homing and end commands, preserves a resumable pause when material-change parking is unavailable, and protects the factory print-time counter on MCU 1.0.5. Fluidd uses port 4480. [Release notes](docs/en/RELEASE_v1.0.0-rc.17.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
+**RC18** checks the MCU guard before replaying a pending print-minute transfer. The host supports MCU 1.0.5 and Fluidd on port 4480. [Release notes](docs/en/RELEASE_v1.0.0-rc.18.md) · [RC6 menu animation](docs/en/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.5.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
@@ -8,7 +8,7 @@
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.17) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC18](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.18) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

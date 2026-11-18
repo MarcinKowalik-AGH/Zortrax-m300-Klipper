@@ -91,6 +91,7 @@ class M300Lifecycle:
         fault = state['fault']
         if fault not in (0, 1) or state['inputs'] & 1:
             report['decision'] = 'HARDWARE_OR_EXPLICIT_SHUTDOWN_REQUIRES_OPERATOR'
+            logging.warning('M300_HOST_START_GUARD %s', json.dumps(report, sort_keys=True))
             return
         # Only a previous configured session qualifies: fault 1 is the MCU's
         # heartbeat-loss latch. A rapid service restart may reconnect before

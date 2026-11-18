@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.17 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-rc.18 — instalacja od początku
 
 Jeśli na tym hoście działa już Klipper dla M300, użyj [instrukcji aktualizacji](INSTALL.md).
 
@@ -118,11 +118,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.17/Zortrax_M300_Klipper_v1.0.0-rc.17.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.17/SHA256SUMS-v1.0.0-rc.17.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.17.zip$' SHA256SUMS-v1.0.0-rc.17.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.17.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.17 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.18/Zortrax_M300_Klipper_v1.0.0-rc.18.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.18/SHA256SUMS-v1.0.0-rc.18.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.18.zip$' SHA256SUMS-v1.0.0-rc.18.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.18.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.18 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -223,7 +223,7 @@ instalacji. [Odczyt stanu licznika](MCU_FIRMWARE_1.0.5.md#odczyt-licznika).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Wersjonowana paczka instaluje `v1.0.0-rc.17`. Gałąź `orange-pi` dostarcza
+Wersjonowana paczka instaluje `v1.0.0-rc.18`. Gałąź `orange-pi` dostarcza
 późniejsze aktualizacje projektu. [Instrukcja aktualizacji](INSTALL.md) opisuje
 klonowanie gałęzi i aktualizację Klippera. Zawiera także osobne polecenie
 aktualizacji lub naprawy działającego Fluidd na porcie 4480. Przed osobną aktualizacją systemu lub Moonrakera

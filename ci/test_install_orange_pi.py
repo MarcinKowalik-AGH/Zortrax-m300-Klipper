@@ -63,7 +63,7 @@ class OrangePiInstallerTest(unittest.TestCase):
             with patch.object(installer,'run',return_value=self.applied_host()) as run:
                 installer.apply_host(Path('/package/host'),('--root','/my/klipper','--config','/my/printer.cfg'),
                     dict(status='PLAN_M300_HOST'),repair_startup=True)
-        idle.assert_called_once_with(repair_startup=True)
+        idle.assert_called_once_with(repair_startup=True, recover_counter_startup=False)
         calls=[c.args for c in run.call_args_list]
         self.assertEqual(calls[0],('sudo','systemctl','stop','klipper.service'))
         self.assertEqual(calls[-1],('sudo','systemctl','start','klipper.service'))
@@ -115,6 +115,30 @@ class OrangePiInstallerTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'idle'):
                     installer.require_idle()
 
+    def test_counter_startup_repair_requires_live_preconnect_failure(self):
+        message = "Unable to obtain 'm300_factory_counter_result' response"
+        info = dict(state='shutdown', state_message="Previous MCU 'mcu' shutdown: M300 local guard latched")
+        hardware = dict(factory_counter_pending=True, factory_counter_sync='RECOVERY_REQUIRED',
+                        factory_counter_error=message)
+        board = dict(ready=False, identified=False, connected=False, native_initialization='NOT_STARTED',
+                     hardware=hardware)
+        status = dict(m300_mcu=board, m300_lifecycle=dict(startup_reconnect=dict(decision='NOT_CHECKED')))
+        with patch.object(installer, 'printer', side_effect=[info, dict(status=status)]):
+            self.assertEqual(installer.require_idle(recover_counter_startup=True), info)
+        for changed in ({'connected': True}, {'ready': True}, {'hardware': {}},
+                        {'hardware': dict(hardware, factory_counter_error='another failure')}):
+            with patch.object(installer, 'printer', side_effect=[
+                    info, dict(status=dict(status, m300_mcu=dict(board, **changed)))]):
+                with self.assertRaises(ValueError):
+                    installer.require_idle(recover_counter_startup=True)
+        with patch.object(installer, 'printer', return_value=info) as query:
+            with self.assertRaises(ValueError):
+                installer.require_idle()
+            query.assert_called_once_with('/printer/info')
+        with patch.object(installer, 'printer', return_value=dict(info, state_message='MCU ADC out of range')):
+            with self.assertRaises(ValueError):
+                installer.require_idle(recover_counter_startup=True)
+
     def test_unready_host_restores_receipt_and_restarts_prior_services(self):
         with patch.object(installer, 'require_idle'), \
              patch.object(installer, 'wait_ready', side_effect=ValueError('MCU startup failed')), \
@@ -157,7 +181,7 @@ class OrangePiInstallerTest(unittest.TestCase):
             web.assert_not_called()
             apply.assert_called_once_with(package / 'M300_HOST', (
                 '--root', info['klipper_path'], '--config', info['config_file']),
-                plan, repair_startup=False)
+                plan, repair_startup=False, recover_counter_startup=False)
             self.assertEqual([call.args[:2] for call in run.call_args_list],
                              [('sha256sum', '-c'), (sys.executable, 'install.py'), ('sudo', '-v')])
             self.assertEqual(json.loads(report.call_args.args[0]), {

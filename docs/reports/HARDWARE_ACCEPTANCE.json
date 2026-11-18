@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-17",
+  "updated": "2026-11-18",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -540,6 +540,31 @@
           "status": "AWAITING_TEST",
           "result": "Oczekuje na porównanie minut i banków przed wydrukiem, po zapisie i po uruchomieniu.",
           "problem": "Próba fizyczna oczekuje.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC13 / próba RC17 / MCU 1.0.5",
+          "version_basis": "Status hosta przed instalacją i wynik wycofania aktualizacji na M300 Classic HW05.",
+          "test": "Synchronizacja oczekujących minut i rozruch po aktualizacji",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "O 15:18 aktywny bank B, 286732 minuty, 149531,14 s nierozliczone. Instalator przywrócił 13 plików. O 15:39 brak potwierdzenia zapisu po restarcie usługi.",
+          "problem": "Host nie ukończył identyfikacji. Kod pierwotnej blokady i końcowy stan Flash pozostają nieznane.",
+          "evidence": {
+            "kind": "user_test_log",
+            "quote": "Unable to obtain 'm300_factory_counter_result' response"
+          }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC18 / MCU 1.0.5",
+          "version_basis": "Testy programu po zmianie kolejności rozruchu hosta.",
+          "test": "Powrót do Ready na HW05, odczyt po dwóch zapisach ID0 i po normalnym ponownym włączeniu",
+          "status": "AWAITING_TEST",
+          "result": "Oczekuje na próbę na drukarce i odczyt minut oraz aktywnego banku.",
+          "problem": "Brak potwierdzenia z fizycznej płyty.",
           "evidence": {
             "kind": "no_hardware_confirmation"
           }

@@ -73,9 +73,35 @@ def startup_status_failure(info):
         return False
 
 
-def require_idle(*,repair_startup=False):
+def pending_counter_startup_failure(info):
+    # A previous host timed out before it could identify the board or
+    # inspect the guard. A native shutdown after Ready is a different case.
+    message = info.get('state_message', '')
+    missing = "Unable to obtain 'm300_factory_counter_result' response"
+    if info.get('state') not in ('error', 'shutdown') or not (
+            "Previous MCU 'mcu' shutdown: M300 local guard latched" in message
+            or 'M300 factory counter recovery: ' + missing in message):
+        return False
+    status = printer('/printer/objects/query?m300_mcu=ready,identified,connected,'
+                     'native_initialization,hardware&'
+                     'm300_lifecycle=startup_reconnect')['status']
+    board = status.get('m300_mcu') or {}
+    hardware = board.get('hardware') or {}
+    link = (status.get('m300_lifecycle') or {}).get('startup_reconnect') or {}
+    return (board.get('ready') is False and board.get('identified') is False
+            and board.get('connected') is False
+            and board.get('native_initialization') == 'NOT_STARTED'
+            and hardware.get('factory_counter_pending') is True
+            and hardware.get('factory_counter_sync') == 'RECOVERY_REQUIRED'
+            and hardware.get('factory_counter_error') == missing
+            and link.get('decision') == 'NOT_CHECKED')
+
+
+def require_idle(*,repair_startup=False, recover_counter_startup=False):
     info = printer('/printer/info')
     if info['state'] != 'ready':
+        if recover_counter_startup and pending_counter_startup_failure(info):
+            return info
         if repair_startup:
             if startup_status_failure(info):return info
             raise ValueError('Startup repair requires the exact early-status R29 exception in the current session')
@@ -534,7 +560,7 @@ def restore_host(host, args, receipt, *, restart_moonraker=False):
             run('sudo', 'systemctl', 'restart', 'moonraker.service')
 
 
-def apply_host(host, args, plan, *, repair_startup=False):
+def apply_host(host, args, plan, *, repair_startup=False, recover_counter_startup=False):
     if plan['status'] == 'ALREADY_M300_HOST':
         if repair_startup:
             raise ValueError('Startup repair found no host files to replace')
@@ -542,7 +568,7 @@ def apply_host(host, args, plan, *, repair_startup=False):
         return
     if plan['status'] != 'PLAN_M300_HOST':
         raise ValueError('Unexpected host install plan')
-    require_idle(repair_startup=repair_startup)
+    require_idle(repair_startup=repair_startup, recover_counter_startup=recover_counter_startup)
     restart_moonraker = any(Path(p).name == 'moonraker.conf' for p in plan.get('files', ()))
     run('sudo', 'systemctl', 'stop', 'klipper.service')
     try:
@@ -635,11 +661,15 @@ def main():
                         help='Organize current configuration, retaining hardware values and saved PID')
     parser.add_argument('--qualified-first-print-z', action='store_true',
                         help='Explicitly apply the mechanically qualified 2026-11-11 M300 Z profile')
-    parser.add_argument('--repair-startup',action='store_true',
+    recovery = parser.add_mutually_exclusive_group()
+    recovery.add_argument('--recover-counter-startup', action='store_true',
+                          help='Update a host blocked before guard identification by a pending counter reply; require Ready')
+    recovery.add_argument('--repair-startup',action='store_true',
                         help='Repair the verified R29 early-status crash while Shutdown; no MCU reset')
     args = parser.parse_args()
     web_only = args.update_fluidd or args.restore_fluidd is not None
-    if web_only and (args.organize_config or args.qualified_first_print_z or args.repair_startup):
+    if web_only and (args.organize_config or args.qualified_first_print_z or args.repair_startup
+                     or args.recover_counter_startup):
         parser.error('Fluidd web operations are separate from Klipper host options')
     if not (PACKAGE / 'SHA256SUMS').is_file():
         parser.exit(1, 'Run this installer from the extracted GitHub Actions artifact.\n')
@@ -650,7 +680,7 @@ def main():
         if web_only:
             update_fluidd(args)
             return
-        info = require_idle(repair_startup=args.repair_startup)
+        info = require_idle(repair_startup=args.repair_startup, recover_counter_startup=args.recover_counter_startup)
         host = PACKAGE / 'M300_HOST'
         host_args = ('--root', info['klipper_path'], '--config', info['config_file'])
         if args.organize_config:
@@ -659,7 +689,8 @@ def main():
             host_args += ('--qualified-first-print-z',)
         plan = json.loads(run(sys.executable, 'install.py', *host_args, cwd=host, capture=True))
         run('sudo', '-v')
-        host_receipt = apply_host(host, host_args, plan, repair_startup=args.repair_startup)
+        host_receipt = apply_host(host, host_args, plan, repair_startup=args.repair_startup,
+                                  recover_counter_startup=args.recover_counter_startup)
         if args.repair_startup:
             print(json.dumps(dict(status='REPAIRED_M300_SERVICE_STARTUP',
                 next_command='FIRMWARE_RESTART',mcu_flashed=False,mcu_reset=False,

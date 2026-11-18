@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.17
+# Zortrax M300 Classic — Klipper 1.0.0-rc.18
 
-**RC17** chroni aktywny wydruk przed ponownym bazowaniem, zachowuje pauzę przy braku prześwitu do wymiany filamentu oraz zabezpiecza rozliczanie minut w MCU 1.0.5. Fluidd pozostaje na porcie 4480. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.17.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
+**RC18** sprawdza blokadę MCU przed wznowieniem oczekującego zapisu minut. Wydanie hosta obsługuje MCU 1.0.5 i Fluidd na porcie 4480. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.18.md) · [Animacje menu z RC6](docs/pl/RELEASE_v1.0.0-rc.6.md).
 
 **MCU 1.0.5:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.5.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
 
@@ -8,7 +8,7 @@
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC17](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.17) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC18](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.18) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
