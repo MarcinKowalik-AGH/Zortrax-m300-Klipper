@@ -401,6 +401,36 @@ class RuntimeSynchronizationTests(unittest.TestCase):
         status.assert_not_called()
         h.transport.query.assert_not_called()
 
+    def test_wait_reason_distinguishes_host_and_mcu_then_clears(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        h.heat['target'] = 60.
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.hw.get_status()['factory_counter_wait_reason'], 'extruder')
+        h.transport.commit.assert_not_called()
+        h.heat['target'] = 0.
+        h.transport.commit.side_effect = lambda args: {'status': 2}
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.hw.get_status()['factory_counter_wait_reason'], 'mcu_write_window')
+        self.assertTrue(h.hw.counter_sync.pending)
+        h.transport.commit.side_effect = h.commit
+        h.hw._runtime_counter_tick(10.)
+        self.assertIsNone(h.hw.get_status()['factory_counter_wait_reason'])
+        self.assertEqual(h.hw.counter_sync.status, 'SYNCED')
+
+    def test_unsupported_target_keeps_readback_and_receipt_without_retry(self):
+        h = self.setup_controller()
+        h.hw.counter_runtime = h.transport
+        h.transport.commit.side_effect = lambda args: {'status': 7}
+        h.hw._runtime_counter_tick(10.)
+        self.assertEqual(h.hw.counter_sync.status, 'UNSUPPORTED_MCU_TARGET')
+        self.assertTrue(h.hw.counter_sync.pending)
+        self.assertEqual(h.hw.counter_sync.committed_seconds, 0)
+        self.assertEqual(h.hw.get_status()['factory_print_minutes'], 300)
+        self.assertEqual(h.hw.counter_sync.banks, 'NORMALIZED')
+        self.assertEqual(h.hw._runtime_counter_tick(10.), h.reactor.NEVER)
+        h.transport.commit.assert_called_once()
+
     def test_status_two_after_partial_write_keeps_wal_until_runtime_recovery(self):
         h = self.setup_controller()
         h.hw.counter_runtime = h.transport

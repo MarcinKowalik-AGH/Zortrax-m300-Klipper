@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.18](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.18).
+i użyj [paczki v1.0.0-rc.19](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.19).
 Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [English](../en/INSTALL.md).
 
@@ -59,18 +59,18 @@ git clone --depth 1 --single-branch --no-tags --branch orange-pi \
 python3 "$m300_src/install-orange-pi.py"
 ```
 
-Zachowaj nową ścieżkę, aby używać jej przy kolejnych aktualizacjach. Pełny ZIP oznaczony wersją umożliwia instalację dokładnie RC18. Po osobnej naprawie Fluidd sprawdź pole `fluidd_http_verified` i otwórz menu na porcie 4480.
+Zachowaj nową ścieżkę, aby używać jej przy kolejnych aktualizacjach. Pełny ZIP oznaczony wersją umożliwia instalację dokładnie RC19. Po osobnej naprawie Fluidd sprawdź pole `fluidd_http_verified` i otwórz menu na porcie 4480.
 
 ## 2. Sprawdź wersję MCU
 
-Jeśli masz już MCU 1.0.5, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC18, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+Jeśli masz już MCU 1.0.6, pomiń aktualizację z SD. Aby wgrać wersję MCU
+dołączoną do RC19, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
-[ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.5).
+[ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.6).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.
-[Instrukcja MCU 1.0.5](MCU_FIRMWARE_1.0.5.md).
+[Instrukcja MCU 1.0.6](MCU_FIRMWARE_1.0.6.md).
 
-Z MCU 1.0.5 synchronizacja działa automatycznie z dotychczasową konfiguracją.
+Z MCU 1.0.6 synchronizacja działa automatycznie z dotychczasową konfiguracją.
 Klipper przyjmuje i ignoruje stary wpis `factory_counter_backup:`. Możesz go
 usunąć po aktualizacji hosta. Zachowaj dotychczasowe pliki licznika Klippera
 wraz z dziennikiem synchronizacji. Jeśli firmware MCU nie udostępnia
@@ -92,10 +92,10 @@ QUERY_PROBE
 ```
 
 Potwierdź Ready, zgodność prędkości UART po obu stronach oraz wersję
-`1.0.5`, jeśli wgrano nowe MCU. Sprawdź [fabryczną rewizję i skalę Z](../en/HARDWARE_VARIANTS.md)
+`1.0.6`, jeśli wgrano nowe MCU. Sprawdź [fabryczną rewizję i skalę Z](../en/HARDWARE_VARIANTS.md)
 swojej płyty, np. HW04/Z800 lub HW05/Z400. Gdy dysza nie styka się ze
 stołem, sonda powinna być otwarta. Zobacz, jak sprawdzić
-[stan automatycznej synchronizacji licznika](MCU_FIRMWARE_1.0.5.md#odczyt-licznika).
+[stan automatycznej synchronizacji licznika](MCU_FIRMWARE_1.0.6.md#odczyt-licznika).
 
 Aby sprawdzić licznik na fizycznej drukarce, zanotuj minuty fabryczne przed
 zwykłym wydrukiem przez `ZORTRAX_HARDWARE_STATUS`. Wydruk musi mieć co

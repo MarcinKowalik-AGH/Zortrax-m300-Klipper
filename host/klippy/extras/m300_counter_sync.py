@@ -274,6 +274,15 @@ class CounterSync:
             result = commit([serial, pending['source'], pending['expected'],
                              pending['target'], pending['settings_crc']])
             status = result['status']
+            if type(status) is int and status == 7:
+                # Firmware rejected the target before entering the writer.
+                if state != 1:
+                    raise ValueError('unsupported MCU target with interrupted factory banks')
+                self.banks, self.active_bank = observed_banks
+                self.display_blocked = previous_display_blocked
+                self.status = 'UNSUPPORTED_MCU_TARGET'
+                self.error = 'MCU rejected the Flash geometry, processor or factory hardware identity'
+                return
             if type(status) is int and status == 2:
                 if runtime:
                     observed = self.observe(query())

@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.18 — first installation
+# Zortrax M300 Classic v1.0.0-rc.19 — first installation
 
 If Klipper for M300 is already running on this host, follow the [update guide](INSTALL.md).
 
@@ -14,7 +14,7 @@ plate, hotend and 0.4 mm nozzle. It is not an M300 Plus, Dual or Inventure image
 | Linux | Board-specific Raspberry Pi OS Lite, or a supported Armbian/Debian/Ubuntu server image |
 | Services, Python environment, nginx, Moonraker | One Klipper + Moonraker + Fluidd instance installed with KIAUH |
 | Klipper actually used for M300 | The complete pinned and patched `KLIPPER_HOST` tree in this release |
-| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.5, for the already installed SD bootloader |
+| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.6, for the already installed SD bootloader |
 | Fluidd actually used for M300 | Our precompiled Fluidd 1.37.7 extension in the same release |
 | Machine configuration | First-install templates, with local paths/UART rendered by the installer |
 
@@ -111,11 +111,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.18/Zortrax_M300_Klipper_v1.0.0-rc.18.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.18/SHA256SUMS-v1.0.0-rc.18.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.18.zip$' SHA256SUMS-v1.0.0-rc.18.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.18.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.18 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.19/Zortrax_M300_Klipper_v1.0.0-rc.19.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.19/SHA256SUMS-v1.0.0-rc.19.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.19.zip$' SHA256SUMS-v1.0.0-rc.19.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.19.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.19 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -177,7 +177,7 @@ QUERY_PROBE
 M105
 ```
 
-Expect Ready, the UART baud rate selected in step 5, MCU `1.0.5`, zero heater
+Expect Ready, the UART baud rate selected in step 5, MCU `1.0.6`, zero heater
 targets and temperatures consistent with the room. Confirm that endstop and
 probe states change when operated.
 The [factory hardware/Z profile](HARDWARE_VARIANTS.md)
@@ -209,14 +209,14 @@ See the [workflow and pause/M600 parameters](../pl/PRINT_CONTROL.md).
 ## MCU print-time synchronization
 
 Klipper keeps print time on the host and automatically sends pending whole
-minutes to MCU 1.0.5 when the printer is idle and can safely write. The MCU
+minutes to MCU 1.0.6 when the printer is idle and can safely write. The MCU
 updates the factory ID0 record in its own Flash and Klipper reads the result
 back. This works with the standard first-install configuration and requires
-no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.5.md#read-the-counter).
+no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.6.md#read-the-counter).
 
 ## Updates and acceptance scope
 
-The fixed `v1.0.0-rc.18` package installs this candidate. The `orange-pi` branch
+The fixed `v1.0.0-rc.19` package installs this candidate. The `orange-pi` branch
 serves later project updates. See the [update guide](INSTALL.md) to clone that
 branch and update Klipper. The guide also gives the separate Fluidd
 update or repair command for the existing site on 4480. Back up the Moonraker and operating-system

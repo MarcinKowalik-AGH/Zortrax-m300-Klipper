@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.5'
+EXPECTED = '1.0.6'
 
 
 def require(condition, message):
@@ -35,6 +35,10 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
             'Factory counter ABI missing')
     require(data['config']['M300_FACTORY_COUNTER_RUNTIME_ABI'] == 1,
             'Factory counter runtime capability missing')
+    require(data['config']['M300_FACTORY_TARGET_ABI'] == 1
+            and 'm300_factory_target_query' in data['commands']
+            and 'm300_factory_target flash_kib=%hu cpuid=%u debug_id=%u debugging=%c supported=%c'
+                in data['responses'], 'Factory counter target diagnostic missing')
     require('m300_factory_counter_query' in data['commands'],
             'Factory counter query command missing')
     require('m300_factory_counter_query_runtime token=%u' in data['commands'],

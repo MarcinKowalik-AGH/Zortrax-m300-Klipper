@@ -86,6 +86,16 @@ class DecoderTests(unittest.TestCase):
 
 
 class HardwareTests(unittest.TestCase):
+    def test_live_target_diagnostics_report_only_the_mcu_fields(self):
+        hw, _, _ = fixture()
+        report = dict(flash_kib=256, cpuid=0x411fc231, debug_id=0, debugging=0, supported=1)
+        hw.mcu.get_constants = lambda: dict(M300_MODEL='M300_CLASSIC', M300_FACTORY_TARGET_ABI=1)
+        hw.mcu.lookup_query_command = lambda name, fmt: NS(send=lambda: dict(report, **{'#name': name}))
+        hw.board.startup_transport = NS(_bounded=lambda name, fn: fn())
+        hw._sync_factory_counter = Mock()
+        hw._configure_counter()
+        self.assertEqual(hw.get_status()['factory_counter_target'], report)
+
     def test_hw05_selects_400_without_writing_configuration(self):
         hw, stepper, config = fixture()
         before = dict(config.options)

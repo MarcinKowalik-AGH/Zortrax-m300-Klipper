@@ -17,7 +17,6 @@ DECL_CONSTANT("M300_FACTORY_COUNTER_RUNTIME_ABI", 1);
 // The high-density, 256 KiB F103 uses the two specified 2 KiB Flash pages.
 // The next page (0x0803F800) retains the factory ID/serial and is read-only.
 #define FLASH_SIZE_WORD 0x1ffff7e0u
-#define STM32F103_HIGH_DENSITY_ID 0x414u
 #define M300_FLASH_KEY1 0x45670123u
 #define M300_FLASH_KEY2 0xcdef89abu
 #define FLASH_STATUS_BITS (FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR)
@@ -62,9 +61,6 @@ static int
 counter_write_allowed(void *context)
 {
     struct counter_window *window = context;
-    if (*(volatile const uint16_t *)FLASH_SIZE_WORD != 256
-        || (DBGMCU->IDCODE & 0xfffu) != STM32F103_HIGH_DENSITY_ID)
-        return 0;
     if (!window->runtime)
         return m300_factory_write_allowed() && !m300_native_config_started();
     int32_t remaining = (int32_t)(window->deadline - timer_read_time());
@@ -267,9 +263,42 @@ command_m300_factory_counter_query_runtime(uint32_t *args)
 DECL_COMMAND_FLAGS(command_m300_factory_counter_query_runtime, HF_IN_SHUTDOWN,
                    "m300_factory_counter_query_runtime token=%u");
 
+struct factory_target_info {
+    uint32_t cpuid, debug_id;
+    uint16_t flash_kib;
+    uint8_t debugging, supported;
+};
+
+static struct factory_target_info
+factory_target(void)
+{
+    struct factory_target_info t;
+    t.flash_kib = *(volatile const uint16_t *)FLASH_SIZE_WORD;
+    t.cpuid = SCB->CPUID;
+    t.debugging = !!(CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk);
+    t.debug_id = DBGMCU->IDCODE;
+    t.supported = m300_factory_target_supported(
+        t.flash_kib, t.cpuid, t.debug_id, t.debugging,
+        *(volatile const uint32_t *)M300_FACTORY_HW_ADDRESS,
+        *(volatile const uint8_t *)(M300_FACTORY_HW_ADDRESS + 4));
+    return t;
+}
+
+void
+command_m300_factory_target_query(uint32_t *args)
+{
+    struct factory_target_info t = factory_target();
+    sendf("m300_factory_target flash_kib=%hu cpuid=%u debug_id=%u debugging=%c supported=%c",
+          t.flash_kib, t.cpuid, t.debug_id, t.debugging, t.supported);
+}
+DECL_COMMAND_FLAGS(command_m300_factory_target_query, HF_IN_SHUTDOWN, "m300_factory_target_query");
+DECL_CONSTANT("M300_FACTORY_TARGET_ABI", 1);
+
 static enum m300_counter_result
 commit_counter(const uint32_t *args, struct counter_window *window)
 {
+    if (!factory_target().supported)
+        return M300_COUNTER_UNSUPPORTED_TARGET;
     uint32_t serial = factory_serial();
     if (!serial || args[0] != serial)
         return M300_COUNTER_CONFLICT;

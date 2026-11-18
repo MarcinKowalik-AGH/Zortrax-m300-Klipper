@@ -17,6 +17,7 @@ enum m300_counter_result {
     M300_COUNTER_CONFLICT,
     M300_COUNTER_IO_ERROR,
     M300_COUNTER_INVALID_TARGET,
+    M300_COUNTER_UNSUPPORTED_TARGET,
 };
 
 enum m300_counter_state {

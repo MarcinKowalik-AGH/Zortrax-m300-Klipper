@@ -568,6 +568,31 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC18 / MCU 1.0.5",
+          "version_basis": "Odczyt wersji z HW05 i potwierdzenie instalatora.",
+          "test": "Stan fabrycznego ID0 po aktualizacji hosta",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "O 16:04:40 bank B, 286732 minuty, oczekująca transakcja i 149531,14 s nierozliczone.",
+          "problem": "W chwili odczytu brak potwierdzenia zapisu.",
+          "evidence": {
+            "kind": "user_test_log",
+            "quote": "\"factory_counter_sync\": \"AWAITING_IDLE\""
+          }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC19 / MCU 1.0.6",
+          "version_basis": "Kandydat z poprawką identyfikacji układu przy pracy bez debuggera.",
+          "test": "Zmiana ID0, rozliczenie czasu w dwóch bankach i ponowny odczyt po normalnym wyłączeniu i włączeniu.",
+          "status": "AWAITING_TEST",
+          "result": "Oczekuje na odczyt na klasycznym M300 z MCU 1.0.6.",
+          "problem": "Test programu i symulowane zaniki zasilania nie potwierdzają trwałości na konkretnym egzemplarzu.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
         }
       ]
     }

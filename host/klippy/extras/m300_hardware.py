@@ -21,6 +21,8 @@ FACTORY_HEADER = 0xaabb0103
 FACTORY_FORMAT = ('m300_factory_state header=%u raw=%c valid=%c'
                   ' revision=%c z_steps=%hu')
 FACTORY_INFO_FORMAT = 'm300_factory_info serial=%u time_valid=%c print_minutes=%u'
+FACTORY_TARGET_FORMAT = ('m300_factory_target flash_kib=%hu cpuid=%u debug_id=%u'
+                         ' debugging=%c supported=%c')
 COUNTER_WINDOW = .350
 COUNTER_TIMEOUT = .550
 COUNTER_RETRY = .730
@@ -104,6 +106,8 @@ class M300Hardware:
         self.counter_sync = CounterSync()
         self.counter_legacy_state = None
         self.counter_legacy_error = None
+        self.counter_wait_reason = None
+        self.counter_target = None
         self.counter_runtime_supported = False
         self.counter_runtime = self.counter_timer = None
         self.state, self.error = 'NOT_READ', None
@@ -197,23 +201,27 @@ class M300Hardware:
         return (self.counter_sync.pending or
                 snapshot['counters']['print_seconds'] - self.counter_sync.committed_seconds >= 60)
 
-    def _counter_idle(self, nvm, now):
-        if (self.printer.is_shutdown() or not self.board.ready
-                or not nvm.runtime_is_checkpointed(now)):
-            return False
+    def _counter_blocker(self, nvm, now):
         printer = self.printer
+        if printer.is_shutdown() or not self.board.ready:
+            return 'board_not_ready'
+        if not nvm.runtime_is_checkpointed(now):
+            return 'runtime_checkpoint'
         sd = printer.lookup_object('virtual_sdcard', None)
         stats = printer.lookup_object('print_stats', None)
         pause = printer.lookup_object('pause_resume', None)
         control = printer.lookup_object('m300_print_control', None)
-        if ((sd is not None and sd.is_active()) or
-                (stats is not None and stats.get_status(now)['state'] in ('printing', 'paused'))
-                or (pause is not None and pause.is_paused)
-                or (control is not None and control.context is not None)):
-            return False
+        if sd is not None and sd.is_active():
+            return 'virtual_sdcard'
+        if stats is not None and stats.get_status(now)['state'] in ('printing', 'paused'):
+            return 'print_stats'
+        if pause is not None and pause.is_paused:
+            return 'pause_resume'
+        if control is not None and control.context is not None:
+            return 'm300_print_control'
         queued, estimated, empty = printer.lookup_object('toolhead').check_busy(now)
-        if not empty or not all(math.isfinite(value) for value in (queued, estimated)) or queued > estimated:
-            return False
+        if not empty or not all(math.isfinite(v) for v in (queued, estimated)) or queued > estimated:
+            return 'toolhead'
         heaters = printer.lookup_object('heaters')
         current_clock = self.mcu.print_time_to_clock(self.mcu.estimated_print_time(now))
         for name in ('extruder', 'heater_bed'):
@@ -223,8 +231,8 @@ class M300Hardware:
             native_pwm = getattr(pwm, 'native', pwm)
             if (status['target'] != 0. or status['power'] != 0.
                     or pwm.get_mcu() is not self.mcu or native_pwm._last_clock > current_clock):
-                return False
-        return other_service(printer, COUNTER_OWNERS, now) is None
+                return name
+        return other_service(printer, COUNTER_OWNERS, now)
 
     def _runtime_counter_tick(self, eventtime):
         reactor = self.printer.get_reactor()
@@ -235,7 +243,8 @@ class M300Hardware:
         if nvm is None:
             return reactor.NEVER
         snapshot = nvm.ui_snapshot()
-        if self.counter_sync.status == 'RECONCILIATION_REQUIRED' or not self._counter_has_backlog(snapshot):
+        if (self.counter_sync.status in ('RECONCILIATION_REQUIRED', 'UNSUPPORTED_MCU_TARGET')
+                or not self._counter_has_backlog(snapshot)):
             return reactor.NEVER
         mutex = self.board.gcode.get_mutex()
         journal = CounterJournal(nvm.store)
@@ -252,17 +261,26 @@ class M300Hardware:
             # Disk I/O and read-only queries occur outside the G-code lock.
             # Recheck the complete idle window after durable intent is written.
             if mutex.test():
+                self.counter_wait_reason = 'gcode_mutex'
                 return {'status': 2}
             with mutex:
                 now = reactor.monotonic()
-                if self.counter_runtime is not transport or not self._counter_idle(nvm, now):
+                if self.counter_runtime is not transport:
+                    raise OSError('M300 factory counter synchronization stopped')
+                self.counter_wait_reason = self._counter_blocker(nvm, now)
+                if self.counter_wait_reason is not None:
                     return {'status': 2}
-                return transport.commit(args)
+                result = transport.commit(args)
+                if result['status'] == 2:
+                    self.counter_wait_reason = 'mcu_write_window'
+                return result
 
         delay = COUNTER_RETRY
         previous_error = self.counter_sync.error
         try:
-            if mutex.test() or not self._counter_idle(nvm, eventtime):
+            self.counter_wait_reason = ('gcode_mutex' if mutex.test()
+                                        else self._counter_blocker(nvm, eventtime))
+            if self.counter_wait_reason is not None:
                 if self.counter_sync.status != 'RECOVERY_REQUIRED':
                     self.counter_sync.status = 'AWAITING_IDLE'
                 return reactor.monotonic() + delay
@@ -299,7 +317,15 @@ class M300Hardware:
     def _configure_counter(self):
         # Native Klipper enters config callbacks only after mcu_identify and
         # a successful get_config shutdown check, before sending config bytes.
-        self._sync_factory_counter(self.mcu.get_constants())
+        constants = self.mcu.get_constants()
+        if (constants.get('M300_MODEL') == 'M300_CLASSIC'
+                and constants.get('M300_FACTORY_TARGET_ABI') == 1
+                and self.mcu.check_valid_response(FACTORY_TARGET_FORMAT)):
+            query = self.mcu.lookup_query_command('m300_factory_target_query', FACTORY_TARGET_FORMAT)
+            report = self.board.startup_transport._bounded('m300_factory_target_query', query.send)
+            self.counter_target = {key: report[key] for key in
+                                   ('flash_kib', 'cpuid', 'debug_id', 'debugging', 'supported')}
+        self._sync_factory_counter(constants)
         logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
 
     def _sync_factory_counter(self, constants):
@@ -489,6 +515,8 @@ class M300Hardware:
                 'factory_counter_observed_minutes': self.counter_sync.minutes,
                 'factory_counter_runtime_supported': self.counter_runtime_supported,
                 'factory_counter_error': self.counter_sync.error,
+                'factory_counter_wait_reason': self.counter_wait_reason,
+                'factory_counter_target': self.counter_target,
                 'factory_counter_pending': self.counter_sync.pending,
                 'factory_counter_banks': self.counter_sync.banks,
                 'factory_counter_active_bank': self.counter_sync.active_bank,
@@ -509,7 +537,7 @@ class M300Hardware:
         expected = gcmd.get_int('MCU_MINUTES', minval=0)
         committed = gcmd.get_int('COMMITTED_MINUTES', minval=0)
         nvm = self.printer.lookup_object('m300_nvm')
-        if not self._counter_idle(nvm, self.printer.get_reactor().monotonic()):
+        if self._counter_blocker(nvm, self.printer.get_reactor().monotonic()) is not None:
             raise gcmd.error('wait for an idle and checkpointed printer')
         try:
             observed = self.counter_runtime.query()

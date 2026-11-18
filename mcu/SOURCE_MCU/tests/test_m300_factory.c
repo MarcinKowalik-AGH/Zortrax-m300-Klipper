@@ -55,6 +55,19 @@ int main(void)
             cases++;
         }
     }
+    // HW05, with and without a debugger. A nonzero conflicting ID always fails.
+    const uint32_t hw = M300_FACTORY_HW_HEADER, m3 = 0x411fc231u;
+    assert(m300_factory_target_supported(256, m3, 0, 0, hw, 0xe5));
+    assert(m300_factory_target_supported(256, m3, 0x10030414, 1, hw, 0xe5));
+    assert(m300_factory_target_supported(256, m3, 0x10030414, 0, hw, 0xe4));
+    assert(!m300_factory_target_supported(256, m3, 0, 1, hw, 0xe5));
+    assert(!m300_factory_target_supported(256, m3, 0x410, 0, hw, 0xe5));
+    assert(!m300_factory_target_supported(256, m3, 0x10000000, 0, hw, 0xe5));
+    assert(!m300_factory_target_supported(128, m3, 0, 0, hw, 0xe5));
+    assert(!m300_factory_target_supported(512, m3, 0x414, 1, hw, 0xe5));
+    assert(!m300_factory_target_supported(256, 0x410fc241, 0, 0, hw, 0xe5));
+    assert(!m300_factory_target_supported(256, m3, 0, 0, 0xffffffff, 0xe5));
+    assert(!m300_factory_target_supported(256, m3, 0, 0, hw, 0xff));
     test_information();
     printf("PASS_FACTORY_ID3 cases=%u\n", cases);
     return 0;

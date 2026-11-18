@@ -37,7 +37,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Kwalifikowany wariant Z pierwszego wydruku | 0.13.16.38 / test 11.11.2026 | Nastawy istniejącego egzemplarza | Uzgodniona konfiguracja: position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1. | Nie jest globalnym standardem dla innych egzemplarzy. |
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
-| Automatyczny zapis licznika ID0 w MCU | RC18 / MCU 1.0.5 | Powrót do Ready na HW05, odczyt po dwóch zapisach ID0 i po normalnym ponownym włączeniu | Oczekuje na test: Oczekuje na próbę na drukarce i odczyt minut oraz aktywnego banku. | Brak potwierdzenia z fizycznej płyty. |
+| Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Zmiana ID0, rozliczenie czasu w dwóch bankach i ponowny odczyt po normalnym wyłączeniu i włączeniu. | Oczekuje na test: Oczekuje na odczyt na klasycznym M300 z MCU 1.0.6. | Test programu i symulowane zaniki zasilania nie potwierdzają trwałości na konkretnym egzemplarzu. |
 
 ## Historia i źródła potwierdzeń
 
@@ -322,6 +322,20 @@ Podstawa wersji: `Status hosta przed instalacją i wynik wycofania aktualizacji 
 Oczekuje na próbę na drukarce i odczyt minut oraz aktywnego banku.
 
 Podstawa wersji: `Testy programu po zmianie kolejności rozruchu hosta.`.
+
+**2026-11-18 · RC18 / MCU 1.0.5 · Obserwacja częściowa**
+
+O 16:04:40 bank B, 286732 minuty, oczekująca transakcja i 149531,14 s nierozliczone.
+
+Zapis użytkownika / treść przesłanego zrzutu: „"factory_counter_sync": "AWAITING_IDLE"”.
+
+Podstawa wersji: `Odczyt wersji z HW05 i potwierdzenie instalatora.`.
+
+**2026-11-18 · RC19 / MCU 1.0.6 · Oczekuje na test**
+
+Oczekuje na odczyt na klasycznym M300 z MCU 1.0.6.
+
+Podstawa wersji: `Kandydat z poprawką identyfikacji układu przy pracy bez debuggera.`.
 
 ## Jak aktualizować
 

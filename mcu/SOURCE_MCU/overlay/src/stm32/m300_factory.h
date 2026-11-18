@@ -31,6 +31,22 @@ m300_factory_decode(uint32_t header, uint8_t raw)
     return id;
 }
 
+// ST ES0340 §2.2.2: a standalone high-density F103 can read zero from
+// DBGMCU_IDCODE. The Cortex-M3 CPUID, Flash size signature and the OEM
+// hardware record are readable without a debug probe.
+static inline int
+m300_factory_target_supported(uint16_t flash_kib, uint32_t cpuid,
+                              uint32_t debug_id, int debugging,
+                              uint32_t hw_header, uint8_t hw_revision)
+{
+    if (flash_kib != 256 || (cpuid & 0xff0ffff0u) != 0x410fc230u
+        || !m300_factory_decode(hw_header, hw_revision).valid)
+        return 0;
+    if (!debug_id)
+        return !debugging;
+    return (debug_id & 0xfffu) == 0x414u;
+}
+
 static inline uint32_t
 m300_factory_serial(uint32_t header, const volatile uint8_t *data)
 {
