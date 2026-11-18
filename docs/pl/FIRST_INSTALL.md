@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.0-rc.22 — instalacja od początku
+# Zortrax M300 Classic v1.0.0-rc.23 — instalacja od początku
 
 Jeśli na tym hoście działa już Klipper dla M300, użyj [instrukcji aktualizacji](INSTALL.md).
 
@@ -19,7 +19,7 @@ Nie trzeba ręcznie kopiować patchy ani kompilować firmware drukarki lub Fluid
 |---|---|
 | System Linux | Obraz dobrany do konkretnego Raspberry Pi lub Orange Pi; nie ma jednego obrazu pasującego do obu rodzin |
 | Klipper host | Pełne źródła przypiętej wersji z kompletem zmian M300, nie same moduły extras |
-| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.7, do posiadanego bootloadera SD |
+| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.8, do posiadanego bootloadera SD |
 | Fluidd | Gotowa kompilacja 1.37.7 z menu i wizualizacją M300 |
 | Konfiguracja | Oddzielne pliki sprzętu, termiki, procedur i makr; ścieżki i UART ustawia instalator |
 | Kontrola wydania | Sumy SHA-256, identyfikator źródeł, raporty testów i licencje |
@@ -118,11 +118,11 @@ Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.22/Zortrax_M300_Klipper_v1.0.0-rc.22.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.22/SHA256SUMS-v1.0.0-rc.22.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.0-rc.22.zip$' SHA256SUMS-v1.0.0-rc.22.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.0-rc.22.zip &&
-cd Zortrax_M300_Klipper_v1.0.0-rc.22 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.23/Zortrax_M300_Klipper_v1.0.0-rc.23.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.0-rc.23/SHA256SUMS-v1.0.0-rc.23.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.0-rc.23.zip$' SHA256SUMS-v1.0.0-rc.23.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.0-rc.23.zip &&
+cd Zortrax_M300_Klipper_v1.0.0-rc.23 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -183,7 +183,7 @@ QUERY_PROBE
 M105
 ```
 
-Sprawdź stan Ready, zgodność prędkości UART z punktem 5, MCU `1.0.7`,
+Sprawdź stan Ready, zgodność prędkości UART z punktem 5, MCU `1.0.8`,
 zerowe cele temperatur i odczyty zbliżone do temperatury otoczenia.
 Sprawdź reakcje krańcówek i styku dyszy.
 [Profil fabrycznej rewizji i osi Z](../en/HARDWARE_VARIANTS.md)
@@ -216,14 +216,14 @@ END_PRINT
 ## Synchronizacja czasu druku z MCU
 
 Klipper zapisuje czas druku na hoście i automatycznie przekazuje oczekujące
-pełne minuty do MCU 1.0.7, gdy drukarka jest bezczynna i spełnia warunki
+pełne minuty do MCU 1.0.8, gdy drukarka jest bezczynna i spełnia warunki
 zapisu. MCU aktualizuje fabryczny rekord ID0 we własnej pamięci Flash, a
 Klipper odczytuje wynik. Wystarcza standardowa konfiguracja pierwszej
-instalacji. [Odczyt stanu licznika](MCU_FIRMWARE_1.0.7.md#odczyt-licznika).
+instalacji. [Odczyt stanu licznika](MCU_FIRMWARE_1.0.8.md#odczyt-licznika).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Wersjonowana paczka instaluje `v1.0.0-rc.22`. Gałąź `orange-pi` dostarcza
+Wersjonowana paczka instaluje `v1.0.0-rc.23`. Gałąź `orange-pi` dostarcza
 późniejsze aktualizacje projektu. [Instrukcja aktualizacji](INSTALL.md) opisuje
 klonowanie gałęzi i aktualizację Klippera. Zawiera także osobne polecenie
 aktualizacji lub naprawy działającego Fluidd na porcie 4480. Przed osobną aktualizacją systemu lub Moonrakera

@@ -217,11 +217,17 @@ class M300Menu:
         if page == 'status':
             oled._show_status()
         else:
+            child = self.page
             self._navigate(page, remember=False, refresh_information=False)
             oled.page, oled.selection, oled.message = 'm04', 0, None
+            ui = self._ui()
+            if hasattr(ui, 'return_position'):
+                oled.selection = ui.return_position(page, child, now)
             select = getattr(self._ui(), 'brightness_selection', None)
             if select is not None:
-                oled.selection = select() or 0
+                level = select()
+                if level is not None:
+                    oled.selection = level
             oled.render_at = 0.
         oled._user_refresh_pending = True
         self.reactor.update_timer(oled.timer, self.reactor.NOW)
@@ -327,9 +333,12 @@ class M300Menu:
         page = ('native_job' if operation == 'CHANGE' else
                 'material' if owner == 'm300_filament' else
                 'maintenance')
+        child = self.page
         self._navigate(page, remember=False)
         if oled is not None:
-            oled.page, oled.selection = 'm04', 0
+            oled.page = 'm04'
+            ui = self._ui()
+            oled.selection = ui.return_position(page, child, self.reactor.monotonic()) if hasattr(ui, 'return_position') else 0
             self._refresh_panel(oled)
         return True
 

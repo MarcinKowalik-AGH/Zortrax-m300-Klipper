@@ -9,7 +9,7 @@ import math
 from .m300_display_stream import AWAKE, DIM, OFF, DisplayStream
 from .m300_display_oem import ENTERING_TEXT, load_moon, sleep_wire
 from .m300_nvm import MAX_BRIGHTNESS
-from .m300_oled_idle import OledTimers
+from .m300_oled_idle import OledTimers, effective
 
 REVISION = '0.5.1-M300-OLED-TIMERS'
 
@@ -368,7 +368,10 @@ class M300Display:
                 'oled_timer_minutes': self.timers.pair(),
                 'oled_timer_storage': self.timers.status,
                 'oled_timer_error': self.timers.error,
-                'oled_timer_mcu_minutes': self.timers.observed,
+                'oled_timer_mcu_minutes': effective(self.timers.observed) if self.timers.observed else None,
+                'oled_preferred_dim_minutes': self.timers.preferences()[0],
+                'oled_mcu_preferred_dim_minutes': (self.timers.observed[0] if
+                    self.timers.preference_mcu and self.timers.observed else None),
                 'applied_contrast': self.stream.display_contrast if self.stream else None,
                 'phase': self.phase, 'notice_seconds': self.notice_seconds,
                 'sleep_enabled': self.sleep_enabled,
@@ -385,14 +388,14 @@ class M300Display:
     def cmd_timers(self, gcmd):
         if gcmd.get('DIM', None) is None and gcmd.get('SLEEP', None) is None:
             settings = self.printer.lookup_object('m300_settings')
-            settings.show('setting_oled_dim_minutes')
+            settings.show('setting_oled_dim_minutes', both_timers=True)
             return
-        old_dim, old_sleep = self.timers.pair()
+        old_dim, old_sleep = self.timers.preferences()
         dim = gcmd.get_int('DIM', old_dim, minval=1, maxval=60)
         sleep = gcmd.get_int('SLEEP', old_sleep, minval=1, maxval=60)
         self.timers.select(dim, sleep)
         gcmd.respond_info('OLED dim %d min, sleep %d min, MCU %s'
-                          % (dim, sleep, self.timers.status))
+                          % (min(dim, sleep), sleep, self.timers.status))
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('M300_DISPLAY ' + json.dumps(

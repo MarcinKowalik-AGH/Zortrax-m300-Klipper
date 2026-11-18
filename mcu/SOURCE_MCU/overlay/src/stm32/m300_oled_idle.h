@@ -30,6 +30,27 @@ oled_pair_valid(uint16_t pair)
     return dim >= 1 && dim <= sleep && sleep <= 60;
 }
 
+// Both individual choices are stored. Runtime dimming never follows sleep.
+static inline int
+oled_pref_valid(uint16_t pair)
+{
+    unsigned preferred = pair >> 8, sleep = pair & 255;
+    return preferred >= 1 && preferred <= 60 && sleep >= 1 && sleep <= 60;
+}
+
+static inline uint16_t
+oled_effective(uint16_t pair)
+{
+    unsigned sleep = pair & 255;
+    return (pair >> 8) > sleep ? (sleep << 8) | sleep : pair;
+}
+
+static inline uint16_t
+oled_record_kind(uint16_t pair)
+{
+    return oled_pair_valid(pair) ? 0x4f4c : 0x4f50;
+}
+
 static inline struct oled_entry
 oled_latest(const struct oled_io *io)
 {
@@ -43,7 +64,7 @@ oled_latest(const struct oled_io *io)
         if ((lo ^ io->read(io->ctx, i+3)) != UINT16_MAX
             || (hi ^ io->read(io->ctx, i+4)) != UINT16_MAX
             || (pair ^ io->read(io->ctx, i+5)) != UINT16_MAX
-            || io->read(io->ctx, i+6) != 0x4f4c || !oled_pair_valid(pair))
+            || !oled_pref_valid(pair) || io->read(io->ctx, i+6) != oled_record_kind(pair))
             continue;
         uint32_t gen = lo | ((uint32_t)hi << 16);
         if (!best.valid || (int32_t)(gen - best.generation) > 0)
@@ -66,7 +87,7 @@ oled_blank(const struct oled_io *io, unsigned slot)
 static inline int
 oled_store(const struct oled_io *io, struct oled_entry best, uint16_t pair)
 {
-    if (!oled_pair_valid(pair))
+    if (!oled_pref_valid(pair))
         return 0;
     if (best.valid && pair == best.pair)
         return 1;
@@ -82,7 +103,7 @@ oled_store(const struct oled_io *io, struct oled_entry best, uint16_t pair)
     uint32_t gen = best.generation+1;
     uint16_t lo = gen, hi = gen >> 16;
     const uint16_t record[] = {lo,hi,pair,(uint16_t)~lo,(uint16_t)~hi,
-                               (uint16_t)~pair,0x4f4c,OLED_TAG};
+                               (uint16_t)~pair,oled_record_kind(pair),OLED_TAG};
     for (unsigned j = 0; j < OLED_SLOT_WORDS; j++) {
         unsigned pos = slot * OLED_SLOT_WORDS+j;
         if ((record[j] != UINT16_MAX && !io->write(io->ctx,pos,record[j]))

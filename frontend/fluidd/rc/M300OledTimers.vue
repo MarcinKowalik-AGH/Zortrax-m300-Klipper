@@ -4,23 +4,26 @@
   <div class="m300-timers">
     <div>
       <m300-segmented-slider
-        v-model="dim"
+        v-if="field !== 'sleep'"
+        :value="Math.min(preferred, sleep)"
         label="DIM"
         :max="60"
         unit="min"
+        @input="preferred = $event"
       />
       <m300-segmented-slider
+        v-if="field !== 'dim'"
         v-model="sleep"
         label="SLEEP"
         :max="60"
         unit="min"
       />
-      <small v-if="dim > sleep">Sleep must be at or after dimming.</small>
+      <small v-if="preferred > sleep">DIM {{ sleep }} min · preferred {{ preferred }} min</small>
       <v-btn
         small
         color="primary"
-        :disabled="dim > sleep"
-        @click="$emit('save', 'ZORTRAX_OLED_TIMERS DIM=' + dim + ' SLEEP=' + sleep)"
+        :disabled="!changes.length"
+        @click="$emit('save', 'ZORTRAX_OLED_TIMERS ' + changes.join(' '))"
       >
         Save
       </v-btn>
@@ -39,14 +42,25 @@ import M300SegmentedSlider from './M300SegmentedSlider.vue'
 export default class M300OledTimers extends Vue {
   @Prop({ type: String, required: true }) readonly values!: string
 
-  dim = 1
+  @Prop({ type: String, default: 'both' }) readonly field!: 'dim' | 'sleep' | 'both'
+
+  savedDim = 1
+  savedSleep = 1
+  preferred = 1
   sleep = 1
 
   @Watch('values', { immediate: true })
   loadTimers (values: string) {
-    const [, dim, sleep] = values.split(' ')
-    this.dim = Number(dim)
-    this.sleep = Number(sleep)
+    const [, dim, sleep, preferred] = values.split(' ')
+    this.preferred = this.savedDim = Number(preferred ?? dim)
+    this.sleep = this.savedSleep = Number(sleep)
+  }
+
+  get changes () {
+    const args: string[] = []
+    if (this.field !== 'sleep' && this.savedDim !== this.preferred) args.push('DIM=' + this.preferred)
+    if (this.field !== 'dim' && this.savedSleep !== this.sleep) args.push('SLEEP=' + this.sleep)
+    return args
   }
 }
 </script>

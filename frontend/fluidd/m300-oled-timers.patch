@@ -1,17 +1,18 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
 # m300-oled-timers.patch - Podłącza okno dwóch suwaków czasu OLED do obu makr w Fluidd.
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
-index 2a9916c..86d88c8 100644
+index 2a9916c..77127c6 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -14,28 +14,21 @@
+@@ -14,28 +14,22 @@
          <v-col v-if="leveling && item.id === leveling.firstId">
            <m300-leveling-diagram :points="leveling.points" />
          </v-col>
 +        <v-col v-else-if="item.type === 'text' && timerItem === item.id">
 +          <m300-oled-timers
-+            :key="item.text"
++            :key="dialog.title + ':' + item.text"
 +            :values="item.text"
++            :field="timerField"
 +            @save="sendGcode($event)"
 +          />
 +        </v-col>
@@ -47,7 +48,7 @@ index 2a9916c..86d88c8 100644
            <app-btn
              class="mt-2"
              :disabled="brightnessLevel(brightnessById[item.id]) === brightnessById[item.id].savedLevel"
-@@ -90,13 +83,15 @@
+@@ -90,13 +84,15 @@
 
  <script lang="ts">
  import { Component, Mixins, Watch } from 'vue-property-decorator'
@@ -64,20 +65,29 @@ index 2a9916c..86d88c8 100644
  export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
    brightnessDraft: Record<string, number> = {}
 
-@@ -104,6 +99,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+@@ -104,6 +100,21 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
      return this.$typedState.console.promptDialog
    }
 
++  get timerField () {
++    switch (this.dialog.title) {
++      case 'ZORTRAX M300 - OLED timers': return 'both'
++      case 'ZORTRAX M300 - OLED dim time': return 'dim'
++      case 'ZORTRAX M300 - OLED sleep time': return 'sleep'
++      default: return undefined
++    }
++  }
++
 +  get timerItem () {
-+    if (!['ZORTRAX M300 - OLED dim time', 'ZORTRAX M300 - OLED sleep time'].includes(this.dialog.title ?? '')) return
++    if (!this.timerField) return
 +    return this.dialog.items.find(item => item.type === 'text' &&
-+      /^M300_OLED_TIMERS (?:[1-9]|[1-5]\d|60) (?:[1-9]|[1-5]\d|60)$/.test(item.text))?.id
++      /^M300_OLED_TIMERS (?:[1-9]|[1-5]\d|60) (?:[1-9]|[1-5]\d|60)(?: (?:[1-9]|[1-5]\d|60))?$/.test(item.text))?.id
 +  }
 +
    get leveling () {
      return readM300Leveling(this.dialog)
    }
-@@ -129,14 +130,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+@@ -129,14 +140,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
      return this.brightnessDraft[control.key] ?? control.level
    }
 
@@ -96,7 +106,7 @@ index 2a9916c..86d88c8 100644
      this.saveBrightness(control)
    }
 
-@@ -181,44 +180,6 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+@@ -181,44 +190,6 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
      }
    }
 

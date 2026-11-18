@@ -78,6 +78,45 @@ class OledTimerTests(unittest.TestCase):
         self.assertEqual(self.t.status,'PENDING')
         self.assertEqual(self.t.observed,(4,12))
 
+    def test_clipped_preference_survives_cold_board_read_without_host_receipt(self):
+        self.t.preference_mcu = True
+        self.t.sync(5.)
+        self.t.select(15, 30)
+        self.t.sync(6.)
+        self.t.select(15, 5)
+        self.t.sync(7.)
+        self.assertEqual(self.t.observed, (15, 5))
+        Path(self.t.path()).unlink()
+        self.t.serial = self.t.desired = self.t.observed = self.t.mirror = None
+        self.t.read.send.side_effect = lambda args: self.reply(args, (15, 5))
+        self.t.sync(8.)
+        self.assertEqual((self.t.preferences(), self.t.pair()), ((15, 5), (5, 5)))
+        for sleep, dim in ((10, 10), (15, 15), (25, 15), (60, 15), (1, 1)):
+            self.t.select(self.t.preferences()[0], sleep)
+            self.t.sync(9.)
+            self.assertEqual(self.t.pair(), (dim, sleep))
+            self.assertEqual(self.t.observed, (15, sleep))
+            self.assertEqual(self.t.status, 'SYNCED')
+        self.t.select(20, 1)
+        self.d.printer.send_event.assert_any_call('m300:setting_changed', 'oled_dim_minutes', 1)
+        self.t.select(self.t.preferences()[0], 60)
+        self.assertEqual(self.t.pair(), (20, 60))
+
+    def test_firmware_upgrade_migrates_legacy_effective_pair_and_host_preference(self):
+        self.t.sync(5.)
+        self.t.select(20, 3)
+        self.t.sync(6.)
+        self.assertEqual(self.t.observed, (3, 3))
+        self.t.serial = self.t.desired = self.t.observed = self.t.mirror = None
+        self.t.preference_mcu = True
+        self.t.read.send.side_effect = lambda args: self.reply(args, (3, 3))
+        self.t.sync(7.)
+        self.assertEqual(self.t.status, 'PENDING')
+        self.t.sync(8.)
+        self.assertEqual(self.t.observed, (20, 3))
+        self.assertEqual(self.t.pair(), (3, 3))
+        self.assertEqual(self.t.status, 'SYNCED')
+
     def test_broken_mirror_is_reported_and_never_written_to_board(self):
         Path(self.t.path()).write_text(json.dumps(dict(serial=100,dim=30,sleep=10)))
         self.t.sync(5.)

@@ -139,7 +139,8 @@ class RepositoryContracts(unittest.TestCase):
             if normalize_runtime:
                 constructor = next(n for n in node.body if isinstance(n, ast.FunctionDef)
                                    and n.name == '__init__')
-                for source in ('self.mcu_oled_stats_time = None',
+                for source in ('self._panel_cursors = {}',
+                               'self.mcu_oled_stats_time = None',
                                'self.ack_recoveries = 0',
                                'self.ack_recovery_active = False',
                                'self.ack_recovery_after = 0.'):
@@ -227,7 +228,8 @@ class RepositoryContracts(unittest.TestCase):
                     "    mirror.reset()\n").body
                 for method_name, additions in (('_send_one', observer[:2]+diagnostic+recovery),
                                                ('_stats', observer[2:]+received+ready[-1:]),
-                                               ('_tick',completed),('_ready',ready),
+                                               ('_tick',completed),
+                                               ('_ready',ready + ast.parse('self._panel_cursors = {}').body),
                                                ('_stop',ready[-1:]+stop_mirror)):
                     method = next(n for n in node.body if isinstance(n, ast.FunctionDef)
                                   and n.name == method_name)

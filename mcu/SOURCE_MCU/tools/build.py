@@ -23,7 +23,7 @@ ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2b
 APP_START = 0x08008000
 NVM_START = 0x0803A000
 APP_LINKER_BYTES = 0x11000
-MCU_RELEASE = '1.0.7'
+MCU_RELEASE = '1.0.8'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_factory_counter_query',

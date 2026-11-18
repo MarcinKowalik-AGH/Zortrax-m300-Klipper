@@ -621,6 +621,7 @@ def physical_panel(h):
     display=test_display.Harness()
     o=M300OLED.__new__(M300OLED)
     o.printer=h.printer;o.reactor=h.reactor;o.stream=display.stream
+    o.board=h.board;o._panel_cursors={}
     o.generation=1;o._input_epoch=0;o.page='m04';o.message=None
     o.connected=o.fast=True;o._user_refresh_pending=False
     o._render_key=o._render_wire=o._presented_context=o._presented_actions=None
@@ -860,9 +861,13 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
             self.assertEqual(h.lines[-1],'// action:prompt_end')
             packet(False, 1, 1, 1)  # Refresh telemetry after simulated extrusion.
             for clicks, expected in ((2, 'zortrax'), (3, 'main'), (4, 'status')):
+                o.selection = 0
                 o._render(h.now);display.pump()
                 packet(False, clicks, clicks, clicks)
                 self.assertEqual(o.page if expected == 'status' else menu.page, expected)
+                if expected != 'status':
+                    self.assertEqual(o._rows(h.now)[1][o.selection][1], ('page', page))
+                    page = expected
 
 
 if __name__=='__main__':unittest.main()

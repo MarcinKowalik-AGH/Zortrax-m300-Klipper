@@ -229,7 +229,7 @@ class M300Settings:
         try:
             if key in TIMER_KEYS:
                 timers = self.printer.lookup_object('m300_display').timers
-                pair = list(timers.pair())
+                pair = list(timers.preferences())
                 pair[TIMER_KEYS.index(key)] = value
                 return timers.select(*pair)
             if key=='sleep_mode' and (value!='OFF')==(self.nvm.get_setting(key)!='OFF'):
@@ -244,6 +244,8 @@ class M300Settings:
             return
         oled = self.printer.lookup_object('m300_oled', None)
         menu = self.printer.lookup_object('m300_menu', None)
+        if key == TIMER_KEYS[0]:
+            value = self.printer.lookup_object('m300_display').timers.preferences()[0]
         if (oled is None or menu is None or oled.page != 'm04'
                 or menu.page != 'setting_' + key or oled.selection == value):
             return
@@ -323,7 +325,7 @@ class M300Settings:
             return WEB_MENU_ROWS[self.page]
         return self.rows(self.page, now)
 
-    def show(self,page=None,refresh=False):
+    def show(self,page=None,refresh=False, *, both_timers=False):
         self._live()
         if page is not None:
             if page in OLD_PRINTER_PAGES:
@@ -339,6 +341,8 @@ class M300Settings:
             self.gcode.respond_info('M300 UI '+json.dumps(dict(title=title,lines=[r[0] for r in rows])))
             return
         self._present_on_oled(self.page, now)
+        if both_timers:
+            title = 'OLED timers'
         def emit(line):self.gcode.respond_raw('// action:'+line)
         emit('prompt_end');emit('prompt_begin ZORTRAX M300 - '+title)
         token=self._view_id()
@@ -349,7 +353,10 @@ class M300Settings:
                 emit('prompt_show')
                 return
             timers = display.timers
-            emit('prompt_text M300_OLED_TIMERS %d %d' % timers.pair())
+            marker = 'M300_OLED_TIMERS %d %d' % timers.pair()
+            if timers.preferences()[0] > timers.pair()[0]:
+                marker += ' %d' % timers.preferences()[0]
+            emit('prompt_text ' + marker)
             emit('prompt_button Back|ZORTRAX_UI_SHOW PAGE=settings|primary')
             emit('prompt_show')
             return

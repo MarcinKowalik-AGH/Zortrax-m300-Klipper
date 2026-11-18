@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.22
+# Zortrax M300 Classic — Klipper 1.0.0-rc.23
 
-**RC22** pokazuje DIM i SLEEP jako dwa osobne, 16-segmentowe suwaki w stylu regulatora jasności na OLED i w Fluidd. Przy każdym pasku widać dokładną liczbę minut. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.22.md).
+**RC23** pokazuje po jednym suwaku na każdym ekranie czasu OLED. Po powrocie do menu kursor wskazuje wybraną wcześniej pozycję. Krótszy SLEEP ogranicza DIM, a wydłużenie SLEEP przywraca zapamiętany DIM. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.23.md).
 
-**MCU 1.0.7:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.7.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
+**MCU 1.0.8:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.8.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
 **Port Klippera dla klasycznego M300**, z oryginalną płytą,
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC22](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.22) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC23](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.23) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 
@@ -37,11 +37,11 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
 Polecenie aktualizuje Klippera i zachowuje istniejącą stronę Fluidd na
-porcie 4480 oraz jej ustawienia. Jeśli masz już MCU 1.0.7, aktualizacja hosta wystarczy. Gdy Fluidd
+porcie 4480 oraz jej ustawienia. Jeśli masz już MCU 1.0.8, aktualizacja hosta wystarczy. Gdy Fluidd
 pokazuje pustą stronę, wykonaj [naprawę Fluidd przed aktualizacją Klippera](docs/pl/INSTALL.md#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [Pełna instrukcja aktualizacji](docs/pl/INSTALL.md) ·
 [Diagnostyka Fluidd](docs/pl/INSTALL.md#gdy-fluidd-nie-otwiera-się-lub-pokazuje-pustą-stronę) ·
-[MCU 1.0.7 i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.7.md).
+[MCU 1.0.8 i odczyt licznika](docs/pl/MCU_FIRMWARE_1.0.8.md).
 
 ## Stan odbioru
 

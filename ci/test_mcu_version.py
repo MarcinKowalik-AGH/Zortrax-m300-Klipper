@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.7'
+EXPECTED = '1.0.8'
 
 
 def require(condition, message):
@@ -44,6 +44,9 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
     require(data['config'].get('M300_OLED_IDLE_ABI') == 1
             and 'm300_oled_idle_store token=%u dim=%c sleep=%c deadline=%u' in data['commands']
             and 'm300_oled_idle_query token=%u' in data['commands']
+            and data['config'].get('M300_OLED_PREF_ABI') == 1
+            and 'm300_oled_pref_query token=%u' in data['commands']
+            and 'm300_oled_pref_store token=%u dim=%c sleep=%c deadline=%u' in data['commands']
             and 'm300_oled_idle_state token=%u status=%c dim=%c sleep=%c serial=%u' in data['responses'],
             'OLED inactivity settings ABI missing')
     require('m300_factory_counter_query' in data['commands'],

@@ -11,6 +11,7 @@
 #include "m300_oled_idle.h"
 
 DECL_CONSTANT("M300_OLED_IDLE_ABI", 1);
+DECL_CONSTANT("M300_OLED_PREF_ABI", 1);
 
 DECL_CONSTANT("M300_FACTORY_ABI", M300_FACTORY_ABI);
 DECL_CONSTANT("M300_FACTORY_HW_ADDRESS", M300_FACTORY_HW_ADDRESS);
@@ -365,7 +366,7 @@ oled_erase_page(void *ctx, unsigned word)
         && flash_mutate(ctx, OLED_FLASH_BASE + 2u*word, 0, 1);
 }
 static void
-oled_idle_reply(uint32_t token, int save, unsigned dim, unsigned sleep,
+oled_idle_reply(uint32_t token, int save, int preference, unsigned dim, unsigned sleep,
                 uint32_t deadline)
 {
     struct counter_window window = {.runtime = 1, .deadline = deadline,
@@ -378,7 +379,7 @@ oled_idle_reply(uint32_t token, int save, unsigned dim, unsigned sleep,
         status = entry.valid ? 1 : 0;
         if (save) {
             uint16_t pair = (dim << 8) | sleep;
-            if (!oled_pair_valid(pair))
+            if (!(preference ? oled_pref_valid(pair) : oled_pair_valid(pair)))
                 status = 4;
             else if (!oled_store(&io, entry, pair))
                 status = window.deferred ? 2 : 3;
@@ -388,19 +389,35 @@ oled_idle_reply(uint32_t token, int save, unsigned dim, unsigned sleep,
             }
         }
     }
+    uint16_t visible = preference ? entry.pair : oled_effective(entry.pair);
     sendf("m300_oled_idle_state token=%u status=%c dim=%c sleep=%c serial=%u",
-          token, status, entry.pair >> 8, entry.pair & 255, factory_serial());
+          token, status, visible >> 8, visible & 255, factory_serial());
 }
 void
 command_m300_oled_idle_query(uint32_t *args)
 {
-    oled_idle_reply(args[0], 0, 0, 0, 0);
+    oled_idle_reply(args[0], 0, 0, 0, 0, 0);
 }
 DECL_COMMAND(command_m300_oled_idle_query, "m300_oled_idle_query token=%u");
 void
 command_m300_oled_idle_store(uint32_t *args)
 {
-    oled_idle_reply(args[0], 1, args[1], args[2], args[3]);
+    oled_idle_reply(args[0], 1, 0, args[1], args[2], args[3]);
 }
 DECL_COMMAND(command_m300_oled_idle_store,
              "m300_oled_idle_store token=%u dim=%c sleep=%c deadline=%u");
+
+void
+command_m300_oled_pref_query(uint32_t *args)
+{
+    oled_idle_reply(args[0], 0, 1, 0, 0, 0);
+}
+DECL_COMMAND(command_m300_oled_pref_query, "m300_oled_pref_query token=%u");
+
+void
+command_m300_oled_pref_store(uint32_t *args)
+{
+    oled_idle_reply(args[0], 1, 1, args[1], args[2], args[3]);
+}
+DECL_COMMAND(command_m300_oled_pref_store,
+             "m300_oled_pref_store token=%u dim=%c sleep=%c deadline=%u");

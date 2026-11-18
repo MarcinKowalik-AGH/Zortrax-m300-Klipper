@@ -39,7 +39,7 @@ def package(release, output, commit):
         'Run `python3 install-orange-pi.py` as the Klipper user while idle and Ready to update the host.\n'
         'For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --update-fluidd --port 4480`.\n'
         'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'
-        'With MCU 1.0.7, Klipper automatically synchronizes print time to the board while idle. '
+        'With MCU 1.0.8, Klipper automatically synchronizes print time to the board while idle. '
         'Install the MCU image from SD only if the board still requires the firmware update.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + provenance['distribution_version'] + '/docs/en/INSTALL.md)\n\n'

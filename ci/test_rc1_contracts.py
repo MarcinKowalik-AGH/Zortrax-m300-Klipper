@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.22'
+VERSION='v1.0.0-rc.23'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -19,7 +19,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(meta['distribution_version'],VERSION)
         self.assertEqual(meta['public_host_version'],VERSION[1:])
         self.assertEqual(meta['menu_revision'],VERSION[1:])
-        self.assertEqual(meta['mcu_release'],'1.0.7')
+        self.assertEqual(meta['mcu_release'],'1.0.8')
         self.assertIn('m300_release.py',meta['host_update_files'])
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)
@@ -38,6 +38,10 @@ class Rc1Contracts(unittest.TestCase):
         native_service = 'host/klippy/extras/m300_native_service.py'
         # Reviewed startup, print lighting and pause/end motion updates through RC17.
         updated_runtime = {
+            # RC23 restores the cursor after remote and procedure navigation.
+            'host/klippy/extras/m300_menu.py': (
+                '36d87ea55349a74610d1dd978cb1eb69f5420bcf0a6dbd09d0b6c0a370b11320',
+                '7814cb4460f499fc7a3eeb3f3536336d3d527848ddf7a7e7ccf2e5c80e894470'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
@@ -46,7 +50,7 @@ class Rc1Contracts(unittest.TestCase):
                 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64'),
             'host/klippy/extras/m300_settings_ui.py': (
                 '27985dd4e51f7a688e060ad37adb278dd26ca50c085ca18f3487bcd484c21bcb',
-                'b9cb31b5536ca37becfaccd6e4a7b4c16e2b676de6fa9d536901d020e8ce7b08'),
+                'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd'),
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
                 '228eb9c11e07a8c6c5b6d98da1c7b85659d4082e054534aa43829c6cf9b22200'),
@@ -67,8 +71,9 @@ class Rc1Contracts(unittest.TestCase):
                 if path == oled:
                     # RC9 removes the development RLE command. The repository
                     # AST contract separately checks the production OLED methods.
+                    # RC23 also preserves the invoking menu row after Back.
                     self.assertEqual(expected, 'e4575a52869ad6cf2937da8ba19f9a09c83338e0bff4326900c0c84a03c0bb9a')
-                    expected = '0c73207d3eb5f48c39fc1c92b4736bca70c6278a54d3438412603e57cfab5126'
+                    expected = '0d5dddbe047512cef1e0e9f1b3d8af990a4afa9dfaf2e98ba078d6a18c4dd219'
                 if path == native_service:
                     # RC13 allows active native Bed Mesh for E-only filament moves.
                     # Preserve the RC6 reference and pin the reviewed RC13 code.
@@ -78,7 +83,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],951)
+        self.assertEqual(meta['self_contained_host_tests'],954)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -150,7 +155,7 @@ class Rc1Contracts(unittest.TestCase):
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/('RELEASE_'+VERSION+'.md')).read_text()
             self.assertIn('--port 4480',text)
-            self.assertIn('1.0.7',text)
+            self.assertIn('1.0.8',text)
 
     def test_obsolete_generators_and_duplicate_publish_workflow_removed(self):
         for path in ('tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py',

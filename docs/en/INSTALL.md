@@ -1,7 +1,7 @@
 # Update an existing M300 Classic installation
 
 For a new host, use the [first-install guide](FIRST_INSTALL.md) and the
-[fixed v1.0.0-rc.22 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.22).
+[fixed v1.0.0-rc.23 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.23).
 For a blank Fluidd page, [recover Fluidd before the host update](#recover-fluidd-then-update-klipper).
 [Polski](../pl/INSTALL.md).
 
@@ -59,18 +59,18 @@ git clone --depth 1 --single-branch --no-tags --branch orange-pi \
 python3 "$m300_src/install-orange-pi.py"
 ```
 
-Keep the new path for subsequent updates. Use the versioned full ZIP to install exactly RC22. After a separate Fluidd repair check `fluidd_http_verified` and open the menu on port 4480.
+Keep the new path for subsequent updates. Use the versioned full ZIP to install exactly RC23. After a separate Fluidd repair check `fluidd_http_verified` and open the menu on port 4480.
 
 ## 2. Check the MCU version
 
-If the printer already runs MCU 1.0.7, skip the SD update. Otherwise, to use
+If the printer already runs MCU 1.0.8, skip the SD update. Otherwise, to use
 the paired MCU version, take `MCU/M300APP.M3B` from the full release or
 extract it from `MCU/M300_SD.zip` or the separate
-[MCU SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
+[MCU SD ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 Use the SD application update procedure of the bootloader already installed
-on your M300. [MCU 1.0.7 instructions](MCU_FIRMWARE_1.0.7.md).
+on your M300. [MCU 1.0.8 instructions](MCU_FIRMWARE_1.0.8.md).
 
-With MCU 1.0.7, synchronization runs automatically with the current
+With MCU 1.0.8, synchronization runs automatically with the current
 configuration. Klipper accepts and ignores the old `factory_counter_backup:`
 setting. You can remove that entry after updating the host. Keep the existing
 Klipper print-time files, including the synchronization journal. If the MCU
@@ -91,11 +91,11 @@ ZORTRAX_INFO REFRESH=0
 QUERY_PROBE
 ```
 
-Confirm Ready, matching host and MCU UART rates, and MCU `1.0.7` if you
+Confirm Ready, matching host and MCU UART rates, and MCU `1.0.8` if you
 flashed it. Verify the [factory hardware revision and Z scale](HARDWARE_VARIANTS.md)
 for your board, for example HW04/Z800 or HW05/Z400. With the nozzle clear of
 the contact plate, the probe should report open. Use the
-[counter status checks](MCU_FIRMWARE_1.0.7.md#read-the-counter) to verify
+[counter status checks](MCU_FIRMWARE_1.0.8.md#read-the-counter) to verify
 automatic synchronization.
 
 To verify the counter on a physical printer, record the factory minutes in

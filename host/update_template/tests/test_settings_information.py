@@ -231,6 +231,65 @@ class SettingsTreeTests(unittest.TestCase):
             h.ui.invalidate()
             self.assertIsNone(h.ui.cursor_for('native_moves'))
 
+    def test_native_menu_round_trip_highlights_each_invoking_row(self):
+        with session() as h:
+            attach_display(h)
+            browser(h)
+            h.objects['m300_sd'] = NS(get_status=lambda now: {}, qualified=False)
+            h.oled.board = NS(get_status=lambda now: {})
+            h.menu.home()
+            h.oled.page = 'm04'
+            visited = set()
+            transitions = set()
+
+            def click(index):
+                h.oled.selection = index
+                h.oled._render(h.now)
+                h.oled._select(h.now, h.oled._presented_actions)
+                self.assertIsNone(h.oled.message)
+
+            def walk():
+                parent = h.menu.page
+                visited.add(parent)
+                for index, (_, action) in enumerate(h.oled._rows(h.now)[1][1:], 1):
+                    if not action or action[0] not in ('page', 'setting', 'temperatures', 'oled'):
+                        continue
+                    click(index)
+                    panel_child = h.oled.page not in ('m04', 'home')
+                    child = h.oled.page if panel_child else h.menu.page
+                    if not panel_child and child not in visited:
+                        walk()
+                    click(0)
+                    self.assertEqual((h.menu.page, h.oled.selection), (parent, index),
+                                     (parent, child))
+                    transitions.add((parent, child))
+
+            walk()
+            self.assertGreaterEqual(len(transitions), 36)
+            # A long press on a regular list uses the same parent as Back.
+            from test_temperature_editor import event
+            root = h.oled._rows(h.now)[1]
+            zortrax = root.index(('Zortrax M300', ('page', 'zortrax')))
+            click(zortrax)
+            h.oled._render(h.now)
+            h.panel_display.pump()
+            event(h, 1)
+            event(h, 2, longs=1)
+            self.assertEqual((h.menu.page, h.oled.selection), ('main', zortrax))
+            # Return to a directory by name even if a new sibling changes its index.
+            for name in ('aaa', 'bbb'):
+                (h.files / name).mkdir()
+            h.menu._browse('host', '')
+            folder_rows = h.oled._rows(h.now)[1]
+            click(next(i for i, (_, a) in enumerate(folder_rows)
+                       if a and a[:3] == ('directory', 'host', 'bbb')))
+            (h.files / 'aab').mkdir()
+            click(0)
+            self.assertEqual(h.oled._rows(h.now)[1][h.oled.selection][1][:3],
+                             ('directory', 'host', 'bbb'))
+
+            self.assertEqual(h.hotend.target, 0.)
+
     def test_homing_selection_does_not_jump_to_back_in_both_native_menus(self):
         with session() as h:
             h.objects['m300_motion']=NS(normal_control=True)
@@ -388,14 +447,17 @@ class SettingsTreeTests(unittest.TestCase):
             _, display = attach_display(h)
             display.timers.apply((5, 25))
             for key, draft, expected in (
-                    ('oled_dim_minutes', 15, (4, 7)),
-                    ('oled_sleep_minutes', 60, (2, 16))):
+                    ('oled_dim_minutes', 15, 4),
+                    ('oled_sleep_minutes', 60, 16)):
                 h.settings.show('setting_' + key)
                 self.assertIn('// action:prompt_text M300_OLED_TIMERS 5 25', h.lines)
                 h.oled.selection = draft
                 h.oled._render(h.now)
                 wire = h.oled._render_wire
-                for y, count in zip((14, 38), expected):
+                # A second grid at either old bar position would light all 16 outlines.
+                for y in (14, 38):
+                    self.assertFalse(all(wire[y*128+(18+10*i)//2] >> 4 for i in range(16)))
+                for y, count in ((55, expected),):
                     for segment in range(16):
                         left = 16 + 10 * segment
                         for dy, dx, blank_level in ((0, 2, 5), (3, 2, 0), (3, 8, 0)):
@@ -733,8 +795,14 @@ class InformationTests(unittest.TestCase):
                     ('ZORTRAX_MODELS_SORT', ('setting_sort_mode', 'settings', 'zortrax', 'main'))):
                 with self.subTest(command=command):
                     h.run(command)
+                    child = None
                     for page in route:
                         self.assertEqual((h.oled.page, h.menu.page), ('m04', page))
+                        if child is not None:
+                            action = h.oled._rows(h.now)[1][h.oled.selection][1]
+                            self.assertIn(action, (('page', child), ('setting', child.removeprefix('setting_'))))
+                        child = page
+                        h.oled.selection = 0
                         h.oled._render(h.now)
                         self.assertEqual(h.oled._rows(h.now)[1][0][0], 'Back')
                         h.oled._select(h.now, h.oled._presented_actions)
@@ -785,7 +853,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.22');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.23');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

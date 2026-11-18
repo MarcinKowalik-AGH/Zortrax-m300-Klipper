@@ -32,7 +32,9 @@ int main(void) {
     struct oled_io io = {&f,read_word,program,erase};
     assert(!oled_latest(&io).valid);
     assert(!oled_store(&io, oled_latest(&io), 0));
-    assert(!oled_store(&io, oled_latest(&io), 0x0201));
+    assert(!oled_pair_valid(0x0201) && oled_pref_valid(0x0201));
+    assert(oled_effective(0x0f05) == 0x0505);
+    assert(oled_effective(0x0f1e) == 0x0f1e);
     assert(!oled_store(&io, oled_latest(&io), 0x013d));
     for (unsigned i = 0; i < OLED_SLOTS; i++) {
         uint16_t pair = i % 2 ? 0x013c : 0x3c3c;
@@ -43,7 +45,7 @@ int main(void) {
     }
     assert(!f.erased);
     const struct flash original = f;
-    const uint16_t before = oled_latest(&io).pair, after = 0x0101;
+    const uint16_t before = oled_latest(&io).pair, after = 0x1e05;
     for (int cut = 0; cut <= (int)OLED_PAGE_BYTES/2+9; cut++) {
         f = original; f.budget = cut;
         int complete = oled_store(&io, oled_latest(&io), after);

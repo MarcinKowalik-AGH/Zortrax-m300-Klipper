@@ -1,14 +1,14 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.22
+# Zortrax M300 Classic — Klipper 1.0.0-rc.23
 
-**RC22** shows DIM and SLEEP as two separate 16-segment sliders, matching the brightness control on the OLED and in Fluidd. Each value is set in minutes. [Release notes](docs/en/RELEASE_v1.0.0-rc.22.md).
+**RC23** gives each OLED timer its own slider and returns the cursor to the selected menu item. Shortening SLEEP temporarily limits DIM. Extending SLEEP restores the preferred DIM. [Release notes](docs/en/RELEASE_v1.0.0-rc.23.md).
 
-**MCU 1.0.7:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.7.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
+**MCU 1.0.8:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.8.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
 **Klipper port for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC22](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.22) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC23](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.23) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 
@@ -37,11 +37,11 @@ python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
 This updates Klipper and preserves the existing Fluidd site on port 4480 and its settings.
-If MCU 1.0.7 is already installed, the host update completes the upgrade.
+If MCU 1.0.8 is already installed, the host update completes the upgrade.
 If Fluidd is blank, use the [recovery procedure](docs/en/INSTALL.md#recover-fluidd-then-update-klipper) to repair the website
 before updating Klipper. [Full update guide](docs/en/INSTALL.md) ·
 [Fluidd diagnosis and recovery](docs/en/INSTALL.md#diagnose-a-blank-or-unreachable-fluidd-page) ·
-[MCU 1.0.7 and print-time checks](docs/en/MCU_FIRMWARE_1.0.7.md).
+[MCU 1.0.8 and print-time checks](docs/en/MCU_FIRMWARE_1.0.8.md).
 
 ## Qualification and limits
 
