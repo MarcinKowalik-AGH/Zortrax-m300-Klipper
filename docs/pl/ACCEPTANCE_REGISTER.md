@@ -37,7 +37,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Kwalifikowany wariant Z pierwszego wydruku | 0.13.16.38 / test 11.11.2026 | Nastawy istniejącego egzemplarza | Uzgodniona konfiguracja: position_min=-0,5; safe_z=5; approach_distance=6,5; probe_search_margin=1. | Nie jest globalnym standardem dla innych egzemplarzy. |
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
-| Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Zmiana ID0, rozliczenie czasu w dwóch bankach i ponowny odczyt po normalnym wyłączeniu i włączeniu. | Oczekuje na test: Oczekuje na odczyt na klasycznym M300 z MCU 1.0.6. | Test programu i symulowane zaniki zasilania nie potwierdzają trwałości na konkretnym egzemplarzu. |
+| Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Trwałość fabrycznego ID0 po normalnym wyłączeniu i włączeniu M300. | Oczekuje na test: Zapis zaległych 2492 min potwierdzony na HW05. Do porównania po ponownym włączeniu: 289224 min, bank B, NORMALIZED, pending=false, przy braku kolejnego wydruku. | Oczekuje na odczyt po cyklu zasilania. Odporność na przerwanie samego zapisu pozostaje sprawdzona w symulacji. |
 
 ## Historia i źródła potwierdzeń
 
@@ -336,6 +336,20 @@ Podstawa wersji: `Odczyt wersji z HW05 i potwierdzenie instalatora.`.
 Oczekuje na odczyt na klasycznym M300 z MCU 1.0.6.
 
 Podstawa wersji: `Kandydat z poprawką identyfikacji układu przy pracy bez debuggera.`.
+
+**2026-11-18 · RC19 / MCU 1.0.6 · Potwierdzone na sprzęcie**
+
+Licznik MCU wzrósł z 286732 do 289224 min (+2492 min). Aktywny bank B, NORMALIZED, CURRENT, pending=false. Host rozliczył 149520 s z 149531,142277 s. Pozostało 11,142277 s. MCU zgłosiło 256 KiB Flash, debug_id=0, debugging=0 i supported=1.
+
+Zapis użytkownika / treść przesłanego zrzutu: „"factory_counter_error": null, "factory_counter_observed_minutes": 289224, "factory_counter_pending": false”.
+
+Podstawa wersji: `Odczyty ZORTRAX_HARDWARE_STATUS i ZORTRAX_INFO z M300 Classic HW05 o 16:32:38.`.
+
+**2026-11-18 · RC19 / MCU 1.0.6 · Oczekuje na test**
+
+Zapis zaległych 2492 min potwierdzony na HW05. Do porównania po ponownym włączeniu: 289224 min, bank B, NORMALIZED, pending=false, przy braku kolejnego wydruku.
+
+Podstawa wersji: `Punktem odniesienia jest odczyt z HW05 o 16:32:38.`.
 
 ## Jak aktualizować
 

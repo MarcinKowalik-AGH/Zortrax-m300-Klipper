@@ -593,6 +593,31 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC19 / MCU 1.0.6",
+          "version_basis": "Odczyty ZORTRAX_HARDWARE_STATUS i ZORTRAX_INFO z M300 Classic HW05 o 16:32:38.",
+          "test": "Odczyt fabrycznego ID0 i rozliczenie zaległych pełnych minut z 14 wydruków.",
+          "status": "CONFIRMED_HARDWARE",
+          "result": "Licznik MCU wzrósł z 286732 do 289224 min (+2492 min). Aktywny bank B, NORMALIZED, CURRENT, pending=false. Host rozliczył 149520 s z 149531,142277 s. Pozostało 11,142277 s. MCU zgłosiło 256 KiB Flash, debug_id=0, debugging=0 i supported=1.",
+          "problem": "Zarejestrowano stan końcowy banku B. Pomiar nie obejmował stanu pośredniego banku A ani odłączenia zasilania.",
+          "evidence": {
+            "kind": "user_test_log",
+            "quote": "\"factory_counter_error\": null, \"factory_counter_observed_minutes\": 289224, \"factory_counter_pending\": false"
+          }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC19 / MCU 1.0.6",
+          "version_basis": "Punktem odniesienia jest odczyt z HW05 o 16:32:38.",
+          "test": "Trwałość fabrycznego ID0 po normalnym wyłączeniu i włączeniu M300.",
+          "status": "AWAITING_TEST",
+          "result": "Zapis zaległych 2492 min potwierdzony na HW05. Do porównania po ponownym włączeniu: 289224 min, bank B, NORMALIZED, pending=false, przy braku kolejnego wydruku.",
+          "problem": "Oczekuje na odczyt po cyklu zasilania. Odporność na przerwanie samego zapisu pozostaje sprawdzona w symulacji.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
         }
       ]
     }
