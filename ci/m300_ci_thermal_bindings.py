@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """FILEOUTPUT-only introspection of the target guard and its native backends.
 
 Never changes heater targets, pins, motion or runtime policy. This module is

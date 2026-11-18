@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Exercise the decoder compiled into the actual MCU query. GPL-3.0-or-later.
 #include <assert.h>
 #include <stdio.h>

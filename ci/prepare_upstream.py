@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Fetch and verify exactly one pinned public Klipper source archive."""
 import argparse
 import json

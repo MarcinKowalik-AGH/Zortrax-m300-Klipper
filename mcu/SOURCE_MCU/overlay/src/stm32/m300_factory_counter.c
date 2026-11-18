@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // M300 Classic OEM print counter, GPL-3.0-or-later.
 #include <string.h>
 #include "m300_factory_counter.h"

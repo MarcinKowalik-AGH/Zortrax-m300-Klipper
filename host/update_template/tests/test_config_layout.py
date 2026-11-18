@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Configuration layout migration preserves effective hardware and saved PID."""
 import configparser
 from pathlib import Path

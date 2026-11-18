@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 #define main inherited_board_reference_main
 #include M300_REVIEW_BOARD_FIXTURE
 #undef main

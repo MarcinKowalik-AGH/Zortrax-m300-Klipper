@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Offline fixtures for automatic retry; never sends a real GitHub POST."""
 from copy import deepcopy
 from io import BytesIO

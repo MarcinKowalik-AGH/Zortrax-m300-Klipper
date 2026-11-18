@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef M300_UART_H
 #define M300_UART_H

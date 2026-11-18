@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Isolated MCU timer scheduler test. Does not emulate STM32 timing.
 #include <assert.h>
 #include <stdint.h>

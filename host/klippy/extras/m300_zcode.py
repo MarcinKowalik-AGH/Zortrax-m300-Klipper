@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: MIT
 # CRC and classic record layout adapted from Marcin Kowalik's Inventure
 # converter v1.4.16, GitHub export v1.4.17 at bed93df495aeb189f784f1dbd81a7e972b151f52.

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Procedure navigation borrows the OLED without restoring control or consent."""
 from types import SimpleNamespace as NS
 import unittest

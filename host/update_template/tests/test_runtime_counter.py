@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native model lifetime accounting and restart checkpoint regression tests."""
 from pathlib import Path
 from types import SimpleNamespace as NS

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Lost return packets must not be mistaken for unexecuted OLED DMA writes."""
 import importlib
 from types import SimpleNamespace as NS

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Validate the compiled M300 MCU numeric firmware identity and application image.
 
 Read-only. Never opens a serial connection, writes to SD, or flashes hardware.
@@ -11,7 +12,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.6'
+EXPECTED = '1.0.7'
 
 
 def require(condition, message):
@@ -39,6 +40,11 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
             and 'm300_factory_target_query' in data['commands']
             and 'm300_factory_target flash_kib=%hu cpuid=%u debug_id=%u debugging=%c supported=%c'
                 in data['responses'], 'Factory counter target diagnostic missing')
+    require(data['config'].get('M300_OLED_IDLE_ABI') == 1
+            and 'm300_oled_idle_store token=%u dim=%c sleep=%c deadline=%u' in data['commands']
+            and 'm300_oled_idle_query token=%u' in data['commands']
+            and 'm300_oled_idle_state token=%u status=%c dim=%c sleep=%c serial=%u' in data['responses'],
+            'OLED inactivity settings ABI missing')
     require('m300_factory_counter_query' in data['commands'],
             'Factory counter query command missing')
     require('m300_factory_counter_query_runtime token=%u' in data['commands'],

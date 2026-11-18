@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Synthetic pad heights for real Klippy FILEOUTPUT profile integration."""
 class PadMeshFixture:
     def __init__(self, config):

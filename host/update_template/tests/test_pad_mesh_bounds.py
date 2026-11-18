@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Measured contact rectangles override approximate square geometry."""
 from types import SimpleNamespace as NS
 import unittest

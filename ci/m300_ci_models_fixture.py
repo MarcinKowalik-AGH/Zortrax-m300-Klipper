@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """FILEOUTPUT-only harness that starts a prepared file using public commands."""
 import json
 from pathlib import Path

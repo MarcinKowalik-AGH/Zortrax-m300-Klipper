@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 #ifndef __STM32_M300_H
 #define __STM32_M300_H
 // Classic Zortrax M300 P01 board policy. GPL-3.0-or-later.

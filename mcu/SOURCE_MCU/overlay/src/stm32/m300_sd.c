@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Classic M300 private SPI1 SD reader. No WRITE, Flash or raw-SPI commands.
 // The wire state machine clocks at most 32 bytes per 1 ms task activation.

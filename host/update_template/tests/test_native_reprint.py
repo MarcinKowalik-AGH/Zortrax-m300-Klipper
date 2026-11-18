@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Verified EOF, native start delegation and immutable replay lifecycle."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

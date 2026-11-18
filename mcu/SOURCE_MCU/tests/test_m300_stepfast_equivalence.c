@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Exact before/after guard equivalence over all GPIO ports, every single bit,
 // representative invalid masks, both levels and all ARM/fault/gate/shutdown
 // states. Includes the established native GPIO/ADC/guard regression suite.

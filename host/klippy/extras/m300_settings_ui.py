@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded original-font OLED menu composition, no actions."""
 from functools import lru_cache
@@ -124,3 +125,18 @@ def notice_frame(title, message, frame_type, sprite=None):
         message = fit_label(message, pixels-width(' ...')-1).rstrip() + ' ...'
     rows.append(message)
     return menu_frame(tuple(rows), (), 0, frame_type, sprite)
+
+@lru_cache(maxsize=32)
+def timers_frame(pair, active, selected, frame_type, sprite=None):
+    frame = frame_type()
+    for row, label in enumerate(('Dim', 'Sleep')):
+        value = selected if row == active and selected else pair[row]
+        y = row * 22
+        draw_text(frame, 10, y, ('> ' if row == active else '  ') + '%s  %d min' % (label, value))
+        for x in range(120):
+            for dy in range(4):
+                frame.pixel(16+x, y+15+dy, 15 if x < 2*value else 4)
+    draw_text(frame, 12, 47, 'Press to save' if selected else 'Press to go back')
+    if sprite is not None:
+        draw_sprite(frame, sprite)
+    return frame.wire_bytes()

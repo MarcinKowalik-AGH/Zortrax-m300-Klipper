@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Generate MCU text/4-bit fault icons from the shared host error catalogue."""
 import argparse
 import base64

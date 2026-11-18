@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Render documentation from production menu rows, OEM font, icons and frame code.
 Only in-memory demonstration state is used. Never constructs an MCU or issues G-code.

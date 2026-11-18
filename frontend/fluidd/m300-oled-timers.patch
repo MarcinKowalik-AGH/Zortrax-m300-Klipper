@@ -1,0 +1,47 @@
+diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
+index 2a9916c..cad1a8e 100644
+--- a/src/components/common/ActionCommandPromptDialog.vue
++++ b/src/components/common/ActionCommandPromptDialog.vue
+@@ -14,6 +14,13 @@
+         <v-col v-if="leveling && item.id === leveling.firstId">
+           <m300-leveling-diagram :points="leveling.points" />
+         </v-col>
++        <v-col v-else-if="item.type === 'text' && timerItem === item.id">
++          <m300-oled-timers
++            :key="item.text"
++            :values="item.text"
++            @save="sendGcode($event)"
++          />
++        </v-col>
+         <v-col v-else-if="brightnessById[item.id]">
+           <label class="m300-brightness-control">
+             <span>{{ brightnessById[item.id].label }}</span>
+@@ -90,13 +97,14 @@
+
+ <script lang="ts">
+ import { Component, Mixins, Watch } from 'vue-property-decorator'
++import M300OledTimers from './M300OledTimers.vue'
+ import M300LevelingDiagram from './M300LevelingDiagram.vue'
+ import { readM300Brightness, readM300Leveling } from './m300Leveling'
+ import type { BrightnessControl } from './m300Leveling'
+ import StateMixin from '@/mixins/state'
+ import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
+
+-@Component({ components: { M300LevelingDiagram } })
++@Component({ components: { M300LevelingDiagram, M300OledTimers } })
+ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+   brightnessDraft: Record<string, number> = {}
+
+@@ -104,6 +112,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+     return this.$typedState.console.promptDialog
+   }
+
++  get timerItem () {
++    if (!['ZORTRAX M300 - OLED dim time', 'ZORTRAX M300 - OLED sleep time'].includes(this.dialog.title ?? '')) return
++    return this.dialog.items.find(item => item.type === 'text' &&
++      /^M300_OLED_TIMERS (?:[1-9]|[1-5]\d|60) (?:[1-9]|[1-5]\d|60)$/.test(item.text))?.id
++  }
++
+   get leveling () {
+     return readM300Leveling(this.dialog)
+   }

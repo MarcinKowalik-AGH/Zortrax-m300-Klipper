@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise the real installer on an isolated source/config fixture, no services."""
 import argparse
 import importlib.util

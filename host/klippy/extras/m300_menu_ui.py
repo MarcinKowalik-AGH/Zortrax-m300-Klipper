@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M11 optional classic M300 menu/translation/encoder display policy.
 
@@ -10,14 +11,15 @@ import math
 import os
 from collections import deque
 
-from .m300_ui_m11_state import MenuHistory, LANGS, atlas_summary, require_rows, clean_label
+from .m300_ui_m11_state import MenuHistory, LANGS, atlas_summary, clean_label
 from .m300_oem_graphics import HOMING_HOURGLASS, OEMGraphics, choose_icon, ICON_STYLE
 from .m300_ui_labels import english_label
 from .m300_leveling_oem import render as render_leveling
 from .m300_maintenance_ui import FAN_LABELS, fan_frame
 from .m300_settings import PAGES as SETTINGS_PAGES, TITLES
+from .m300_oled_idle import KEYS as TIMER_KEYS
 from .m300_nvm import BRIGHTNESS_KEYS
-from .m300_settings_ui import brightness_frame, menu_frame, temperature_frame
+from .m300_settings_ui import timers_frame, brightness_frame, menu_frame, temperature_frame
 from .m300_activity_graphics import fault_symbol, menu_symbol, procedure_symbol
 from .m300_error_codes import CODES
 
@@ -272,6 +274,15 @@ class M300MenuUI:
             settings = self.printer.lookup_object('m300_settings', None)
             if settings is not None:
                 key = self.menu.page[8:]
+                if key in TIMER_KEYS:
+                    display = self.printer.lookup_object('m300_display', None)
+                    if not hasattr(display, 'timers'):
+                        return menu_frame(('Back', 'Display unavailable'), (), 0, frame_type, sprite)
+                    pair = display.timers.pair()
+                    wire = timers_frame(pair, TIMER_KEYS.index(key), selected, frame_type, sprite)
+                    self._brightness_presented = self.menu.generation, selected, wire
+                    self._remember_editor_frame('_brightness_frames', selected, wire)
+                    return wire
                 if key in BRIGHTNESS_KEYS:
                     level = selected or self.menu.nvm.get_setting(key)
                     wire = brightness_frame(TITLES[key], level, selected == 0, frame_type, sprite)
@@ -326,6 +337,11 @@ class M300MenuUI:
 
     def brightness_selection(self):
         key = self.menu.page[8:]
+        if key in TIMER_KEYS:
+            display = self.printer.lookup_object('m300_display', None)
+            if hasattr(display, 'timers'):
+                return display.timers.pair()[TIMER_KEYS.index(key)]
+            return None
         return self.menu.nvm.get_setting(key) if key in BRIGHTNESS_KEYS else None
 
     def brightness_receipt(self, stream):

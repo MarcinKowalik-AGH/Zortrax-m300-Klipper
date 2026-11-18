@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Validate the deployment helper without changing a real web root or service."""
 from contextlib import contextmanager
 from pathlib import Path

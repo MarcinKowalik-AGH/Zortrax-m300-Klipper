@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """One production raster regardless of legacy sharp option; no hardware I/O."""
 import base64
 import hashlib

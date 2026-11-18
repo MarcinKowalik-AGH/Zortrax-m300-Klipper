@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Test the exact MCU transaction core with STM32F103 Flash programming rules.
 // GPL-3.0-or-later.
 #include <assert.h>

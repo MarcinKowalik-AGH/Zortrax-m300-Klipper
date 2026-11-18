@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Factory scale selection, transport capability errors and startup boundaries."""
 from types import SimpleNamespace as NS
 import unittest

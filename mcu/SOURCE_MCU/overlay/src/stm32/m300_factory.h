@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // M300 stock factory ID3 decoder. Read-only; GPL-3.0-or-later.
 #ifndef __STM32_M300_FACTORY_H
 #define __STM32_M300_FACTORY_H

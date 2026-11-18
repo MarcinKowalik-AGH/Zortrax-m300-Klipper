@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """The native print hold needs a continuous, acknowledged physical gesture."""
 import unittest
 

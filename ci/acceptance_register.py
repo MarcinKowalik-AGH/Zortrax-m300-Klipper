@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Validate and render a hardware-acceptance ledger without controlling hardware."""
 import argparse
 import json

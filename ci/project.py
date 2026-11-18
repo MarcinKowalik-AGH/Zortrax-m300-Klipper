@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Shared staging for CI. Never contacts a printer or changes its config."""
 import hashlib
 import importlib.util

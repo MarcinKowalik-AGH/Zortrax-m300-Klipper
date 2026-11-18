@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Render approved menu animation without hardware, heating or bitmap edits."""
 import argparse
 import hashlib

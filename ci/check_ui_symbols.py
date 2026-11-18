@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Validate committed OLED artwork without raster libraries or printer access."""
 import hashlib
 import base64

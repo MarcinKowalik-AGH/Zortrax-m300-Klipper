@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Use the exact calibration-preserving migration shipped to Orange Pi."""
 import importlib.util
 from pathlib import Path

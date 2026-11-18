@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Software regression only: heaters and hardware are modeled."""
 from pathlib import Path
 from types import SimpleNamespace as NS

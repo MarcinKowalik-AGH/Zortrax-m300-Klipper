@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M08 22-state supervisory executor for classic M300.
 
@@ -250,7 +251,6 @@ class M300Cycle:
         state, reason = self._derive(now)
         self._publish(state, reason)
         job = self.job.get_status(now)
-        filament = self.filament.get_status(now)
         return {'version': '0.8.0-LAB_M01_M02_M03_M04_M05_M06_M07_M08',
                 'model': 'M300_CLASSIC', 'state': self.state,
                 'state_count': len(STATES), 'states': list(STATES),

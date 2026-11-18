@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Small status text scoped to the bottom strip of the native Klipper screen."""
 from functools import lru_cache

@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-only
 export const OLED_WIDTH = 256
 export const OLED_HEIGHT = 64

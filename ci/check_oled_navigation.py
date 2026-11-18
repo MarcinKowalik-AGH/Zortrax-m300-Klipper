@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise event waits with the pinned real Klipper reactor/API request parser.
 
 No serial port, physical MCU, printer motion, heater, or network is involved.

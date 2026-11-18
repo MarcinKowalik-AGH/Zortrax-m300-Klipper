@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Three-tone complete Klipper V/nozzle symbol and lowercase 'klipper' wordmark.
 

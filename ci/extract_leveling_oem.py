@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Reproduce the M07 text/font manifest from the operator-supplied OEM dump.
 
 The application and initialized RAM are inputs, never release payloads. This

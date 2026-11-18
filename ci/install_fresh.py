@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """First M300 Classic install after a single-printer KIAUH system setup.
 
 Default: read-only plan. --apply replaces only an unused stock Klipper setup.

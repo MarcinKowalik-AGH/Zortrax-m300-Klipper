@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Normal operation boundaries, migration and Fluidd category regression tests."""
 from types import SimpleNamespace as NS
 import unittest

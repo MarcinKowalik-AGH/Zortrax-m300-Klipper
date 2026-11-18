@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise the production MCU error store and board guard in native models."""
 import argparse
 from pathlib import Path

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: MIT
 # Offline-only adaptation of the user's M300Boot v1.1 ibtool.py.
 # Full original and license: docs/boot_reference. No UART or flash actions.

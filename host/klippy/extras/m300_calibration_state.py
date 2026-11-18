@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Pure M04 five-point/three-screw observation state machine (millimetres)."""
 import copy

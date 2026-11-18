@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """No network, sudo, service changes or printer commands in these tests."""
 import json
 from pathlib import Path

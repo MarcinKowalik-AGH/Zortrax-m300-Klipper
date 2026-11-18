@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Pinned native two-pass homing with modeled PC7 and physical Z steps.
 
 The native retract, position updates and no-movement rejection execute

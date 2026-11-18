@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Actual pinned Klippy processes, FILEOUTPUT only: no printer UART or MCU execution."""
 import argparse
 import base64
@@ -147,7 +148,7 @@ def main():
         ('native_oem_error_shutdown',
          'ZORTRAX_NATIVE_STATUS\nM112\nZORTRAX_ERROR_STATUS\nZORTRAX_ERROR_SHOW\n',
          False, 'Shutdown due to M112 command'),
-        ('native_settings_information',settings_script,False,None),
+        ('native_settings_information',settings_script + '\nOLED_TIMERS\nZORTRAX_SETTINGS_STATUS\nZORTRAX_OLED_TIMERS\nZORTRAX_SETTINGS_STATUS\n',False,None),
         ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
         ('native_pad_mesh_zero_margin',
          'ZORTRAX_NATIVE_STATUS\nBED_MESH PREVIEW=1\nZORTRAX_PAD_MESH_STATUS\n'
@@ -395,10 +396,12 @@ def main():
         if name == 'native_settings_information':
             views = [json.loads(line.split('M300_SETTINGS ', 1)[1]) for line in text.splitlines()
                         if 'M300_SETTINGS ' in line]
+            assert [v['page'] for v in views[-2:]] == ['setting_oled_dim_minutes'] * 2
+            views = views[:-2]
             view = views[-3]
             assert view['settings'] == dict(light_mode='WHITE', sound=False, sleep_mode='DISABLED',full_platform_preheat=False,
                                             sort_mode='NAME_CASE', language='EN',
-                                            oled_brightness=8, led_brightness=5), view
+                                            oled_dim_minutes=5, oled_sleep_minutes=15, oled_brightness=8, led_brightness=5), view
             resources = next(json.loads(line.split('M300_CONFIG ', 1)[1])
                              for line in text.splitlines() if 'M300_CONFIG ' in line)
             assert resources['software_pwm_count'] == 7, resources

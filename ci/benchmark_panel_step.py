@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Count instructions in selected M300 F103 firmware paths using emulated GPIO."""
 import argparse
 from hashlib import sha256

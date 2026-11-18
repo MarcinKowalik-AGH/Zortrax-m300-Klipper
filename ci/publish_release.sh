@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # Publish only an immutable, successful main-branch build; never rebuild assets.
 set -euo pipefail
 tag=$(jq -er .distribution_version PORT.json)

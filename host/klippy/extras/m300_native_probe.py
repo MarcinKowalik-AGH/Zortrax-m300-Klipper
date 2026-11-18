@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """One bounded native HomingMove capability, shared by M07 and Z refinement."""
 import math

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise the real Moonraker query path before connect; FILEOUTPUT only."""
 import json
 

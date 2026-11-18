@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # Classic M300 P01 LAB build; does not identify the physical MCU/crystal.
 # Classic M300 uses a 68 KiB linker budget inside its existing app slot.
 # SRAM remains at 20 KiB.

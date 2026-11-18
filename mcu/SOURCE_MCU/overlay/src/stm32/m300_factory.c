@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // M300 factory identity and bounded stock-compatible print counter writer.
 // GPL-3.0-or-later.
 #include "board/irq.h"
@@ -7,6 +8,9 @@
 #include "m300.h"
 #include "m300_factory.h"
 #include "m300_factory_counter.h"
+#include "m300_oled_idle.h"
+
+DECL_CONSTANT("M300_OLED_IDLE_ABI", 1);
 
 DECL_CONSTANT("M300_FACTORY_ABI", M300_FACTORY_ABI);
 DECL_CONSTANT("M300_FACTORY_HW_ADDRESS", M300_FACTORY_HW_ADDRESS);
@@ -127,7 +131,7 @@ counter_flash_op(uintptr_t address, uint16_t value, int erase,
 }
 
 static int
-counter_mutate(struct counter_window *window, unsigned offset, uint16_t value, int erase)
+flash_mutate(struct counter_window *window, uintptr_t address, uint16_t value, int erase)
 {
     if (!counter_write_allowed(window)) {
         window->deferred = window->runtime;
@@ -168,7 +172,7 @@ counter_mutate(struct counter_window *window, unsigned offset, uint16_t value, i
                 window->started = 1;
                 window->erased |= erase;
                 uint32_t timeout = timer_from_us(erase ? ERASE_TIMEOUT_US : PROGRAM_TIMEOUT_US);
-                result = counter_flash_op(M300_FACTORY_NVM_A_ADDRESS + offset,
+                result = counter_flash_op(address,
                                           value, erase, timeout);
                 if (result == FLASH_PLATFORM_FAULT)
                     m300_factory_platform_fault();
@@ -193,7 +197,7 @@ counter_program(void *context, unsigned offset, uint16_t value)
     if (offset >= M300_FACTORY_COUNTER_SPAN || (offset & 1u)
         || (counter_read(context, offset) != UINT16_MAX && value != 0))
         return 0;
-    return counter_mutate(context, offset, value, 0);
+    return flash_mutate(context, M300_FACTORY_NVM_A_ADDRESS + offset, value, 0);
 }
 
 static int
@@ -201,7 +205,7 @@ counter_erase(void *context, unsigned offset)
 {
     if (offset != 0 && offset != M300_FACTORY_NVM_SIZE)
         return 0;
-    return counter_mutate(context, offset, 0, 1);
+    return flash_mutate(context, M300_FACTORY_NVM_A_ADDRESS + offset, 0, 1);
 }
 
 static const struct m300_counter_io counter_io_template = {
@@ -338,3 +342,65 @@ command_m300_factory_counter_commit_runtime(uint32_t *args)
 DECL_COMMAND(command_m300_factory_counter_commit_runtime,
              "m300_factory_counter_commit_runtime serial=%u source=%c expected=%u"
              " target=%u settings_crc=%u deadline=%u");
+
+// The build limits the entire linked application to [0x08008000,0x08019000).
+#define OLED_FLASH_BASE 0x08019000u
+_Static_assert(OLED_FLASH_BASE + 2 * OLED_PAGE_BYTES <= 0x0803a000u,
+               "OLED storage overlaps reserved OEM area");
+static uint16_t
+oled_read_word(void *ctx, unsigned word)
+{
+    return *(volatile const uint16_t *)(OLED_FLASH_BASE + 2u * word);
+}
+static int
+oled_write_word(void *ctx, unsigned word, uint16_t value)
+{
+    return word < OLED_PAGE_BYTES && oled_read_word(ctx,word) == UINT16_MAX
+        && flash_mutate(ctx, OLED_FLASH_BASE + 2u*word, value, 0);
+}
+static int
+oled_erase_page(void *ctx, unsigned word)
+{
+    return (word == 0 || word == OLED_PAGE_BYTES/2)
+        && flash_mutate(ctx, OLED_FLASH_BASE + 2u*word, 0, 1);
+}
+static void
+oled_idle_reply(uint32_t token, int save, unsigned dim, unsigned sleep,
+                uint32_t deadline)
+{
+    struct counter_window window = {.runtime = 1, .deadline = deadline,
+        .wait_until = timer_read_time() + timer_from_us(RUNTIME_WAIT_US)};
+    struct oled_io io = {&window, oled_read_word, oled_write_word, oled_erase_page};
+    struct oled_entry entry = {0};
+    unsigned status = 4;
+    if (factory_target().supported && factory_serial()) {
+        entry = oled_latest(&io);
+        status = entry.valid ? 1 : 0;
+        if (save) {
+            uint16_t pair = (dim << 8) | sleep;
+            if (!oled_pair_valid(pair))
+                status = 4;
+            else if (!oled_store(&io, entry, pair))
+                status = window.deferred ? 2 : 3;
+            else {
+                entry = oled_latest(&io);
+                status = entry.valid && entry.pair == pair ? 1 : 3;
+            }
+        }
+    }
+    sendf("m300_oled_idle_state token=%u status=%c dim=%c sleep=%c serial=%u",
+          token, status, entry.pair >> 8, entry.pair & 255, factory_serial());
+}
+void
+command_m300_oled_idle_query(uint32_t *args)
+{
+    oled_idle_reply(args[0], 0, 0, 0, 0);
+}
+DECL_COMMAND(command_m300_oled_idle_query, "m300_oled_idle_query token=%u");
+void
+command_m300_oled_idle_store(uint32_t *args)
+{
+    oled_idle_reply(args[0], 1, args[1], args[2], args[3]);
+}
+DECL_COMMAND(command_m300_oled_idle_store,
+             "m300_oled_idle_store token=%u dim=%c sleep=%c deadline=%u");

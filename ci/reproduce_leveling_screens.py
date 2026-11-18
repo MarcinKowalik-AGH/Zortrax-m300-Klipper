@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Generate reference pixels by executing the recovered OEM register-C code.
 
 Input: source_evidence_m04_binary from the supplied source archive. Only the

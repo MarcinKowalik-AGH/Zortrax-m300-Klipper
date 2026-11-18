@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """The footer must retain suffixes clipped by the native 16-character LCD."""
 import unittest
 

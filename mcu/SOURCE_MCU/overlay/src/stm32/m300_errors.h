@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 #ifndef __STM32_M300_ERRORS_H
 #define __STM32_M300_ERRORS_H
 #include <stdint.h>

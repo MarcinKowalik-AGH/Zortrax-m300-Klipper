@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """305/105C normal-operation target policy. User reports successful hardware
 operation2026-11-11; software tests do not claim physical validation.

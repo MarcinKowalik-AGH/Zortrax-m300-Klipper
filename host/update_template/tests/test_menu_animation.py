@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Approved artwork must advance in menus without new pixels or control I/O."""
 import hashlib
 from pathlib import Path
@@ -23,7 +24,7 @@ class MenuAnimationTests(unittest.TestCase):
     def test_approved_artwork_files_are_byte_identical(self):
         root = Path(__file__).resolve().parents[1] / 'payload'
         for name, sha in APPROVED.items():
-            self.assertEqual(hashlib.sha256((root/name).read_bytes()).hexdigest(), sha, name)
+            self.assertEqual(hashlib.sha256((root/name).read_bytes().removeprefix(b'# Marcin Kowalik <mkowalik@agh.edu.pl>\n')).hexdigest(), sha, name)
 
     def test_all_24_activity_sequences_keep_four_original_frames_and_period(self):
         graphics = ActivityGraphics()

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Real native dispatcher + shared menu/OLED models; no physical fault injection."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

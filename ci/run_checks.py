@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Public source and register-model checks; real Klippy is FILEOUTPUT only."""
 import argparse
 import ast
@@ -100,6 +101,10 @@ def main():
         KIT / 'tests/test_m300_factory_counter.c',
         KIT / 'overlay/src/stm32/m300_factory_counter.c', '-o', factory_counter])
     run('factory_counter_power_cut_model', [factory_counter])
+    oled_journal = ROOT / '.ci/oled-idle-test'
+    run('oled_idle_compile', ['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
+                              KIT / 'tests/test_oled_idle.c', '-o', oled_journal])
+    run('oled_idle_power_cut_model', [oled_journal])
     run('factory_counter_runtime_scheduler', [sys.executable,
         KIT / 'tools/test_factory_runtime_scheduler.py', '--upstream', pristine])
     sd_card = report / 'sd-card-test'

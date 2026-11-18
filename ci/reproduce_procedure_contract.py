@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Execute OEM 1.3.1 procedure control flow with declared environment hooks.
 
 The supplied application is an input, never a release payload. Heating, UI

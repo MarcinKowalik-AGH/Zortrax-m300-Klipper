@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 from pathlib import Path
 import importlib.util,json,shutil,subprocess,tempfile
 B=Path(__file__).resolve().parents[1]

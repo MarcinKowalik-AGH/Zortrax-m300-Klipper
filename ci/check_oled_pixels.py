@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Actual browser screenshots: every source OLED pixel is an equal N x N block.
 
 Exercises the same compiled drawOledPixels helper used by the Vue component.

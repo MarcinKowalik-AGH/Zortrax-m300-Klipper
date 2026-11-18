@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Full Settings/Information sessions, durable settings and real browser paths."""
 import copy
 import hashlib
@@ -112,10 +113,25 @@ class SettingsTreeTests(unittest.TestCase):
             self.assertNotEqual(fit_label(label, SPRITE_LABEL_PIXELS),
                                 fit_label(label, SPRITE_LABEL_PIXELS, 25))
 
+    def test_expired_history_callback_preserves_new_session_fetch(self):
+        with session() as h:
+            h.settings.request_refresh()
+            previous = h.callbacks.pop()
+            h.settings.invalidate()
+            h.settings._ready()
+            h.settings.request_refresh()
+            current = h.callbacks.pop()
+            previous(h.now)
+            self.assertTrue(h.settings.reading)
+            with patch('payload.m300_settings.history_totals', return_value=75.):
+                current(h.now)
+            self.assertFalse(h.settings.reading)
+            self.assertEqual(h.settings.history_seconds, 75.)
+
     def test_exact_requested_tree_and_english_only_language(self):
         with session() as h:
             expected={'settings':['Back','Light','Buzzer','Sleep mode','Language','Models sorting',
-                                  'Full platform preheating','OLED brightness','LED brightness'],
+                                  'Full platform preheating','OLED brightness','LED brightness','OLED dim time','OLED sleep time'],
                 'setting_light_mode':['Back','Dynamic','White','Disabled'],
                 'setting_sound':['Back','Enabled','Disabled'],
                 'setting_sleep_mode':['Back','Enabled','Disabled'],
@@ -169,7 +185,8 @@ class SettingsTreeTests(unittest.TestCase):
                     ('Models sorting', ('Date', 'Case-sensitive name', 'File size', 'Name')),
                     ('Full platform preheating', ('Enabled','Disabled')),
                     ('OLED brightness', ('1', '16')),
-                    ('LED brightness', ('8', '16'))):
+                    ('LED brightness', ('8', '16')),
+                    ('OLED dim time', ()), ('OLED sleep time', ())):
                 press(page)
                 for choice in choices:
                     press(choice)
@@ -719,7 +736,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.19');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.20');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

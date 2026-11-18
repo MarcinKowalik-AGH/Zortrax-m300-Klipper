@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Classic M300 P01 board protocol and fail-closed host qualification gates.
 
@@ -182,6 +183,7 @@ class M300MCU:
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
         self.gcode = self.printer.lookup_object('gcode')
+        self.debug = config.getboolean('debug', False)
         self.mcu_name = config.get('mcu', 'mcu')
         self.mcu = self.printer.lookup_object(self.mcu_name)
         self.allow_actuators = config.getboolean('allow_actuators', False)
@@ -648,6 +650,7 @@ class M300MCU:
             policy_name = 'both_PE13_PE14_HIGH_while_unarmed_or_fault'
         return {'model': MODEL, 'abi': ABI, 'stage': STAGE,
                 'mcu_release': getattr(self, 'mcu_release', 'legacy'),
+                'debug': getattr(self, 'debug', False),
                 'uart': dict(getattr(self, 'uart_state', {})),
                 'hardware': self.hardware.get_status(),
                 'startup_transport': (self.startup_transport.get_status()

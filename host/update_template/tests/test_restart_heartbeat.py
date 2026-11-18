@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """A planned native restart starts its drain with one healthy heartbeat."""
 from types import SimpleNamespace as NS
 from unittest.mock import Mock

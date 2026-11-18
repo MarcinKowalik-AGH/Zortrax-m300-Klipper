@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native print state projection, OLED acknowledgement and delayed dispatch."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

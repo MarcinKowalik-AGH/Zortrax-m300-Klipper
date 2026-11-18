@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Production panel module + actual pinned generic timer_init() with MMIO doubles.
 // No physical STM32, no clock-cycle or panel power-on timing claim.
 #define M300_TIMER_SCALE 72u

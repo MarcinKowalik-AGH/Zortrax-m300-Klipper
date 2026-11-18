@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native median observations, the 0.8 mm span and one shared error surface."""
 import sys
 from types import SimpleNamespace as NS

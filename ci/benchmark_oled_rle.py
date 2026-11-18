@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Check Thumb-2 RLE fill equivalence and count emulated instructions."""
 import argparse
 import json

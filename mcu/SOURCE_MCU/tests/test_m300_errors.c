@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Native register model. No physical printer fault injection.
 #define main original_board_tests
 #include "test_m300_board.c"

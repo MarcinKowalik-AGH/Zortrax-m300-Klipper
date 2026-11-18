@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Full OEM manual sessions with the pinned native dispatcher and GCodeMove.
 
 Only the heater, clock and physical move/drain boundaries are modeled. These

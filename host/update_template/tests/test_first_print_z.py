@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """User-qualified Z variant; modeled hardware, never a physical printer test."""
 import math
 from pathlib import Path

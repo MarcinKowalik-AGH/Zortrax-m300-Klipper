@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Read-only autonomous cooling. ADC2 is private to this monitor; native
 // Klipper heater acquisition retains exclusive ownership of ADC1 registers.
 // Both ADC blocks share the existing /8 ADC clock, which is never modified.

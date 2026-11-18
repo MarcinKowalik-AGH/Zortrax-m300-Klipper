@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // The pinned native stepper, gated-timer driver and simulated peripheral events.
 // No ARM execution, peripheral latency or electrical acceptance is modeled.
 #include <assert.h>

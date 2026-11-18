@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """OEM procedure defaults with modeled authority and heater boundaries."""
 from types import SimpleNamespace as NS
 import unittest

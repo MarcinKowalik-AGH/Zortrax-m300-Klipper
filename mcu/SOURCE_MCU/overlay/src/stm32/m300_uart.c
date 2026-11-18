@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Read-only adapter for the M300Boot v1.1 F103 HALFWORD journal.
 #include "m300_uart.h"

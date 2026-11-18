@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Author flat-frame project marks and homing animations in the OLED format.
 
 Raster tools run only on the asset-authoring machine. The printer shares the

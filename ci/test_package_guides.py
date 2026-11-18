@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Check that the installed and standalone release guides resolve on GitHub."""
 from pathlib import Path
 import tempfile

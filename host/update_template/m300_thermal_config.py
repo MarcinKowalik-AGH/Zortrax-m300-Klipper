@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Explicit305/105 migration. No PID, sensor conversion or motion retuning."""
 import re
 POLICY='[m300_temperature_policy]\nhotend_target_max: 305\nbed_target_max: 105\n'

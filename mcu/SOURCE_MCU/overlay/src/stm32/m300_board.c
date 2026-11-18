@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Classic Zortrax M300, STM32F103: P01 local safety and fixed board resources.
 //
 // Copyright (C) 2026 M300 port contributors

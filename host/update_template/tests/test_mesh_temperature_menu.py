@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Mesh temperature defaults, Klipper grouping and distinct homing animations."""
 import unittest
 

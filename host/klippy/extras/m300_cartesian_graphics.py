@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """50x50 native 4bpp Cartesian axis symbols for the Classic M300 OLED.
 

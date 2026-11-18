@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Actual pinned Klipper checker, synthetic thermal traces. No heater operation."""
 from pathlib import Path
 import importlib.util,json,logging,types

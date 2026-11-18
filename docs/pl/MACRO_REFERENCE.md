@@ -2,12 +2,12 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.1**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.20**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 41 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w RC1. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 43 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w RC20. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -53,6 +53,8 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | [`PID_BED`](../../host/config/klipper_calibration.cfg) | PID | Natywna kalibracja PID stołu, zapis osobno. | TARGET=60. |
 | [`PID_SAVE`](../../host/config/klipper_calibration.cfg) | PID | SAVE_CONFIG — zapis uzyskanej kalibracji i restart Klippera. | Wyłącznie bezczynna drukarka. |
 
+| [`OLED_TIMERS`](../../host/config/m300_operations.cfg) | Klipper | Czas przygaszenia i uśpienia OLED. | DIM i SLEEP w minutach od ostatniej aktywności, 1 ≤ DIM ≤ SLEEP ≤ 60. Bez parametrów otwiera dwa suwaki. |
+| [`ZORTRAX_OLED_TIMERS`](../../host/config/m300_operations.cfg) | Zortrax M300 | Czas przygaszenia i uśpienia OLED. | DIM i SLEEP w minutach od ostatniej aktywności, 1 ≤ DIM ≤ SLEEP ≤ 60. Bez parametrów otwiera dwa suwaki. |
 | [`ZORTRAX_OLED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności fizycznego OLED co w Settings. | LEVEL=1…16; brak parametru otwiera wybór, nie zmienia wartości. |
 | [`ZORTRAX_LED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności oświetlenia drukarki co w Settings. | LEVEL=1…16; brak parametru otwiera wybór. |
 | [`ZORTRAX_DIAGNOSTICS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt konfiguracji, sprzętu, OLED i chłodzenia. | Bez ruchu, grzania i resetowania statystyk. |

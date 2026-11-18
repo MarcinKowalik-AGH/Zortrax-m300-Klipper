@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Render production OLED views using offline test fixtures; never run printer I/O."""
 import argparse
 from pathlib import Path

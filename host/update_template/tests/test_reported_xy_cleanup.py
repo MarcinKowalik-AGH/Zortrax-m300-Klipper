@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exact macro supplied by the operator on 2026-11-12. No macro is executed."""
 import json
 from pathlib import Path

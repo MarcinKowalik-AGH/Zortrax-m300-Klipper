@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Native C register/scheduler doubles, including the transformed upstream
 // gpio.c and adc.c. This is not execution on a physical STM32 or a timing test.

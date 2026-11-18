@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native temperature-editor pixels, real encoder/ACK path and guarded heater application on explicit confirmation."""
 import unittest
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Render production OLED temperature editors in a host-only test harness."""
 import argparse
 import hashlib

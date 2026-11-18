@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Regression coverage for the optional Classic M300 pad mesh adapter."""
 from types import SimpleNamespace as NS
 import statistics

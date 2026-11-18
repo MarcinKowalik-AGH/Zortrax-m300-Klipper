@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Measure repeated host menu rendering and observation-free ownership reads."""
 import argparse
 import json

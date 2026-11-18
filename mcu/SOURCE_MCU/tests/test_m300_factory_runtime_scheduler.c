@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the transformed production timer-list code, without physical I/O.
 #include <assert.h>

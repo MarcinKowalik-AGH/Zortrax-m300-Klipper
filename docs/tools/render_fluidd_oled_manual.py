@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Render the beta.20 OLED layout using actual SFC CSS and compiled pixel helper.
 This is an isolated browser demonstration, not a screenshot of a live printer.
 No remote requests, printer WebSocket, movement or heat commands are used.

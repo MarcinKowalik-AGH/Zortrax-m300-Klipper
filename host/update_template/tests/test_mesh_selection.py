@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """RC17 plate selection through the native LOAD command and original AUTO macro."""
 import unittest
 from pathlib import Path

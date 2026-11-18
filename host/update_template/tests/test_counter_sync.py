@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise startup counter synchronization and durable recovery."""
 from copy import deepcopy
 from pathlib import Path

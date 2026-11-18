@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 from copy import deepcopy
 import json
 from pathlib import Path

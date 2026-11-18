@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Real native SD/parser/planner integration, strictly FILEOUTPUT only.
 
 No physical thermal/drain proof: heater readings and the estimated MCU clock

@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-only
 /** One decode in progress and one replaceable latest frame, never a FIFO. */
 export class M300LatestPainter {

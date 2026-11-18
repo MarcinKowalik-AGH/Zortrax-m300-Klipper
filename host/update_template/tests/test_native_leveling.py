@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native M07 with the pinned HomingMove and modeled contact/heater boundaries.
 
 These tests exercise complete sessions, not physical printer acceptance.

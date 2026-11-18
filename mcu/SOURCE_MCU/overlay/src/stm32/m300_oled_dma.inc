@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 #line 1000 "m300_oled_dma.inc"
 // Private SPI2 TX: STM32F103 DMA1 channel 5. Four fixed slots, no heap.

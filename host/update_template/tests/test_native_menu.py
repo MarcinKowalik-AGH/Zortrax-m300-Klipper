@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native menu contracts, including negative controls from shipped R15.5."""
 from contextlib import nullcontext
 from types import SimpleNamespace as NS

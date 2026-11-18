@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Start the actual first-install configuration in pinned Klippy FILEOUTPUT."""
 import argparse
 import json

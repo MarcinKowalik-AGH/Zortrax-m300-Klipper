@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """R16 normal-operation configuration migration; keeps calibration text intact."""
 from pathlib import Path
 import glob
@@ -252,8 +253,6 @@ def convert_text(text, stock_xy=None):
         elif section == 'gcode_macro ZORTRAX_LANGUAGE':
             block = re.sub(r'^(\s*ZORTRAX_UI_SETTING NAME=language) VALUE=EN[ \t]*$',
                            r'\1', block, flags=re.MULTILINE)
-        elif section == 'gcode_macro ZORTRAX_INFORMATION':
-            block = block.replace('REFRESH={params.REFRESH|', "REFRESH={params.REFRESH|")
         elif section == 'gcode_macro ZORTRAX_LEVEL':
             block = ('[gcode_macro ZORTRAX_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'

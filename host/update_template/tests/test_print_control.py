@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native parser/pause ownership with modeled heaters and physical motion.
 
 Real file descriptors verify file identity. Hardware temperature, motion and

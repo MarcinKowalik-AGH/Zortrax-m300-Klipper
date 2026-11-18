@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """OEM Maintenance traces, native thermostat ownership and actual OLED dispatch."""
 import base64
 import hashlib

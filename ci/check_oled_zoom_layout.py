@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Verify the actual M300 OLED Vue stylesheet: centered screen, pinned controls.
 
 Uses the production pixel helper plus CSS extracted from the Vue component.

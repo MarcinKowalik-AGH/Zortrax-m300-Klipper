@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """One-time host-start recovery, separate from hardware fault acknowledgement."""
 from types import SimpleNamespace as NS
 import unittest

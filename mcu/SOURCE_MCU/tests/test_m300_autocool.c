@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Register model of the actual R14 cooling code and patched native GPIO/ADC.
 // ADC2 hardware completion/calibration are explicit boundaries; not a physical
 // temperature or F103 cycle test. GPL-3.0-or-later.

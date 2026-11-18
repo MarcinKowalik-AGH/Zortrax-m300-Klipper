@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M10 OLED link supervisory facade. Optional: no pins, motion or menu owner.
 

@@ -1,3 +1,4 @@
+<!-- Marcin Kowalik <mkowalik@agh.edu.pl> -->
 <template>
   <section
     v-if="preview"

@@ -1,6 +1,6 @@
 {
-  "release": "v1.0.0-rc.1",
-  "count": 41,
+  "release": "v1.0.0-rc.20",
+  "count": 43,
   "macros": [
     {
       "name": "BED_MESH",
@@ -41,6 +41,14 @@
       "name": "END_PRINT",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
+    },
+    {
+      "name": "OLED_TIMERS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "DIM",
+        "SLEEP"
+      ]
     },
     {
       "name": "PID_BED",
@@ -218,6 +226,14 @@
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "LEVEL"
+      ]
+    },
+    {
+      "name": "ZORTRAX_OLED_TIMERS",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": [
+        "DIM",
+        "SLEEP"
       ]
     },
     {

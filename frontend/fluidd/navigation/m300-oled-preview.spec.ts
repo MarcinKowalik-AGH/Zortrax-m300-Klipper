@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 import { describe, expect, it } from 'vitest'
 import { readM300OledPreview, selectM300OledPreview } from './m300-oled-preview'
 

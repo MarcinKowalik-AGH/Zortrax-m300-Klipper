@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Offline register/scheduler doubles; this does NOT execute on an STM32.
 // Build: cc -std=c11 -Wall -Wextra tests/test_panel.c -o /tmp/test_m300_panel

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """First-install data migration and rollback; never invokes system services."""
 import hashlib
 import json

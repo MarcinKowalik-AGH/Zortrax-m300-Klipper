@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # Publish exactly the firmware-only M300APP.M3B from a verified main build.
 set -euo pipefail
 version=$(jq -er '.mcu_release' PORT.json)

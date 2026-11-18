@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Serve the actual release UI and verify recovery from two empty files."""
 import argparse
 from functools import partial

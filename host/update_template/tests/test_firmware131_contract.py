@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Independent OEM execution fixtures versus full native procedure sessions."""
 import copy
 import json

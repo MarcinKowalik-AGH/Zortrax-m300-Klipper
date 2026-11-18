@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // M300 Classic OEM print counter, GPL-3.0-or-later.
 #ifndef __STM32_M300_FACTORY_COUNTER_H
 #define __STM32_M300_FACTORY_COUNTER_H

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """OEM reference pixels, shared prompts and actual OLED encoder dispatch."""
 import base64
 from collections import deque

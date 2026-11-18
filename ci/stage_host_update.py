@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Assemble the Orange Pi host update from the checked-out source."""
 from project import ROOT, stage_host_update
 

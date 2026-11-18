@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native pad measurement borrows the OLED; presentation never controls probing."""
 from types import SimpleNamespace as NS
 import unittest

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Native Klipper probing and compensation for the five Classic M300 pads."""
 from .m300_temperature_policy import target_limit
@@ -655,6 +656,9 @@ class M300PadMesh:
             if points and all(low[0] <= x <= high[0] and low[1] <= y <= high[1] for x, y in points):
                 result['suggested_edge_margin'] = margin
         return result
+
+    def get_ownership_status(self, eventtime):
+        return dict(state=self.state, busy=self.busy)
 
     def get_status(self, eventtime):
         toolhead = self.printer.lookup_object('toolhead', None)

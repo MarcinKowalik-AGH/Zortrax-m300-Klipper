@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Validate actual compiled firmware and collect matching host artifacts."""
 import argparse
 import importlib.util

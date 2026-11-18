@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Classic M300 SSD1322 and encoder. Private raw F103 GPIO ownership.
 // The button can revoke an already armed native stepper trigger.
@@ -37,8 +38,8 @@ DECL_CONSTANT("M300_OLED_DMA_IRQ_PRIORITY", 4);
 #define PANEL_EXTI_USED (PANEL_EXTI_AB | PANEL_EXTI_RELEASE)
 DECL_CONSTANT("M300_LOCAL_OLED_ABI", 1);
 #if CONFIG_M300_XY_STEP_TIMER
-DECL_CONSTANT_STR("M300_MCU_RELEASE", "1.0.6");
-#define M300_LOCAL_RELEASE_TEXT "MCU: 1.0.6"
+DECL_CONSTANT_STR("M300_MCU_RELEASE", "1.0.7");
+#define M300_LOCAL_RELEASE_TEXT "MCU: 1.0.7"
 DECL_CONSTANT("M300_XY_STEP_TIMER_ABI", 1);
 #else
 DECL_CONSTANT_STR("M300_MCU_RELEASE", "0.13.14.9");

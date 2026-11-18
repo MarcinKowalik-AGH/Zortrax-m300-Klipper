@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise the actual pinned native restart helper, without a UART or MCU."""
 import argparse
 import json

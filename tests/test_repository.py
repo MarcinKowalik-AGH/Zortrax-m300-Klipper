@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Packaging boundaries and compatibility contracts for the public repository."""
 import hashlib
 import ast
@@ -11,6 +12,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'ci'))
+from historical_source import source_sha
 from project import META, KIT, digest, fresh_directory, stage_host_update, upstream_archive
 
 
@@ -103,7 +105,7 @@ class RepositoryContracts(unittest.TestCase):
     def test_unmodified_oled_transport_parts_and_generic_renderer_match_reference(self):
         runtime = ROOT / 'host/klippy/extras'
         reference = ROOT / 'host/update_template/tests/reference'
-        self.assertEqual(digest(runtime / 'm300_oled_render.py'),
+        self.assertEqual(source_sha(runtime / 'm300_oled_render.py'),
                          digest(reference / 'm300_oled_render.py'))
 
         def classes(folder):

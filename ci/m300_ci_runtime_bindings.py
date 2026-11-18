@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Inspect the runtime observers and existing guards on actual Klippy handlers."""
 import json
 import logging

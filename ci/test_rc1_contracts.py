@@ -1,4 +1,6 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """RC1 publication, UI coverage and no-motion-change contracts. No printer I/O."""
+from historical_source import source_bytes
 import hashlib
 import json
 from pathlib import Path
@@ -7,7 +9,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.19'
+VERSION='v1.0.0-rc.20'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -16,7 +18,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(meta['distribution_version'],VERSION)
         self.assertEqual(meta['public_host_version'],VERSION[1:])
         self.assertEqual(meta['menu_revision'],VERSION[1:])
-        self.assertEqual(meta['mcu_release'],'1.0.6')
+        self.assertEqual(meta['mcu_release'],'1.0.7')
         self.assertIn('m300_release.py',meta['host_update_files'])
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)
@@ -35,19 +37,28 @@ class Rc1Contracts(unittest.TestCase):
         native_service = 'host/klippy/extras/m300_native_service.py'
         # Reviewed startup, print lighting and pause/end motion updates through RC17.
         updated_runtime = {
+            'host/klippy/extras/m300_calibration.py': (
+                '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
+                '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
+            'host/config/m300_classic_base.cfg': (
+                '1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a',
+                'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64'),
+            'host/klippy/extras/m300_settings_ui.py': (
+                '27985dd4e51f7a688e060ad37adb278dd26ca50c085ca18f3487bcd484c21bcb',
+                '0e72d7de0e90cfc953cb2f79cc607f5b26d9b0c8ce171125ece8ece5304013db'),
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
                 '228eb9c11e07a8c6c5b6d98da1c7b85659d4082e054534aa43829c6cf9b22200'),
             'host/klippy/extras/m300_native_motion.py': (
                 '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
-                'a4857c0b5dd7f7e9390ad92ab7f5885002a834a2d997160d6ec0e7a23517faff'),
+                '9a858e5603c07776d76a2741c2a9723a29f1b615b77c78376f0e8ec904a92be9'),
             'host/klippy/extras/m300_pad_mesh.py': (
                 'd7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836',
-                '34bf981bc1a7265abee980573b55000ee9e1f5862163e8bec7d7e5e77e053fec'),
+                '6d565763d5a8e4b7febda77df0b6d59c2d5431925df7616ff6ecc2d1a43ce0d7'),
         }
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
-                data = (ROOT/path).read_bytes()
+                data = source_bytes(ROOT/path)
                 if path in updated_runtime:
                     historical, current = updated_runtime[path]
                     self.assertEqual(expected, historical)
@@ -66,7 +77,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],940)
+        self.assertEqual(meta['self_contained_host_tests'],947)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -84,7 +95,7 @@ class Rc1Contracts(unittest.TestCase):
         names=[]
         for path in (ROOT/'host/config').glob('*.cfg'):
             names += re.findall(r'^\[gcode_macro ([^\]]+)\]',path.read_text(),re.M)
-        self.assertEqual(len(names),41)
+        self.assertEqual(len(names),43)
         self.assertEqual(len(names),len(set(names)))
         self.assertFalse(any(n.startswith('TEST_') for n in names))
         for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS',
@@ -138,7 +149,7 @@ class Rc1Contracts(unittest.TestCase):
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/('RELEASE_'+VERSION+'.md')).read_text()
             self.assertIn('--port 4480',text)
-            self.assertIn('1.0.6',text)
+            self.assertIn('1.0.7',text)
 
     def test_obsolete_generators_and_duplicate_publish_workflow_removed(self):
         for path in ('tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py',

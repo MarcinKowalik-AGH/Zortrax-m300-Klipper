@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Read-only, strictly validated status adapter for the M300 OLED preview.
 // Moonraker already subscribes to all Klipper status objects in Fluidd.
 export interface M300OledPreviewStatus {

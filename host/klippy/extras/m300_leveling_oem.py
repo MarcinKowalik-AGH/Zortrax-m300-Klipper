@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 1.3.1 M07 dialogs: one text model for OLED and Fluidd.
 

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Meaning, animation lifecycle and non-overlapping native OLED composition."""
 import copy
 import json

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Update M300 Classic Klipper, with a separate opt-in Fluidd web update."""
 import argparse
 from contextlib import closing, contextmanager

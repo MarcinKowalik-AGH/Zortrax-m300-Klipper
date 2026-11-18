@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Reproduce the unchanged OEM logo ROM and pixel-exact preview. No printer I/O."""
 import argparse

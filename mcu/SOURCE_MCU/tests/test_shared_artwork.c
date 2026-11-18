@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Production OLED scanline renderer with existing isolated MMIO fixture.
 // Emits the actual packed frame; never runs on or flashes printer hardware.
 #define main panel_regression_main

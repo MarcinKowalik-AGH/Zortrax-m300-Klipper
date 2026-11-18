@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-only
 import Vue from 'vue'
 import { readM300OledPreview, type M300OledPreviewStatus } from './m300-oled-preview'

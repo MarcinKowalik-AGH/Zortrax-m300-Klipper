@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Replay the real patched stepper and gated-timer driver with STM32 register doubles."""
 import argparse
 from pathlib import Path

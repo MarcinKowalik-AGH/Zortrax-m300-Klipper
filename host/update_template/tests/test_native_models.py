@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native Models integration with a sector fixture at the MCU wire boundary."""
 import base64
 from contextlib import contextmanager

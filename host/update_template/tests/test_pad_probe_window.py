@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Do not confuse an absolute homing offset with the accepted surface span."""
 import unittest
 

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Reproduce beta.14's idle-clock livelock and exercise real dispatch entrypoints.
 
 Native ToolHead timing methods and G-code/pause parsers are unmodified snapshots.

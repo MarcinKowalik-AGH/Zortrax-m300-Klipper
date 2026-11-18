@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Common fault indication on the audited RGB pins. GPL-3.0-or-later.
 // The permanent scheduler task wake survives shutdown's user-timer reset.
 // No UART traffic, new timer IRQ, actuator access or fault clearing is needed.

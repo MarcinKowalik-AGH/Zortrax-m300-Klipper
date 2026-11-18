@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Check OEM 1.3.1 Settings callbacks and OLED menu pixels from the private model."""
 import argparse
 import hashlib

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Group M300 macros through Moonraker, preserving unrelated UI preferences."""
 import argparse
 import copy
@@ -32,7 +33,7 @@ def category(name):
                                           'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE',
                                           'PAUSE', 'RESUME', 'CANCEL_PRINT',
                                           'START_PRINT', 'END_PRINT', 'FILAMENT_READY', 'M600', 'M601',
-                                          'PRINT_CONTROL_STATUS', 'PAUSE_TEMP_STATUS', 'COOLDOWN'):
+                                          'PRINT_CONTROL_STATUS', 'PAUSE_TEMP_STATUS', 'OLED_TIMERS', 'COOLDOWN'):
         return 'Klipper'
     if name.startswith('ZORTRAX_'):
         return 'ZORTRAX M300'

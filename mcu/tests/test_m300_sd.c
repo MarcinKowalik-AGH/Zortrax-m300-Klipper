@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Native register/card doubles; does not execute STM32 instructions or hardware.
 #include <assert.h>

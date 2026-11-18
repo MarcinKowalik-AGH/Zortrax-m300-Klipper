@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Exercise published macro names through the actual pinned G-code lexer."""
 import configparser
 import importlib.util

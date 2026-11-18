@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 #ifndef __STM32_M300_XY_STEP_TIMER_H
 #define __STM32_M300_XY_STEP_TIMER_H
 // Finite Classic M300 STEP pulse trains. GPL-3.0-or-later.

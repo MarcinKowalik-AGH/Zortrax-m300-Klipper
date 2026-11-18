@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Bounded, fail-closed GitHub Actions retry. Logs are DATA, never executable.
 
 Run from the trusted default-branch workflow, NOT from a failed PR checkout.

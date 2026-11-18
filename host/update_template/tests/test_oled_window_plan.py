@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Check the actual OLED transport with and without the idle window planner."""
 import unittest
 

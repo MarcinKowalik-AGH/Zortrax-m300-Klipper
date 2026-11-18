@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Real local renderer and lease handler with isolated MMIO doubles.
 // Does not flash hardware or modify any printer configuration.
 #define main panel_regression_main

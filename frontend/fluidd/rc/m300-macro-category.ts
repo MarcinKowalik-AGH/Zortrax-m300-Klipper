@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-only
 const internalMacros = new Set([
   'ZORTRAX_PRINT', 'ZORTRAX_OLED_PERF', 'ZORTRAX_TEST_PRINT_FAN',
@@ -16,7 +17,7 @@ export function m300MacroDefaultCategory (name: string, model: unknown): string 
   const key = name.toUpperCase()
   if (key.startsWith('ZORTRAX_')) return 'ZORTRAX M300'
   if (key.startsWith('PID_') || ['START_PRINT', 'END_PRINT', 'BED_MESH', 'PAUSE',
-    'RESUME', 'CANCEL_PRINT', 'M600', 'M601', 'COOLDOWN', 'PRINT_CONTROL_STATUS'].includes(key)) {
+    'RESUME', 'CANCEL_PRINT', 'M600', 'M601', 'COOLDOWN', 'OLED_TIMERS', 'PRINT_CONTROL_STATUS'].includes(key)) {
     return 'Klipper'
   }
 }

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Native bed service, shared rendering, settings and safe cancellation."""
 from types import SimpleNamespace as NS
 import unittest

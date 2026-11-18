@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Reproduce OEM Maintenance with declared UI/heater/button boundaries.
 
 Fan entry, toggles, saved-request restoration and PWM register writes execute

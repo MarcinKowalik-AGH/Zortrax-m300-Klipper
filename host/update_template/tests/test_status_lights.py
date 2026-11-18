@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Shared state colors, procedure transitions and monotonic RGB alarm timing."""
 from types import SimpleNamespace as NS
 import unittest

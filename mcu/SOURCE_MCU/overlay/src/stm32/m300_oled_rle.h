@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef M300_OLED_RLE_H
 #define M300_OLED_RLE_H

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Post-job MCU synchronization, runtime UART correlation and durable retries."""
 import os
 from pathlib import Path

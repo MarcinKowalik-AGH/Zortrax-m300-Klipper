@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M13 optional Z-code admission and read-only SD diagnostics for M300 Classic.
 

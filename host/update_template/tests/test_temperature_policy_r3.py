@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """R3 target caps and native parser semantics. Hardware boundaries modeled."""
 from pathlib import Path
 from types import SimpleNamespace as NS

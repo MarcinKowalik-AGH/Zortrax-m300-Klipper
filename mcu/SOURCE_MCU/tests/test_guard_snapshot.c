@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Explicit ADC interrupt interleavings. Native register model, NOT hardware.
 #define main original_board_tests
 #include "test_m300_board.c"

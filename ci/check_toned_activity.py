@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Audit native icon geometry, tonal transport and ROM budget; no printer I/O."""
 import argparse
 import base64

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Read-only low-latency host-rendered OLED preview, 4bpp PNG fidelity and bounds."""
 import base64
 import struct

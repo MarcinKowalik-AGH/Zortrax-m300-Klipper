@@ -1,3 +1,4 @@
+// Marcin Kowalik <mkowalik@agh.edu.pl>
 // Finite Classic M300 STEP pulse trains. GPL-3.0-or-later.
 #include "board/gpio.h" // GPIO
 #include "board/irq.h" // irq_save

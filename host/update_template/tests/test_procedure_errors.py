@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Fault injection at procedure boundaries and the shared error dispatcher."""
 from types import SimpleNamespace as NS
 import unittest

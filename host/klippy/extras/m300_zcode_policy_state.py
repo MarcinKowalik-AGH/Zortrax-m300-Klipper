@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M13 pure, fail-closed compatibility classification for M300 Classic binary Z-code.
 

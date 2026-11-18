@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Event-driven menu preview: actual wait completion, bounds and no old frames."""
 import base64
 import hashlib

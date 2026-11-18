@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 import importlib.util
 import pathlib
 import sys
@@ -232,6 +233,10 @@ class Config:
 
 
 class Printer:
+    def send_event(self, event, *args):
+        for handler in self.events.get(event, ()):
+            handler(*args)
+
     def __init__(self):
         self.reactor = Reactor()
         self.events = {}
@@ -292,6 +297,17 @@ class PolicyTests(unittest.TestCase):
         self.module.stream._local['mode'] = DIM
         self.at(300.)
         self.at(310.)
+
+    def test_separate_minute_thresholds_keep_dim_screen_visible_until_sleep(self):
+        self.module.timers.apply((1, 2))
+        self.at(59.)
+        self.assertEqual(self.module.phase, AWAKE)
+        self.at(60.)
+        self.assertEqual(self.module.phase, DIM)
+        self.at(119.)
+        self.assertEqual(self.module.phase, DIM)
+        self.at(120.)
+        self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
 
     def test_idle_notice_after_300_seconds_then_off_after_visible_notice(self):
         self.at(299.)
