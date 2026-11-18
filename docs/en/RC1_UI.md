@@ -1,6 +1,8 @@
 # RC1 — one OLED, Fluidd and Klipper control surface
 
-The public version is **1.0.0-rc.1**. There are no parallel motion procedures:
+The current OLED timers count from the last operator interaction in Ready, during a print and while paused. Set them in **OLED_TIMERS** or **ZORTRAX_OLED_TIMERS**. For example, `DIM=1 SLEEP=2` dims at one minute and turns the display off at two. Both values are in the range 1–60 minutes with DIM ≤ SLEEP. The first knob gesture wakes the panel. [OLED timing](RELEASE_v1.0.0-rc.21.md).
+
+The original shared controls were introduced in **1.0.0-rc.1**. There are no parallel motion procedures:
 buttons call the same procedure owners as the OLED. Settings without an argument
 open the shared selector; an explicit argument updates the same persistent value.
 

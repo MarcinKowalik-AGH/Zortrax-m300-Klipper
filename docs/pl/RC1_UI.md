@@ -1,5 +1,7 @@
 # RC1 — wspólne menu OLED, makra Fluidd i procedury Klippera
 
+W aktualnym wydaniu oba czasy OLED mierzy się od ostatniej obsługi w Ready, podczas druku i w pauzie. Ustaw je w **OLED_TIMERS** lub **ZORTRAX_OLED_TIMERS**. Przykład `DIM=1 SLEEP=2` przygasza ekran po minucie i wyłącza go po dwóch. Obie wartości mieszczą się w zakresie 1–60 min, przy czym DIM ≤ SLEEP. Pierwszy gest wybudza panel. [Opis działania](RELEASE_v1.0.0-rc.21.md).
+
 [Instrukcja główna](../../README_PL.md) · [Katalog makr](MACRO_REFERENCE.md) · [Odbiory sprzętowe](ACCEPTANCE_REGISTER.md)
 
 RC1 nie wprowadza drugiego zestawu ruchów ani oddzielnych nastaw dla przeglądarki.

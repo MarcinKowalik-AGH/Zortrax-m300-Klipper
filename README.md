@@ -4,7 +4,7 @@
 
 **MCU 1.0.7:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.7.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
 
-**Release candidate 19 for the classic M300**, using its original controller,
+**Klipper port for the classic M300**, using its original controller,
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
@@ -19,8 +19,8 @@ OLED menu with original artwork and unified shaded icons; low-latency Fluidd OLE
 preview with integer square pixels and ×1/×2/×3 controls. Print START loads the
 selected mesh after homing and primes with two Y and two X lines.
 
-OLED, Fluidd macros and native commands share the same owners. All eight Settings
-entries have direct macros, including OLED and LED brightness. Lab shortcuts
+OLED, Fluidd macros and native commands share the same owners. Settings
+macros include OLED and LED brightness and both OLED inactivity timers. Lab shortcuts
 are removed from the normal UI; OEM fan service, PID and read-only diagnostics
 remain. [Macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Print control](docs/pl/PRINT_CONTROL.md).
 
