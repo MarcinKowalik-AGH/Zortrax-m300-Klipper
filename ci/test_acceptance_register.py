@@ -31,7 +31,16 @@ class AcceptanceTests(unittest.TestCase):
         stock = next(f for f in self.data['features'] if f['id'] == 'OEM_131_BOOT')
         self.assertEqual(stock['events'][-1]['status'], 'CONFIRMED_HARDWARE')
         runtime = next(f for f in self.data['features'] if f['id'] == 'COUNTER_RUNTIME_SYNC')
-        self.assertEqual(runtime['events'][-1]['status'], 'AWAITING_TEST')
+        stock_evidence = [e['evidence'] for e in stock['events']]
+        confirmed = [e for e in runtime['events'] if e['status'] == 'CONFIRMED_HARDWARE']
+        self.assertTrue(confirmed)
+        for event in confirmed:
+            self.assertNotIn(event['evidence'], stock_evidence)
+        self.assertTrue(any(e['version'] == 'RC19 / MCU 1.0.6'
+                            and '16:37:27' in e['version_basis']
+                            and '289224' in e['result']
+                            and 'wyłączyłem drukarkę' in e['evidence'].get('quote', '')
+                            for e in confirmed))
     def test_mandatory_fields_validated(self):
         for key in ('date','version','test','result'):
             d=deepcopy(self.data);d['features'][0]['events'][0][key]=''

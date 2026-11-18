@@ -618,6 +618,19 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-18",
+          "version": "RC19 / MCU 1.0.6",
+          "version_basis": "Wersje odczytane z HW05 o 16:32:38. Operator potwierdził wyłączenie i ponowne włączenie drukarki przed odczytem o 16:37:27.",
+          "test": "Zachowanie fabrycznego licznika ID0 po wyłączeniu i ponownym włączeniu drukarki.",
+          "status": "CONFIRMED_HARDWARE",
+          "result": "Przed wyłączeniem i po ponownym włączeniu MCU zgłosiło 289224 min (4820 h 24 min), bank B, NORMALIZED, CURRENT, pending=false i 149520 rozliczonych sekund. Wartość przetrwała cykl zasilania bez ponownego doliczenia czasu.",
+          "problem": "Test dotyczył zakończonego zapisu. Przerwanie zasilania w trakcie programowania banku sprawdzono dotąd w symulacji.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "wyłączyłem drukarkę , włączyłem od razu a następnie wydałem twoje polecenie i je skopiowałem do chat"
+          }
         }
       ]
     }
