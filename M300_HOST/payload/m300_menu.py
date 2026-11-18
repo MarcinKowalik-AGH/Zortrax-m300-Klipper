@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_menu.py - Obsługuje nawigację fizycznego panelu i uruchamia akcję przypisaną do wskazanego wiersza.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04 operator menu. Rows are data; file names never become G-code text.
 

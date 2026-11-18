@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_settings_ui.py - Rysuje wiersze, suwaki i wartości ustawień za pomocą czcionki panelu OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded original-font OLED menu composition, no actions."""
 from functools import lru_cache

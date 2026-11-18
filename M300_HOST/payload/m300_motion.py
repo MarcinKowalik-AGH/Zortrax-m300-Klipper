@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_motion.py - Prowadzi operacje ruchu i bazowania M300 oraz sprawdza położenie i sygnały krańcowe.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 bounded initial homing and encoder/deadman Z motion.
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_lifecycle.py - Synchronizuje ponowne połączenie z MCU oraz przejęcie OLED przez hosta.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 startup reconnect and private OLED lease; never resumes actuators."""
 import json

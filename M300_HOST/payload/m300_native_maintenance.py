@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_native_maintenance.py - Realizuje czynności serwisowe z użyciem natywnego sterowania M300.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """OEM Maintenance on the existing native Klipper heaters and Z rail.
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# install.py - Planuje, instaluje i w razie błędu wycofuje zmiany modułów oraz konfiguracji hosta.
 """Plan, apply and roll back the M300 Classic host update."""
 import argparse
 import ast

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_filament_state.py - Wyznacza kolejne fazy sesji materiałowej i odcinki ruchu ekstrudera.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Pure M300 M03 filament-session FSM and bounded signed-E segment plans.
 

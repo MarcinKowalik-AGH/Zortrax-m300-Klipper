@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_print_hold.py - Rozpoznaje ciągłe przytrzymanie pokrętła podczas obsługi wydruku.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Recognize a continuous knob hold without borrowing the MCU menu-long event."""
 import math

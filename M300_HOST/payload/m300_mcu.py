@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_mcu.py - Łączy Klipper z płytą M300, rozpoznaje jej możliwości i sprawdza stan zabezpieczeń.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Classic M300 P01 board protocol and fail-closed host qualification gates.
 

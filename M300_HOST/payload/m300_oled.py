@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled.py - Obsługuje pokrętło i obraz fizycznego panelu, przekazując akcje do aktualnego menu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Classic M300 diagnostics and token-bound optional job/filament controls.
 

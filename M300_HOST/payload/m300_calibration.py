@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_calibration.py - Prowadzi pomiary kalibracyjne stołu z wykorzystaniem natywnego ruchu i styku PC7.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04/M07 native PC7 calibration adapter, bounded and default disabled.
 

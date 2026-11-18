@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_nvm.py - Zapisuje na hoście ustawienia, wyniki kalibracji i stan rozliczenia czasu pracy.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04 durable host settings. Never writes MCU Flash or restores live state.
 

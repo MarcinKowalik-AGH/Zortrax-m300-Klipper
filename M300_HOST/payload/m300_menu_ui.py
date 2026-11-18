@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_menu_ui.py - Rysuje menu, zapamiętuje kursor i wiąże kliknięcie z ekranem potwierdzonym przez OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M11 optional classic M300 menu/translation/encoder display policy.
 

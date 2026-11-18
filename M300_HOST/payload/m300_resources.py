@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_resources.py - Sprawdza przypisanie pinów i zasobów M300 przed wysłaniem konfiguracji do płyty.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Exact classic-M300 resource census, before MCU configuration is sent."""
 import json

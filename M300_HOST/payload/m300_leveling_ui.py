@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_leveling_ui.py - Buduje wiersze menu i akcje kolejnych ekranów poziomowania.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M07 rows use the same recovered text as the modal OLED and Fluidd."""
 from .m300_leveling_oem import describe

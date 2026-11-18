@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_maintenance.py - Obsługuje procedury konserwacji, ruch platformy i ręczne uśpienie drukarki.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04 bounded maintenance and sleep on the single native M300 resources.
 

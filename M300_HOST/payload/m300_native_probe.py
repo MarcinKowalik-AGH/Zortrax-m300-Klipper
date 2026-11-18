@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_native_probe.py - Wykonuje ograniczony ruch pomiarowy Klippera do wyzwolenia styku dyszy.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """One bounded native HomingMove capability, shared by M07 and Z refinement."""
 import math

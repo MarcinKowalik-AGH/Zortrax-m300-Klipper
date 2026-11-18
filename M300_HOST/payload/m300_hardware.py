@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_hardware.py - Rozpoznaje rewizję płyty, dobiera skalę osi Z i synchronizuje licznik minut z MCU.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Identify the stock M300 and synchronize its print-minute counter.
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_klipper_status.py - Przenosi standardowy ekran statusu Klippera do bufora OLED drukarki.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Klipper's real default graphics screen, rendered into the private M300 OLED.
 

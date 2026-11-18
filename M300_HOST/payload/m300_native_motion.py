@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_native_motion.py - Wykonuje bazowanie i ruch ręczny przez natywny planer Klippera.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Normal M300 homing on Klipper's native Cartesian/probe implementation.
 

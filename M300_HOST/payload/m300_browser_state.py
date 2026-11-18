@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_browser_state.py - Zapamiętuje katalog i generację listy plików, aby kliknięcie wskazywało nadal ten sam model.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M12 pure, bounded, non-executing directory lease for the classic M300.
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_material_ui_state.py - Dobiera widok i dostępne potwierdzenia do aktualnej fazy zmiany materiału.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M09 pure presentation contract for M03 material-session snapshots.
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_activity_graphics.py - Dobiera animacje OLED do stanu menu, grzania i procedur drukarki.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Semantic OLED artwork selected from existing cached status, without control I/O."""
 import base64

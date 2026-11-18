@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_display_oem.py - Odczytuje fabryczną ikonę księżyca i składa ekran zapowiedzi uśpienia.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Read-only OEM moon. The existing M300 renderer retains its wire format."""
 import base64

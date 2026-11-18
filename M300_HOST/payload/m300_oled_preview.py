@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled_preview.py - Publikuje podgląd wyrenderowanej ramki OLED dla interfejsu Fluidd.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Low-latency, read-only mirror of a host-rendered M300 SSD1322 OLED frame.
 

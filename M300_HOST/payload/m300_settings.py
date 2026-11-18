@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_settings.py - Obsługuje menu ustawień i informacji o drukarce oraz wspólne polecenia z Fluidd.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Shared English Settings/Information over existing owners and host NVM.
 

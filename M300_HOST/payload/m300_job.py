@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_job.py - Zarządza sesją zadania i koordynuje użycie zasobów drukarki przez wydruk.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 M02 job lifecycle on native Klippy resources.
 

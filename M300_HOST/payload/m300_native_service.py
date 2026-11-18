@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_native_service.py - Przydziela ruch i grzanie procedurom serwisowym na czas danej sesji.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Session-only native motion/heater ownership for OEM manual services.
 

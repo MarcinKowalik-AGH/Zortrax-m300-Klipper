@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_stock_geometry.py - Odtwarza fabryczne przesunięcia XY używane w układzie współrzędnych M300.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """OEM 1.3.1 session XY offsets: 0x08008174 and 0x080159a0."""
 
