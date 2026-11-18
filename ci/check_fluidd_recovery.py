@@ -17,6 +17,7 @@ from urllib.request import urlopen
 
 from playwright.sync_api import sync_playwright
 
+from check_fluidd_sidebar import check_sidebar
 from install_orange_pi import deploy_web, extract_web, select_fluidd
 
 
@@ -107,6 +108,7 @@ def main():
                         browser = getattr(driver, name).launch(**options)
                         try:
                             check_browser(browser, url, javascript)
+                            check_sidebar(browser, url)
                             versions[name] = browser.version
                         finally:
                             browser.close()
@@ -119,7 +121,7 @@ def main():
     report = dict(status='PASS_FLUIDD_RECOVERY_BROWSER', archive_sha256=checksum,
                   browsers=versions, html_bytes=len(html),
                   main_javascript_bytes=len(original_javascript), custom_config_preserved=True,
-                  physical_printer_tested=False)
+                  sidebar_restart_and_reload=True, physical_printer_tested=False)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report))

@@ -1,0 +1,141 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300-sidebar.patch - Przywraca nawigację Fluidd i dodaje przycisk odświeżania strony w Orca.
+diff --git a/src/App.vue b/src/App.vue
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -94,7 +94,7 @@
+ import { Component, Mixins, Watch } from 'vue-property-decorator'
+ import { EventBus } from '@/eventBus'
+ import StateMixin from '@/mixins/state'
+-import { M300PanelRecovery } from '@/util/m300-panel-recovery'
++import { m300PanelRecovery } from '@/util/m300-panel-recovery'
+ import FilesMixin from '@/mixins/files'
+ import BrowserMixin from '@/mixins/browser'
+ import type { LinkPropertyHref, MetaPropertyName } from 'vue-meta'
+@@ -135,18 +135,17 @@
+   toolsdrawer: boolean | null = null
+   navdrawer: boolean | null = null
+   dragState = false
+-  private panelRecovery = new M300PanelRecovery()
+ 
+   @Watch('socketReady')
+   restoreReconnectedPanel (ready: boolean, previous: boolean) {
+     if (!ready) this.clearDragOverlay()
+-    this.panelRecovery.observe('socket', this.$typedState.config.socketUrl, ready, previous)
++    m300PanelRecovery.observe('socket', this.$typedState.config.socketUrl, ready, previous)
+   }
+ 
+   @Watch('klippyReady')
+   restoreKlippyPanel (ready: boolean, previous: boolean) {
+     if (!ready) this.clearDragOverlay()
+-    this.panelRecovery.observe('klippy', this.$typedState.config.socketUrl, ready, previous)
++    m300PanelRecovery.observe('klippy', this.$typedState.config.socketUrl, ready, previous)
+   }
+ 
+   clearDragOverlay () {
+diff --git a/src/store/socket/actions.ts b/src/store/socket/actions.ts
+--- a/src/store/socket/actions.ts
++++ b/src/store/socket/actions.ts
+@@ -1,3 +1,4 @@
++import { m300PanelRecovery } from '@/util/m300-panel-recovery'
+ import type { ActionTree } from 'vuex'
+ import { consola } from 'consola'
+ import type { SocketState, SocketStatus } from './types'
+@@ -343,7 +344,8 @@
+   /**
+    * This is fired when, for example - the service is stopped.
+    */
+-  async notifyKlippyDisconnected ({ commit, dispatch }) {
++  async notifyKlippyDisconnected ({ commit, dispatch, rootState }) {
++    m300PanelRecovery.klippyNotification(rootState.config.socketUrl, false)
+     commit('console/setResetPromptDialog', '', { root: true })
+     await dispatch('resetKlippy', undefined, { root: true })
+ 
+@@ -358,7 +360,8 @@
+     SocketActions.serverInfo()
+   },
+ 
+-  async notifyKlippyReady () {
++  async notifyKlippyReady ({ rootState }) {
++    m300PanelRecovery.klippyNotification(rootState.config.socketUrl, true)
+     consola.debug('Klippy Ready')
+     SocketActions.serverInfo()
+   },
+diff --git a/src/components/ui/AppNavItem.vue b/src/components/ui/AppNavItem.vue
+--- a/src/components/ui/AppNavItem.vue
++++ b/src/components/ui/AppNavItem.vue
+@@ -10,6 +10,7 @@
+         link
+         color="secondary"
+         v-bind="attrs"
++        @click.native.capture="handleNavigationClick"
+         v-on="on"
+       >
+         <v-list-item-icon>
+@@ -37,6 +38,7 @@
+ import StateMixin from '@/mixins/state'
+ import BrowserMixin from '@/mixins/browser'
+ import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from '@/util/event-helpers'
++import { navigateM300Sidebar } from '@/util/m300-sidebar'
+ import { Globals } from '@/globals'
+ import isKeyOf from '@/util/is-key-of'
+ 
+@@ -64,6 +66,17 @@
+     return this.$typedState.config.uiSettings.general.enableKeyboardShortcuts
+   }
+ 
++  handleNavigationClick (event: MouseEvent) {
++    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
++    // Vue Router's native listener skips a click already handled here.
++    event.preventDefault()
++    this.openView()
++  }
++
++  openView () {
++    navigateM300Sidebar(this.$router, this.to)
++  }
++
+   handleKeyDown (event: KeyboardEvent) {
+     if (
+       !this.enableKeyboardShortcuts ||
+@@ -81,7 +94,7 @@
+     ) {
+       event.preventDefault()
+ 
+-      this.$router.push({ name: this.to })
++      this.openView()
+     }
+   }
+ 
+diff --git a/src/components/layout/AppBar.vue b/src/components/layout/AppBar.vue
+--- a/src/components/layout/AppBar.vue
++++ b/src/components/layout/AppBar.vue
+@@ -35,6 +35,17 @@
+     <!-- <v-spacer /> -->
+ 
+     <div class="toolbar-supplemental">
++      <app-btn
++        icon
++        text
++        data-m300-panel-reload
++        :title="$t('app.general.btn.socket_refresh')"
++        :aria-label="$t('app.general.btn.socket_refresh')"
++        @click="reloadPanel"
++      >
++        <v-icon>$refresh</v-icon>
++      </app-btn>
++
+       <div v-if="socketReady && klippyReady && showSaveConfigAndRestartForPendingChanges">
+         <app-save-config-and-restart-btn
+           :loading="hasWait($waits.onSaveConfig)"
+@@ -262,6 +273,10 @@
+   }
+ })
+ export default class AppBar extends Mixins(StateMixin, ServicesMixin, FilesMixin, BrowserMixin) {
++  reloadPanel () {
++    window.location.reload()
++  }
++
+   menu = false
+   userPasswordDialogOpen = false
+   pendingChangesDialogOpen = false

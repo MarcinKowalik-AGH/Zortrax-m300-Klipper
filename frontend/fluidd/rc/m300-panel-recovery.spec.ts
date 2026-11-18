@@ -56,9 +56,26 @@ describe('M300 embedded panel reconnection', () => {
     panel.observe('klippy', 'ws://m300', true, false)
     expect(reload).toHaveBeenCalledTimes(1)
     vi.advanceTimersByTime(120_001)
-    panel.observe('klippy', 'ws://m300', false, true)
-    panel.observe('klippy', 'ws://m300', true, false)
+    const nextPage = new M300PanelRecovery(reload)
+    nextPage.observe('klippy', 'ws://m300', false, true)
+    nextPage.observe('klippy', 'ws://m300', true, false)
     expect(reload).toHaveBeenCalledTimes(2)
+  })
+
+  it('recovers a second confirmed Klipper restart inside the socket cooldown even when Vue misses the transient state', () => {
+    sessionStorage.setItem('m300-panel-reload:ws://m300', String(Date.now()))
+    const reload = vi.fn()
+    const panel = new M300PanelRecovery(reload)
+    panel.klippyNotification('ws://m300', true)
+    panel.klippyNotification('ws://other', false)
+    panel.klippyNotification('ws://m300', true)
+    expect(reload).not.toHaveBeenCalled()
+    panel.klippyNotification('ws://m300', false)
+    panel.klippyNotification('ws://m300', true)
+    panel.klippyNotification('ws://m300', true)
+    panel.observe('socket', 'ws://m300', false, true)
+    panel.observe('socket', 'ws://m300', true, false)
+    expect(reload).toHaveBeenCalledTimes(1)
   })
 
   it('keeps retrying beyond the original three attempts and stops on explicit close', async () => {

@@ -20,6 +20,8 @@ git apply --check "$root/frontend/fluidd/m300-oled-timers.patch"
 git apply "$root/frontend/fluidd/m300-oled-timers.patch"
 git apply --check "$root/frontend/fluidd/m300-panel-recovery.patch"
 git apply "$root/frontend/fluidd/m300-panel-recovery.patch"
+git apply --check "$root/frontend/fluidd/m300-sidebar.patch"
+git apply "$root/frontend/fluidd/m300-sidebar.patch"
 cp "$root/frontend/fluidd/rc/"*.vue src/components/common/
 cp "$root/frontend/fluidd/m300-tune.spec.ts" src/util/
 # Versioned navigation-only overlay; preserve the existing graphics and animation cadence.
@@ -28,8 +30,8 @@ cp "$root/frontend/fluidd/navigation/"*.ts src/util/
 cp "$root/frontend/fluidd/rc/"*.ts src/util/
 
 pnpm install --frozen-lockfile --ignore-scripts
-pnpm exec vitest run src/components/common/m300Leveling.spec.ts src/util/m300-homing.spec.ts src/util/m300-pad-mesh.spec.ts src/util/m300-pad-contact-map.spec.ts src/util/m300-feedback.spec.ts src/util/m300-macro-category.spec.ts src/util/m300-oled-preview.spec.ts src/util/m300-oled-navigation.spec.ts src/util/m300-oled-navigation-component.spec.ts src/util/m300-oled-paint.spec.ts src/util/m300-oled-pixels.spec.ts src/util/m300-tune.spec.ts src/util/m300-oled-timers.spec.ts src/util/m300-panel-recovery.spec.ts
-pnpm exec eslint --max-warnings 0 src/App.vue src/views/Tune.vue src/store/{mesh,macros}/getters.ts src/components/common/{ActionCommandPromptDialog.vue,M300OledTimers.vue,M300SegmentedSlider.vue,M300LevelingDiagram.vue,m300Leveling.ts,m300Leveling.spec.ts,M300PadMeshObserver.vue} src/mixins/state.ts src/api/socketActions.ts src/util/m300-{homing,pad-mesh,pad-contact-map,feedback,macro-category}{,.spec}.ts src/components/widgets/thermals/M300OledPreview.vue src/util/m300-oled-preview{,.spec}.ts src/util/m300-oled-navigation{,.spec,-component.spec}.ts src/util/m300-oled-paint{,.spec}.ts src/util/m300-oled-pixels{,.spec}.ts src/components/widgets/toolhead/ToolheadControl{Bars,BarsAxis,Circle,Cross}.vue src/components/widgets/bedmesh/{BedMeshCard,BedMeshControls,M300PadMeshStatus,M300PadContactMap}.vue src/util/m300-tune.spec.ts src/util/m300-oled-timers.spec.ts src/util/m300-panel-recovery.spec.ts src/util/m300-panel-recovery.ts src/plugins/socketClient.ts src/store/socket/actions.ts
+pnpm exec vitest run src/components/common/m300Leveling.spec.ts src/util/m300-homing.spec.ts src/util/m300-pad-mesh.spec.ts src/util/m300-pad-contact-map.spec.ts src/util/m300-feedback.spec.ts src/util/m300-macro-category.spec.ts src/util/m300-oled-preview.spec.ts src/util/m300-oled-navigation.spec.ts src/util/m300-oled-navigation-component.spec.ts src/util/m300-oled-paint.spec.ts src/util/m300-oled-pixels.spec.ts src/util/m300-tune.spec.ts src/util/m300-oled-timers.spec.ts src/util/m300-panel-recovery.spec.ts src/util/m300-sidebar.spec.ts
+pnpm exec eslint --max-warnings 0 src/App.vue src/views/Tune.vue src/store/{mesh,macros}/getters.ts src/components/common/{ActionCommandPromptDialog.vue,M300OledTimers.vue,M300SegmentedSlider.vue,M300LevelingDiagram.vue,m300Leveling.ts,m300Leveling.spec.ts,M300PadMeshObserver.vue} src/mixins/state.ts src/api/socketActions.ts src/util/m300-{homing,pad-mesh,pad-contact-map,feedback,macro-category}{,.spec}.ts src/components/widgets/thermals/M300OledPreview.vue src/util/m300-oled-preview{,.spec}.ts src/util/m300-oled-navigation{,.spec,-component.spec}.ts src/util/m300-oled-paint{,.spec}.ts src/util/m300-oled-pixels{,.spec}.ts src/components/widgets/toolhead/ToolheadControl{Bars,BarsAxis,Circle,Cross}.vue src/components/widgets/bedmesh/{BedMeshCard,BedMeshControls,M300PadMeshStatus,M300PadContactMap}.vue src/util/m300-tune.spec.ts src/util/m300-oled-timers.spec.ts src/util/m300-panel-recovery.spec.ts src/util/m300-panel-recovery.ts src/plugins/socketClient.ts src/store/socket/actions.ts src/util/m300-sidebar{,.spec}.ts src/components/{ui/AppNavItem,layout/AppBar}.vue
 pnpm run type-check
 # Full application types were checked above. Compile this exact standalone
 # production helper with explicit options for the actual browser raster test.
@@ -42,13 +44,13 @@ pnpm run build
 
 cd "$work"
 mv source/dist fluidd-m300
-cp source/LICENSE "$root/frontend/fluidd/m300-panel-recovery.patch" "$root/frontend/fluidd/m300-oled-timers.patch" "$root/frontend/fluidd/m300-leveling.patch" "$root/frontend/fluidd/m300-tune.patch" "$root/frontend/fluidd/m300-tune.spec.ts" "$root/docs/en/FLUIDD_M300.md" .
+cp source/LICENSE "$root/frontend/fluidd/m300-sidebar.patch" "$root/frontend/fluidd/m300-panel-recovery.patch" "$root/frontend/fluidd/m300-oled-timers.patch" "$root/frontend/fluidd/m300-leveling.patch" "$root/frontend/fluidd/m300-tune.patch" "$root/frontend/fluidd/m300-tune.spec.ts" "$root/docs/en/FLUIDD_M300.md" .
 cp -R "$root/frontend/fluidd/navigation" navigation-source
 cp -R "$root/frontend/fluidd/rc" rc-source
 mkdir -p "$root/dist/fluidd"
 archive="$root/dist/fluidd/M300_FLUIDD.zip"
 rm -f -- "$archive"
-zip -qr "$archive" fluidd-m300 LICENSE m300-panel-recovery.patch m300-oled-timers.patch m300-leveling.patch m300-tune.patch m300-tune.spec.ts FLUIDD_M300.md navigation-source rc-source
+zip -qr "$archive" fluidd-m300 LICENSE m300-sidebar.patch m300-panel-recovery.patch m300-oled-timers.patch m300-leveling.patch m300-tune.patch m300-tune.spec.ts FLUIDD_M300.md navigation-source rc-source
 cd "$root/dist/fluidd"
 sha256sum "$(basename -- "$archive")" > SHA256SUMS
 sha256sum -c SHA256SUMS
