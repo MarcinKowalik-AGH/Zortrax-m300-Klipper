@@ -108,7 +108,7 @@
   "error_revision": "0.13.16.27-SD-NOTICE",
   "oem_error_count": 21,
   "print_control_revision": "0.13.16.42-AUDIT",
-  "supersedes_version": "v1.0.0-rc.16",
+  "supersedes_version": "v1.0.0-rc.17",
   "oled_revision": "0.13.16.32-OLED-ACK-RECOVERY",
   "precision_z_release_retries": 2,
   "oled_preview_revision": "NAV-EVENT-1",
