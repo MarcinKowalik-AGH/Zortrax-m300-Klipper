@@ -383,6 +383,54 @@ class SettingsTreeTests(unittest.TestCase):
                 x = 16 + 10 * segment + 4
                 self.assertEqual(frame[57 * 128 + x // 2] & 15, 15 if segment < 8 else 0)
 
+    def test_oled_timer_pages_share_brightness_geometry_and_keep_separate_drafts(self):
+        with session() as h:
+            _, display = attach_display(h)
+            display.timers.apply((5, 25))
+            for key, draft, expected in (
+                    ('oled_dim_minutes', 15, (4, 7)),
+                    ('oled_sleep_minutes', 60, (2, 16))):
+                h.settings.show('setting_' + key)
+                self.assertIn('// action:prompt_text M300_OLED_TIMERS 5 25', h.lines)
+                h.oled.selection = draft
+                h.oled._render(h.now)
+                wire = h.oled._render_wire
+                for y, count in zip((14, 38), expected):
+                    for segment in range(16):
+                        left = 16 + 10 * segment
+                        for dy, dx, blank_level in ((0, 2, 5), (3, 2, 0), (3, 8, 0)):
+                            byte = wire[(y + dy) * 128 + (left + dx) // 2]
+                            level = byte >> 4
+                            self.assertEqual(level, 15 if segment < count and dx < 8 else blank_level)
+                self.assertEqual(display.timers.pair(), (5, 25))
+                # Animation is visible to the right of the bars on both pages.
+                def icon(image):
+                    return b''.join(image[y*128+98:(y+1)*128] for y in range(64))
+                self.assertTrue(any(icon(wire)))
+                h.oled._render(h.now + .5)
+                self.assertNotEqual(icon(h.oled._render_wire), icon(wire))
+
+    def test_encoder_edits_only_the_selected_oled_timer_after_frame_ack(self):
+        from test_temperature_editor import event
+        with session() as h:
+            _, display = attach_display(h)
+            display.timers.apply((5, 25))
+            display.timers.select = Mock(side_effect=lambda dim, sleep: display.timers.apply((dim, sleep)))
+            h.oled.menu_reverse = True
+            for page, base, pos, previous_clicks, expected in (
+                    ('dim', 1, -1, 0, (6, 25)), ('sleep', 4, -3, 1, (6, 27))):
+                h.settings.show('setting_oled_' + page + '_minutes')
+                h.oled._render(h.now)
+                h.panel_display.pump()
+                if page == 'dim':
+                    event(h, 0)
+                event(h, base, nav=pos, shorts=previous_clicks)
+                h.oled._render(h.now)
+                h.panel_display.pump()
+                event(h, base + 1, nav=pos, shorts=previous_clicks + 1)
+                display.timers.select.assert_called_with(*expected)
+                self.assertEqual(display.timers.pair(), expected)
+
     def test_fluidd_slider_save_keeps_back_valid_and_updates_the_open_oled_cursor(self):
         for key in ('oled_brightness', 'led_brightness'):
             with self.subTest(key=key), session() as h:
@@ -737,7 +785,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.21');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.22');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

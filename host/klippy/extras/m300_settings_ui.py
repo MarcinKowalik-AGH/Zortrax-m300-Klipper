@@ -55,6 +55,23 @@ def menu_frame(labels, active, selected, frame_type, sprite=None):
     return frame.wire_bytes()
 
 
+def _segmented_bar(frame, level, top):
+    for segment in range(16):
+        left = 16 + BRIGHTNESS_BAR_PITCH * segment
+        for x in range(left, left + BRIGHTNESS_BAR_WIDTH):
+            for y in range(top, top + 8):
+                if segment < level or x in (left, left + BRIGHTNESS_BAR_WIDTH-1) or y in (top, top + 7):
+                    frame.pixel(x, y, 15 if segment < level else 5)
+
+
+def _draw_display_icon(frame, sprite):
+    if sprite is not None:
+        # Keep the animated display, omit the decorative meter below it.
+        w, h, pixels = sprite
+        edge = 43 * (w // 2)
+        draw_sprite(frame, (w, h, pixels[:edge] + bytes(len(pixels) - edge)))
+
+
 @lru_cache(maxsize=64)
 def brightness_frame(title, level, back, frame_type, sprite=None):
     frame = frame_type()
@@ -62,17 +79,8 @@ def brightness_frame(title, level, back, frame_type, sprite=None):
     draw_text(frame, 16, 14, 'Turn to adjust')
     draw_text(frame, 16, 27, 'Press to go back' if back else 'Press to save')
     draw_text(frame, 16, 40, 'Hold to go back')
-    for segment in range(16):
-        left = 16 + BRIGHTNESS_BAR_PITCH * segment
-        for x in range(left, left + BRIGHTNESS_BAR_WIDTH):
-            for y in range(55, 63):
-                if segment < level or x in (left, left + BRIGHTNESS_BAR_WIDTH-1) or y in (55, 62):
-                    frame.pixel(x, y, 15 if segment < level else 5)
-    if sprite is not None:
-        # The real sixteen-segment control is on the left. Hide the draft
-        # icon's demonstration meter so the screen has only one value bar.
-        w,h,raw=sprite
-        draw_sprite(frame,(w,h,raw[:43*(w//2)]+bytes((h-43)*(w//2))))
+    _segmented_bar(frame, level, 55)
+    _draw_display_icon(frame, sprite)
     return frame.wire_bytes()
 
 
@@ -90,12 +98,7 @@ def temperature_frame(title, value, lower, upper, back, frame_type, sprite=None)
     # is the exact temperature; a single-value range is shown fully filled.
     filled = (16 if upper == lower else
               (16 * (value - lower) + (upper - lower) // 2) // (upper - lower))
-    for segment in range(16):
-        left = 16 + BRIGHTNESS_BAR_PITCH * segment
-        for x in range(left, left + BRIGHTNESS_BAR_WIDTH):
-            for y in range(55, 63):
-                if segment < filled or x in (left, left + BRIGHTNESS_BAR_WIDTH-1) or y in (55, 62):
-                    frame.pixel(x, y, 15 if segment < filled else 5)
+    _segmented_bar(frame, filled, 55)
     if sprite is not None:
         w, h, raw = sprite
         if (w, h, len(raw)) != (50, 50, 1250):
@@ -127,17 +130,22 @@ def notice_frame(title, message, frame_type, sprite=None):
     rows.append(message)
     return menu_frame(tuple(rows), (), 0, frame_type, sprite)
 
+
 @lru_cache(maxsize=32)
 def timers_frame(pair, active, selected, frame_type, sprite=None):
     frame = frame_type()
-    for row, label in enumerate(('Dim', 'Sleep')):
-        value = selected if row == active and selected else pair[row]
-        y = row * 22
-        draw_text(frame, 10, y, ('> ' if row == active else '  ') + '%s  %d min' % (label, value))
-        for x in range(120):
-            for dy in range(4):
-                frame.pixel(16+x, y+15+dy, 15 if x < 2*value else 4)
-    draw_text(frame, 12, 47, 'Press to save' if selected else 'Press to go back')
-    if sprite is not None:
-        draw_sprite(frame, sprite)
+    minutes = list(pair)
+    if selected:
+        minutes[active] = selected
+    for row, (label, value) in enumerate(zip(('DIM', 'SLEEP'), minutes)):
+        top = row * 24
+        draw_text(frame, 16, top, '%s  %d min' % (label, value))
+        if row == active and selected:
+            draw_text(frame, 2, top, '>')
+        _segmented_bar(frame, (16 * value + 59) // 60, top + 14)
+    hint = 'Press to save' if selected else 'Press to go back'
+    if minutes[0] > minutes[1]:
+        hint = 'DIM exceeds SLEEP'
+    draw_text(frame, 16, 50, hint)
+    _draw_display_icon(frame, sprite)
     return frame.wire_bytes()

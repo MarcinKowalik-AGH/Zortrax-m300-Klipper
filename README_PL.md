@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.21
+# Zortrax M300 Classic — Klipper 1.0.0-rc.22
 
-**RC21** wygasza OLED po tym samym czasie w stanie Ready, podczas druku i w pauzie. W Fluidd na porcie 4480 ustawiasz oddzielnie minutę przygaszenia i minutę całkowitego wyłączenia ekranu. Oba progi są zapamiętywane przez MCU. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.21.md).
+**RC22** pokazuje DIM i SLEEP jako dwa osobne, 16-segmentowe suwaki w stylu regulatora jasności na OLED i w Fluidd. Przy każdym pasku widać dokładną liczbę minut. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.22.md).
 
 **MCU 1.0.7:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.7.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
 
@@ -8,7 +8,7 @@
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.21) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC22](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.22) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 

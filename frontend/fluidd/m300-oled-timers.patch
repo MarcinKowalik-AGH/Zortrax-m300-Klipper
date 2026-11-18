@@ -1,10 +1,10 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
 # m300-oled-timers.patch - Podłącza okno dwóch suwaków czasu OLED do obu makr w Fluidd.
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
-index 2a9916c..cad1a8e 100644
+index 2a9916c..86d88c8 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue
 +++ b/src/components/common/ActionCommandPromptDialog.vue
-@@ -14,6 +14,13 @@
+@@ -14,28 +14,21 @@
          <v-col v-if="leveling && item.id === leveling.firstId">
            <m300-leveling-diagram :points="leveling.points" />
          </v-col>
@@ -16,13 +16,43 @@ index 2a9916c..cad1a8e 100644
 +          />
 +        </v-col>
          <v-col v-else-if="brightnessById[item.id]">
-           <label class="m300-brightness-control">
-             <span>{{ brightnessById[item.id].label }}</span>
-@@ -90,13 +97,14 @@
+-          <label class="m300-brightness-control">
+-            <span>{{ brightnessById[item.id].label }}</span>
+-            <div class="m300-brightness-bar">
+-              <span
+-                v-for="segment in 16"
+-                :key="segment"
+-                :class="{ filled: segment <= brightnessLevel(brightnessById[item.id]) }"
+-                aria-hidden="true"
+-              />
+-              <input
+-                type="range"
+-                min="1"
+-                max="16"
+-                step="1"
+-                :aria-label="brightnessById[item.id].label"
+-                :value="brightnessLevel(brightnessById[item.id])"
+-                @input="previewBrightness(brightnessById[item.id], $event)"
+-                @change="applyBrightness(brightnessById[item.id], $event)"
+-              >
+-            </div>
+-          </label>
++          <m300-segmented-slider
++            :label="brightnessById[item.id].label"
++            :value="brightnessLevel(brightnessById[item.id])"
++            :max="16"
++            @input="previewBrightness(brightnessById[item.id], $event)"
++            @change="applyBrightness(brightnessById[item.id], $event)"
++          />
+           <app-btn
+             class="mt-2"
+             :disabled="brightnessLevel(brightnessById[item.id]) === brightnessById[item.id].savedLevel"
+@@ -90,13 +83,15 @@
 
  <script lang="ts">
  import { Component, Mixins, Watch } from 'vue-property-decorator'
 +import M300OledTimers from './M300OledTimers.vue'
++import M300SegmentedSlider from './M300SegmentedSlider.vue'
  import M300LevelingDiagram from './M300LevelingDiagram.vue'
  import { readM300Brightness, readM300Leveling } from './m300Leveling'
  import type { BrightnessControl } from './m300Leveling'
@@ -30,11 +60,11 @@ index 2a9916c..cad1a8e 100644
  import type { PromptDialog, PromptDialogButton } from '@/store/console/types'
 
 -@Component({ components: { M300LevelingDiagram } })
-+@Component({ components: { M300LevelingDiagram, M300OledTimers } })
++@Component({ components: { M300LevelingDiagram, M300OledTimers, M300SegmentedSlider } })
  export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
    brightnessDraft: Record<string, number> = {}
 
-@@ -104,6 +112,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+@@ -104,6 +99,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
      return this.$typedState.console.promptDialog
    }
 
@@ -47,3 +77,88 @@ index 2a9916c..cad1a8e 100644
    get leveling () {
      return readM300Leveling(this.dialog)
    }
+@@ -129,14 +130,12 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+     return this.brightnessDraft[control.key] ?? control.level
+   }
+
+-  previewBrightness (control: BrightnessControl, event: Event) {
+-    if (event.target instanceof HTMLInputElement) {
+-      this.$set(this.brightnessDraft, control.key, event.target.valueAsNumber)
+-    }
++  previewBrightness (control: BrightnessControl, value: number) {
++    this.$set(this.brightnessDraft, control.key, value)
+   }
+
+-  applyBrightness (control: BrightnessControl, event: Event) {
+-    this.previewBrightness(control, event)
++  applyBrightness (control: BrightnessControl, value: number) {
++    this.previewBrightness(control, value)
+     this.saveBrightness(control)
+   }
+
+@@ -181,44 +180,6 @@ export default class ActionCommandPromptDialog extends Mixins(StateMixin) {
+     }
+   }
+
+-  .m300-brightness-control {
+-    display: block;
+-    cursor: pointer;
+-  }
+-
+-  .m300-brightness-bar {
+-    position: relative;
+-    display: grid;
+-    grid-template-columns: repeat(16, 1fr);
+-    gap: 3px;
+-    height: 26px;
+-    padding: 5px 0;
+-
+-    span {
+-      border: 1px solid currentColor;
+-      border-radius: 2px;
+-      opacity: .45;
+-    }
+-
+-    .filled {
+-      background: currentColor;
+-      opacity: 1;
+-    }
+-
+-    input {
+-      position: absolute;
+-      inset: 0;
+-      width: 100%;
+-      opacity: 0;
+-      cursor: pointer;
+-    }
+-
+-    &:focus-within {
+-      outline: 1px solid currentColor;
+-      outline-offset: 3px;
+-    }
+-  }
+-
+   .m300-printer-info-row + .m300-printer-info-row {
+     margin-top: 0;
+   }
+diff --git a/src/components/common/m300Leveling.spec.ts b/src/components/common/m300Leveling.spec.ts
+index 25908eb..20db460 100644
+--- a/src/components/common/m300Leveling.spec.ts
++++ b/src/components/common/m300Leveling.spec.ts
+@@ -2,6 +2,7 @@
+ // @vitest-environment jsdom
+ import { describe, expect, it, vi } from 'vitest'
+ import { mount, shallowMount } from '@vue/test-utils'
++import M300SegmentedSlider from './M300SegmentedSlider.vue'
+ import Vue from 'vue'
+ import ActionCommandPromptDialog from './ActionCommandPromptDialog.vue'
+ import M300LevelingDiagram from './M300LevelingDiagram.vue'
+@@ -139,7 +140,7 @@ describe('M300 brightness controls', () => {
+     const button = { props: ['disabled'], template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>' }
+     const wrapper = shallowMount(ActionCommandPromptDialog, {
+       mocks: { $typedState: source, sendGcode },
+-      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot, AppBtn: button }
++      stubs: { 'app-dialog': slot, 'v-card-text': slot, 'v-row': slot, 'v-col': slot, AppBtn: button, M300SegmentedSlider }
+     })
+     expect(wrapper.findAll('.filled')).toHaveLength(8)
+     source.printer.printer.m300_settings.brightness.led_brightness = 13

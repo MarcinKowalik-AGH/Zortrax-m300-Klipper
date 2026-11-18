@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.21'
+VERSION='v1.0.0-rc.22'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -46,7 +46,7 @@ class Rc1Contracts(unittest.TestCase):
                 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64'),
             'host/klippy/extras/m300_settings_ui.py': (
                 '27985dd4e51f7a688e060ad37adb278dd26ca50c085ca18f3487bcd484c21bcb',
-                '0e72d7de0e90cfc953cb2f79cc607f5b26d9b0c8ce171125ece8ece5304013db'),
+                'b9cb31b5536ca37becfaccd6e4a7b4c16e2b676de6fa9d536901d020e8ce7b08'),
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
                 '228eb9c11e07a8c6c5b6d98da1c7b85659d4082e054534aa43829c6cf9b22200'),
@@ -78,7 +78,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],949)
+        self.assertEqual(meta['self_contained_host_tests'],951)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

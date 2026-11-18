@@ -16,7 +16,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.21'
+CURRENT_RELEASE = 'v1.0.0-rc.22'
 CURRENT_MCU = '1.0.7'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -140,7 +140,7 @@ def main():
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         'host/klippy/extras/m300_pad_mesh.py': '6d565763d5a8e4b7febda77df0b6d59c2d5431925df7616ff6ecc2d1a43ce0d7',
         'host/klippy/extras/m300_activity_graphics.py': '70f2d9d825ebbd3ccd2cf5e9a744c4fea9e44e6b1ff0d1b59375507c911c989c',
-        'host/klippy/extras/m300_settings_ui.py': '0e72d7de0e90cfc953cb2f79cc607f5b26d9b0c8ce171125ece8ece5304013db',
+        'host/klippy/extras/m300_settings_ui.py': 'b9cb31b5536ca37becfaccd6e4a7b4c16e2b676de6fa9d536901d020e8ce7b08',
         'host/klippy/extras/m300_klipper_status.py': '6bde411f82ee2f1a86e53b40b967000d715bc4f10ee656521493a7a2e8ae45c1',
     }
     for path, expected in source_baseline['files'].items():
