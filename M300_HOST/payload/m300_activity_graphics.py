@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Semantic OLED artwork selected from existing cached status, without control I/O."""
 import base64
@@ -124,6 +125,8 @@ def procedure_symbol(owner, status):
 PAGE_SYMBOLS = {
     'errors': PREFIX+'emergency_stop', 'error_catalog': '0x0801dc08',
     'info_printer': '0x0801dc08', 'info_firmware': PREFIX+'firmware_update',
+    'setting_oled_dim_minutes': PREFIX+'oled_brightness',
+    'setting_oled_sleep_minutes': PREFIX+'oled_brightness',
     'setting_oled_brightness': PREFIX+'oled_brightness',
     'setting_led_brightness': PREFIX+'led_brightness',
     'setting_light_mode': '0x0801d55c', 'setting_sound': '0x0801d72c',

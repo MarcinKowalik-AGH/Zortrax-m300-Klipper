@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Opt-in geometry from the user's 2026-11-11 M300 first-print report.
 
 Never lower the global template or mask a bed-mesh error. Called only with an

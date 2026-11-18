@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 bounded initial homing and encoder/deadman Z motion.
 
@@ -1091,9 +1092,10 @@ class M300Motion:
         self._move_and_drain(target, self.release_speed)
         released = self.toolhead.get_position()
         active = self._query()
-        logging.info('M300 Z retract phase=%s start_z=%.6f end_z=%.6f '
-                     'requested_mm=%.6f PC7_active=%s', self.phase,
-                     start[2], released[2], distance, active)
+        if getattr(self.board, 'debug', False):
+            logging.info('M300 Z retract phase=%s start_z=%.6f end_z=%.6f '
+                         'requested_mm=%.6f PC7_active=%s', self.phase,
+                         start[2], released[2], distance, active)
         if active:
             raise _CompletedRetractContactError(
                 'NO_RELEASE: PC7 remains active after completed %.3fmm '

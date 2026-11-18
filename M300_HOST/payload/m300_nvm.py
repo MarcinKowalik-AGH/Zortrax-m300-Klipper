@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04 durable host settings. Never writes MCU Flash or restores live state.
 
@@ -16,7 +17,6 @@ import stat
 import struct
 import tempfile
 import threading
-from datetime import datetime, timezone
 
 from .m300_runtime import CHECKPOINT_SECONDS, DRAIN_POLL_SECONDS, PrintClock
 

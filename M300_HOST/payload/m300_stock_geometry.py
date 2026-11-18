@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """OEM 1.3.1 session XY offsets: 0x08008174 and 0x080159a0."""
 

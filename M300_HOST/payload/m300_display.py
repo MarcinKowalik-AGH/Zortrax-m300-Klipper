@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Display-only inactivity. Native thermal, motion and printer sleep untouched."""
 import json
@@ -7,8 +8,9 @@ import math
 from .m300_display_stream import AWAKE, DIM, OFF, DisplayStream
 from .m300_display_oem import ENTERING_TEXT, load_moon, sleep_wire
 from .m300_nvm import MAX_BRIGHTNESS
+from .m300_oled_idle import OledTimers
 
-REVISION = '0.4.0-M300-BRIGHTNESS'
+REVISION = '0.5.0-M300-OLED-TIMERS'
 
 
 class M300Display:
@@ -20,6 +22,10 @@ class M300Display:
         self.timeout = config.getfloat('timeout', 300., minval=5., maxval=86400.)
         if not math.isfinite(self.timeout):
             raise config.error('Display timeout must be finite')
+        self.sleep_timeout = config.getfloat('sleep_timeout', self.timeout, minval=self.timeout, maxval=86400.)
+        if not math.isfinite(self.sleep_timeout):
+            raise config.error('Display sleep timeout must be finite')
+        self.timers = OledTimers(self)
         self.normal = config.getint('normal_contrast', 159, minval=1, maxval=159)
         self.dim = config.getint('dim_contrast', 32, minval=1, maxval=self.normal)
         self.brightness = MAX_BRIGHTNESS
@@ -32,6 +38,7 @@ class M300Display:
         self.error = None
         self.last_activity = self.reactor.monotonic()
         self.last_source = 'startup'
+        self.debug = False
         self.busy = False
         self.sleep_enabled = True
         self.phase = AWAKE
@@ -50,6 +57,7 @@ class M300Display:
             self.printer.register_event_handler(event, cb)
         self.gcode.register_command('ZORTRAX_DISPLAY_STATUS', self.cmd_status,
                                    when_not_ready=True)
+        self.gcode.register_command('ZORTRAX_UI_OLED_TIMERS', self.cmd_timers)
         self.gcode.register_command('ZORTRAX_DISPLAY_WAKE', self.cmd_wake)
         self.printer.register_event_handler('m300:setting_changed', self._setting_changed)
 
@@ -157,7 +165,14 @@ class M300Display:
             if nvm is not None:
                 self._set_brightness(nvm.get_setting('oled_brightness', MAX_BRIGHTNESS))
             self._consume_gesture = False
+            self.debug = getattr(self.printer.lookup_object('m300_mcu', None), 'debug', False)
             self.activity('ready')
+            try:
+                self.timers.start()
+            except Exception as exc:
+                self.timers.error = str(exc)
+                self.timers.status = 'UNAVAILABLE'
+                logging.warning('M300 OLED timer storage unavailable: %s', exc)
             self.reactor.update_timer(self.timer, self.reactor.NOW)
         except Exception as exc:
             self.connected = False
@@ -169,6 +184,7 @@ class M300Display:
     def _stop(self, *args):
         self.connected = False
         self._consume_gesture = False
+        self.timers.stop()
         self.phase = 'DISCONNECTED'
         self._notice_shown_at = None
         self._presentation_wait = False
@@ -266,7 +282,7 @@ class M300Display:
             return False
 
     def _working(self, now):
-        names = ('print_stats', 'm300_job', 'm300_filament',
+        names = ('print_stats', 'm300_job', 'm300_print_control', 'm300_pad_mesh', 'm300_filament',
                  'm300_calibration', 'm300_motion', 'm300_thermal', 'm300_fans',
                  'm300_models', 'm300_sd')
         for name in names:
@@ -274,7 +290,8 @@ class M300Display:
             if obj is None:
                 continue
             try:
-                status = obj.get_status(now)
+                read = getattr(obj, 'get_ownership_status', None) or obj.get_status
+                status = read(now)
                 if not isinstance(status, dict) or not (
                         isinstance(status.get('state'), str) or 'busy' in status):
                     return True
@@ -306,6 +323,7 @@ class M300Display:
     def _tick(self, now):
         if not self.connected:
             return self.reactor.NEVER
+        previous_phase = self.phase
         self.busy = self._working(now)
         asleep = self._maintenance_sleep(now)
         entered_sleep = asleep and not self._maintenance_asleep
@@ -321,19 +339,22 @@ class M300Display:
             self.phase = desired
         elif self.phase == 'ENTERING_SLEEP':
             desired = self._notice_mode(now)
-        elif now - self.last_activity >= self.timeout:
+        elif now - self.last_activity >= self.sleep_timeout:
             if self.phase == OFF:
                 desired = OFF
             else:
                 self._begin_notice()
                 desired = DIM
         else:
-            desired = AWAKE
-            self.phase = AWAKE
+            desired = DIM if now - self.last_activity >= self.timeout else AWAKE
+            self.phase = desired
         self._sync_presentation()
         if desired != self.stream.requested_mode:
             self.stream.set_mode(desired)
             self.reactor.update_timer(self.oled.timer, self.reactor.NOW)
+        if self.debug and previous_phase != self.phase:
+            logging.info('M300 OLED idle %s -> %s after %.1fs, busy=%s',
+                         previous_phase, self.phase, now - self.last_activity, self.busy)
         return now + (.1 if self.phase == 'ENTERING_SLEEP' else 1.)
 
     def get_status(self, now):
@@ -343,6 +364,10 @@ class M300Display:
                 'requested_mode': self.stream.requested_mode if self.stream else None,
                 'normal_contrast': self.normal, 'dim_contrast': self.dim,
                 'brightness': self.brightness,
+                'oled_timer_minutes': self.timers.pair(),
+                'oled_timer_storage': self.timers.status,
+                'oled_timer_error': self.timers.error,
+                'oled_timer_mcu_minutes': self.timers.observed,
                 'applied_contrast': self.stream.display_contrast if self.stream else None,
                 'phase': self.phase, 'notice_seconds': self.notice_seconds,
                 'sleep_enabled': self.sleep_enabled,
@@ -354,6 +379,18 @@ class M300Display:
                 'screen_only': True, 'hardware_verified': False,
                 'wake_command_sources': ['Fluidd/Moonraker G-code API', 'encoder'],
                 'changes': self.stream.display_changes if self.stream else 0}
+
+    def cmd_timers(self, gcmd):
+        if gcmd.get('DIM', None) is None and gcmd.get('SLEEP', None) is None:
+            settings = self.printer.lookup_object('m300_settings')
+            settings.show('setting_oled_dim_minutes')
+            return
+        old_dim, old_sleep = self.timers.pair()
+        dim = gcmd.get_int('DIM', old_dim, minval=1, maxval=60)
+        sleep = gcmd.get_int('SLEEP', old_sleep, minval=1, maxval=60)
+        self.timers.select(dim, sleep)
+        gcmd.respond_info('OLED dim %d min, sleep %d min, MCU %s'
+                          % (dim, sleep, self.timers.status))
 
     def cmd_status(self, gcmd):
         gcmd.respond_info('M300_DISPLAY ' + json.dumps(

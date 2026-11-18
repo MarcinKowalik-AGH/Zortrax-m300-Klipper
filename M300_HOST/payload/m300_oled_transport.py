@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 SSD1322 transactions; one ACK-paced command and two bounded frames.
 

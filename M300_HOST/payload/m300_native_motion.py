@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Normal M300 homing on Klipper's native Cartesian/probe implementation.
 
@@ -261,7 +262,8 @@ class M300NativeMotion:
         check = dict(pass_number=len(self.native_z_checks)+1,
                      pc7_active_before=active, retreat_mm=0., pc7_open=not active)
         self.native_z_checks.append(check)
-        logging.info('M300_Z_PROBE_CHECK %s', json.dumps(check, sort_keys=True))
+        if getattr(self.board, 'debug', False):
+            logging.info('M300_Z_PROBE_CHECK %s', json.dumps(check, sort_keys=True))
         if not active:
             return
         if check['pass_number'] != 2:
@@ -286,7 +288,8 @@ class M300NativeMotion:
         check['retreat_mm'] = distance
         check['pc7_open'] = not endstop.query_endstop(self.toolhead.get_last_move_time())
         self._check(token)
-        logging.info('M300_Z_PROBE_RELEASE %s', json.dumps(check, sort_keys=True))
+        if getattr(self.board, 'debug', False):
+            logging.info('M300_Z_PROBE_RELEASE %s', json.dumps(check, sort_keys=True))
         if not check['pc7_open']:
             raise self.printer.command_error(
                 'M300 homing NO_RELEASE: PC7 still closed before native Z pass 2 after %.1f mm retreat; approach was not started'

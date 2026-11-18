@@ -1,10 +1,10 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M09 pure presentation contract for M03 material-session snapshots.
 
 No hardware, reactor, motion, heater, NVM or G-code imports. M03 remains
 sole owner of transport, deadlines and operator-confirmation tokens.
 """
-from dataclasses import dataclass
 
 PHASES = frozenset({'IDLE','WAIT_PAUSE','HEATING','REHEATING','WAIT_INSERT',
     'LOADING','WAIT_UNLOAD','UNLOADING','WAIT_PURGE','PURGING',

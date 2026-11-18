@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded, read-only FAT16/FAT32 reader for the private M300 SD transport.
 

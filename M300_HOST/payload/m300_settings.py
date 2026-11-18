@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Shared English Settings/Information over existing owners and host NVM.
 
@@ -12,6 +13,7 @@ import os
 import re
 import urllib.request
 
+from .m300_oled_idle import KEYS as TIMER_KEYS
 from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS, COSMETIC_SETTINGS
 
 PROJECT_URL = 'https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper'
@@ -29,6 +31,10 @@ SETTINGS = (
     ('led_brightness', 'LED brightness', tuple((n, str(n)) for n in BRIGHTNESS_LEVELS)))
 CHOICES = {key:values for key,_,values in SETTINGS}
 TITLES = {key:title for key,title,_ in SETTINGS}
+TIMER_SETTINGS = tuple((key, title, tuple((n, str(n)) for n in range(1, 61)))
+                       for key, title in zip(TIMER_KEYS, ('OLED dim time', 'OLED sleep time')))
+CHOICES.update({key: choices for key, _, choices in TIMER_SETTINGS})
+TITLES.update({key: title for key, title, _ in TIMER_SETTINGS})
 PARENTS = {'settings':'zortrax','information':'zortrax','help':'information',
            'info_firmware':'information','info_printer':'information',
            'errors':'help','error_catalog':'errors'}
@@ -72,6 +78,9 @@ def history_totals(url):
 
 def choice_value(nvm,key):
     if key=='language':return 'EN'
+    if key in TIMER_KEYS:
+        display = nvm.printer.lookup_object('m300_display', None) if hasattr(nvm, 'printer') else None
+        return display.timers.pair()[TIMER_KEYS.index(key)] if hasattr(display, 'timers') else None
     value=nvm.get_setting(key)
     if key=='sleep_mode':return 'OFF' if value=='OFF' else '15MIN'
     return value
@@ -108,6 +117,8 @@ class M300Settings:
     def invalidate(self,*args):
         self.ready=False;self.fetch_token+=1;self.generation+=1
         self.consumed=None
+        self.reading=False
+        self.request_time=None
 
     def _live(self):
         if not self.ready or self.printer.is_shutdown():
@@ -129,7 +140,8 @@ class M300Settings:
             except Exception as exc:
                 value=None;error='Moonraker history unavailable: '+display_text(exc,140)
             finally:
-                self.reading=False
+                if token == self.fetch_token:
+                    self.reading=False
             if token!=self.fetch_token or not self.ready or self.printer.is_shutdown():return
             if error is None:self.history_seconds=value
             self.history_error=error
@@ -173,9 +185,11 @@ class M300Settings:
             raise self.printer.command_error('Unknown Settings/Information page')
         back=[('Back',('page',PARENTS[page]))]
         if page=='settings':
-            return 'Settings',back+[(title,('setting',key)) for key,title,_ in SETTINGS]
+            return 'Settings',back+[(title,('setting',key)) for key,title,_ in SETTINGS + TIMER_SETTINGS]
         if page.startswith('setting_'):
             key=page[8:]
+            if key in TIMER_KEYS and not hasattr(self.printer.lookup_object('m300_display', None), 'timers'):
+                return TITLES[key], back + [('Display unavailable', None)]
             return TITLES[key],back+[(label,('set',key,value)) for value,label in CHOICES[key]]
         if page=='information':
             return 'Information',back+[(title,('page',target)) for title,target in (
@@ -212,6 +226,11 @@ class M300Settings:
             raise self.printer.command_error('Unsupported or busy English Settings choice')
         self.setting_busy=True
         try:
+            if key in TIMER_KEYS:
+                timers = self.printer.lookup_object('m300_display').timers
+                pair = list(timers.pair())
+                pair[TIMER_KEYS.index(key)] = value
+                return timers.select(*pair)
             if key=='sleep_mode' and (value!='OFF')==(self.nvm.get_setting(key)!='OFF'):
                 return self.nvm.ui_snapshot()
             return self.nvm.set_setting(key,value)
@@ -220,7 +239,7 @@ class M300Settings:
     def _setting_changed(self, key, value):
         # A remote save updates an already open slider as well as the lamp.
         # Invalidate old physical click receipts, without changing its route.
-        if key not in BRIGHTNESS_KEYS:
+        if key not in BRIGHTNESS_KEYS and key not in TIMER_KEYS:
             return
         oled = self.printer.lookup_object('m300_oled', None)
         menu = self.printer.lookup_object('m300_menu', None)
@@ -322,6 +341,17 @@ class M300Settings:
         def emit(line):self.gcode.respond_raw('// action:'+line)
         emit('prompt_end');emit('prompt_begin ZORTRAX M300 - '+title)
         token=self._view_id()
+        if self.page.startswith('setting_') and self.page[8:] in TIMER_KEYS:
+            display = self.printer.lookup_object('m300_display', None)
+            if not hasattr(display, 'timers'):
+                emit('prompt_text Display unavailable')
+                emit('prompt_show')
+                return
+            timers = display.timers
+            emit('prompt_text M300_OLED_TIMERS %d %d' % timers.pair())
+            emit('prompt_button Back|ZORTRAX_UI_SHOW PAGE=settings|primary')
+            emit('prompt_show')
+            return
         active=self.active_rows(self.page)
         for index,(label,action) in enumerate(rows):
             label=label+(' <' if index in active else '')
@@ -375,7 +405,7 @@ class M300Settings:
         settings['sleep_mode']='ENABLED' if sleep else 'DISABLED'
         display=self.printer.lookup_object('m300_display',None)
         return dict(revision='0.13.16.13-BRIGHTNESS-SYNC',ready=self.ready,state='IDLE',busy=False,
-            io_busy=self.reading,settings=settings,
+            io_busy=self.reading,page=self.page,settings=settings,
             brightness=self.brightness_levels(),
             language='EN',sleep_enabled=sleep,display_timeout_seconds=getattr(display,'timeout',None),
             information=self.information(now),project_url=PROJECT_URL)

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """English OEM fan menu and manual platform presentation; no hardware access."""
 from functools import lru_cache

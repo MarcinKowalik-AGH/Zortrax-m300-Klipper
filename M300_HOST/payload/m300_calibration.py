@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M04/M07 native PC7 calibration adapter, bounded and default disabled.
 
@@ -6,7 +7,6 @@ no GPIO/ADC owner, emits no raw steps, and never makes an unknown Z 'homed'.
 All XYZ must already be known. Contact results are observations, not offsets.
 """
 from .m300_temperature_policy import target_limit
-import copy
 import json
 import logging
 import math

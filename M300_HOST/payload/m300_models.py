@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Prepare Models files once, then give the read-only stream to native Klippy."""
 from dataclasses import dataclass

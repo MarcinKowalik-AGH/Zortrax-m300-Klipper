@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M07 rows use the same recovered text as the modal OLED and Fluidd."""
 from .m300_leveling_oem import describe

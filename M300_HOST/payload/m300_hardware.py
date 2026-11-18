@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Identify the stock M300 and synchronize its print-minute counter.
 
@@ -326,7 +327,8 @@ class M300Hardware:
             self.counter_target = {key: report[key] for key in
                                    ('flash_kib', 'cpuid', 'debug_id', 'debugging', 'supported')}
         self._sync_factory_counter(constants)
-        logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
+        if getattr(self.board, 'debug', False):
+            logging.info('M300_HARDWARE %s', json.dumps(self.get_status(), sort_keys=True))
 
     def _sync_factory_counter(self, constants):
         nvm = self.printer.lookup_object('m300_nvm', None)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 """Plan, apply and roll back the M300 Classic host update."""
 import argparse
 import ast
@@ -36,7 +37,7 @@ NAMES += ('m300_filament.py', 'm300_filament_state.py')
 NAMES += ('m300_native_service.py', 'm300_maintenance.py',
           'm300_native_maintenance.py', 'm300_oem_procedure_ui.py')
 NAMES += ('m300_settings.py', 'm300_settings_ui.py', 'm300_browser.py', 'm300_browser_state.py', 'm300_job.py')
-NAMES += ('m300_runtime.py', 'm300_counter_sync.py')
+NAMES += ('m300_runtime.py', 'm300_counter_sync.py', 'm300_oled_idle.py')
 NAMES += ('m300_fans.py', 'm300_native_fans.py', 'm300_thermal.py', 'm300_maintenance_ui.py')
 NAMES += ('m300_native_probe.py', 'm300_native_z.py', 'm300_stock_geometry.py', 'm300_nvm.py')
 NAMES += ('m300_pad_mesh.py', 'm300_status_footer.py', 'm300_klipper_status.py')
@@ -111,13 +112,14 @@ def validate_settings(data):
     if parser.sections() != ['m300_display']:
         raise ValueError('m300_display.cfg must only contain [m300_display]')
     section = parser['m300_display']
-    if set(section) - {'timeout', 'normal_contrast', 'dim_contrast', 'notice_seconds'}:
+    if set(section) - {'timeout', 'normal_contrast', 'dim_contrast', 'notice_seconds', 'sleep_timeout'}:
         raise ValueError('Unknown display setting')
     timeout = section.getfloat('timeout', 300)
+    sleep_timeout = section.getfloat('sleep_timeout', timeout)
     normal = section.getint('normal_contrast', 159)
     dim = section.getint('dim_contrast', 32)
     notice = section.getfloat('notice_seconds', 10)
-    if not (5 <= timeout <= 86400 and 1 <= dim <= normal <= 159 and 1 <= notice <= 60):
+    if not (5 <= timeout <= sleep_timeout <= 86400 and 1 <= dim <= normal <= 159 and 1 <= notice <= 60):
         raise ValueError('Invalid display timeout/contrast')
 
 

@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Read-only OEM moon. The existing M300 renderer retains its wire format."""
 import base64

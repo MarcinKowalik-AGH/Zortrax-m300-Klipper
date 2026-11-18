@@ -1,3 +1,4 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Recognize a continuous knob hold without borrowing the MCU menu-long event."""
 import math

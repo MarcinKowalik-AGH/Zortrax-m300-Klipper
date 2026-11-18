@@ -1,8 +1,9 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Public distribution identity; protocol/firmware IDs remain separate."""
 import re
 
-VERSION = '1.0.0-rc.19'
+VERSION = '1.0.0-rc.20'
 
 
 def display_mcu_version(raw):
