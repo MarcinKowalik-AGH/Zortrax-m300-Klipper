@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_sched.h - Deklaruje funkcje harmonogramu używane przez operacje czasu rzeczywistego M300.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // M300 timer rescheduling: do not insert a catch-up timer in the past.
 // Called from timer callbacks after their work. A missed interval is not

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_rc1_contracts.py - Sprawdza zgodność publicznych makr, interfejsu i chronionych źródeł z wymaganiami wydania.
 """RC1 publication, UI coverage and no-motion-change contracts. No printer I/O."""
 from historical_source import source_bytes
 import hashlib
@@ -9,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.20'
+VERSION='v1.0.0-rc.21'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -77,7 +78,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],947)
+        self.assertEqual(meta['self_contained_host_tests'],949)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -163,7 +164,7 @@ class Rc1Contracts(unittest.TestCase):
         build=(ROOT/'.github/workflows/build-m300.yml').read_text()
         publish=(ROOT/'.github/workflows/publish-release.yml').read_text()
         retry=(ROOT/'.github/workflows/retry-transient.yml').read_text()
-        self.assertTrue(build.startswith('name: M300 build and verification'))
+        self.assertIn('name: M300 build and verification', build.splitlines())
         self.assertIn("['M300 build and verification']",publish)
         self.assertIn("'M300 build and verification', 'Publish M300 release'",retry)
         self.assertIn("conclusion == 'success'",publish)

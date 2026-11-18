@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_early_status.py - Odczytuje stan modułów na wczesnym etapie startu Klippy w próbie integracyjnej.
 """Exercise the real Moonraker query path before connect; FILEOUTPUT only."""
 import json
 

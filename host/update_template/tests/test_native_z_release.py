@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_z_release.py - Sprawdza wykrycie rozwarcia styku PC7 i ponowne wyznaczenie odniesienia osi Z.
 """Pinned native two-pass homing with modeled PC7 and physical Z steps.
 
 The native retract, position updates and no-movement rejection execute

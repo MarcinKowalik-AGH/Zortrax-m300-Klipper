@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_board.c - Testuje polecenia płyty, nadzór połączenia i blokady wyjść wykonawczych.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Native C register/scheduler doubles, including the transformed upstream
 // gpio.c and adc.c. This is not execution on a physical STM32 or a timing test.

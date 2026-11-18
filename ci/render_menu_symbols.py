@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# render_menu_symbols.py - Tworzy podglądy symboli stron menu z danych graficznych projektu.
 """Author flat-frame project marks and homing animations in the OLED format.
 
 Raster tools run only on the asset-authoring machine. The printer shares the

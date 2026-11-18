@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_mcu_version.py - Porównuje wersję, polecenia protokołu i granice pliku binarnego z metadanymi wydania.
 """Validate the compiled M300 MCU numeric firmware identity and application image.
 
 Read-only. Never opens a serial connection, writes to SD, or flashes hardware.

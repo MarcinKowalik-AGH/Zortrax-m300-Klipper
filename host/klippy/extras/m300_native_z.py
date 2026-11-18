@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_native_z.py - Wyznacza położenie odniesienia osi Z z kolejnych zwarć i rozwarć styku PC7.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Five successive PC7 contact/release reference updates using native Klipper.
 

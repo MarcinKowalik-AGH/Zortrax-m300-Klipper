@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_print_ui.py - Pokazuje na OLED postęp druku i akcje dostępne dla aktualnej pauzy.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Contextual OLED views of the native print and pause_resume owners."""
 from collections import deque

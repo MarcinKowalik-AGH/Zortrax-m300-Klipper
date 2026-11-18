@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oem_errors.py - Testuje mapowanie i prezentację fabrycznych błędów w konsoli i na panelu.
 """Real native dispatcher + shared menu/OLED models; no physical fault injection."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

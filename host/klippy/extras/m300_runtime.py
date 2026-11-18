@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_runtime.py - Mierzy czas aktywnego druku zegarem monotonicznym i przygotowuje punkty zapisu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Measure active model printing with a monotonic, checkpointable clock."""
 import math

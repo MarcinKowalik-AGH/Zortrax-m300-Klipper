@@ -1,4 +1,5 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> -->
+<!-- M300OledPreview.vue - Wyświetla aktualną ramkę OLED w Fluidd i aktualizuje ją po zdarzeniach z drukarki. -->
 <template>
   <section
     v-if="preview"

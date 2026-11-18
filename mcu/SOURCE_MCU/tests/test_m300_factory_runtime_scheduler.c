@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_factory_runtime_scheduler.c - Sprawdza dopuszczenie operacji Flash względem terminów zadań czasu rzeczywistego.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the transformed production timer-list code, without physical I/O.
 #include <assert.h>

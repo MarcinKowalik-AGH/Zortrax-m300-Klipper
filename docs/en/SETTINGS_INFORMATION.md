@@ -103,14 +103,14 @@ pages. Brightness, light mode and buzzer can change while a service owns
 motion or heaters. The host saves these changes when the service releases
 its resources.
 
-Sleep mode gates the existing dim, moon notice, display off and encoder wake
-sequence. Its timeout, notice duration and contrast come from
-`m300_display.cfg`. Enabled dims the display during print inactivity and
-restores the selected brightness on an encoder press. When idle, the moon
-fades over the configured notice duration before the screen turns off.
-Disabled keeps the OLED awake. A wake gesture from an off screen or moon
-notice is consumed. `ZORTRAX_DISPLAY_STATUS` reports the applied contrast,
-selected brightness and configured timing.
+Enable Sleep mode for automatic OLED dimming and power-off. Set both times
+in minutes since the last operator interaction with the OLED_TIMERS sliders.
+The allowed range is 1–60 minutes, with DIM at or before SLEEP. Ready, printing
+and pause use the same deadlines. The moon fades before SLEEP when time permits.
+At SLEEP the panel switches off. The first encoder gesture wakes it and
+restores the selected brightness. Disabled keeps the display awake.
+The alarm LED operates independently. `ZORTRAX_DISPLAY_STATUS` reports the
+configured times, MCU readback and display state.
 
 Model directories come first. Date and File size order entries newest and
 largest first. Name uses case-insensitive comparison with a stable spelling

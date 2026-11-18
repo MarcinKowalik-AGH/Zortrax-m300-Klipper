@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_timer_deadline.c - Testuje obliczanie i dotrzymywanie terminów zdarzeń timera MCU.
 // Isolated MCU timer scheduler test. Does not emulate STM32 timing.
 #include <assert.h>
 #include <stdint.h>

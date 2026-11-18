@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_test01.py - Udostępnia diagnostykę testowego profilu i ręcznie uruchamianą próbę grzania.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """TEST01 marker; default diagnostics or explicit supervised heating test.
 

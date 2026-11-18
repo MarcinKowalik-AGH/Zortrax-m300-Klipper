@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_manual.py - Sprawdza odnośniki, makra, ilustracje i zgodność dokumentacji z bieżącą wersją.
 """Verify current instructions and historical illustrations. Never contacts a printer."""
 import argparse
 import configparser
@@ -15,7 +16,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.20'
+CURRENT_RELEASE = 'v1.0.0-rc.21'
 CURRENT_MCU = '1.0.7'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',

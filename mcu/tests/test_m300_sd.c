@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_sd.c - Testuje polecenia i obsługę błędów czytnika fizycznej karty SD M300.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Native register/card doubles; does not execute STM32 instructions or hardware.
 #include <assert.h>

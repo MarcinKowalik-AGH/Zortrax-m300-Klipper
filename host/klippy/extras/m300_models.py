@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_models.py - Przygotowuje wskazany model do druku i obsługuje ponowne uruchomienie wydruku.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Prepare Models files once, then give the read-only stream to native Klippy."""
 from dataclasses import dataclass

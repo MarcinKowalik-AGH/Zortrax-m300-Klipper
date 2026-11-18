@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_panel.c - Obsługuje fizyczny panel OLED, pokrętło i polecenia panelowe przesyłane przez hosta.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Classic M300 SSD1322 and encoder. Private raw F103 GPIO ownership.
 // The button can revoke an already armed native stepper trigger.

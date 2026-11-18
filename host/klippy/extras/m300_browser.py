@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_browser.py - Udostępnia menu listę plików modeli oraz podgląd wybranego pliku.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M12 optional classic M300 file-listing and safe snapshot-preview service.
 

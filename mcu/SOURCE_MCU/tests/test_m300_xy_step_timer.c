@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_xy_step_timer.c - Testuje generowanie kroków osi XY przez model sprzętowego timera.
 // The pinned native stepper, gated-timer driver and simulated peripheral events.
 // No ARM execution, peripheral latency or electrical acceptance is modeled.
 #include <assert.h>

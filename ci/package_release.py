@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# package_release.py - Sprawdza zgodność wyników kompilacji i testów oraz składa pełne wydanie M300.
 """Validate actual compiled firmware and collect matching host artifacts."""
 import argparse
 import importlib.util

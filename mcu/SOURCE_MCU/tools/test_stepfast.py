@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_stepfast.py - Buduje i uruchamia porównanie obu ścieżek generowania kroków.
 """Native C guard equivalence; no physical MCU execution or cycle benchmark."""
 from pathlib import Path
 import argparse,hashlib,json,subprocess,tempfile

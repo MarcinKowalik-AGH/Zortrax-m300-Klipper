@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_startup_recovery.c - Sprawdza reakcję płyty na przerwany start i odzyskanie połączenia z hostem.
 // Real local renderer and lease handler with isolated MMIO doubles.
 // Does not flash hardware or modify any printer configuration.
 #define main panel_regression_main

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_shared_artwork.py - Porównuje współdzielone grafiki OLED z zaakceptowanymi wzorcami.
 """One production raster regardless of legacy sharp option; no hardware I/O."""
 import base64
 import hashlib

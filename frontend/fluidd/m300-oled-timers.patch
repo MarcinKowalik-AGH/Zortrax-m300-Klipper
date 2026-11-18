@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300-oled-timers.patch - Podłącza okno dwóch suwaków czasu OLED do obu makr w Fluidd.
 diff --git a/src/components/common/ActionCommandPromptDialog.vue b/src/components/common/ActionCommandPromptDialog.vue
 index 2a9916c..cad1a8e 100644
 --- a/src/components/common/ActionCommandPromptDialog.vue

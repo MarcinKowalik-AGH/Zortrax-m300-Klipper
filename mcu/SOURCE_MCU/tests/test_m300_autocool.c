@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_autocool.c - Testuje progi, histerezę i reakcje autonomicznego chłodzenia MCU.
 // Register model of the actual R14 cooling code and patched native GPIO/ADC.
 // ADC2 hardware completion/calibration are explicit boundaries; not a physical
 // temperature or F103 cycle test. GPL-3.0-or-later.

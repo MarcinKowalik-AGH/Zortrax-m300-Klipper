@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_thermal_305105.py - Testuje migrację i poprawność konfiguracji dopuszczającej 305 °C dla dyszy i 105 °C dla stołu.
 """Software regression only: heaters and hardware are modeled."""
 from pathlib import Path
 from types import SimpleNamespace as NS

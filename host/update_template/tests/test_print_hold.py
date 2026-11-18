@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_print_hold.py - Sprawdza rozpoznanie przytrzymania pokrętła i odrzucenie krótkich lub starych zdarzeń.
 """The native print hold needs a continuous, acknowledged physical gesture."""
 import unittest
 

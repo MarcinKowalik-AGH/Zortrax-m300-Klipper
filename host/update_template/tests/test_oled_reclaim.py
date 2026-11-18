@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_reclaim.py - Testuje ponowne przejęcie sterowania OLED przez hosta i odtworzenie transmisji.
 """Display-only re-claim with cancelled DMA, late ACKs and native queue order."""
 from types import SimpleNamespace as NS
 import unittest

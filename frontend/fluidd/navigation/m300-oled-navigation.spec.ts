@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-navigation.spec.ts - Testuje kolejność i scalanie zdarzeń aktualizacji widoku panelu.
 // SPDX-License-Identifier: GPL-3.0-only
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { M300NavigationEvents, type NavigationReply, type NavigationTransport } from './m300-oled-navigation'

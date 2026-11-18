@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_error_codes.py - Łączy wyjątki i komunikaty M300 z kodami błędów przekazywanymi do operatora.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Classic M300 1.3.1 error vocabulary; presentation never detects a fault.
 

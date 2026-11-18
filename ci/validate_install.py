@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# validate_install.py - Instaluje i sprawdza migracje starszych konfiguracji oraz ich wycofanie.
 """Exercise the real installer on an isolated source/config fixture, no services."""
 import argparse
 import importlib.util

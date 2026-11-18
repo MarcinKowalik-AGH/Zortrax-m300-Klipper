@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-paint.ts - Dekoduje obraz podglądu i przekazuje do wyświetlenia najnowszą gotową ramkę.
 // SPDX-License-Identifier: GPL-3.0-only
 /** One decode in progress and one replaceable latest frame, never a FIFO. */
 export class M300LatestPainter {

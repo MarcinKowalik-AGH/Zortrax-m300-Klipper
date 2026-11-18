@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300-leveling.patch - Łączy kreator poziomowania, makra M300 i podgląd OLED z interfejsem Fluidd.
 diff --git a/src/App.vue b/src/App.vue
 index de67b82..bfe5c31 100644
 --- a/src/App.vue

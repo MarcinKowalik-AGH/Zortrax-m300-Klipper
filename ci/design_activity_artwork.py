@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# design_activity_artwork.py - Rysuje bazowe klatki ikon czynności używanych w menu M300.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Native-grid art direction for the existing 24 activity silhouettes.
 

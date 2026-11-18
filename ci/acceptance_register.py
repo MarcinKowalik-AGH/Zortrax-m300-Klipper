@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# acceptance_register.py - Sprawdza spójność rejestru prób sprzętowych i generuje jego zestawienie dla projektu.
 """Validate and render a hardware-acceptance ledger without controlling hardware."""
 import argparse
 import json

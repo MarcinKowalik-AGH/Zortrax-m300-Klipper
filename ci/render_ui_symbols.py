@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# render_ui_symbols.py - Renderuje zestaw symboli interfejsu do wizualnego porównania.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Generate project SVGs and optional native OLED frames and review animations.
 

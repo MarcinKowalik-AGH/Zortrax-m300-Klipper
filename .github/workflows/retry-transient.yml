@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# retry-transient.yml - Ponawia przebieg GitHub Actions, gdy niepowodzenie odpowiada rozpoznanemu problemowi infrastruktury.
 name: Retry recognized transient M300 failures
 
 on:

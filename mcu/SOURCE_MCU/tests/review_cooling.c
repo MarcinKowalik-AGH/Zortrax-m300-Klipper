@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | review_cooling.c - Porównuje działanie sterowania chłodzeniem z oczekiwanymi reakcjami na temperaturę i usterki.
 #define main inherited_board_reference_main
 #include M300_REVIEW_BOARD_FIXTURE
 #undef main

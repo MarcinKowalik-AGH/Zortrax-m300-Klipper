@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_mcu_errors.py - Sprawdza zgłaszanie błędów płyty i ich prezentację z użyciem kodu MCU.
 """Exercise the production MCU error store and board guard in native models."""
 import argparse
 from pathlib import Path

@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_guard_snapshot.c - Sprawdza spójność zrzutu stanu zabezpieczeń przy zmianach wejść płyty.
 // Explicit ADC interrupt interleavings. Native register model, NOT hardware.
 #define main original_board_tests
 #include "test_m300_board.c"

@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-timers.spec.ts - Sprawdza zakres i kolejność progów OLED oraz zapis obu suwaków jednym poleceniem.
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'

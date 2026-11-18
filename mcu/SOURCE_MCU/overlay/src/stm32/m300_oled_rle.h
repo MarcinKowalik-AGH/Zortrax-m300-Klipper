@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_oled_rle.h - Wypełnia bufor pikseli powtórzeniami bajtu przy rozpakowywaniu ramek RLE dla SSD1322.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef M300_OLED_RLE_H
 #define M300_OLED_RLE_H

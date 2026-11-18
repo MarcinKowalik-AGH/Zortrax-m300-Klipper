@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# setup_fluidd.py - Przypisuje makra do grup w ustawieniach Fluidd przechowywanych przez Moonrakera.
 """Group M300 macros through Moonraker, preserving unrelated UI preferences."""
 import argparse
 import copy

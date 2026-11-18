@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# extract_leveling_oem.py - Wyodrębnia dane fabrycznych ekranów poziomowania używanych przez port M300.
 """Reproduce the M07 text/font manifest from the operator-supplied OEM dump.
 
 The application and initialized RAM are inputs, never release payloads. This

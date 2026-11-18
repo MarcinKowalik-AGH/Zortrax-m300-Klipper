@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_reported_xy_cleanup.py - Sprawdza migrację historycznych nastaw XY i zachowanie zmian operatora.
 """Exact macro supplied by the operator on 2026-11-12. No macro is executed."""
 import json
 from pathlib import Path

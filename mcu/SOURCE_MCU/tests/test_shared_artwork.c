@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_shared_artwork.c - Porównuje dekodowanie grafik na MCU z obrazami przyjętymi jako wzorcowe.
 // Production OLED scanline renderer with existing isolated MMIO fixture.
 // Emits the actual packed frame; never runs on or flashes printer hardware.
 #define main panel_regression_main

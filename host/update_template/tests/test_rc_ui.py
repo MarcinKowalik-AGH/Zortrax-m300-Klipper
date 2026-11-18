@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_rc_ui.py - Sprawdza publiczne makra ustawień, zgodność panelu z Fluidd i migrację interfejsu.
 """RC1 production UI parity and exact-value migration, with no printer I/O."""
 import configparser
 from pathlib import Path
@@ -97,7 +98,7 @@ class PublicSettingsTests(unittest.TestCase):
         self.assertIn(('Diagnostics',('page','diagnostics')),menu.rows(1)[1])
 
     def test_public_firmware_label_is_clean_but_unknown_identity_not_faked(self):
-        self.assertEqual(VERSION,'1.0.0-rc.20')
+        self.assertEqual(VERSION,'1.0.0-rc.21')
         self.assertEqual(display_mcu_version('0.13.14.19-TONED-OLED-UART8'),'0.13.14.19')
         self.assertEqual(display_mcu_version('foreign MCU'),'foreign MCU')
         self.assertEqual(display_mcu_version(None),'Unavailable')

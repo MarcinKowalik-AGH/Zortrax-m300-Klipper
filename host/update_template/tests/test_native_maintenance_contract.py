@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_maintenance_contract.py - Testuje akcje, zabezpieczenia i potwierdzenia procedur konserwacji.
 """OEM Maintenance traces, native thermostat ownership and actual OLED dispatch."""
 import base64
 import hashlib

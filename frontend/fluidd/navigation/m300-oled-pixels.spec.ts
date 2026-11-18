@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-pixels.spec.ts - Sprawdza skalowanie i zgodność odcieni obrazu OLED w przeglądarce.
 // SPDX-License-Identifier: GPL-3.0-only
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'

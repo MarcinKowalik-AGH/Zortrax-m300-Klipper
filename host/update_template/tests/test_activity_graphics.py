@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_activity_graphics.py - Sprawdza wybór ikon i animacji dla stanów drukarki i poszczególnych stron menu.
 """Meaning, animation lifecycle and non-overlapping native OLED composition."""
 import copy
 import json

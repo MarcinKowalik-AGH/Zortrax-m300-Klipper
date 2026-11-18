@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_leveling_oem.py - Porównuje dialogi i obrazy poziomowania z danymi fabrycznymi M300.
 """OEM reference pixels, shared prompts and actual OLED encoder dispatch."""
 import base64
 from collections import deque

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check-zcode.py - Sprawdza strukturę i zgodność wskazanego pliku Z-code przed drukiem.
 """Read-only Z-code preflight. Never imports Klippy or sends printer commands."""
 import argparse
 import json

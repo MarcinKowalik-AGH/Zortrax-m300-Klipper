@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# retry_failed_workflow.py - Rozpoznaje przejściowe błędy infrastruktury i kwalifikuje nieudany przebieg do ponowienia.
 """Bounded, fail-closed GitHub Actions retry. Logs are DATA, never executable.
 
 Run from the trusted default-branch workflow, NOT from a failed PR checkout.

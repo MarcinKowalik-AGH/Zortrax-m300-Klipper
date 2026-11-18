@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# reproduce_maintenance_contract.py - Odtwarza zachowanie fabrycznych procedur konserwacji na potrzeby testów zgodności.
 """Reproduce OEM Maintenance with declared UI/heater/button boundaries.
 
 Fan entry, toggles, saved-request restoration and PWM register writes execute

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_print_drain_purge.py - Sprawdza zakończenie zaplanowanych ruchów i ciągłość linii czyszczących na starcie.
 """Reproduce beta.14's idle-clock livelock and exercise real dispatch entrypoints.
 
 Native ToolHead timing methods and G-code/pause parsers are unmodified snapshots.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test01_m3b.py - Pakuje obraz aplikacji w kontener M3B dla bootloadera M300 i sprawdza jego strukturę.
 # SPDX-License-Identifier: MIT
 # Offline-only adaptation of the user's M300Boot v1.1 ibtool.py.
 # Full original and license: docs/boot_reference. No UART or flash actions.

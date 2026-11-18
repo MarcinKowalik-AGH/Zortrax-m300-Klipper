@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_lifecycle.py - Sprawdza kolejność startu, rozłączenia, ponownego połączenia i odzyskania panelu.
 """One-time host-start recovery, separate from hardware fault acknowledgement."""
 from types import SimpleNamespace as NS
 import unittest

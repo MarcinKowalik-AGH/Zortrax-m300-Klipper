@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300-tune.patch - Dodaje kontrolki M300 do widoków Tune i Prepare w Fluidd.
 diff --git a/src/components/widgets/bedmesh/BedMeshControls.vue b/src/components/widgets/bedmesh/BedMeshControls.vue
 --- a/src/components/widgets/bedmesh/BedMeshControls.vue
 +++ b/src/components/widgets/bedmesh/BedMeshControls.vue

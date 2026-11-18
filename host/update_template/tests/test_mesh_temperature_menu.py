@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_mesh_temperature_menu.py - Sprawdza wybór nastaw cieplnych używanych do pomiaru siatki z poziomu menu.
 """Mesh temperature defaults, Klipper grouping and distinct homing animations."""
 import unittest
 

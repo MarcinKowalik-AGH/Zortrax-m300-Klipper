@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_oled_host.inc - Rozstrzyga przejęcie OLED przez hosta i zwrot panelu do lokalnej obsługi MCU.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Private display lease only. Never clears shutdown or changes actuator gates.
 static uint8_t oled_host_protocol, oled_host_owned, oled_host_timer_active;

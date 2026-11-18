@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# render_assigned_ui.py - Renderuje symbole przypisane do funkcji menu i zapisuje ich podgląd.
 """Render production OLED views using offline test fixtures; never run printer I/O."""
 import argparse
 from pathlib import Path

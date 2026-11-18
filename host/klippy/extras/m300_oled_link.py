@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled_link.py - Udostępnia diagnostykę połączenia panelu i koordynuje odzyskanie sterowania OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M10 OLED link supervisory facade. Optional: no pins, motion or menu owner.
 

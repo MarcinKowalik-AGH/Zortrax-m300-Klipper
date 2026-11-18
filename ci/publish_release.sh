@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# publish_release.sh - Publikuje archiwum wydania, instrukcje instalacji i sumy kontrolne na GitHubie.
 # Publish only an immutable, successful main-branch build; never rebuild assets.
 set -euo pipefail
 tag=$(jq -er .distribution_version PORT.json)

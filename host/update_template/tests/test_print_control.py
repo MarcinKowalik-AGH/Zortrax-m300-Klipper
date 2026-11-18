@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_print_control.py - Sprawdza przygotowanie, pauzę, wznowienie, anulowanie i zakończenie zadania.
 """Native parser/pause ownership with modeled heaters and physical motion.
 
 Real file descriptors verify file identity. Hardware temperature, motion and

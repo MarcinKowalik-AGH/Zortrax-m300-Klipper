@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_panel.c - Testuje polecenia panelu, obsługę pokrętła i transmisję OLED na modelu MCU.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Offline register/scheduler doubles; this does NOT execute on an STM32.
 // Build: cc -std=c11 -Wall -Wextra tests/test_panel.c -o /tmp/test_m300_panel

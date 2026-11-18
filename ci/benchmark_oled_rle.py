@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# benchmark_oled_rle.py - Porównuje rozmiar danych i koszt kodowania ramek OLED metodą RLE.
 """Check Thumb-2 RLE fill equivalence and count emulated instructions."""
 import argparse
 import json

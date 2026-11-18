@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# prepare_upstream.py - Przygotowuje przypięte źródła Klippera i weryfikuje sumę pobranego archiwum.
 """Fetch and verify exactly one pinned public Klipper source archive."""
 import argparse
 import json

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# benchmark_panel_step.py - Mierzy pracę transportu panelu w pojedynczych krokach harmonogramu.
 """Count instructions in selected M300 F103 firmware paths using emulated GPIO."""
 import argparse
 from hashlib import sha256

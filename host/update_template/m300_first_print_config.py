@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_first_print_config.py - Wprowadza zweryfikowane ustawienia osi Z do profilu pierwszego wydruku.
 """Opt-in geometry from the user's 2026-11-11 M300 first-print report.
 
 Never lower the global template or mask a bed-mesh error. Called only with an

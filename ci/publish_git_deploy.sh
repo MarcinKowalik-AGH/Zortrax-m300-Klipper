@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# publish_git_deploy.sh - Publikuje sprawdzone pliki dla Orange Pi w gałęzi instalacyjnej repozytorium.
 # Publish the ready-to-install tree without bringing source history or docs to Orange Pi.
 set -euo pipefail
 

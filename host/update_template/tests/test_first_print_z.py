@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_first_print_z.py - Sprawdza migrację ustawień pierwszego wydruku oraz zachowanie skal i limitów osi Z.
 """User-qualified Z variant; modeled hardware, never a physical printer test."""
 import math
 from pathlib import Path

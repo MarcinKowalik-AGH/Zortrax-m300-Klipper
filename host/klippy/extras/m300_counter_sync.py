@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_counter_sync.py - Rozlicza pełne minuty druku między dziennikiem hosta a fabrycznym licznikiem MCU.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Durable host intent for the M300 Classic factory print-minute counter."""
 

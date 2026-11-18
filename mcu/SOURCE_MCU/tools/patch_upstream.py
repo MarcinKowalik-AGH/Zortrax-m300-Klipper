@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# patch_upstream.py - Nakłada zmiany M300 na zweryfikowane źródła Klippera i zapisuje pochodzenie plików.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Deterministically apply the classic-M300 P01 overlay to pinned Klipper.
 

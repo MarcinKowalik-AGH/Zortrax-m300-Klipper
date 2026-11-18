@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# install_orange_pi.py - Aktualizuje działającego Klippera na Orange Pi albo na żądanie wdraża gotowe zasoby Fluidd.
 """Update M300 Classic Klipper, with a separate opt-in Fluidd web update."""
 import argparse
 from contextlib import closing, contextmanager

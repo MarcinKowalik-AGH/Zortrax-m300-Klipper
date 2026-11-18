@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# render_temperature_editors.py - Renderuje ekrany nastaw temperatury do sprawdzenia geometrii, ikon i wartości.
 """Render production OLED temperature editors in a host-only test harness."""
 import argparse
 import hashlib

@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_factory_counter.c - Symuluje zapis, przerwanie i odtworzenie stanu dwóch banków fabrycznego licznika.
 // Test the exact MCU transaction core with STM32F103 Flash programming rules.
 // GPL-3.0-or-later.
 #include <assert.h>

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled_idle.py - Przechowuje czasy DIM i SLEEP na hoście i uzgadnia obie wartości z pamięcią MCU.
 """Operator-selected OLED thresholds. The factory counter is independent."""
 import json
 from secrets import randbits

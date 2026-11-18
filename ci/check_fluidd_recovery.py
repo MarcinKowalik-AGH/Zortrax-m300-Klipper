@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_fluidd_recovery.py - Odtwarza awarię pustych plików HTML i JavaScript, a następnie sprawdza naprawiony Fluidd w przeglądarkach.
 """Serve the actual release UI and verify recovery from two empty files."""
 import argparse
 from functools import partial

@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_factory.h - Definiuje adresy i reguły odczytu fabrycznych rekordów identyfikacji płyty M300.
 // M300 stock factory ID3 decoder. Read-only; GPL-3.0-or-later.
 #ifndef __STM32_M300_FACTORY_H
 #define __STM32_M300_FACTORY_H

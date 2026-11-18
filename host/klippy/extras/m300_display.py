@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_display.py - Steruje jasnością, wygaszaniem i wybudzaniem OLED według czasu od ostatniej obsługi.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Display-only inactivity. Native thermal, motion and printer sleep untouched."""
 import json
@@ -10,7 +11,7 @@ from .m300_display_oem import ENTERING_TEXT, load_moon, sleep_wire
 from .m300_nvm import MAX_BRIGHTNESS
 from .m300_oled_idle import OledTimers
 
-REVISION = '0.5.0-M300-OLED-TIMERS'
+REVISION = '0.5.1-M300-OLED-TIMERS'
 
 
 class M300Display:
@@ -39,7 +40,6 @@ class M300Display:
         self.last_activity = self.reactor.monotonic()
         self.last_source = 'startup'
         self.debug = False
-        self.busy = False
         self.sleep_enabled = True
         self.phase = AWAKE
         self.notice_wire = None
@@ -52,8 +52,7 @@ class M300Display:
         self.timer = self.reactor.register_timer(self._tick)
         for event, cb in (('klippy:ready', self._ready),
                           ('klippy:shutdown', self._stop),
-                          ('klippy:disconnect', self._stop),
-                          ('gcode:command_error', self._command_error)):
+                          ('klippy:disconnect', self._stop)):
             self.printer.register_event_handler(event, cb)
         self.gcode.register_command('ZORTRAX_DISPLAY_STATUS', self.cmd_status,
                                    when_not_ready=True)
@@ -192,9 +191,6 @@ class M300Display:
         # Existing OLED/MCU lifecycle retains ownership of the local waiting
         # and error screen. No host command is sent after disconnect/shutdown.
 
-    def _command_error(self, *args):
-        self.activity('command_error')
-
     def _setting_changed(self, name, value):
         if name == 'sleep_mode':
             self.sleep_enabled = value != 'OFF'
@@ -236,6 +232,7 @@ class M300Display:
     def _sync_presentation(self):
         b = self.stream._base
         if (self._presentation_wait and b.ready and b.enabled
+                and self.phase not in (OFF, 'ENTERING_SLEEP')
                 and b.previous is not None and b.previous != self.notice_wire
                 and b.operations is None and not self.stream.pending
                 and not self.stream.inflight and self.stream.display_mode != OFF):
@@ -300,7 +297,7 @@ class M300Display:
                         in ('printing', 'paused')):
                     return True
             except Exception:
-                # An unknown operation should remain visible, at dim level.
+                # Treat an unavailable operation status as busy for manual machine sleep.
                 return True
         toolhead = self.printer.lookup_object('toolhead', None)
         if toolhead is not None:
@@ -324,38 +321,42 @@ class M300Display:
         if not self.connected:
             return self.reactor.NEVER
         previous_phase = self.phase
-        self.busy = self._working(now)
+        idle = now - self.last_activity
         asleep = self._maintenance_sleep(now)
         entered_sleep = asleep and not self._maintenance_asleep
         self._maintenance_asleep = asleep
-        if entered_sleep and not self.busy and self.sleep_enabled:
-            self._begin_notice()
         if not self.sleep_enabled:
             self._leave_notice()
             self.phase, desired = AWAKE, AWAKE
-        elif self.busy:
-            self._leave_notice()
-            desired = DIM if now - self.last_activity >= self.timeout else AWAKE
-            self.phase = desired
+        elif idle >= self.sleep_timeout or self.phase == OFF:
+            if self.phase != OFF:
+                self.stream.set_dim_override(None)
+                self._presentation_wait = True
+                self._invalidate_view()
+            self.phase, desired = OFF, OFF
         elif self.phase == 'ENTERING_SLEEP':
             desired = self._notice_mode(now)
-        elif now - self.last_activity >= self.sleep_timeout:
-            if self.phase == OFF:
-                desired = OFF
-            else:
-                self._begin_notice()
-                desired = DIM
+        elif ((entered_sleep and not self._working(now))
+              or idle >= max(self.timeout, self.sleep_timeout - self.notice_seconds)):
+            self._begin_notice()
+            desired = DIM
         else:
-            desired = DIM if now - self.last_activity >= self.timeout else AWAKE
+            desired = DIM if idle >= self.timeout else AWAKE
             self.phase = desired
         self._sync_presentation()
         if desired != self.stream.requested_mode:
             self.stream.set_mode(desired)
             self.reactor.update_timer(self.oled.timer, self.reactor.NOW)
         if self.debug and previous_phase != self.phase:
-            logging.info('M300 OLED idle %s -> %s after %.1fs, busy=%s',
-                         previous_phase, self.phase, now - self.last_activity, self.busy)
-        return now + (.1 if self.phase == 'ENTERING_SLEEP' else 1.)
+            logging.info('M300 OLED idle %s -> %s after %.1fs',
+                         previous_phase, self.phase, idle)
+        next_tick = now + (.1 if self.phase == 'ENTERING_SLEEP' else 1.)
+        if self.sleep_enabled and self.phase != OFF:
+            for threshold in (self.timeout, max(self.timeout, self.sleep_timeout - self.notice_seconds),
+                              self.sleep_timeout):
+                if idle < threshold:
+                    return min(next_tick, self.last_activity + threshold)
+        return next_tick
 
     def get_status(self, now):
         return {'revision': REVISION, 'connected': self.connected,
@@ -375,7 +376,8 @@ class M300Display:
                 'oem_moon_descriptor': '0x0801d908',
                 'ui_guarded': self.phase == 'ENTERING_SLEEP' or self._presentation_wait,
                 'inactive_seconds': max(0., now - self.last_activity),
-                'last_activity': self.last_source, 'working': self.busy,
+                'last_activity': self.last_source,
+                'working': self._working(now) if self.connected else False,
                 'screen_only': True, 'hardware_verified': False,
                 'wake_command_sources': ['Fluidd/Moonraker G-code API', 'encoder'],
                 'changes': self.stream.display_changes if self.stream else 0}

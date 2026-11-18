@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_leveling.py - Testuje przebieg natywnej procedury poziomowania i jej reakcję na błędy.
 """Native M07 with the pinned HomingMove and modeled contact/heater boundaries.
 
 These tests exercise complete sessions, not physical printer acceptance.

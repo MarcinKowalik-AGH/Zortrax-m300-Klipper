@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# tone_activity.py - Przelicza odcienie klatek animacji na paletę panelu OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Lossless native 4bpp row encoder shared by both MCU asset exporters."""
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# generate_startup_logo.py - Przygotowuje dane logo startowego i sprawdza je względem obrazu wzorcowego.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Reproduce the unchanged OEM logo ROM and pixel-exact preview. No printer I/O."""
 import argparse

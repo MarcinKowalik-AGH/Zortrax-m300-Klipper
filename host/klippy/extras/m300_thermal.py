@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_thermal.py - Obsługuje diagnostykę cieplną, nastawy grzałek i strojenie PID w M300.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Thermal commissioning and optional native heater control/PID integration.
 

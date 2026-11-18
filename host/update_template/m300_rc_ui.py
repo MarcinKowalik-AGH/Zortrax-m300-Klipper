@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_rc_ui.py - Aktualizuje dostarczone makra panelu i usuwa rozpoznane definicje wycofanych makr.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """RC UI migration: remove exact stock lab macros; preserve operator extensions."""
 import hashlib

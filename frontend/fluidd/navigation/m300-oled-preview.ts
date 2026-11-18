@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-preview.ts - Odczytuje i sprawdza dane ramki OLED z obiektów drukarki publikowanych przez Moonrakera.
 // Read-only, strictly validated status adapter for the M300 OLED preview.
 // Moonraker already subscribes to all Klipper status objects in Fluidd.
 export interface M300OledPreviewStatus {

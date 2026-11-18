@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_xy_step_timer.c - Generuje kroki osi XY z użyciem timera STM32 i obsługuje planowane terminy impulsów.
 // Finite Classic M300 STEP pulse trains. GPL-3.0-or-later.
 #include "board/gpio.h" // GPIO
 #include "board/irq.h" // irq_save

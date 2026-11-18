@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_factory_counter.h - Definiuje strukturę banków licznika oraz interfejs odczytu, programowania i kasowania.
 // M300 Classic OEM print counter, GPL-3.0-or-later.
 #ifndef __STM32_M300_FACTORY_COUNTER_H
 #define __STM32_M300_FACTORY_COUNTER_H

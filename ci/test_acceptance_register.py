@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_acceptance_register.py - Sprawdza powiązanie deklaracji zgodności sprzętowej z wynikami prób na drukarce.
 from copy import deepcopy
 import json
 from pathlib import Path

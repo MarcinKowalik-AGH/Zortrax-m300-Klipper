@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_retry_failed_workflow.py - Testuje kwalifikację błędów GitHub Actions do automatycznego ponowienia.
 """Offline fixtures for automatic retry; never sends a real GitHub POST."""
 from copy import deepcopy
 from io import BytesIO

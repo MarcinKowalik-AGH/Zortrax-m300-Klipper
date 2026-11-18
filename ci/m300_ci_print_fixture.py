@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_print_fixture.py - Dostarcza kontrolowane warunki do prób startu, pauzy i zakończenia wydruku.
 """Real native SD/parser/planner integration, strictly FILEOUTPUT only.
 
 No physical thermal/drain proof: heater readings and the estimated MCU clock

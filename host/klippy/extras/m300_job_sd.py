@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_job_sd.py - Przekazuje sprawdzony plik G-code do virtual_sdcard i nadzoruje jego własność.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M02 checked G-code snapshots and sole ownership of native virtual_sdcard.
 

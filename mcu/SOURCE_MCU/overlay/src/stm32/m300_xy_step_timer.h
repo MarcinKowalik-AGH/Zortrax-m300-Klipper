@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_xy_step_timer.h - Deklaruje interfejs sprzętowego timera kroków osi XY.
 #ifndef __STM32_M300_XY_STEP_TIMER_H
 #define __STM32_M300_XY_STEP_TIMER_H
 // Finite Classic M300 STEP pulse trains. GPL-3.0-or-later.

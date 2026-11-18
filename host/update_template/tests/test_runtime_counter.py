@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_runtime_counter.py - Testuje pomiar i zapis czasu faktycznego druku z uwzględnieniem przerw.
 """Native model lifetime accounting and restart checkpoint regression tests."""
 from pathlib import Path
 from types import SimpleNamespace as NS

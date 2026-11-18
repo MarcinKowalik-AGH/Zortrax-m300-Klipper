@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# install_fresh.py - Przygotowuje nową instalację hosta M300 z wybraną konfiguracją i ścieżką portu szeregowego.
 """First M300 Classic install after a single-printer KIAUH system setup.
 
 Default: read-only plan. --apply replaces only an unused stock Klipper setup.

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_procedure_errors.py - Sprawdza obsługę niepowodzeń procedur i przekazywanie ich do operatora.
 """Fault injection at procedure boundaries and the shared error dispatcher."""
 from types import SimpleNamespace as NS
 import unittest

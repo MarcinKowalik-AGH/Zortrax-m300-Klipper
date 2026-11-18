@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_startup_epoch.py - Buduje model startu i porównuje treść ekranu oraz zachowanie przy ponownym połączeniu.
 """Cold start through the real generic timer initialization, without host config."""
 import base64
 import hashlib

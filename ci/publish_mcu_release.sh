@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# publish_mcu_release.sh - Publikuje wersjonowany ZIP z aplikacją MCU po udanej kompilacji i weryfikacji.
 # Publish exactly the firmware-only M300APP.M3B from a verified main build.
 set -euo pipefail
 version=$(jq -er '.mcu_release' PORT.json)

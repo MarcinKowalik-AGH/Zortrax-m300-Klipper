@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ui_m11_state.py - Przechowuje historię stron i sprawdza poprawność wierszy oraz akcji menu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M11 pure five-language menu policy and generation-bound navigation.
 

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_idle.py - Sprawdza zapis obu progów OLED, odczyt z MCU i odzyskanie ustawień po restarcie.
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory

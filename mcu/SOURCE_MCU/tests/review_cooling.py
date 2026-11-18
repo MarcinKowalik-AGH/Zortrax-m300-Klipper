@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# review_cooling.py - Kompiluje i uruchamia model przeglądu chłodzenia oraz zapisuje raport wyników.
 """Independent firmware-source cooling checks; native register models, no hardware."""
 from pathlib import Path
 import argparse,hashlib,importlib.util,json,re,subprocess,tempfile,zipfile

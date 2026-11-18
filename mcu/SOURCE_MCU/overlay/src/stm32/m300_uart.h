@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_uart.h - Deklaruje interfejs transmisji UART używany przez moduły płyty M300.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef M300_UART_H
 #define M300_UART_H

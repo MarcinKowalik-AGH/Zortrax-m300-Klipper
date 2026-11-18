@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_preview.py - Sprawdza kodowanie i publikację ramek podglądu OLED dla Fluidd.
 """Read-only low-latency host-rendered OLED preview, 4bpp PNG fidelity and bounds."""
 import base64
 import struct

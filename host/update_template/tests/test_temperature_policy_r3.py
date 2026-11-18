@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_temperature_policy_r3.py - Sprawdza egzekwowanie limitów temperatury w profilu M300.
 """R3 target caps and native parser semantics. Hardware boundaries modeled."""
 from pathlib import Path
 from types import SimpleNamespace as NS

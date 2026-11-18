@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_klipper_logo.py - Rysuje znak i napis Klipper w trzech odcieniach wyświetlacza OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Three-tone complete Klipper V/nozzle symbol and lowercase 'klipper' wordmark.
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_ui_symbols.py - Sprawdza przypisanie symboli do stron, stanów pracy i procedur panelu.
 """Validate committed OLED artwork without raster libraries or printer access."""
 import hashlib
 import base64

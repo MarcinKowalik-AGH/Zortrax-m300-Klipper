@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_config_layout.py - Sprawdza porządkowanie sekcji konfiguracji, zachowanie wartości i wycofanie instalacji.
 """Configuration layout migration preserves effective hardware and saved PID."""
 import configparser
 from pathlib import Path

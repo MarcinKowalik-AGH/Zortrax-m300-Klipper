@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_counter_runtime_sync.py - Sprawdza synchronizację licznika podczas bezczynności hosta i odroczenie zapisu przy zajętej drukarce.
 """Post-job MCU synchronization, runtime UART correlation and durable retries."""
 import os
 from pathlib import Path

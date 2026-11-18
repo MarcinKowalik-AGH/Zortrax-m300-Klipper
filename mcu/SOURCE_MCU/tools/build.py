@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# build.py - Buduje aplikację STM32 z przypiętych źródeł, sprawdza rozmieszczenie pamięci i zapisuje artefakty.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Build the M300 M01-M08 MCU from a verified upstream archive. Never flashes."""
 from __future__ import annotations

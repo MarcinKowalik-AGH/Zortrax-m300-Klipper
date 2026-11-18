@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_repository.py - Sprawdza integralność repozytorium, pakietu hosta i formatu aplikacji dla bootloadera.
 """Packaging boundaries and compatibility contracts for the public repository."""
 import hashlib
 import ast

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_zcode_policy_state.py - Klasyfikuje zgodność binarnego Z-code z modelem drukarki i możliwościami portu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M13 pure, fail-closed compatibility classification for M300 Classic binary Z-code.
 

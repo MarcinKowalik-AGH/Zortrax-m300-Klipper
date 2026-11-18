@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# reproduce_leveling_screens.py - Odtwarza fabryczne ekrany procedury poziomowania do porównania z portem.
 """Generate reference pixels by executing the recovered OEM register-C code.
 
 Input: source_evidence_m04_binary from the supplied source archive. Only the

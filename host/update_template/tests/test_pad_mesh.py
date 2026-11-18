@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_pad_mesh.py - Sprawdza pomiary padów i tworzenie siatki kompensacji stołu M300.
 """Regression coverage for the optional Classic M300 pad mesh adapter."""
 from types import SimpleNamespace as NS
 import statistics

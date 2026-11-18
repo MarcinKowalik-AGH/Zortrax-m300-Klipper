@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_counter_sync.py - Testuje rozliczanie minut, odczyt banków i odtworzenie przerwanej transakcji licznika.
 """Exercise startup counter synchronization and durable recovery."""
 from copy import deepcopy
 from pathlib import Path

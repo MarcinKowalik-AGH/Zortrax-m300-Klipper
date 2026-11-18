@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# reproduce_settings_contract.py - Odtwarza wybory i ekrany ustawień oryginalnego firmware do testów zgodności.
 """Check OEM 1.3.1 Settings callbacks and OLED menu pixels from the private model."""
 import argparse
 import hashlib

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_menu.py - Sprawdza nawigację menu i przekazywanie wybranych akcji do natywnych modułów Klippera.
 """Native menu contracts, including negative controls from shipped R15.5."""
 from contextlib import nullcontext
 from types import SimpleNamespace as NS

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_pad_mesh_fixture.py - Podstawia położenia i wyniki kontaktu do prób geometrii, pomiaru i zapisu siatki.
 """Synthetic pad heights for real Klippy FILEOUTPUT profile integration."""
 class PadMeshFixture:
     def __init__(self, config):

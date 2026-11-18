@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_factory_runtime_scheduler.py - Sprawdza zachowanie harmonogramu przy zapisie fabrycznego licznika podczas pracy MCU.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Compile the production transformed scheduler against a host clock model."""
 import argparse

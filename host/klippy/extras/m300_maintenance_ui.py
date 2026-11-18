@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_maintenance_ui.py - Rysuje menu serwisowe wentylatorów i platformy oraz przypisuje akcje wierszom.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """English OEM fan menu and manual platform presentation; no hardware access."""
 from functools import lru_cache

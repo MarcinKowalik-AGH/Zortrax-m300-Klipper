@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_procedure_return.py - Sprawdza powrót do odpowiedniego ekranu po procedurze lub wyjściu z ustawień.
 """Procedure navigation borrows the OLED without restoring control or consent."""
 from types import SimpleNamespace as NS
 import unittest

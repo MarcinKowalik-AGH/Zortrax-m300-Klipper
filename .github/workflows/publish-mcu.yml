@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# publish-mcu.yml - Publikuje samą aplikację MCU dla zweryfikowanej kompilacji na gałęzi main.
 name: Publish verified M300 MCU
 
 on:

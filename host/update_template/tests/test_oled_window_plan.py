@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_window_plan.py - Porównuje koszt i poprawność okien wybranych do przesłania zmienionych pikseli OLED.
 """Check the actual OLED transport with and without the idle window planner."""
 import unittest
 

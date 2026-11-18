@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_oled_zoom_layout.py - Sprawdza w przeglądarce geometrię podglądu OLED przy zmianach rozmiaru i powiększenia.
 """Verify the actual M300 OLED Vue stylesheet: centered screen, pinned controls.
 
 Uses the production pixel helper plus CSS extracted from the Vue component.

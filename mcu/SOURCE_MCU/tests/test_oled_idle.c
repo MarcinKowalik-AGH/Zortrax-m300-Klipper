@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_oled_idle.c - Przerywa zapis i kasowanie w modelu Flash, aby sprawdzić odzyskanie ostatniej pary DIM i SLEEP.
 #include <assert.h>
 #include <string.h>
 #include "../overlay/src/stm32/m300_oled_idle.h"

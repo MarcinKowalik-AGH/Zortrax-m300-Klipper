@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_pad_mesh_oled.py - Sprawdza prezentację stanu pomiaru i wyników siatki na OLED.
 """Native pad measurement borrows the OLED; presentation never controls probing."""
 from types import SimpleNamespace as NS
 import unittest

@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_errors.c - Rejestruje błędy lokalne i udostępnia ich stan pozostałym modułom oraz hostowi.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Error metadata only. No GPIO, timers, ADC ownership, flash or actuator API.
 #ifndef M300_ERRORS_TEST

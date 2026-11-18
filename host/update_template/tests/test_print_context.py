@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_print_context.py - Sprawdza stan sesji i akcje dopuszczalne w kontekście aktywnego zadania.
 """Native print state projection, OLED acknowledgement and delayed dispatch."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

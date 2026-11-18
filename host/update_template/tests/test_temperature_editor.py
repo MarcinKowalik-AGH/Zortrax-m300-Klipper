@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_temperature_editor.py - Sprawdza regulację temperatury z panelu, zakres wyboru i zatwierdzenie wartości.
 """Native temperature-editor pixels, real encoder/ACK path and guarded heater application on explicit confirmation."""
 import unittest
 from unittest.mock import patch

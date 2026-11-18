@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_firmware131_contract.py - Porównuje zachowanie portu z danymi wzorcowymi oryginalnego firmware 1.3.1.
 """Independent OEM execution fixtures versus full native procedure sessions."""
 import copy
 import json

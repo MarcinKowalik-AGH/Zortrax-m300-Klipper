@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_guard_snapshot.py - Buduje próbę odczytu zabezpieczeń MCU i sprawdza zgodność kolejnych próbek.
 from pathlib import Path
 import importlib.util,json,shutil,subprocess,tempfile
 B=Path(__file__).resolve().parents[1]

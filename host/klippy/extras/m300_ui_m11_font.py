@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ui_m11_font.py - Dostarcza dodatkowe glify dla wersji językowych klasycznego panelu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Adapted 5x7/5x8 supplemental glyphs for five classic-M300 languages.
 

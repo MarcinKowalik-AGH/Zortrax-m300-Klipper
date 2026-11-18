@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_errors.h - Deklaruje interfejs kodów i stanu błędów używany przez firmware MCU.
 #ifndef __STM32_M300_ERRORS_H
 #define __STM32_M300_ERRORS_H
 #include <stdint.h>

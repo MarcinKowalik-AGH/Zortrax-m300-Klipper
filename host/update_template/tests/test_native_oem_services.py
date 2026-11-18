@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_oem_services.py - Sprawdza integrację natywnych usług z obsługą procedur i fizycznego panelu.
 """Full OEM manual sessions with the pinned native dispatcher and GCodeMove.
 
 Only the heater, clock and physical move/drain boundaries are modeled. These

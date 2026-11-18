@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_verify_gain.py - Sprawdza działanie nadzoru narastania temperatury grzałek w konfiguracji M300.
 """Actual pinned Klipper checker, synthetic thermal traces. No heater operation."""
 from pathlib import Path
 import importlib.util,json,logging,types

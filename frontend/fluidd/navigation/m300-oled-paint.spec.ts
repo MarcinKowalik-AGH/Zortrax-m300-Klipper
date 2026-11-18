@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-paint.spec.ts - Testuje kolejność wyświetlania gotowych obrazów i odrzucanie nieaktualnych ramek.
 // SPDX-License-Identifier: GPL-3.0-only
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { M300LatestPainter } from './m300-oled-paint'

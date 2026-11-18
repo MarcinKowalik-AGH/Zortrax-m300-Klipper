@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-macro-category.ts - Dobiera domyślną grupę makra M300 i rozpoznaje ukryte makra testowe.
 // SPDX-License-Identifier: GPL-3.0-only
 const internalMacros = new Set([
   'ZORTRAX_PRINT', 'ZORTRAX_OLED_PERF', 'ZORTRAX_TEST_PRINT_FAN',

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oem_procedure_ui.py - Układa współdzielone dialogi konserwacji i materiału dla panelu OLED oraz Fluidd.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Recovered Maintenance/Material dialogs; same text for OLED and Fluidd."""
 from .m300_leveling_oem import assets, text, LANGUAGES

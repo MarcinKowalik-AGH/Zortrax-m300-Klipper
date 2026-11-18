@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_fat.py - Odczytuje tablice FAT16/FAT32 i zawartość plików z karty SD drukarki.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded, read-only FAT16/FAT32 reader for the private M300 SD transport.
 

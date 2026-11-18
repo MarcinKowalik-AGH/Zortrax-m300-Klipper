@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_io.py - Podłącza wyjścia PWM do Klippera i sprawdza gotowość płyty do sterowania.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Native software PWM with M300 qualification gates; no duplicate ADC owner."""
 import json

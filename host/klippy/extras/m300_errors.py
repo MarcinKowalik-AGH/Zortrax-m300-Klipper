@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_errors.py - Łączy zgłoszenia błędów Klippera i MCU na potrzeby konsoli, Fluidd i OLED.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """One error identity for native Klipper, Fluidd, OLED and MCU metadata.
 

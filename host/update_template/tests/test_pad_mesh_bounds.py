@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_pad_mesh_bounds.py - Testuje granice obszaru pomiaru i dopasowanie punktów siatki do dostępnego ruchu.
 """Measured contact rectangles override approximate square geometry."""
 from types import SimpleNamespace as NS
 import unittest

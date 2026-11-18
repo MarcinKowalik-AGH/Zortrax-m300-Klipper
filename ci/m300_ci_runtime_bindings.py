@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_runtime_bindings.py - Podłącza symulowane zasoby wykonawcze podczas prób Klippy w trybie FILEOUTPUT.
 """Inspect the runtime observers and existing guards on actual Klippy handlers."""
 import json
 import logging

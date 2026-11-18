@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_filament.py - Prowadzi ładowanie i wycofywanie filamentu z potwierdzeniami operatora.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 M03 bounded filament services on native Klippy and the M02 owner.
 

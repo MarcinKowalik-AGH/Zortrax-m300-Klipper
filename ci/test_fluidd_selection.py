@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_fluidd_selection.py - Sprawdza wybór właściwej instalacji Fluidd przy wielu witrynach i portach nginx.
 """No network, sudo, service changes or printer commands in these tests."""
 import json
 from pathlib import Path

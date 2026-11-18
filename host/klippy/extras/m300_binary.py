@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_binary.py - Sprawdza rekordy binarnego Z-code M300 i tłumaczy kompletny plik na G-code Klippera.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Bounded, all-or-nothing M300 1.3.1 Z-code to native G-code compiler.
 

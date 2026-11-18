@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_oled_local.inc - Rysuje lokalne ekrany MCU podczas startu i w stanach, gdy panel obsługuje płyta.
 /* SPDX-License-Identifier: GPL-3.0-or-later
  * Inventure RC6 local-screen lifecycle, adapted to M300 pins/init/F103 RAM.
  * Only a 128-byte scanline is kept. No full 8192-byte MCU framebuffer.

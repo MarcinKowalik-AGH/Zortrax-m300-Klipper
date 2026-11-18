@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# validate_host_reconnect.py - Sprawdza zachowanie hosta przy ponownym połączeniu z MCU i odczycie zabezpieczeń.
 """Exercise the actual pinned native restart helper, without a UART or MCU."""
 import argparse
 import json

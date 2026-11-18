@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_install.py - Sprawdza plan, instalację, integralność pakietu i przywrócenie wcześniejszych plików hosta.
 import hashlib
 import json
 import pathlib

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_shared_artwork.py - Porównuje dane ikon oraz ich renderowanie w implementacjach hosta i MCU.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Compare master -> live host -> PNG and real C autonomous MCU pixels.
 

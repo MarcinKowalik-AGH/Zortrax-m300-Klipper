@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled_render.py - Rysuje tekst i elementy statusu w formacie pikseli wyświetlacza SSD1322.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 diagnostic OLED renderer, adapted from the Inventure project atlas.
 

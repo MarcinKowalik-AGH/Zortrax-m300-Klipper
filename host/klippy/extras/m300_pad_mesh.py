@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_pad_mesh.py - Mierzy powierzchnię pięciu padów M300 i przekazuje siatkę do kompensacji Klippera.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Native Klipper probing and compensation for the five Classic M300 pads."""
 from .m300_temperature_policy import target_limit

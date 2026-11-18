@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_leveling_state.py - Prowadzi kolejność pomiarów pięciu punktów i regulacji trzech śrub stołu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M07 M300 five-point, three-screw workflow; no printer or hardware imports.
 

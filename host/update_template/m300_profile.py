@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_profile.py - Rozpoznaje i migruje sekcje konfiguracji, zachowując ustawienia operatora.
 """R16 normal-operation configuration migration; keeps calibration text intact."""
 from pathlib import Path
 import glob

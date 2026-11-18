@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# package_git_deploy.py - Tworzy z gotowego wydania mały zestaw plików dla gałęzi instalacyjnej orange-pi.
 """Prepare a compact Git checkout from a complete, verified Actions artifact."""
 import argparse
 import json

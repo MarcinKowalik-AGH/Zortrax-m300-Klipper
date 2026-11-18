@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# publish-release.yml - Publikuje pakiet wydania po udanym przebiegu kompilacji i testów.
 name: Publish M300 release
 
 on:

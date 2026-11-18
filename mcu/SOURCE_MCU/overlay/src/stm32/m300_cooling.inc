@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_cooling.inc - Odczytuje temperaturę na MCU i steruje lokalnym chłodzeniem w stanach wymagających ochrony.
 // Read-only autonomous cooling. ADC2 is private to this monitor; native
 // Klipper heater acquisition retains exclusive ownership of ADC1 registers.
 // Both ADC blocks share the existing /8 ADC clock, which is never modified.

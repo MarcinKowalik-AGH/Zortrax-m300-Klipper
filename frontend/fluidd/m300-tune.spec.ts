@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-tune.spec.ts - Sprawdza widok Tune i kontrolki przygotowania drukarki dostępne w Fluidd.
 // SPDX-License-Identifier: GPL-3.0-only
 // @vitest-environment jsdom
 import Vue from 'vue'

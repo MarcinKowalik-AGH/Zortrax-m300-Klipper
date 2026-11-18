@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_print_control.py - Koordynuje przygotowanie, pauzę, wznowienie, anulowanie i zakończenie wydruku.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 preparation and protected pauses around the pinned native SD owner.
 

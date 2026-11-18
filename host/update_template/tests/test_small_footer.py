@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_small_footer.py - Sprawdza czytelność dolnego paska statusu i jego położenie na ekranie.
 """The footer must retain suffixes clipped by the native 16-character LCD."""
 import unittest
 

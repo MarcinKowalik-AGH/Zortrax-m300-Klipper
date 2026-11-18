@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_startup_epoch.c - Sprawdza kolejność zdarzeń startu płyty i stan lokalnego panelu.
 // Production panel module + actual pinned generic timer_init() with MMIO doubles.
 // No physical STM32, no clock-cycle or panel power-on timing claim.
 #define M300_TIMER_SCALE 72u

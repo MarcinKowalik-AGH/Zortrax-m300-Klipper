@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_f103.defconfig - Wybiera STM32F103, bazę aplikacji, zegar i interfejs szeregowy kompilacji M300.
 # Classic M300 P01 LAB build; does not identify the physical MCU/crystal.
 # Classic M300 uses a 68 KiB linker budget inside its existing app slot.
 # SRAM remains at 20 KiB.

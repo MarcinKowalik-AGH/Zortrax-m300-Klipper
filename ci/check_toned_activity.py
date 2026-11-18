@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_toned_activity.py - Weryfikuje zachowanie odcieni podczas kodowania i transmisji animacji OLED.
 """Audit native icon geometry, tonal transport and ROM budget; no printer I/O."""
 import argparse
 import base64

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# run_checks.py - Uruchamia zestawy testów hosta i MCU oraz scenariusze Klippy i zapisuje raporty wydania.
 """Public source and register-model checks; real Klippy is FILEOUTPUT only."""
 import argparse
 import ast

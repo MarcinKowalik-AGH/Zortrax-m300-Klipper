@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-pixels.ts - Rysuje piksele OLED na płótnie przeglądarki z zachowaniem proporcji i odcieni.
 // SPDX-License-Identifier: GPL-3.0-only
 export const OLED_WIDTH = 256
 export const OLED_HEIGHT = 64

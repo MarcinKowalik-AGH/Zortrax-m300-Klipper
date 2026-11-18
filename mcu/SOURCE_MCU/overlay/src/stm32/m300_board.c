@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_board.c - Obsługuje stan płyty, nadzór połączenia i warunki dopuszczające pracę wyjść.
 // Classic Zortrax M300, STM32F103: P01 local safety and fixed board resources.
 //
 // Copyright (C) 2026 M300 port contributors

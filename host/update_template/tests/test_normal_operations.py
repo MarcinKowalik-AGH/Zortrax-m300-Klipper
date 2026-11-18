@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_normal_operations.py - Sprawdza operacje dostępne w zwykłej konfiguracji drukarki i warunki ich wykonania.
 """Normal operation boundaries, migration and Fluidd category regression tests."""
 from types import SimpleNamespace as NS
 import unittest

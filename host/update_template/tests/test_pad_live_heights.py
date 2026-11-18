@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_pad_live_heights.py - Sprawdza udostępnianie zmierzonych wysokości padów w trakcie kalibracji.
 """Native median observations, the 0.8 mm span and one shared error surface."""
 import sys
 from types import SimpleNamespace as NS

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_ack_loss.py - Symuluje utratę potwierdzeń transmisji OLED i sprawdza odzyskanie synchronizacji.
 """Lost return packets must not be mistaken for unexecuted OLED DMA writes."""
 import importlib
 from types import SimpleNamespace as NS

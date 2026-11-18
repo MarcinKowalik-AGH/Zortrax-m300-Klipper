@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_hardware.py - Sprawdza identyfikację płyty z danych fabrycznych oraz dobór skali osi Z.
 """Factory scale selection, transport capability errors and startup boundaries."""
 from types import SimpleNamespace as NS
 import unittest

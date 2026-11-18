@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_install_fresh.py - Sprawdza instalację na nowym hoście, wykrywanie kolizji i ochronę istniejących plików.
 """First-install data migration and rollback; never invokes system services."""
 import hashlib
 import json

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oem_sleep.py - Sprawdza fabryczny ekran z księżycem, wygaszanie oraz zachowanie pokrętła podczas wybudzania.
 import hashlib
 import importlib
 import json
@@ -68,7 +69,7 @@ for _name in dir(fixture.PolicyTests):
 
 def test_notice_waits_for_actual_frame_ack(self):
     self.at(300.)
-    self.at(900.)
+    self.at(309.9)
     self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
     self.assertIsNone(self.module._notice_shown_at)
     self.assertNotEqual(self.module.stream.requested_mode, OFF)
@@ -88,9 +89,9 @@ def test_notice_waits_for_pending_dma_and_contrast(self):
     self.module.stream._local['mode'] = DIM
     self.at(300.3)
     self.assertEqual(self.module._notice_shown_at, 300.3)
-    self.at(310.2)
+    self.at(309.9)
     self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
-    self.at(310.4)
+    self.at(310.)
     self.assertEqual(self.module.phase, OFF)
 
 
@@ -103,7 +104,7 @@ def test_notice_render_does_not_present_menu_actions(self):
     self.assertIsNone(self.p.oled._presented_context)
 
 
-def test_transport_reinitialization_restarts_visible_notice_duration(self):
+def test_transport_reinitialization_respects_sleep_deadline(self):
     self.at(300.)
     b = self.module.stream._base
     b.ready = b.enabled = True
@@ -115,11 +116,7 @@ def test_transport_reinitialization_restarts_visible_notice_duration(self):
     self.at(309.)
     self.assertIsNone(self.module._notice_shown_at)
     b.previous = self.module.notice_wire
-    self.at(315.)
-    self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
-    self.at(324.9)
-    self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
-    self.at(325.1)
+    self.at(310.)
     self.assertEqual(self.module.phase, OFF)
 
 
@@ -132,13 +129,15 @@ def test_click_cancels_notice_and_does_not_select(self):
     self.assertTrue(self.module._presentation_wait)
 
 
-def test_internal_work_start_replaces_notice_with_progress(self):
+def test_internal_work_preserves_notice_until_sleep(self):
     self.at(300.)
     self.p.objects['m300_filament'] = fixture.Object(busy=True, state='HEATING')
     self.at(301.)
-    self.assertEqual(self.module.phase, DIM)
+    self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
     self.p.oled._render(301.)
-    self.assertNotEqual(self.module.stream.latest, self.module.notice_wire)
+    self.assertEqual(self.module.stream.latest, self.module.notice_wire)
+    self.at(310.)
+    self.assertEqual(self.module.stream.requested_mode, OFF)
 
 
 def test_no_repeated_notice_after_off(self):
@@ -160,12 +159,14 @@ def test_manual_printer_sleep_is_observed_but_not_executed(self):
     self.assertEqual(self.p.objects['heater_bed'].status['target'], 0.)
 
 
-def test_sleep_notice_is_never_shown_over_active_print(self):
+def test_sleep_notice_precedes_off_during_active_print(self):
     self.p.objects['print_stats'].status['state'] = 'printing'
     self.at(300.)
     self.p.oled._render(300.)
-    self.assertEqual(self.module.phase, DIM)
-    self.assertNotEqual(self.module.stream.latest, self.module.notice_wire)
+    self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
+    self.assertEqual(self.module.stream.latest, self.module.notice_wire)
+    self.at(310.)
+    self.assertEqual(self.module.stream.requested_mode, OFF)
 
 
 def test_ui_stays_guarded_until_real_view_is_acknowledged(self):
@@ -184,10 +185,13 @@ def test_ui_stays_guarded_until_real_view_is_acknowledged(self):
     self.assertFalse(self.module._presentation_wait)
 
 
-def test_unknown_service_status_does_not_blank_a_possible_operation(self):
+def test_unknown_service_status_does_not_change_display_deadlines(self):
     self.p.objects['m300_filament'] = fixture.Object()
     self.at(300.)
-    self.assertEqual(self.module.phase, DIM)
+    self.assertTrue(self.module.get_status(300.)['working'])
+    self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
+    self.at(310.)
+    self.assertEqual(self.module.phase, OFF)
 
 
 def test_diagnostic_exposes_notice_and_never_claims_hardware_pass(self):

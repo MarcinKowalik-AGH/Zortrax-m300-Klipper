@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# validate_native_process.py - Uruchamia prawdziwy proces Klippy w trybie FILEOUTPUT i sprawdza wyniki scenariuszy drukarki.
 """Actual pinned Klippy processes, FILEOUTPUT only: no printer UART or MCU execution."""
 import argparse
 import base64

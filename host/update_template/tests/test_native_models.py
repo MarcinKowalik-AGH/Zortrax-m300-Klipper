@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_models.py - Testuje wybór, przygotowanie i uruchomienie modelu przez natywne usługi M300.
 """Native Models integration with a sector fixture at the MCU wire boundary."""
 import base64
 from contextlib import contextmanager

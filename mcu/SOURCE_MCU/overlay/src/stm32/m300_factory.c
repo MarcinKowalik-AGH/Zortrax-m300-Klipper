@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_factory.c - Obsługuje odczyt danych fabrycznych oraz ograniczone zapisy licznika i ustawień OLED do Flash.
 // M300 factory identity and bounded stock-compatible print counter writer.
 // GPL-3.0-or-later.
 #include "board/irq.h"

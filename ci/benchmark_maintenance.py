@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# benchmark_maintenance.py - Mierzy koszt obsługi menu serwisowego i odczytu stanu procedur na hoście.
 """Host-only Maintenance costs; simulated telemetry/output boundaries.
 
 No printer, UART, physical RPM or Orange Pi timing is measured. Absolute

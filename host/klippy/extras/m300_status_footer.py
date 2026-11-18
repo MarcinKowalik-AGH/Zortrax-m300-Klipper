@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_status_footer.py - Rysuje skrócone informacje w dolnym pasku standardowego ekranu Klippera.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Small status text scoped to the bottom strip of the native Klipper screen."""
 from functools import lru_cache

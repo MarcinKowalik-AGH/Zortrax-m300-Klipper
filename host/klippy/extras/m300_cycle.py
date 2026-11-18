@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_cycle.py - Koordynuje kolejność operacji zadania, obsługi materiału i powrotu do wydruku.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M08 22-state supervisory executor for classic M300.
 

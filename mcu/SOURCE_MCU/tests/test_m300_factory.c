@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | test_m300_factory.c - Sprawdza dekodowanie fabrycznych rekordów płyty i rozpoznawanie obsługiwanego procesora.
 // Exercise the decoder compiled into the actual MCU query. GPL-3.0-or-later.
 #include <assert.h>
 #include <stdio.h>

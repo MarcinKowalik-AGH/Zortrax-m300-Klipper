@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_restart_heartbeat.py - Sprawdza zachowanie nadzoru łączności podczas restartu hosta i ponownego połączenia.
 """A planned native restart starts its drain with one healthy heartbeat."""
 from types import SimpleNamespace as NS
 from unittest.mock import Mock

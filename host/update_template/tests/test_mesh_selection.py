@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_mesh_selection.py - Sprawdza wybór, zapamiętanie i odtworzenie profilu siatki stołu.
 """RC17 plate selection through the native LOAD command and original AUTO macro."""
 import unittest
 from pathlib import Path

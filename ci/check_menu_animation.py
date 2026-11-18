@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_menu_animation.py - Sprawdza klatki animacji menu na podstawie obrazów wyrenderowanych przez kod hosta.
 """Render approved menu animation without hardware, heating or bitmap edits."""
 import argparse
 import hashlib

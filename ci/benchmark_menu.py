@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# benchmark_menu.py - Mierzy czas budowania i rysowania stron menu M300.
 """Measure repeated host menu rendering and observation-free ownership reads."""
 import argparse
 import json

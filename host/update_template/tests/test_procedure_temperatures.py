@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_procedure_temperatures.py - Sprawdza dobór temperatur i przywracanie nastaw po zakończeniu procedur.
 """OEM procedure defaults with modeled authority and heater boundaries."""
 from types import SimpleNamespace as NS
 import unittest

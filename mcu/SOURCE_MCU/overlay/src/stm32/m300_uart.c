@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_uart.c - Obsługuje transmisję szeregową między płytą M300 a hostem Klippera.
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Read-only adapter for the M300Boot v1.1 F103 HALFWORD journal.
 #include "m300_uart.h"

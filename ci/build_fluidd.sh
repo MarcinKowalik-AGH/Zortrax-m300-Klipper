@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# build_fluidd.sh - Buduje Fluidd z nakładkami M300, uruchamia testy frontendu i pakuje pliki do wdrożenia.
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 

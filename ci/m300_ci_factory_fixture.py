@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_factory_fixture.py - Podstawia kontrolowane rekordy fabryczne do prób identyfikacji płyty i skali osi Z.
 """Synthetic factory record for actual Klippy FILEOUTPUT tests only.
 
 CI copies this file to its generated Klippy tree. It is never a host payload.

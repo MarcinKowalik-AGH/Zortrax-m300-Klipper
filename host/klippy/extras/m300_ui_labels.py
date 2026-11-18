@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ui_labels.py - Tłumaczy etykiety starszego menu na angielskie napisy fizycznego panelu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """English presentation of legacy panel labels; actions and data stay intact.
 

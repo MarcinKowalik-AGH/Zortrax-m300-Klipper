@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_pad_probe_window.py - Sprawdza dozwolony zakres ruchu dyszy w czasie szukania kontaktu z padem.
 """Do not confuse an absolute homing offset with the accepted surface span."""
 import unittest
 

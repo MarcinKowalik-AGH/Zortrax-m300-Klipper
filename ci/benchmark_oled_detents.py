@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# benchmark_oled_detents.py - Symuluje obracanie pokrętłem i mierzy liczbę zmian ekranu oraz operacji transmisji.
 """Replay OLED menu detents and model their serial traffic offline."""
 import argparse
 from functools import lru_cache

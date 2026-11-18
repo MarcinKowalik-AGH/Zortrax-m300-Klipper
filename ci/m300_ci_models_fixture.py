@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_models_fixture.py - Przygotowuje pliki modeli i obserwuje ich przetwarzanie przez prawdziwy proces Klippy.
 """FILEOUTPUT-only harness that starts a prepared file using public commands."""
 import json
 from pathlib import Path

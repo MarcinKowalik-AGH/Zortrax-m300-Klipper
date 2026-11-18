@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_fans.py - Udostępnia stan i test wentylatorów w menu serwisowym M300.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M300 fan presentation and bounded tests over the existing native owners.
 

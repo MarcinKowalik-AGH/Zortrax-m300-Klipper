@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_platform_heat.py - Testuje procedurę nagrzewania platformy i jej powiązanie z interfejsem operatora.
 """Native bed service, shared rendering, settings and safe cancellation."""
 from types import SimpleNamespace as NS
 import unittest

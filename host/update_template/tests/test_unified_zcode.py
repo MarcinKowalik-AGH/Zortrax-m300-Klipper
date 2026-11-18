@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_unified_zcode.py - Sprawdza przetwarzanie plików Z-code i ścieżki ich przygotowania do wydruku.
 """Whole-file Z-code checks and the common native lifecycle contract.
 
 All vectors are declared synthetic. Real Z-Suite corpus and physical print

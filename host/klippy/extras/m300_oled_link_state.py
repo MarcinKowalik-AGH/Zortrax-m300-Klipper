@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_oled_link_state.py - Wyznacza kolejne kroki odzyskiwania transmisji OLED po utracie potwierdzeń.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M10: bounded OLED stream recovery policy, independent of Klippy/MCU/menu.
 

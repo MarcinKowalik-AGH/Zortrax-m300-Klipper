@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_install_orange_pi.py - Sprawdza aktualizację hosta i zasobów Fluidd, zachowanie ustawień i wycofanie po błędzie.
 """Validate the deployment helper without changing a real web root or service."""
 from contextlib import contextmanager
 from pathlib import Path

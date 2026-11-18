@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_status_lights.py - Testuje kolory oświetlenia podczas druku, pauzy, grzania i sygnalizacji błędów.
 """Shared state colors, procedure transitions and monotonic RGB alarm timing."""
 from types import SimpleNamespace as NS
 import unittest

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_oled_navigation.py - Sprawdza przekazywanie zdarzeń nawigacji i aktualizację podglądu fizycznego panelu.
 """Exercise event waits with the pinned real Klipper reactor/API request parser.
 
 No serial port, physical MCU, printer motion, heater, or network is involved.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# validate_fresh_install.py - Uruchamia Klippy z nowo zainstalowanej konfiguracji i sprawdza osiągnięty stan.
 """Start the actual first-install configuration in pinned Klippy FILEOUTPUT."""
 import argparse
 import json

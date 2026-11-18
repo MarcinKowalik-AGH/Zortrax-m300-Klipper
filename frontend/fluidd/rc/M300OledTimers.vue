@@ -1,4 +1,5 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> -->
+<!-- M300OledTimers.vue - Wyświetla suwaki DIM i SLEEP oraz wysyła wybraną parę minut po zatwierdzeniu. -->
 <template>
   <div class="m300-timers">
     <div>

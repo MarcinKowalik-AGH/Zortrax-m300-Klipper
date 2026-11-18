@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_oled_idle.h - Zapisuje parę DIM i SLEEP w dwustronicowym dzienniku Flash i odczytuje ostatni kompletny wpis.
 #ifndef M300_OLED_IDLE_H
 #define M300_OLED_IDLE_H
 #include <stdint.h>

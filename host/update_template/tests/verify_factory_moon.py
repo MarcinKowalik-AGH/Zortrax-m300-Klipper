@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# verify_factory_moon.py - Porównuje grafikę księżyca z danymi źródłowymi fabrycznego firmware.
 """Independent byte-level verification against the user's stock M300 image.
 
 Usage: python3 tests/verify_factory_moon.py /path/M300_stock_1.3.1_application.bin

@@ -1,19 +1,18 @@
-# Behaviour — R15.7
+# M300 behaviour
 
 [Install](INSTALL.md)
 
 | Condition | State | Display |
 |---|---|---|
-| Less than timeout since interaction | AWAKE | Current view, normal contrast |
-| Timeout during work, pause, movement or heater target | DIM | Current live view, dim contrast |
-| Timeout while idle | ENTERING_SLEEP | Original moon and Entering sleep mode |
-| Notice acknowledged for notice_seconds | OFF | OLED emission disabled |
-| Operator interaction | AWAKE | Refreshed current view |
+| Before DIM | AWAKE | Current view at the selected brightness |
+| From DIM to the sleep notice | DIM | Current view at reduced contrast |
+| Final seconds before SLEEP | ENTERING_SLEEP | Moon and fade within the remaining time |
+| At SLEEP | OFF | Panel emission switched off |
+| First knob gesture after OFF | AWAKE | Wake and refresh the current view |
 
-The notice timer begins only after framebuffer and contrast acknowledgements.
-A transport reinitialization restarts it. Work starting during the notice
-restores the progress view at dim contrast. Work ending without new interaction
-allows the notice and subsequent blanking.
+Both deadlines are measured from the last operator interaction. Printing,
+pause, heating and motion use the same deadlines as Ready. Equal deadlines
+switch the screen off directly. The alarm LED operates independently.
 
 Fresh knob events and external Moonraker G-code requests count as interaction.
 Object polling, heartbeats, temperature updates and internally replayed

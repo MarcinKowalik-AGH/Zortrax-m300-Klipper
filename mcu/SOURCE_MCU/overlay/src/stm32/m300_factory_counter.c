@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_factory_counter.c - Realizuje odczyt i zapis fabrycznego licznika minut z zachowaniem poprzedniego banku.
 // M300 Classic OEM print counter, GPL-3.0-or-later.
 #include <string.h>
 #include "m300_factory_counter.h"

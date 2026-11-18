@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_xy_step_timer.py - Buduje i uruchamia model timera kroków, a wynik zapisuje w raporcie.
 """Replay the real patched stepper and gated-timer driver with STM32 register doubles."""
 import argparse
 from pathlib import Path

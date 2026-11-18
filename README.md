@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.20
+# Zortrax M300 Classic — Klipper 1.0.0-rc.21
 
-**RC20** adds adjustable OLED dimming and sleep, two Fluidd sliders on port 4480, MCU-backed preference storage and a Klipper debug option. [Release notes](docs/en/RELEASE_v1.0.0-rc.20.md).
+**RC21** uses the same OLED dim and power-off deadlines in Ready, while printing and while paused. Both sliders are available in Fluidd on port 4480 and their settings are stored on the MCU. [Release notes](docs/en/RELEASE_v1.0.0-rc.21.md).
 
 **MCU 1.0.7:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.7.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.7).
 
@@ -8,7 +8,7 @@
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC20](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.20) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC21](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.21) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_oled_dma.inc - Przesyła dane do SSD1322 przez SPI2 z użyciem DMA i zgłasza zakończenie operacji.
 // SPDX-License-Identifier: GPL-3.0-or-later
 #line 1000 "m300_oled_dma.inc"
 // Private SPI2 TX: STM32F103 DMA1 channel 5. Four fixed slots, no heap.

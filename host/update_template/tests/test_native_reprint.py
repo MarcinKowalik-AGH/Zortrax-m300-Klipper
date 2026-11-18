@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_native_reprint.py - Sprawdza ponowny wydruk modelu oraz zachowanie danych o poprzednim zadaniu.
 """Verified EOF, native start delegation and immutable replay lifecycle."""
 from contextlib import contextmanager
 from types import SimpleNamespace as NS

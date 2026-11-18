@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-navigation-component.spec.ts - Testuje podłączenie widoku OLED do zdarzeń oraz jego zachowanie po rozłączeniu.
 // SPDX-License-Identifier: GPL-3.0-only
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

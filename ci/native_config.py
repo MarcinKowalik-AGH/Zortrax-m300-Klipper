@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# native_config.py - Przekształca konfigurację testową w profil natywnego Klippy do prób integracyjnych.
 """Use the exact calibration-preserving migration shipped to Orange Pi."""
 import importlib.util
 from pathlib import Path

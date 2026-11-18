@@ -1,4 +1,4 @@
-// Marcin Kowalik <mkowalik@agh.edu.pl>
+// Marcin Kowalik <mkowalik@agh.edu.pl> | m300_status_led.inc - Nadaje wzorce LED odpowiadające stanom płyty i lokalnym alarmom MCU.
 // Common fault indication on the audited RGB pins. GPL-3.0-or-later.
 // The permanent scheduler task wake survives shutdown's user-timer reset.
 // No UART traffic, new timer IRQ, actuator access or fault clearing is needed.

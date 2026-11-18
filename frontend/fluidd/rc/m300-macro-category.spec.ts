@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-macro-category.spec.ts - Sprawdza przypisanie makr M300 do grup i ukrywanie poleceń wewnętrznych.
 // SPDX-License-Identifier: GPL-3.0-only
 import { describe, expect, it } from 'vitest'
 import { m300MacroDefaultCategory, m300MacroHidden } from '@/util/m300-macro-category'

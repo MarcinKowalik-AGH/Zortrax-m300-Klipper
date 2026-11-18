@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_oled_navigation.py - Testuje kolejność zdarzeń pokrętła, nawigację i odrzucanie nieaktualnych akcji panelu.
 """Event-driven menu preview: actual wait completion, bounds and no old frames."""
 import base64
 import hashlib

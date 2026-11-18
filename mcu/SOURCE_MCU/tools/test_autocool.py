@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_autocool.py - Kompiluje i uruchamia scenariusze testowe autonomicznego chłodzenia płyty.
 """Native R14 cooling register tests; no physical MCU execution or cycle benchmark."""
 from pathlib import Path
 import argparse,hashlib,json,re,subprocess,tempfile

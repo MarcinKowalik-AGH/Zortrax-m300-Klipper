@@ -1,3 +1,5 @@
+# Marcin Kowalik <mkowalik@agh.edu.pl>
+# build-m300.yml - Kompiluje firmware, uruchamia testy hosta i Fluidd oraz publikuje sprawdzony zestaw dla Orange Pi.
 name: M300 build and verification
 
 on:

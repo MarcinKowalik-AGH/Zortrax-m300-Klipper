@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_ci_thermal_bindings.py - Podstawia odczyty temperatury i stan grzania do prób Klippy bez fizycznej drukarki.
 """FILEOUTPUT-only introspection of the target guard and its native backends.
 
 Never changes heater targets, pins, motion or runtime policy. This module is

@@ -1,4 +1,5 @@
 // Marcin Kowalik <mkowalik@agh.edu.pl>
+// m300-oled-preview.spec.ts - Sprawdza walidację danych podglądu OLED odbieranych z Moonrakera.
 import { describe, expect, it } from 'vitest'
 import { readM300OledPreview, selectM300OledPreview } from './m300-oled-preview'
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_macro_dispatch.py - Wykonuje szablony makr i sprawdza polecenia przekazane właściwym modułom.
 """Exercise published macro names through the actual pinned G-code lexer."""
 import configparser
 import importlib.util

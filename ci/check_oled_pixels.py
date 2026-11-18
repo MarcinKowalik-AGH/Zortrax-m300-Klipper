@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# check_oled_pixels.py - Porównuje piksele przeglądarkowego podglądu OLED z oczekiwanym obrazem.
 """Actual browser screenshots: every source OLED pixel is an equal N x N block.
 
 Exercises the same compiled drawOledPixels helper used by the Vue component.

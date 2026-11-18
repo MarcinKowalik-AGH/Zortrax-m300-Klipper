@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_display_stream.py - Kolejkuje zmianę kontrastu, wyłączenie i wybudzenie SSD1322 między potwierdzonymi ramkami.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """SSD1322 power transactions at existing M300 frame/ACK boundaries.
 

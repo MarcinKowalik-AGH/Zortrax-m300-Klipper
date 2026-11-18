@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# generate_error_catalog.py - Generuje katalog błędów dla hosta i MCU oraz sprawdza zgodność plików po regeneracji.
 """Generate MCU text/4-bit fault icons from the shared host error catalogue."""
 import argparse
 import base64

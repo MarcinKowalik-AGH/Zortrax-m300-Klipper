@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_cycle_state.py - Opisuje dozwolone przejścia między stanami druku i obsługi materiału.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Pure M08 22-state M300 job/material cycle contract.
 

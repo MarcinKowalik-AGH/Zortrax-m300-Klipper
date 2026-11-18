@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_zcode_policy.py - Sprawdza dopuszczenie pliku Z-code i udostępnia diagnostykę odczytu karty SD.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """M13 optional Z-code admission and read-only SD diagnostics for M300 Classic.
 

@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# m300_sd.py - Czyta kartę SD podłączoną do SPI1 płyty M300 przed przygotowaniem modelu.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Physical SD on the M300 MCU SPI1, read-only, before print preparation.
 

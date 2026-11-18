@@ -1,4 +1,5 @@
 # Marcin Kowalik <mkowalik@agh.edu.pl>
+# test_display.py - Sprawdza terminy DIM i SLEEP, potwierdzenia SSD1322 oraz przechwycenie gestu wybudzania.
 import importlib.util
 import pathlib
 import sys
@@ -227,7 +228,7 @@ class Config:
     def get_printer(self):
         return self.printer
     def getfloat(self, name, default, **kwargs):
-        return default
+        return 310. if name == 'sleep_timeout' else default
     def getint(self, name, default, **kwargs):
         return default
 
@@ -298,16 +299,32 @@ class PolicyTests(unittest.TestCase):
         self.at(300.)
         self.at(310.)
 
-    def test_separate_minute_thresholds_keep_dim_screen_visible_until_sleep(self):
-        self.module.timers.apply((1, 2))
-        self.at(59.)
-        self.assertEqual(self.module.phase, AWAKE)
-        self.at(60.)
-        self.assertEqual(self.module.phase, DIM)
-        self.at(119.)
-        self.assertEqual(self.module.phase, DIM)
-        self.at(120.)
-        self.assertEqual(self.module.phase, 'ENTERING_SLEEP')
+    def test_same_two_deadlines_in_ready_print_and_pause(self):
+        for state in ('standby', 'printing', 'paused'):
+            with self.subTest(state=state):
+                self.p.objects['print_stats'].status['state'] = state
+                self.p.objects['extruder'].status['target'] = 215. if state == 'printing' else 0.
+                self.module.timers.apply((1, 2))
+                self.p.reactor.now = 0.
+                self.module.activity('encoder')
+                for t, phase in ((59., AWAKE), (60., DIM), (109., DIM),
+                                 (110., 'ENTERING_SLEEP'), (120., OFF), (180., OFF)):
+                    self.at(t)
+                    self.assertEqual(self.module.phase, phase)
+                self.assertEqual(self.module.stream.requested_mode, OFF)
+                self.assertEqual(self.p.objects['print_stats'].status['state'], state)
+
+    def test_equal_thresholds_switch_off_at_first_and_last_supported_minute(self):
+        for minutes in (1, 60):
+            self.p.objects['print_stats'].status['state'] = 'printing'
+            self.p.reactor.now = 0.
+            self.module.activity('encoder')
+            self.module.timers.apply((minutes, minutes))
+            deadline = 60. * minutes
+            self.at(deadline - .01)
+            self.assertEqual(self.module.phase, AWAKE)
+            self.at(deadline)
+            self.assertEqual(self.module.stream.requested_mode, OFF)
 
     def test_idle_notice_after_300_seconds_then_off_after_visible_notice(self):
         self.at(299.)
@@ -328,10 +345,10 @@ class PolicyTests(unittest.TestCase):
         self.at(305.5)
         self.assertLess(stream._target_contrast(), start)
         stream._local['pending'] = (123, 311., 0.)
-        self.at(310.25)
-        self.assertEqual(stream._target_contrast(), 1)
+        self.at(309.99)
+        self.assertLess(stream._target_contrast(), start)
         self.assertEqual(self.module._notice_shown_at, 300.5)
-        self.at(310.5)
+        self.at(310.)
         self.assertEqual(stream.requested_mode, OFF)
 
     def test_printing_and_paused_dim_after_300_seconds(self):
@@ -353,16 +370,16 @@ class PolicyTests(unittest.TestCase):
         self.at(301.)
         self.assertEqual(self.module.stream.requested_mode, DIM)
 
-    def test_heating_and_active_procedure_stay_dim(self):
+    def test_heating_and_active_procedure_do_not_block_sleep(self):
         self.p.objects['extruder'].status['target'] = 200.
         self.at(301.)
         self.assertEqual(self.module.stream.requested_mode, DIM)
         self.p.objects['extruder'].status['target'] = 0.
         self.p.objects['m300_filament'] = Object(busy=True)
-        self.at(302.)
-        self.assertEqual(self.module.stream.requested_mode, DIM)
+        self.at(310.)
+        self.assertEqual(self.module.stream.requested_mode, OFF)
 
-    def test_finish_changes_dim_to_notice_without_resetting_activity(self):
+    def test_finish_keeps_existing_notice_without_resetting_activity(self):
         self.p.objects['print_stats'].status['state'] = 'printing'
         self.at(301.)
         self.p.objects['print_stats'].status['state'] = 'complete'
@@ -395,7 +412,7 @@ class PolicyTests(unittest.TestCase):
         for seconds in range(400):
             # virtual_sdcard dispatches internally, without the API endpoint.
             self.at(float(seconds))
-        self.assertEqual(self.module.stream.requested_mode, DIM)
+        self.assertEqual(self.module.stream.requested_mode, OFF)
         self.assertEqual(self.module.last_activity, 0.)
 
     def test_wake_press_hold_release_consumes_entire_gesture(self):
@@ -417,6 +434,7 @@ class PolicyTests(unittest.TestCase):
 
     def test_dim_click_keeps_normal_action(self):
         self.p.objects['print_stats'].status['state'] = 'printing'
+        self.module.timers.apply((5, 15))
         self.at(301.)
         self.p.pending_events = dict(delta=0, shorts=1, pressed=False)
         events = self.p.oled.encoder.update({}, 301.)
@@ -437,10 +455,24 @@ class PolicyTests(unittest.TestCase):
         self.assertFalse(kw['view_current'])
         self.assertFalse(args[0]['pressed'])
 
-    def test_command_error_wakes(self):
-        self.at(301.)
-        self.module._command_error()
-        self.assertEqual(self.module.stream.requested_mode, AWAKE)
+    def test_internal_command_error_keeps_sleeping_print_asleep(self):
+        self.p.objects['print_stats'].status['state'] = 'printing'
+        self.go_off()
+        self.p.send_event('gcode:command_error')
+        self.assertEqual(self.module.stream.requested_mode, OFF)
+        self.assertEqual(self.module.last_activity, 0.)
+
+    def test_wake_during_print_consumes_first_turn_and_restarts_both_timers(self):
+        self.p.objects['print_stats'].status['state'] = 'printing'
+        self.module.timers.apply((1, 2))
+        self.at(120.)
+        self.p.pending_events = dict(delta=2, pressed=False)
+        self.assertEqual(self.p.oled.encoder.update({}, 120.)['delta'], 0)
+        self.assertEqual(self.module.phase, AWAKE)
+        self.at(180.)
+        self.assertEqual(self.module.phase, DIM)
+        self.at(240.)
+        self.assertEqual(self.module.phase, OFF)
 
     def test_stop_cannot_issue_display_commands_or_rearm_timer(self):
         self.at(301.)
