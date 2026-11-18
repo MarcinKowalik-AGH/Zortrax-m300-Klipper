@@ -8,4 +8,4 @@ With MCU 1.0.6, Klipper automatically synchronizes print time to the board while
 
 [Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.19/docs/en/INSTALL.md)
 
-Source commit: `0e6bd1476e4dad323eee6fe0baaa130f045c41ea`
+Source commit: `4657cfd1d93cbdcade614a2124a5f7ccbf3528db`
