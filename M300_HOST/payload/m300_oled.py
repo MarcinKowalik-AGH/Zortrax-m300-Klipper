@@ -411,8 +411,8 @@ class M300OLED:
             if leveling_panel is not None and leveling_panel(events, received_leveling, now):
                 return
             brightness_selection = getattr(received_ui, 'brightness_selection', None)
-            brightness = (self.page == 'm04' and brightness_selection is not None
-                          and brightness_selection() is not None)
+            setting_slider = (self.page == 'm04' and brightness_selection is not None
+                              and brightness_selection() is not None)
             temperature = (self.page == 'm04' and menu is not None and
                            menu.page in ('temperature_HOTEND', 'temperature_BED'))
             if events['longs']:
@@ -420,7 +420,7 @@ class M300OLED:
                     child = menu.page
                     menu._navigate(menu._return_page, remember=False)
                     self.selection = received_ui.return_position(menu.page, child, now)
-                elif brightness:
+                elif setting_slider:
                     child = menu.page
                     menu._navigate('settings', remember=False)
                     self.selection = received_ui.return_position('settings', child, now)
@@ -456,9 +456,11 @@ class M300OLED:
                     _, rows = self._rows(now)
                     count = len(presented_actions) if presented_actions is not None else len(rows)
                     delta = -events['delta'] if self.menu_reverse else events['delta']
-                    self.selection = max(0, min(count - 1, self.selection + delta))
+                    # Row 0 is Back. On a setting slider a hold already handles Back.
+                    minimum = 1 if setting_slider else 0
+                    self.selection = min(count - 1, max(minimum, self.selection + delta))
                 adjustment_receipt = received_temperature if temperature else received_brightness
-                if events['shorts'] and (not (brightness or temperature) or (
+                if events['shorts'] and (not (setting_slider or temperature) or (
                         not events['delta'] and adjustment_receipt == (menu.generation, self.selection))):
                     # Coalesced clicks never cascade through several menus.
                     self._select(now, presented_actions=presented_actions)
