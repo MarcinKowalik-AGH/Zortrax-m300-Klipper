@@ -1,4 +1,4 @@
-# M300 Classic v1.0.0-rc.17 — Orange Pi
+# M300 Classic v1.0.0-rc.18 — Orange Pi
 
 This checkout contains the tested host, prebuilt Fluidd and MCU image.
 Run `python3 install-orange-pi.py` as the Klipper user while idle and Ready to update the host.
@@ -6,6 +6,6 @@ For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --
 The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.
 With MCU 1.0.5, Klipper automatically synchronizes print time to the board while idle. Install the MCU image from SD only if the board still requires the firmware update.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.17/docs/en/INSTALL.md)
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.18/docs/en/INSTALL.md)
 
-Source commit: `f667b203326d4229dddaabc30cd005c9bd9605fb`
+Source commit: `512c89b30b88e70cd3597e940454a5e33cc17814`
