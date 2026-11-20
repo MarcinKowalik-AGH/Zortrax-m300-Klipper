@@ -52,6 +52,12 @@ def number(value):
             and math.isfinite(value) else None)
 
 
+def read_panel_status(service, now):
+    """Read the operator view when the owner has a separate diagnostic report."""
+    reader = getattr(service, 'get_panel_status', None) or service.get_status
+    return reader(now)
+
+
 class M300Procedures:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -132,7 +138,7 @@ class M300Procedures:
                                getattr(service, 'operator_homing', None) not in HOMING_TITLES):
             return {'state': 'UNAVAILABLE', 'busy': False, 'ready': False}
         try:
-            status = service.get_status(now)
+            status = read_panel_status(service, now)
             if not isinstance(status, dict) or not isinstance(status.get('state'), str):
                 raise ValueError('invalid owner status')
             return dict(status)
@@ -228,8 +234,7 @@ class M300Procedures:
             message = (('Measuring %d / 25' % min(measured+1,25))
                        if status.get('phase') == 'PROBING' else
                        PAD_MESH_PHASES.get(status.get('phase'), state.replace('_',' ').title()))
-        stats = self._read('print_stats', now)
-        elapsed = (number(stats.get('print_duration')) if owner == 'm300_job' else
+        elapsed = (number(self._read('print_stats', now).get('print_duration')) if owner == 'm300_job' else
                    max(0., now - self.started.get(owner, now)))
         progress = number(status.get('progress')) if owner == 'm300_job' else None
         if owner == 'm300_pad_mesh':
