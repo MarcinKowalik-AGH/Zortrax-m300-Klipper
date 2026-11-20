@@ -4,7 +4,7 @@ MCU zapamiętuje wybrany DIM i aktualny SLEEP również wtedy, gdy DIM jest dłu
 
 Nowe ustawienia OLED używają dwóch stron aplikacji pod adresami 0x08019000 i 0x08019800. Fabryczny licznik ma osobne banki. Po zmianie czasów sprawdź `oled_timer_storage` i `oled_timer_mcu_minutes` w `ZORTRAX_DISPLAY_STATUS`.
 
-[Pierwsza instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/pl/FIRST_INSTALL.md) · [Opis RC23](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/pl/RELEASE_v1.0.0-rc.23.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8)
+[Pierwsza instalacja](FIRST_INSTALL.md) · [Opis RC23](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/pl/RELEASE_v1.0.0-rc.23.md) · [ZIP na kartę SD i sumy SHA-256](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8)
 
 ## Wgraj aplikację z karty SD
 
@@ -42,7 +42,7 @@ uzgodnienia transakcji. Po odzyskaniu sprawdź
 
 MCU 1.0.8 przed przyjęciem transakcji sprawdza sygnaturę 256 KiB Flash, identyfikator rdzenia Cortex-M3 i fabryczny rekord rewizji płyty. Każdy transfer wymaga zgodności numeru seryjnego, banku i sumy CRC ustawień oraz spełnienia warunków bezczynności. Przy pracy bez debuggera STM32 może zwrócić zero z DBGMCU_IDCODE. Obcy niezerowy identyfikator lub zero przy aktywnym debuggerze blokuje zapis. [Errata ST ES0340 §2.2.2](https://www.st.com/resource/en/errata_sheet/cd00197763-stm32f101xcde-and-stm32f103xcde-highdensity-device-limitations-stmicroelectronics.pdf).
 
-RC20 udostępnia odczyty MCU w `factory_counter_target`. Sprawdź `flash_kib` i `supported`. Przy `AWAITING_IDLE` pole `factory_counter_wait_reason` podaje warunek hosta albo `mcu_write_window`, gdy zapis odroczyła płyta. Przy `UNSUPPORTED_MCU_TARGET` host zachowuje zaległy czas. Po dwóch zapisach aktywny może być ponownie wyjściowy bank. Porównaj liczbę minut i potwierdzenie hosta, a po normalnym wyłączeniu i włączeniu powtórz odczyt. Odbiór na drukarce pozostaje otwarty.
+RC20 udostępnia odczyty MCU w `factory_counter_target`. Sprawdź `flash_kib` i `supported`. Przy `AWAITING_IDLE` pole `factory_counter_wait_reason` podaje warunek hosta albo `mcu_write_window`, gdy zapis odroczyła płyta. Przy `UNSUPPORTED_MCU_TARGET` host zachowuje zaległy czas. Po dwóch zapisach aktywny może być ponownie wyjściowy bank. Porównaj liczbę minut i potwierdzenie hosta, a po normalnym wyłączeniu i włączeniu powtórz odczyt. Operator potwierdził trwałość ID0 po normalnym cyklu zasilania na RC19 z MCU 1.0.6. Przerwanie zapisu w banku sprawdzono w symulacji. [Zakres prób sprzętowych](ACCEPTANCE_REGISTER.md).
 
 ### Gdy host nie może rozstrzygnąć historii licznika
 

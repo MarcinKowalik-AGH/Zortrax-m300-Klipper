@@ -8,6 +8,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import unicodedata
+from collections import Counter
 from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageChops
 
@@ -31,6 +33,39 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def heading_ids(text):
+    ids = set(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))
+    counts = Counter()
+    for heading in re.findall(r'^#{1,6}\s+(.+?)\s*$', text, re.M):
+        heading = re.sub(r'\[([^]]+)\]\([^)]+\)', r'\1', heading)
+        slug = ''.join(c for c in heading.strip().lower().replace(' ', '-')
+                       if c in '-_' or unicodedata.category(c)[0] in 'LNM')
+        ids.add(slug if not counts[slug] else f'{slug}-{counts[slug]}')
+        counts[slug] += 1
+    return ids
+
+
+def check_manual_links(check):
+    paths = sorted((ROOT/'docs').rglob('*.md')) + list(ROOT.glob('*.md'))
+    # Fenced examples contain G-code and shell syntax as well as prose.
+    pages = {p: re.sub(r'^```[^\n]*\n.*?^```[^\n]*', '', p.read_text(),
+                       flags=re.M | re.S) for p in paths}
+    headings = {p: heading_ids(body) for p, body in pages.items()}
+    links = 0
+    for page, body in pages.items():
+        for target in re.findall(r'\]\(([^\s)]+)', body):
+            url = urlsplit(target)
+            if url.scheme or url.netloc:
+                continue
+            dest = (page.parent / unquote(url.path)).resolve() if url.path else page
+            label = str(page.relative_to(ROOT)) + ':' + target
+            check(dest.is_relative_to(ROOT) and dest.exists(), 'link:' + label)
+            if url.fragment and dest in headings:
+                check(unquote(url.fragment) in headings[dest], 'anchor:' + label)
+            links += 1
+    return len(pages), links
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT/'.ci/reports/DOCUMENTATION_RC1_VALIDATION.json')
@@ -42,23 +77,14 @@ def main():
         if not condition:
             errors.append(label)
     paths = [ROOT/'README_PL.md', ROOT/'README.md'] + [ROOT/'docs/pl'/n for n in CHAPTERS]
-    paths += [ROOT/'docs/en'/n for n in ('FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md', f'MCU_FIRMWARE_{CURRENT_MCU}.md')]
+    paths += [ROOT/'docs/en'/n for n in ('USER_GUIDE.md','FIRST_INSTALL.md','INSTALL.md','FRONTEND_BETA20.md','FLUIDD_M300.md','FEATURES.md','LEVELING.md','SETTINGS_INFORMATION.md','UI_SYMBOLS.md','MCU_FIRMWARE_1.0.1.md', 'MCU_FIRMWARE_1.0.2.md', f'MCU_FIRMWARE_{CURRENT_MCU}.md')]
     paths += [ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md') for lang in ('pl','en')]
     for p in paths:
         check(p.is_file(), 'document:'+str(p.relative_to(ROOT)))
-    links = 0
     for p in paths:
-        if not p.is_file():
-            continue
-        text = p.read_text()
-        check(len(text.split()) >= 100, 'substantive:'+str(p.relative_to(ROOT)))
-        for target in re.findall(r'!?\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)', text):
-            if target.startswith(('http://','https://','mailto:','#')):
-                continue
-            rel = unquote(urlsplit(target).path)
-            dest = (p.parent / rel).resolve()
-            links += 1
-            check(dest.is_relative_to(ROOT) and dest.exists(), 'link:'+str(p.relative_to(ROOT))+':'+target)
+        if p.is_file():
+            check(len(p.read_text().split()) >= 100, 'substantive:'+str(p.relative_to(ROOT)))
+    page_count, links = check_manual_links(check)
     render = json.loads((ROOT/'docs/reports/OLED_RENDER_MANIFEST.json').read_text())
     check(render['source_commit'] == '4828a9da9d5fd8b0b93eb2ac267732ee7e49d506', 'render-source-commit')
     check(render['physical_printer'] is False, 'render-is-demonstration-not-hardware')
@@ -77,12 +103,13 @@ def main():
         check(ImageChops.difference(b,expected).getbbox() is None, 'square-3x:'+s['id'])
         native_pixels += a.width*a.height
     screenshots = json.loads((ROOT/'docs/reports/IMAGE_PROVENANCE.json').read_text())
-    check(len(screenshots) == 3, 'three-user-screenshots')
+    cover = 'docs/img/m300-orcaslicer-fluidd-printing.png'
+    check(sum(item['file'] == cover for item in screenshots) == 1, 'cover-provenance')
     for s in screenshots:
         p = ROOT/s['file']
         check(p.exists(), 'screenshot:'+s['file'])
         if p.exists():
-            check(sha(p) == s['published_sha256'], 'screenshot-sha:'+s['file'])
+            check(sha(p) == s['published_sha256'] == s['original_sha256'], 'screenshot-sha:'+s['file'])
             check(list(Image.open(p).size) == s['dimensions'], 'screenshot-size:'+s['file'])
     names = set()
     for p in (ROOT/'host/config').glob('*.cfg'):
@@ -165,6 +192,10 @@ def main():
         check('beta.20' in supplement, 'historical-illustration-baseline-disclosed:'+lang)
     for name in ('README.md','README_PL.md'):
         text = (ROOT/name).read_text()
+        top = text.split('\n\n', 2)[1]
+        check(bool(re.fullmatch(r'\[!\[[^\]]+\]\(' + re.escape(cover) +
+                                r'\)\]\(' + re.escape(cover) + r'\?raw=true\)', top)),
+              'clickable-cover-under-title:'+name)
         check('releases/tag/'+CURRENT_RELEASE in text, 'README-current-release:'+name)
         check('OLED_FUNCTIONS.md' in text, 'README-illustrated-guide:'+name)
     update = (ROOT/'docs/pl/UPDATE_2026-11-10.md').read_text()
@@ -173,9 +204,9 @@ def main():
     check('nie deklaruje' in (ROOT/'docs/pl/USER_GUIDE.md').read_text(), 'no-unimplemented-CI-auto-repair-claim')
     report = {'status':'PASS_DOCUMENTATION' if not errors else 'FAIL_DOCUMENTATION',
               'reference_release':CURRENT_RELEASE, 'visual_baseline_release':VISUAL_BASELINE,
-              'documents':len(paths), 'local_link_references':links,
+              'documents':page_count, 'local_link_references':links,
               'oled_screen_states':65,'oled_png_files':130,
-              'native_pixels_compared':native_pixels,'user_screenshots':3,
+              'native_pixels_compared':native_pixels,'user_screenshots':len(screenshots),
               'config_macros':len(names),'illustrated_functions':len(entries),
               'browser_demo_images':len(demo['screens']),'checks_count':len(checks),'checks':checks,
               'physical_printer_tested':False,'errors':errors}

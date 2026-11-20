@@ -26,6 +26,7 @@ else
   git clone --depth 1 --single-branch --no-tags --branch orange-pi \
     https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
 fi &&
+(cd "$m300_dir" && sha256sum -c --quiet SHA256SUMS) &&
 python3 "$m300_dir/install-orange-pi.py"
 ```
 
@@ -52,7 +53,7 @@ konkretnej drukarki. Zwykła aktualizacja jej nie wymaga.
 Pozostaw uszkodzony katalog na miejscu. Przy bezczynnej drukarce pobierz nową kopię do osobnego katalogu na Orange Pi. Instalator nadal używa istniejącej konfiguracji drukarki. Poniższe polecenie pobiera aktualnie opublikowaną gałąź wdrożeniową.
 
 ```bash
-m300_src=$(mktemp -d "$HOME/m300-rc18.XXXXXX") &&
+m300_src=$(mktemp -d "$HOME/m300-orange-pi.XXXXXX") &&
 git clone --depth 1 --single-branch --no-tags --branch orange-pi \
   https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_src" &&
 (cd "$m300_src" && sha256sum -c --quiet SHA256SUMS) &&

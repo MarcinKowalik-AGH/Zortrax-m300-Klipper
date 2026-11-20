@@ -42,7 +42,7 @@ def package(release, output, commit):
         'With MCU 1.0.8, Klipper automatically synchronizes print time to the board while idle. '
         'Install the MCU image from SD only if the board still requires the firmware update.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
-        + provenance['distribution_version'] + '/docs/en/INSTALL.md)\n\n'
+        + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')
     files = sorted(path for path in output.rglob('*') if path.is_file())
     (output / 'SHA256SUMS').write_text(''.join(

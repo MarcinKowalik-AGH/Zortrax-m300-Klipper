@@ -29,14 +29,20 @@ the newly compiled files against BUILD_REPORT.json before constructing M3B.
 ## Local equivalent
 
 Install GNU Arm Embedded tools with newlib/nano, make, a native C compiler and
-Python 3.12. In an isolated Python environment:
+Python 3.12. The frontend uses Node 24 and pnpm 11.25.0. With those tools available, run the following from the repository root in an isolated Python environment. The [build workflow](../../.github/workflows/build-m300.yml) lists the runner setup and exact order.
 
 ~~~bash
 python ci/prepare_upstream.py
 python -m pip install -r .ci/pristine/scripts/klippy-requirements.txt
+python -m pip install Pillow==11.3.0 unicorn==2.1.4
 python mcu/SOURCE_MCU/tools/build.py --archive mcu/SOURCE_MCU/UPSTREAM_KLIPPER_PINNED.zip --work .ci/arm-build --output dist/mcu --jobs 4
+python ci/test_mcu_version.py --dictionary dist/mcu/klipper.dict --binary dist/mcu/klipper.bin
 python ci/run_checks.py --dictionary dist/mcu/klipper.dict
+python ci/check_oled_navigation.py --klipper .ci/pristine --output .ci/reports/OLED_NAVIGATION.json
+python ci/benchmark_oled_rle.py --output .ci/reports/OLED_RLE.json
 bash ci/build_fluidd.sh
+python docs/tools/check_manual.py
+python ci/acceptance_register.py --check
 python ci/package_release.py --build dist/mcu --fluidd dist/fluidd
 ~~~
 

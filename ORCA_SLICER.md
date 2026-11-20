@@ -1,11 +1,15 @@
-# Profile OrcaSlicer przeniesione do osobnego repozytorium
+# OrcaSlicer i M300 Classic
 
-**[Zortrax-m300-Orca-Slicer](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer)** jest jedynym miejscem dalszego rozwoju profili drukarki, procesu i materiałów, testów slicera oraz raportów G-code.
+Profile drukarki, procesów, średnic dyszy i filamentów znajdują się w [repozytorium integracji OrcaSlicera](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer). Wybierz profil M300 Classic odpowiadający założonej dyszy. Zakładka Device otwiera Fluidd pod adresem `http://<adres-hosta>:4480/`.
 
-Przeniesiono kompletny katalog Orca ze źródłowego commita `1f58160e2d0e81c462648e57fa0ee69123313a4f`. Profil R3 w nowym repozytorium jest identyczny bajt w bajt (SHA-256 `3b60cd1ec9d324d5c2ed5a2aec7ced13560d13eff56734167bede1655e4333a4`). Kopię wszystkich 11 źródłowych plików, ich sumy i raporty R2/R3 zachowano w nowym repozytorium. Nowy niezależny test OrcaSlicer 2.3.2: 17 profili PASS, 0 błędów, test przekazywania PA PASS. Z-PEEK pozostaje tylko katalogiem; testy GUI i sprzętu nie zostały wykonane.
+## Początek i koniec pliku
 
-Tutaj pozostają **host Klippera, firmware MCU, OLED/Fluidd, implementacje START_PRINT/END_PRINT/PAUSE, procedury, limit nastawy stołu i instalatory**. Nie zmieniono ich podczas porządkowania. Profil Orca wywołuje te funkcje, ale ich nie instaluje.
+Sprawdź w profilu drukarki sekcje maszynowego G-code. Dla automatycznego wyboru zapisanej siatki początek zawiera jedno wywołanie:
 
-Usunięto aktywny katalog `orca/`, workflow slicera oraz jednorazowy skrypt łączący poprawki hosta i profili. Testy hosta R3 są niezależne w `m300-r3-host-audit.yml`. Wdrożone źródła hosta są utrzymywane bez generatora `apply_m300_r3.py`.
+```gcode
+START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_temperature_initial_layer_single] MESH=AUTO
+```
 
-Historia Git i stare commity nie są przepisywane. PR #13 jest zastąpiony nowym repozytorium; PR #14 dotyczy już wyłącznie hosta i kontroli temperatur. Rozdzielenie repozytoriów nie jest instalacją na Orange Pi ani zatwierdzeniem sprzętowym R3.
+Koniec pliku wywołuje `END_PRINT`. START prowadzi grzanie, bazowanie, wybór siatki i linie czyszczące. Parametry w nawiasach kwadratowych rozwija slicer podczas generowania pliku. W konsoli operującej na drukarce podaje się wartości liczbowe. [Obsługa wydruku](docs/pl/PRINT_CONTROL.md) · [Podręcznik operatora (EN)](docs/en/USER_GUIDE.md).
+
+Przy zmianie koloru wybierz `M600` lub **Change the material**. Gdy pojawi się potwierdzenie wypływu, w zakładce Device możesz użyć przycisków Extrude i Retract, potwierdzić czysty kolor i osobno wznowić wydruk. [Obsługa filamentu](docs/pl/MAINTENANCE_MATERIAL.md).

@@ -4,7 +4,7 @@ MCU 1.0.8 stores the preferred DIM and current SLEEP even when DIM is longer. Af
 
 OLED preferences use two application pages at 0x08019000 and 0x08019800. The factory counter uses separate banks. Inspect `oled_timer_storage` and `oled_timer_mcu_minutes` in `ZORTRAX_DISPLAY_STATUS` after saving.
 
-[First installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/en/FIRST_INSTALL.md) · [RC23 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/en/RELEASE_v1.0.0-rc.23.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8)
+[First installation](FIRST_INSTALL.md) · [RC23 release notes](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.0-rc.23/docs/en/RELEASE_v1.0.0-rc.23.md) · [Firmware SD ZIP and SHA-256 checksums](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8)
 
 ## Install the SD application
 
@@ -44,7 +44,7 @@ After recovery, confirm `factory_counter_banks: NORMALIZED` and
 
 MCU 1.0.8 checks the 256 KiB Flash signature, Cortex-M3 CPUID and OEM hardware record before accepting a counter transaction. The serial, bank state, settings CRC and idle checks apply to each transfer. A standalone STM32 can return zero for DBGMCU_IDCODE. An unexpected nonzero device ID or zero in active debug mode fails the target check. [ST ES0340 §2.2.2](https://www.st.com/resource/en/errata_sheet/cd00197763-stm32f101xcde-and-stm32f103xcde-highdensity-device-limitations-stmicroelectronics.pdf).
 
-RC20 reports the actual MCU readings under `factory_counter_target`. Check `flash_kib` and `supported`. With `AWAITING_IDLE`, `factory_counter_wait_reason` identifies the host condition or `mcu_write_window` for a deferral returned by the board. `UNSUPPORTED_MCU_TARGET` retains pending time for inspection. After two transfers the original bank can be active again. Compare minutes and receipts and repeat the read after a normal cold restart. On-board acceptance is pending.
+RC20 reports the actual MCU readings under `factory_counter_target`. Check `flash_kib` and `supported`. With `AWAITING_IDLE`, `factory_counter_wait_reason` identifies the host condition or `mcu_write_window` for a deferral returned by the board. `UNSUPPORTED_MCU_TARGET` retains pending time for inspection. After two transfers the original bank can be active again. Compare minutes and receipts and repeat the read after a normal cold restart. The operator verified retained ID0 after a normal power cycle on RC19/MCU 1.0.6. Power interruption during a bank write has simulation coverage. See the [hardware register](../pl/ACCEPTANCE_REGISTER.md) for the tested scope.
 
 ### When the host cannot reconcile previous transfers
 

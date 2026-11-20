@@ -1,6 +1,6 @@
 # Settings and Information
 
-> RC1 interface: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
+> RC32 controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 OLED menu button audio has two fixed pulse lengths: normal entry and other
 selection/exit clicks are 35 ms, while an explicitly visible **Back** or
@@ -55,6 +55,7 @@ qualified hardware detector. Acknowledgement never clears a safety latch.
 | Language | English | `ZORTRAX_LANGUAGE` |
 | Models sorting | Date, Name, Case-sensitive name, File size | `ZORTRAX_MODELS_SORT MODE=DATE`, `NAME`, `NAME_CASE` or `SIZE` |
 | Full platform preheating | Enabled, Disabled | `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` or `DISABLED` |
+| OLED dim time / OLED sleep time | 1–60 minutes each | `ZORTRAX_OLED_TIMERS` |
 | OLED brightness | 1–16 | `ZORTRAX_SETTINGS` → OLED brightness |
 | LED brightness | 1–16 | `ZORTRAX_SETTINGS` → LED brightness |
 
@@ -106,7 +107,7 @@ its resources.
 Enable Sleep mode for automatic OLED dimming and power-off. Set both times
 in minutes since the last operator interaction with the OLED_TIMERS sliders.
 The allowed range is 1–60 minutes, with DIM at or before SLEEP. Ready, printing
-and pause use the same deadlines. The moon fades before SLEEP when time permits.
+and pause use the same deadlines. SLEEP temporarily caps the effective DIM. Increasing SLEEP restores the preferred DIM up to the new deadline. Both times are measured from the same last interaction. The moon fades before SLEEP when time permits.
 At SLEEP the panel switches off. The first encoder gesture wakes it and
 restores the selected brightness. Disabled keeps the display awake.
 The alarm LED operates independently. `ZORTRAX_DISPLAY_STATUS` reports the
@@ -134,10 +135,7 @@ one minute and reconciles confirmed transfers so they count once.
 
 On older MCU firmware, a configured `serial_number:` is a fallback.
 An unavailable OEM counter is shown as unavailable. `ZORTRAX_INFO` also
-reports the OEM and Klipper components separately. After synchronization is
-enabled for the individual printer, Klipper calls MCU 1.0.4 to transfer whole
-minutes automatically when the printer is idle and eligible to write.
-[MCU storage and update procedure](MCU_FIRMWARE_1.0.4.md).
+reports the OEM and Klipper components separately. With MCU 1.0.8 the host transfers whole minutes automatically once the printer is idle and the MCU accepts a write. Use `ZORTRAX_HARDWARE_STATUS` for the active bank, pending state and any wait reason. [Counter readback and persistence](MCU_FIRMWARE_1.0.8.md#read-the-counter).
 
 Opening Information or Printer information requests Moonraker history in the
 background. Fluidd's Printer information page has a Refresh button. In the console,

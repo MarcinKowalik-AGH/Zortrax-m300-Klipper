@@ -22,14 +22,14 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Tune → przygotowanie / All / Calibrate / kolejność grafik | beta.18+ | Osobne wejście suwakiem, All bez mesh, Calibrate z mesh | Oczekuje na test: Poprawka istnieje; brak osobnego potwierdzenia całej sekwencji. | — |
 | Pomiar pól i pokazanie profilu m300_pads | 0.13.16.38 / test 11.11.2026 | Odczyt m300_pads i GET_POSITION przy X3/Y10 | Obserwacja częściowa: Notatka: siatka 61×61, min=-0,4497, max=0,0965; lokalna korekcja -0,369086 mm. | Nie jest to nowy pomiar w CI ani odbiór pierwszej warstwy. |
 | Powtarzalność kontaktowego Z | beta.22 / konfiguracja egzemplarza | Powtarzane bazowanie na rozgrzanym egzemplarzu | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
-| Zapis, restart i aktywacja mesh | beta.22 / konfiguracja egzemplarza | Pomiar → SAVE_CONFIG → restart → START z profilem | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
+| Zapis, restart i aktywacja mesh | Wersja hosta podczas obserwacji nieodczytana | Odczyt konsoli i podglądu OLED podczas testu przepływu. | Obserwacja częściowa: Na ekranie podczas wydruku widać profil m300_pads w konsoli i na podglądzie OLED. | Zrzut nie pokazuje zapisu SAVE_CONFIG i restartu. |
 | Pierwsza warstwa na większej części stołu | beta.22 / konfiguracja egzemplarza | Środek oraz okolice narożników | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | START i cztery linie 2Y+2X | 0.13.16.38 / test 11.11.2026 | Ponowny start po korekcie -0,5 / 6,5 | Obserwacja częściowa: Użytkownik potwierdził nagrzanie, homing i rozpoczęcie druku. | Nie potwierdza ukończenia Benchy, jakości pierwszej warstwy ani osobnej obserwacji wszystkich czterech linii. |
-| PAUSE i parkowanie | beta.22 / konfiguracja egzemplarza | Próba z OLED oraz przycisku Fluidd | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
+| PAUSE i parkowanie | Wersja hosta podczas obserwacji nieodczytana | Uruchomienie pauzy z panelu i ekranu operatora. | Obserwacja częściowa: Operator potwierdził działanie pauzy oraz obsługę materiału z OLED i interfejsu. | Relacja nie zawiera pomiaru przesunięcia Z ani próby wznowienia na RC32. |
 | RESUME | beta.22 / konfiguracja egzemplarza | Dogrzanie i bezkolizyjny powrót do tego samego pliku | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | CANCEL w druku, przygotowaniu i pauzie | 0.13.16.38 / test 11.11.2026 | CANCEL_PRINT po nieudanym starcie | Obserwacja częściowa: Głowica zaparkowała; STATUS Ready, PRINT_CONTROL_STATUS IDLE i busy=false. | Pozostałe fazy anulowania i RESUME wymagają osobnego testu. |
-| END i ponowne zadanie | beta.22 / konfiguracja egzemplarza | Normalne ukończenie i uruchomienie kolejnego pliku | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
-| Zmiana filamentu w pauzie | beta.22 / konfiguracja egzemplarza | Wycofanie, ładowanie, wypływ, osobne RESUME | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
+| END i ponowne zadanie | Wersja hosta podczas obserwacji nieodczytana | Obserwacja normalnego końca wydruku. | Obserwacja częściowa: Po ukończeniu wydruku stół zjechał, a głowica zaparkowała. | Odległości i ponownego startu z tego ekranu nie zmierzono. |
+| Zmiana filamentu w pauzie | Wersja hosta podczas obserwacji nieodczytana | Obsługa materiału z OLED i Fluidd. | Obserwacja częściowa: Operator potwierdził obsługę procedur i zgłosił pozostałość filamentu przy wejściu do ekstrudera. | Ręczne podanie i cofnięcie po procedurze oraz wznowienie po przepłukaniu na RC32 wymagają potwierdzenia na maszynie. |
 | Stabilność dłuższego wydruku | Wersja hosta podczas wydruku nieodczytana | 3DBenchy_M300_0p4_0p28.gcode | Obserwacja częściowa: Użytkownik ukończył wydruk. Fluidd pokazał Actual 30 h 37 min 4 s. | Odbiór dotyczy ukończenia tego zadania. |
 | Przepływ i profile Orca | beta.22 / konfiguracja egzemplarza | Pomiary dla konkretnego materiału, dyszy i temperatury | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
 | Rzeczywista karta SD i pliki Z-Suite M300 | beta.22 / konfiguracja egzemplarza | Import i nadzorowany druk reprezentatywnych plików | Oczekuje na test: Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano. | — |
@@ -129,6 +129,14 @@ Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji
 
 Podstawa wersji: `conversation_context_not_device_report`.
 
+**2026-11-20 · Wersja hosta podczas obserwacji nieodczytana · Obserwacja częściowa**
+
+Na ekranie podczas wydruku widać profil m300_pads w konsoli i na podglądzie OLED.
+
+Materiał źródłowy: `docs/img/m300-orcaslicer-fluidd-printing.png`.
+
+Podstawa wersji: `user_screenshot_version_unknown`.
+
 ### FIRST_LAYER — Pierwsza warstwa na większej części stołu
 
 **2026-11-10 · beta.22 / konfiguracja egzemplarza · Oczekuje na test**
@@ -173,6 +181,14 @@ Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji
 
 Podstawa wersji: `conversation_context_not_device_report`.
 
+**2026-11-20 · Wersja hosta podczas obserwacji nieodczytana · Obserwacja częściowa**
+
+Operator potwierdził działanie pauzy oraz obsługę materiału z OLED i interfejsu.
+
+Zapis użytkownika / treść przesłanego zrzutu: „ok pausa wyładowywanie i aładowywanie działa z oled i ekranu.”.
+
+Podstawa wersji: `operator_report_available_by_2026-11-20`.
+
 ### PRINT_RESUME — RESUME
 
 **2026-11-10 · beta.22 / konfiguracja egzemplarza · Oczekuje na test**
@@ -207,6 +223,14 @@ Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji
 
 Podstawa wersji: `conversation_context_not_device_report`.
 
+**2026-11-20 · Wersja hosta podczas obserwacji nieodczytana · Obserwacja częściowa**
+
+Po ukończeniu wydruku stół zjechał, a głowica zaparkowała.
+
+Zapis użytkownika / treść przesłanego zrzutu: „w międzyczasie zakończył sie pierwszy wydruk , srół zjechał , a głowica zaparkowała .”.
+
+Podstawa wersji: `operator_report_available_by_2026-11-20`.
+
 ### FILAMENT_CHANGE — Zmiana filamentu w pauzie
 
 **2026-11-10 · beta.22 / konfiguracja egzemplarza · Oczekuje na test**
@@ -214,6 +238,14 @@ Podstawa wersji: `conversation_context_not_device_report`.
 Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.
 
 Podstawa wersji: `conversation_context_not_device_report`.
+
+**2026-11-20 · Wersja hosta podczas obserwacji nieodczytana · Obserwacja częściowa**
+
+Operator potwierdził obsługę procedur i zgłosił pozostałość filamentu przy wejściu do ekstrudera.
+
+Zapis użytkownika / treść przesłanego zrzutu: „ok pausa wyładowywanie i aładowywanie działa z oled i ekranu.”.
+
+Podstawa wersji: `operator_report_available_by_2026-11-20`.
 
 ### LONG_PRINT — Stabilność dłuższego wydruku
 

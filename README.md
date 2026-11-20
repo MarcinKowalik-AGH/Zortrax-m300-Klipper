@@ -1,61 +1,40 @@
 # Zortrax M300 Classic — Klipper 1.0.0-rc.32
 
-**RC32** lets you use Fluidd’s Extrude and Retract buttons while paused, after a colour change and after standalone loading or unloading. [Operation and update instructions](docs/en/RELEASE_v1.0.0-rc.32.md).
+[![An M300 Classic printing a flow calibration in OrcaSlicer, with Fluidd temperatures and the live OLED preview](docs/img/m300-orcaslicer-fluidd-printing.png)](docs/img/m300-orcaslicer-fluidd-printing.png?raw=true)
 
-**MCU 1.0.8:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.8.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
+*OrcaSlicer’s Device tab during a print on the M300 Classic, 20 November 2026. The console and the OLED preview show the active `m300_pads` mesh. Click the image for the original.*
 
-**Klipper port for the classic M300**, using its original controller,
-OLED, encoder, temperature sensors and contact bed. This repository is not the
-M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
+[Podręcznik po polsku](README_PL.md) · [Operator handbook](docs/en/USER_GUIDE.md) · [Download RC32](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.32)
 
-[Download RC32](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.32) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+This port runs Klipper on the original **Zortrax M300 Classic** controller with its OLED, encoder and contact plate. The supported pair is host **1.0.0-rc.32** and MCU **1.0.8**. Fluidd runs on port **4480**. In RC32 you can purge or retract with Fluidd’s Tool buttons during a settled pause and before confirming flow after a colour change.
 
-## Included
+## Install and operate
 
-Native Klipper motion and print control; original temperature conversions;
-contact Z homing and platform autocalibration; saved pad-mesh compensation;
-material loading/unloading/change; protected cooling and OEM error reporting;
-OLED menu with original artwork and unified shaded icons; low-latency Fluidd OLED
-preview with integer square pixels and ×1/×2/×3 controls. Print START loads the
-selected mesh after homing and primes with two Y and two X lines.
+| What you want to do | Where to start |
+|---|---|
+| Install on a new Orange Pi or Raspberry Pi | [First installation, wiring, full ZIP and commissioning](docs/en/FIRST_INSTALL.md) |
+| Update a running printer or recover a blank Fluidd page | [Host update, Fluidd repair and rollback](docs/en/INSTALL.md) |
+| Update the printer MCU with the installed SD bootloader | [Application and verification](docs/en/MCU_FIRMWARE_1.0.8.md) · [MCU SD archive](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8) |
+| Prepare the plate and print from OrcaSlicer or SD | [Operator handbook](docs/en/USER_GUIDE.md) · [OrcaSlicer profiles](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer) · [Models and SD](docs/en/MODELS_SD.md) |
+| Pause, change colour, purge and resume | [Print controls](docs/en/PRINT_CONTEXT.md) · [Material procedures](docs/en/MAINTENANCE_MATERIAL.md) |
+| Use the encoder, menus and Fluidd controls | [Controls and macros](docs/en/RC1_UI.md) · [Display settings](docs/en/SETTINGS_INFORMATION.md) · [Illustrated OLED reference (PL)](docs/pl/OLED_FUNCTIONS.md) |
+| Diagnose a fault or qualify hardware | [Error catalogue](docs/en/ERRORS.md) · [Board identification](docs/en/HARDWARE_VARIANTS.md) · [Hardware acceptance register (PL)](docs/pl/ACCEPTANCE_REGISTER.md) |
 
-OLED, Fluidd macros and native commands share the same owners. Settings
-macros include OLED and LED brightness and both OLED inactivity timers. Lab shortcuts
-are removed from the normal UI; OEM fan service, PID and read-only diagnostics
-remain. [Macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Print control](docs/pl/PRINT_CONTROL.md).
+## Update an existing Orange Pi
 
-**RC3 artwork retained:** one native shaded raster for 24 added icons across host, MCU and Fluidd. No blur, halo or threshold. Original OEM frames retain their original grayscale. [Artwork and verification](docs/en/RELEASE_v1.0.0-rc.3.md).
-
-## Existing Orange Pi installation
-
-For an existing `~/m300-orange-pi` checkout, wait for Ready, finish any
-print or procedure, and turn the heater targets off before running:
+Finish the print or procedure, wait for Ready and turn both heater targets off. Run the following in your existing checkout of the `orange-pi` branch. The path below is the default.
 
 ```bash
-git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py"
+cd "$HOME/m300-orange-pi" &&
+git pull --ff-only &&
+sha256sum -c --quiet SHA256SUMS &&
+python3 install-orange-pi.py
 ```
 
-This updates Klipper and preserves the existing Fluidd site on port 4480 and its settings.
-If MCU 1.0.8 is already installed, the host update completes the upgrade.
-If Fluidd is blank, use the [recovery procedure](docs/en/INSTALL.md#recover-fluidd-then-update-klipper) to repair the website
-before updating Klipper. [Full update guide](docs/en/INSTALL.md) ·
-[Fluidd diagnosis and recovery](docs/en/INSTALL.md#diagnose-a-blank-or-unreachable-fluidd-page) ·
-[MCU 1.0.8 and print-time checks](docs/en/MCU_FIRMWARE_1.0.8.md).
+In the Fluidd console run `ZORTRAX_INFO REFRESH=0` to read the host and MCU versions. The default installer updates the host. The update guide covers first-time cloning, a damaged Git checkout, and the separate Fluidd repair on port 4480.
 
-## Qualification and limits
+## Verification and release status
 
-The first-print report confirms heating, homing and entry into printing.
-The [acceptance register](docs/pl/ACCEPTANCE_REGISTER.md) records those observations
-and tracks the full print and pause/resume tests. The optional qualified Z profile
-(-0.5 limit, M07 5/6.5/1, contact clearance 2 mm) is not silently applied to new
-printers. No unverified Y315 cleaning zone or blind forced moves are included.
+RC32 is a release candidate. The operator has reported a completed Benchy, bed lowering and head parking after a completed print, and filament handling from the OLED and Fluidd. The register gives the scope and version evidence for each observation. Outstanding hardware checks include repeatability of contact Z, first-layer coverage across the plate, and the RC32 manual-purge/resume sequence on the machine.
 
-[Parameters and planner](docs/pl/PRINT_LIMITS_AND_PLANNER.md) · [Mesh and leveling](docs/pl/BED_MESH_AND_LEVELING.md) · [Installation and bounded CI retries](docs/pl/INSTALLATION_AND_CI.md) · [RC1 code review](docs/pl/CODE_REVIEW_RC1.md)
-
-The full build verifies native Klippy/ARM, host regressions, actual browser pixel
-and layout rendering, installer rollback and package checksums before publishing
-orange-pi and versioned archives. Recognized transient infrastructure failures
-have bounded retries; failed tests never become successful by being skipped.
-Historical release notes, firmware evidence and 65 beta.20 illustrative screens
-remain explicitly versioned, not relabeled as new hardware measurements.
+[RC32 notes](docs/en/RELEASE_v1.0.0-rc.32.md) · [Build and software tests](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Hardware register](docs/pl/ACCEPTANCE_REGISTER.md) · [Source and licences](THIRD_PARTY_NOTICES.md)

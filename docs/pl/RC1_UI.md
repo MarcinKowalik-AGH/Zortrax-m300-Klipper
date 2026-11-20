@@ -1,4 +1,6 @@
-# RC1 — wspólne menu OLED, makra Fluidd i procedury Klippera
+# Menu OLED, Fluidd i makra Klippera w RC32
+
+We Fluidd i w zakładce Device OrcaSlicera otwórz `ZORTRAX_MAIN_MENU`. Models, Maintenance, Material, Settings i Information odpowiadają pięciu pozycjom menu Zortrax na OLED. Dla przykładu **Material → Unload the material** prowadzi do tej samej procedury z obu urządzeń, a potwierdzenie dotyczy aktualnej fazy. Przy zmianie koloru w pauzie przyciski Extrude/Retract działają przed potwierdzeniem wypływu. [Codzienna obsługa](USER_GUIDE.md).
 
 W aktualnym wydaniu oba czasy OLED mierzy się od ostatniej obsługi w Ready, podczas druku i w pauzie. Ustaw je w **OLED_TIMERS** lub **ZORTRAX_OLED_TIMERS**. Przykład `DIM=1 SLEEP=2` przygasza ekran po minucie i wyłącza go po dwóch. Obie wartości mieszczą się w zakresie 1–60 min, a rzeczywisty DIM jest mniejszą z dwóch wartości: wybranego DIM i aktualnego SLEEP. Pierwszy gest wybudza panel. [Opis działania](RELEASE_v1.0.0-rc.23.md).
 
@@ -19,6 +21,7 @@ sesję procedury. Zamknięcie okna nie jest zgodą na następny ruch.
 | Language | ZORTRAX_LANGUAGE | English; brak innych języków |
 | Models sorting | ZORTRAX_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
 | Full platform preheating | ZORTRAX_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
+| OLED dim time / OLED sleep time | ZORTRAX_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
 | OLED brightness | ZORTRAX_OLED_BRIGHTNESS | LEVEL=1…16 |
 | LED brightness | ZORTRAX_LED_BRIGHTNESS | LEVEL=1…16 |
 
@@ -72,20 +75,20 @@ funkcją serwisową OEM, a nie testem rozwoju portu.
 
 ## Wersje i aktualizacja
 
-Wersja publiczna to **1.0.0-rc.1**. Information pokazuje krótki numer hosta i
+Wersja hosta to **1.0.0-rc.32**, a sparowanego MCU **1.0.8**. Information pokazuje krótki numer hosta i
 numeryczny numer MCU. Pełny rzeczywisty identyfikator firmware i znaczniki
 zgodności transportu pozostają w diagnostyce; nie udajemy, że MCU otrzymało
 nowe oprogramowanie. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i M300_SD.zip.
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
 Tylko bezczynna drukarka Ready, bez pauzy. Instalator zachowuje już wprowadzone
 Z=-0,5 / M07 5–6,5–1 / odsunięcie styku 2 mm, siatkę m300_pads, PID i UART.
 Parametr --qualified-first-print-z nadal służy do jawnego wdrożenia tego wariantu
 na zakwalifikowanym egzemplarzu; RC1 nie stosuje go automatycznie do innych drukarek.
-Odśwież Fluidd przez Cmd+Shift+R. RC to kandydat do wydania, nie potwierdzenie
+Strzałka na górnym pasku Fluidd przeładowuje stronę również w OrcaSlicerze. RC to kandydat do wydania, nie potwierdzenie
 ukończenia całej listy prób sprzętowych. Dotychczasowe 65 ilustracji beta.20
 pozostaje opisanym materiałem historycznym; bieżące różnice określa ten rozdział.

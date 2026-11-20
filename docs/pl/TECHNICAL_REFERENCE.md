@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.32**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co jest parametrem fabrycznym, a co ustawieniem portu
@@ -17,9 +17,9 @@
 | Host | Linux na Orange Pi; pakiet obsługuje też właściwie przygotowany Raspberry Pi | Instrukcja instalacji |
 | Frontend / serwer API | Zmodyfikowany Fluidd 1.37.7 / Moonraker | Przypięta kompilacja |
 | Klipper upstream | `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51` | `PORT.json` |
-| Wersja aplikacji MCU | `0.13.14.18-OEM-ERRORS-UART8` | Manifest beta.20 |
+| Wersja aplikacji MCU | `1.0.8` | [Wersja i instalacja MCU](MCU_FIRMWARE_1.0.8.md) |
 | Adres aplikacji MCU | `0x08008000`, kontener M300APP.M3B | Pakiet i bootloader |
-| Host / kontroler druku | R16.12 / `0.13.16.38-PRINT-DRAIN-XY-PURGE` | Manifest i moduł druku |
+| Host / kontroler druku | 1.0.0-rc.32 / `0.13.16.43-MANUAL-E` | Manifest i moduł druku |
 | OLED / szybki podgląd | 256 × 64, 4 bity/piksel, 16 poziomów; NAV-EVENT-1 / NAV-PIPELINE-2 | Kod hosta i frontendu |
 
 Źródła fabryczne: [M300 — producent](https://zortrax.com/3d-printers/m300-/), [specyfikacje serii M](https://support.zortrax.com/m-series-specification/). Parametry portu: [PORT.json](../../PORT.json), [konfiguracja sprzętu](../../host/config/m300_classic_base.cfg). Wymiary granic osi w konfiguracji nie są obietnicą większego niż fabryczny pola drukowania.
@@ -72,7 +72,7 @@ Parametr `refresh_interval: 0.2` jest ustawieniem modułu OLED w konfiguracji ba
 
 750000 baud jest domyślnym zaleceniem publikowanej instrukcji pierwszej instalacji. R14.18 rozszerza obsługę również o 1500000; lista przyjmowana przez moduł hosta obejmuje 19200, 57600, 115200, 250000, 500000, 750000, 1000000 i 1500000. **Lista akceptowana przez host nie oznacza, że każde ustawienie znajduje się w każdym menu bootloadera lub zostało zakwalifikowane na każdym SBC.**
 
-W projekcie były testy 1500000, ale instrukcja tej bety zaleca 750000 ze względu na stabilny udokumentowany przebieg i retransmisje w jednym z testów szybszego łącza. Działającego łącza nie przełączaj tylko dlatego, że liczba jest większa. Wartości hosta i MCU muszą się zgadzać; instalator nie zmienia automatycznie UART w drukarce.
+W projekcie były testy 1500000, ale instrukcja pierwszej instalacji zaleca 750000 ze względu na stabilny udokumentowany przebieg i retransmisje w jednym z testów szybszego łącza. Działającego łącza nie przełączaj tylko dlatego, że liczba jest większa. Wartości hosta i MCU muszą się zgadzać; instalator nie zmienia automatycznie UART w drukarce.
 
 ```gcode
 ZORTRAX_LINK_STATUS
@@ -110,11 +110,12 @@ Odtworzenie map jest odrębne od sprawdzenia czujnika, kontaktu termicznego, nap
 |---|---:|
 | Homing Z — minimum dla hotendu | 180°C; respektuje wyższy roboczy cel |
 | Autokalibracja M07 / Heat the extruder | 260°C |
-| Load/Unload/Change materiału | 240°C |
+| Automatyczny załadunek i wyładunek, także w M600 | `auto` = 240°C i 2 mm/s w obu kierunkach. Cztery nastawy w `[m300_filament]`. |
 | Mesh: domyślny cel hotendu / stołu | 260°C / 60°C; niższy dopuszczalny parametr hotendu 180°C |
 | Kontrola ekstruzji | `min_extrude_temp: 170` |
-| Granice konfiguracji hotendu | 5…270°C |
-| Granice konfiguracji stołu | 5…120°C |
+| Maksymalne cele robocze w profilu RC32 (dysza / stół) | 305°C / 105°C w `[m300_temperature_policy]` |
+| Granice pomiaru hotendu w konfiguracji | 5…310°C |
+| Granice pomiaru stołu w konfiguracji | 5…120°C |
 | Chłodzenie hotendu | 50°C ON / 45°C OFF |
 
 **Limity konfiguracji nie są zaleceniami temperatury druku ani nową specyfikacją sprzętu.** Producent podaje dla platformy M300 maksymalną temperaturę 105°C; wpis `max_temp: 120` w porcie jest progiem ochrony/konfiguracji, a nie potwierdzeniem bezpiecznej długiej pracy przy 120°C. Dla hotendu specyfikacja producenta i limit portu również nie są tą samą liczbą. Nie podnoś limitów, aby ominąć błąd. Temperaturę roboczą dobieraj do oryginalnego/zmodyfikowanego układu i materiału.
@@ -133,9 +134,9 @@ Skala jest zapamiętywana w przeglądarce; jej zmiana przerysowuje ostatnio zdek
 
 ## 7. Rewizje a numer wydania
 
-| Warstwa | RC1 |
+| Warstwa | Wydanie RC32 |
 |---|---|
-| Dystrybucja / publiczny host | v1.0.0-rc.1 / 1.0.0-rc.1 |
+| Dystrybucja / publiczny host | v1.0.0-rc.32 / 1.0.0-rc.32 |
 | Interfejs hosta podglądu | NAV-EVENT-1 |
 | Pipeline przeglądarki | NAV-PIPELINE-2 |
 | Sterowanie i układ powiększenia | OLED-ZOOM-2 |

@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.32**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -26,18 +26,22 @@ Stan krańcówek i PC7 musi odpowiadać fizycznej sytuacji. Sam napis Ready nie 
 
 ## 2. Fluidd i makra
 
-![Historyczny zrzut układu Fluidd z podglądem OLED](../img/fluidd_overview.png)
+[![Wydruk testu przepływu w zakładce Device OrcaSlicera](../img/m300-orcaslicer-fluidd-printing.png)](../img/m300-orcaslicer-fluidd-printing.png?raw=true)
 
-*Zrzut użytkownika z 10.11.2026 sprzed beta.20; nie przedstawia obecnego położenia przycisków skalowania. Sterowanie osią znajduje się po lewej, temperatury i podgląd OLED po prawej. Poniżej są makra, konsola i pliki.*
+*Zrzut operatora z 20.11.2026. Po lewej widać stan zadania i ruch, po prawej temperatury, OLED i konsolę. Na OLED i w konsoli widać nazwę siatki `m300_pads`.*
+
+Dla nowej instalacji skorzystaj z [pełnego pakietu i procedury uruchomienia](FIRST_INSTALL.md). Działający port ma [osobną instrukcję aktualizacji](INSTALL.md). W przeglądarce i w zakładce Device używaj adresu Fluidd na porcie 4480. Makro `ZORTRAX_MAIN_MENU` prowadzi do Models, Maintenance, Material, Settings i Information. Potwierdzenia z pokrętła i z Fluidd dotyczą tej samej operacji. Aby wrócić do jej okna, wybierz `ZORTRAX_PROCEDURE`.
 
 Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. Laboratoryjna grupa **TEST M300** nie jest częścią RC1. Odczyty daje `ZORTRAX_DIAGNOSTICS`; OEM-owy test wentylatorów pozostaje w Maintenance. Jasność otwierają `ZORTRAX_OLED_BRIGHTNESS` i `ZORTRAX_LED_BRIGHTNESS`. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
+
+W Settings osobno ustawiasz jasność OLED i LED (1–16) oraz czasy od ostatniego użycia pokrętła. Każdy z dwóch edytorów, **OLED dim time** i **OLED sleep time**, ma własny suwak 1–60 min. Skrócenie SLEEP poniżej wybranego DIM skraca efektywny DIM. Wydłużenie SLEEP przywraca zapamiętaną wartość DIM do wysokości nowego SLEEP. Zasada działa także podczas druku i pauzy. Po wyjściu zaznaczenie zostaje na edytowanej pozycji. [Zapis i odczyt nastaw z MCU](MCU_FIRMWARE_1.0.8.md).
 
 <details>
 <summary>Historyczny panel z 08.11.2026 — dlaczego część makr była „Uncategorized”</summary>
 
 ![Starszy panel makr przed poprawą grupowania](../img/macros_panel.png)
 
-To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `ZORTRAX_HEAT_PLATFORM`, `ZORTRAX_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Zrzut powyżej pokazuje poprawiony podział makr, ale wcześniejszy układ OLED. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
+To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `ZORTRAX_HEAT_PLATFORM`, `ZORTRAX_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Zrzut z 20 listopada na początku rozdziału pokazuje nowszy układ podczas druku. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
 
 </details>
 
@@ -49,11 +53,11 @@ To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `ZORTRAX_HEAT_PLA
 
 Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zmiana wielkości nie wysyła poleceń do drukarki i nie steruje menu. OLED pozostaje wycentrowany względem całej karty, a wysokość całej kolumny przycisków odpowiada ×1. Gdy ×2/×3 nie mieści się w karcie, przewijaj tylko obraz. Wybór jest zapamiętywany osobno w przeglądarce. Kwadratowe piksele mają pierwszeństwo przed zachowaniem dokładnej wielkości CSS przy ułamkowym powiększeniu strony.
 
-**HIDE/SHOW** dotyczy wyłącznie podglądu w Fluidd, nie wyłączenia fizycznego OLED. Po aktualizacji użyj Cmd+Shift+R. [Pełny opis powiększenia](UPDATE_2026-11-10.md) i [co robi każdy ekran OLED](OLED_FUNCTIONS.md).
+**HIDE/SHOW** dotyczy wyłącznie podglądu w Fluidd, nie wyłączenia fizycznego OLED. Strzałka przeładowania na górnym pasku Fluidd odświeża stronę także wewnątrz zakładki Device w OrcaSlicerze. [Pełny opis powiększenia](UPDATE_2026-11-10.md) i [co robi każdy ekran OLED](OLED_FUNCTIONS.md).
 
 ## 2b. Tune, All i Calibrate — trzy różne działania
 
-| Działanie | Zachowanie zachowane w RC1 |
+| Działanie | Działanie w RC32 |
 |---|---|
 | Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
 | All w Tune | Wspólne ZORTRAX_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
@@ -84,6 +88,8 @@ natywna siatka stołu Klippera. Procedura porusza wyłącznie ekstruderem
 i pozostawia profil aktywny po zakończeniu.
 
 ![Menu ładowania materiału](../img/oled/material_load@3x.png)
+
+W `[m300_filament]` pola `unload_temperature`, `unload_speed`, `load_temperature` i `load_speed` przyjmują osobno `auto` albo liczbę. W obu kierunkach `auto` oznacza 240°C i 2 mm/s. Po zakończeniu samego Load lub Unload ekstruder pozostaje gorący do wyłączenia grzania lub wystąpienia zwykłej bezczynności. Przy pytaniu o wypływ w pauzie możesz naciskać **Extrude** lub **Retract** w panelu Narzędzie. Dopiero po uzyskaniu czystego koloru potwierdź wypływ i wybierz **Resume**. [Procedura materiałowa](MAINTENANCE_MATERIAL.md).
 
 Temperaturę dobierz w granicach materiału i konfiguracji, korzystając z obsługiwanych parametrów. Nie forsuj podawania, gdy materiał się zacina. Dalsza ekstruzja, potwierdzenie i anulowanie zależą od aktualnej fazy; stary przycisk nie jest zgodą na kolejną fazę. Zmiana podczas druku: PAUSE → `ZORTRAX_CHANGE` → potwierdzenie prawidłowego przepływu → jawne RESUME.
 
@@ -137,10 +143,14 @@ Nie wyłączaj silników, nie wykonuj bazowania i nie przestawiaj osi ręcznie p
 Poczekaj na stan Ready, zakończ wydruk i aktywne procedury oraz wyłącz cele
 grzania. Użyj [instrukcji aktualizacji Klippera](INSTALL.md). Standardowa
 aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
-MCU 1.0.5 wystarczy aktualizacja Klippera. W razie komunikatu o nieznanych
+MCU 1.0.8 wystarczy aktualizacja hosta. Numer hosta i MCU sprawdzisz poleceniem `ZORTRAX_INFO REFRESH=0`. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL_STATUS` ma rewizję `0.13.16.41-END-PARK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+W RC32 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.43-MANUAL-E`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+
+### Czas pracy drukarki
+
+W konsoli odczytaj `ZORTRAX_HARDWARE_STATUS` oraz `ZORTRAX_INFO REFRESH=0`. Pierwsze polecenie pokazuje licznik MCU w minutach, stan banków oraz przyczynę oczekiwania. Drugie pokazuje też czas Klippera oczekujący na zapis. `CURRENT` i `factory_counter_pending: false` oznaczają rozliczenie pełnych minut. Po zwykłym wyłączeniu i ponownym włączeniu drukarki porównaj `factory_print_minutes`. [Stany licznika i trwałość](MCU_FIRMWARE_1.0.8.md).
 
 ## 9. Rozpoznawanie problemów
 
@@ -153,6 +163,8 @@ Zachowane identyfikatory diagnostyczne (nie publiczna nazwa RC1): `PRINT_CONTROL
 | „Unknown runtime module” przy instalacji | Lokalna modyfikacja lub inny pakiet; porównaj SHA z oficjalnym wydaniem |
 | Zacięcie materiału przy szybkim druku | Limit przepływu i temperaturę materiału, opory podawania i stan hotendu; nie zwiększaj automatycznie maksymalnej temperatury |
 | Wentylator hotendu pracuje po CANCEL | Sprawdź temperaturę: to może być prawidłowe chłodzenie 50/45°C, nie pozostawiony wydruk |
+
+W celu zebrania szczegółów ustaw `debug: True` w istniejącej sekcji `[m300_mcu]` i przeładuj Klipper na postoju. Po diagnozie przywróć `False`. Błędy są rejestrowane również przy wyłączonym debugowaniu.
 
 Logi przydatne do zgłoszenia: `klippy.log`, `moonraker.log`, statusy powyżej i identyfikator wydania. Przed publicznym udostępnieniem usuń dane sieciowe, sekrety i identyfikatory niepotrzebne do diagnozy.
 

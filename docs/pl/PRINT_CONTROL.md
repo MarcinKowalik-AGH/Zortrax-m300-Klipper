@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Procedura RC17.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+**Kontroler w RC32.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
 oraz parametry ruchu.
 
@@ -153,6 +153,6 @@ Nie przypisujemy tu nowych wyników testów sprzętowych.
 ## Ujemne Z po transformacji mesh — kwalifikowany egzemplarz
 
 Dla zgłoszonego pierwszego startu Z0,28 po korekcji -0,369086 dawało -0,089086 mm.
-[Dodatek beta.24](RELEASE_v1.0.0-rc.1.md) opisuje jawny profil position_min=-0,5,
+[Dodatek beta.24](RELEASE_v1.0.0-beta.24.md) opisuje jawny profil position_min=-0,5,
 safe_z=5, approach_distance=6,5 oraz homing clearance=2. Nie usuwa mesh i nie
 przenosi purge. Zwykła aktualizacja nie narzuca ujemnego zakresu innym drukarkom.

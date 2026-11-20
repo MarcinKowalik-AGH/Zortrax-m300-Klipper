@@ -1,7 +1,10 @@
-# M300 in Fluidd — current beta.20 and historical implementation notes
+# Fluidd on the M300 Classic
 
-**Current reference:** [beta.20 user-interface guide](FRONTEND_BETA20.md) · [65 illustrated OLED functions](../pl/OLED_FUNCTIONS.md). This page retains explicitly historical notes; 344×86, 50%-width and ACK-only mirroring below are not the current UI.
+Open Fluidd at `http://<printer-host>:4480/` in a browser or in OrcaSlicer's Device tab. The Thermals card includes the M300 OLED preview. Its ×1/×2/×3 and HIDE controls affect the local view. To operate the printer use the Tool controls, macros or the physical encoder. The circular arrow in the Fluidd toolbar reloads the embedded page if a sidebar route stops responding.
 
+Use `ZORTRAX_MAIN_MENU` for Models, Maintenance, Material, Settings and Information. During a settled pause or the material-flow confirmation, use Tool → Extrude or Retract before resuming. The [operator handbook](USER_GUIDE.md) walks through the workflow. For a blank page or zero-byte web assets follow the [current installer and repair procedure](INSTALL.md). The sections below document earlier frontend revisions and layouts.
+
+[Screen illustrations](../pl/OLED_FUNCTIONS.md) · [Historical beta.20 UI reference](FRONTEND_BETA20.md)
 
 ## Pixel-color-matched, centered OLED and pinned 1×-height zoom controls (beta.20)
 
@@ -351,16 +354,7 @@ uses the existing nginx site and preserves its `config.json`. See the
 [Fluidd update instructions](INSTALL.md#update-or-repair-fluidd).
 The steps below are for a custom web-root deployment.
 
-1. On the Orange Pi, identify the actual web root of your existing Fluidd
-   server block (for nginx, inspect `sudo nginx -T` and the matching
-   `listen` and `root` directives). Keep the current root as a rollback copy.
-2. Extract the ZIP beside the existing site. Set the same server block's
-   `root` to the absolute path of the extracted `fluidd-m300` directory.
-   If you customized `config.json`, copy it from the old site into the new
-   web root. Keep the existing Moonraker routes and printer address.
-3. Check `sudo nginx -t`, reload nginx and open the same Fluidd URL. If
-   Fluidd is installed as a PWA, reload the site after its update. Roll back
-   by restoring the original root path and reloading nginx.
+The installer locates the website serving port 4480, checks its assets and keeps a rollback receipt. Follow the [host update and Fluidd recovery guide](INSTALL.md) for the checks and restore command.
 
 The diagram is limited to complete M300 leveling results. Incomplete reports
 use the text rendering. The site neither interprets HTML from G-code nor

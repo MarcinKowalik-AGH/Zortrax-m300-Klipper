@@ -1,6 +1,6 @@
 # Menu OLED — struktura, funkcje i rendery z kodu
 
-> **RC1:** bieżące makra i nawigację opisuje [spójność interfejsu RC1](RC1_UI.md). Menu główne ma tylko Klipper i Zortrax M300. Ekrany poniżej zachowano jako podpisany wzorzec beta.20; pozycja Service / Tests na starszych ilustracjach nie występuje w RC1.
+> **RC32.** [Bieżące menu i sterowanie](RC1_UI.md) obejmuje też regulację czasów OLED i menu materiału we Fluidd. Poniższy atlas przedstawia beta.20. Pozycja Service / Tests z historycznych ilustracji została wycofana w RC1.
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 

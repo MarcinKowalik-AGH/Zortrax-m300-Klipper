@@ -1,6 +1,6 @@
-# RC1 features and acceptance boundaries
+# M300 Classic features and acceptance boundaries
 
-> RC1 interface: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
+> Operator controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 [Installation](INSTALL.md) · [Validation](VALIDATION_R16_9.md)
 
@@ -42,7 +42,6 @@ installer rule; other deliberate geometry, including Z315, is preserved.
 No additional general G1 velocity cap is introduced. FILEOUTPUT planning at
 300 mm/s and M220 150% does not measure physical F103 scheduling at that speed.
 
-299 host tests and 16 actual Klippy FILEOUTPUT scenarios support software
-integration. Electrical inputs and movement are modeled in the full procedure
+The archived R16.9 validation covered 299 host tests and 16 Klippy FILEOUTPUT scenarios. RC32 passed 976 host tests and a native print, pause, manual extrusion and resume scenario. [RC32 build results](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/runs/44813278599). Electrical inputs and movement are modeled in the full procedure
 tests. Follow [the supervised acceptance sequence](VALIDATION_R16_9.md) for
 new contact homing, screw instructions, manual holds and material transport.

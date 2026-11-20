@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-18",
+  "updated": "2026-11-20",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -187,6 +187,19 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-20",
+          "version": "Wersja hosta podczas obserwacji nieodczytana",
+          "version_basis": "user_screenshot_version_unknown",
+          "test": "Odczyt konsoli i podglądu OLED podczas testu przepływu.",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Na ekranie podczas wydruku widać profil m300_pads w konsoli i na podglądzie OLED.",
+          "problem": "Zrzut nie pokazuje zapisu SAVE_CONFIG i restartu.",
+          "evidence": {
+            "kind": "user_screenshot",
+            "artifact": "docs/img/m300-orcaslicer-fluidd-printing.png"
+          }
         }
       ]
     },
@@ -269,6 +282,19 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-20",
+          "version": "Wersja hosta podczas obserwacji nieodczytana",
+          "version_basis": "operator_report_available_by_2026-11-20",
+          "test": "Uruchomienie pauzy z panelu i ekranu operatora.",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Operator potwierdził działanie pauzy oraz obsługę materiału z OLED i interfejsu.",
+          "problem": "Relacja nie zawiera pomiaru przesunięcia Z ani próby wznowienia na RC32.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "ok pausa wyładowywanie i aładowywanie działa z oled i ekranu."
+          }
         }
       ]
     },
@@ -337,6 +363,19 @@
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
+        },
+        {
+          "date": "2026-11-20",
+          "version": "Wersja hosta podczas obserwacji nieodczytana",
+          "version_basis": "operator_report_available_by_2026-11-20",
+          "test": "Obserwacja normalnego końca wydruku.",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Po ukończeniu wydruku stół zjechał, a głowica zaparkowała.",
+          "problem": "Odległości i ponownego startu z tego ekranu nie zmierzono.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "w międzyczasie zakończył sie pierwszy wydruk , srół zjechał , a głowica zaparkowała ."
+          }
         }
       ]
     },
@@ -354,6 +393,19 @@
           "problem": "",
           "evidence": {
             "kind": "no_hardware_confirmation"
+          }
+        },
+        {
+          "date": "2026-11-20",
+          "version": "Wersja hosta podczas obserwacji nieodczytana",
+          "version_basis": "operator_report_available_by_2026-11-20",
+          "test": "Obsługa materiału z OLED i Fluidd.",
+          "status": "PARTIAL_OBSERVATION",
+          "result": "Operator potwierdził obsługę procedur i zgłosił pozostałość filamentu przy wejściu do ekstrudera.",
+          "problem": "Ręczne podanie i cofnięcie po procedurze oraz wznowienie po przepłukaniu na RC32 wymagają potwierdzenia na maszynie.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "ok pausa wyładowywanie i aładowywanie działa z oled i ekranu."
           }
         }
       ]

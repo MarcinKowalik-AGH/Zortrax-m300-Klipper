@@ -1,4 +1,6 @@
-# RC1 — one OLED, Fluidd and Klipper control surface
+# OLED, Fluidd and Klipper controls in RC32
+
+Use `ZORTRAX_MAIN_MENU` in Fluidd or in OrcaSlicer’s Device tab to reach Models, Maintenance, Material, Settings and Information. For example, choose **Material → Unload the material** on either surface and confirm the current phase from either one. During a paused colour change you can purge with the Tool buttons before confirming flow. [Daily operation](USER_GUIDE.md).
 
 The current OLED timers count from the last operator interaction in Ready, during a print and while paused. Set them in **OLED_TIMERS** or **ZORTRAX_OLED_TIMERS**. For example, `DIM=1 SLEEP=2` dims at one minute and turns the display off at two. Both values are in the range 1–60 minutes with effective DIM equal to the earlier of the preferred DIM and SLEEP. The first knob gesture wakes the panel. [OLED timing](RELEASE_v1.0.0-rc.23.md).
 
@@ -14,6 +16,7 @@ open the shared selector; an explicit argument updates the same persistent value
 | Language | ZORTRAX_LANGUAGE | English only |
 | Models sorting | ZORTRAX_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
 | Full platform preheating | ZORTRAX_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
+| OLED dim time / OLED sleep time | ZORTRAX_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
 | OLED brightness | ZORTRAX_OLED_BRIGHTNESS | LEVEL=1..16 |
 | LED brightness | ZORTRAX_LED_BRIGHTNESS | LEVEL=1..16 |
 
@@ -45,7 +48,7 @@ Upgrade only while idle and Ready, not paused:
 
 ```bash
 git -C "$HOME/m300-orange-pi" pull --ff-only &&
-python3 "$HOME/m300-orange-pi/install-orange-pi.py" --port 4480
+python3 "$HOME/m300-orange-pi/install-orange-pi.py"
 ```
 
 Refresh Fluidd. Qualified Z values, saved mesh, PID, UART and all current motion

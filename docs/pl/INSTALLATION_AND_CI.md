@@ -33,7 +33,7 @@ starsze konfiguracje na innych portach.
 Wynik `INSTALLED_M300_FLUIDD` podaje ścieżkę kopii, jeśli zastąpiono
 stronę. Instalator pierwszego uruchomienia bez `--apply` wyświetla plan
 bez zapisu ustawień. Aktualizacja MCU jest osobnym krokiem opisanym w
-[instrukcji firmware](MCU_FIRMWARE_1.0.5.md).
+[instrukcji firmware](MCU_FIRMWARE_1.0.8.md).
 
 ## Retry GitHub Actions: tylko awarie przejściowe
 

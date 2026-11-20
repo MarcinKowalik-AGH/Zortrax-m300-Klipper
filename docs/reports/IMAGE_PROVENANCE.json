@@ -10,7 +10,7 @@
     ],
     "source": "User-supplied screenshot, permission to publish in project documentation",
     "capture_date": "2026-11-10",
-    "caption_pl": "Aktualny widok Fluidd",
+    "caption_pl": "Archiwalny widok Fluidd z 10 listopada 2026",
     "processing": "Original uploaded PNG bytes; no cropping, scaling, palette change or text reconstruction"
   },
   {
@@ -40,5 +40,19 @@
     "capture_date": "2026-11-09",
     "caption_pl": "Mesh m300_pads, profil nieaktywny",
     "processing": "Original uploaded PNG bytes; no cropping, scaling, palette change or text reconstruction"
+  },
+  {
+    "file": "docs/img/m300-orcaslicer-fluidd-printing.png",
+    "original_filename": "Zrzut ekranu 2026-11-20 o 21.52.36.png",
+    "original_sha256": "46f0eb381693a8521028beb5c1654971d82906b6a7112cce3f8378820db20508",
+    "published_sha256": "46f0eb381693a8521028beb5c1654971d82906b6a7112cce3f8378820db20508",
+    "dimensions": [
+      1457,
+      1202
+    ],
+    "source": "Operator screenshot supplied for the project home page",
+    "capture_date": "2026-11-20",
+    "caption_pl": "Fluidd w OrcaSlicerze podczas wydruku testu przepływu na M300 Classic, z podglądem OLED i profilem m300_pads.",
+    "processing": "Original uploaded PNG bytes"
   }
 ]

@@ -25,6 +25,7 @@ else
   git clone --depth 1 --single-branch --no-tags --branch orange-pi \
     https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_dir"
 fi &&
+(cd "$m300_dir" && sha256sum -c --quiet SHA256SUMS) &&
 python3 "$m300_dir/install-orange-pi.py"
 ```
 
@@ -52,7 +53,7 @@ mechanical clearance and is unnecessary for routine updates.
 Leave the damaged checkout in place. With the printer idle, clone the published deployment branch into a new directory on the Orange Pi. The installer uses the existing printer configuration.
 
 ```bash
-m300_src=$(mktemp -d "$HOME/m300-rc18.XXXXXX") &&
+m300_src=$(mktemp -d "$HOME/m300-orange-pi.XXXXXX") &&
 git clone --depth 1 --single-branch --no-tags --branch orange-pi \
   https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$m300_src" &&
 (cd "$m300_src" && sha256sum -c --quiet SHA256SUMS) &&
