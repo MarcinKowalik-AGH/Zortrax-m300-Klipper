@@ -18,7 +18,7 @@ from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.42-AUDIT'
+REVISION = '0.13.16.43-MANUAL-E'
 PERIOD = .25
 END_BED_DROP_MM = 300.
 
@@ -125,6 +125,10 @@ class M300PrintControl:
                         and name in ('G0','G1','G2','G3') and self.sd.is_cmd_from_sd()):
                     raise gcmd.error('M300 print: ' + name + ' follows END_PRINT in this file')
                 if (self.busy or self.context is not None) and not self._internal:
+                    if (name in ('G0', 'G1') and self.state == 'PAUSED'
+                            and self.context is not None and 'E' in gcmd.get_command_parameters()
+                            and not self.sd.is_cmd_from_sd() and not self._material_busy()):
+                        return self._manual_pause_extrusion(gcmd)
                     raise gcmd.error('M300 protected print: use RESUME or CANCEL_PRINT; '+name+' refused')
                 if (name in ('BED_MESH_PROFILE', 'BED_MESH_CLEAR')
                         and self.sd.is_active() and not self.sd.is_cmd_from_sd()):
@@ -349,6 +353,33 @@ class M300PrintControl:
         pos=list(self.toolhead.get_position());pos[3]+=amount
         self._move(pos,self.e_speed,extrusion=True)
 
+    def _manual_pause_extrusion(self, gcmd):
+        # Fluidd sends SAVE_GCODE_STATE, M83, G1 E... F..., RESTORE_GCODE_STATE.
+        # A parked head can be in a compensated mesh frame. Keep physical XYZ
+        # fixed and let manual_move update the parser before Fluidd restores it.
+        params = gcmd.get_command_parameters()
+        if (set(params) - {'G', 'E', 'F'} or 'F' not in params
+                or (self.gcode_move.absolute_coord and self.gcode_move.allow_absolute_extrude)):
+            raise gcmd.error('M300 paused: use a relative E-only move with an explicit feed rate')
+        self._guard(self.generation)
+        ctx = self.context
+        if not self._position_is(ctx['plan']['target']):
+            raise self._error('parked position changed')
+        now = self.reactor.monotonic()
+        measured, target = self.hotend.get_temp(now)
+        if (not self.hotend.can_extrude or not math.isfinite(measured) or not math.isfinite(target)
+                or min(measured, target) < self.hotend.min_extrude_temp or target <= 0.):
+            raise self._error('heat the nozzle before manual extrusion')
+        distance = gcmd.get_float('E')
+        speed = gcmd.get_float('F', above=0.) / 60.
+        if not math.isfinite(speed) or not math.isfinite(distance):
+            raise gcmd.error('M300 paused: extrusion distance and speed must be finite')
+        if abs(distance) > self.toolhead.get_extruder().max_e_dist:
+            raise gcmd.error('M300 paused: move exceeds max_extrude_only_distance')
+        endpoint = self.toolhead.get_position()[3] + distance
+        self.toolhead.manual_move([None, None, None, endpoint], speed)
+        ctx['thermal_since'] = self.reactor.monotonic()
+
     def cmd_PAUSE(self,gcmd):
         if self.context is not None:
             gcmd.respond_info('M300: print is already paused')
@@ -366,6 +397,7 @@ class M300PrintControl:
         now=self.reactor.monotonic()
         self.context=dict(saved=saved,file=None,origin=list(self.toolhead.get_position()[:3]),
             bounds=(tuple(low[:3]),tuple(high[:3])),targets=targets,started=now,thermal_since=now,
+            last_pause_target=targets['hotend'],
             mesh=self._mesh_identity(),invalid='',change_required=False,material_success=False,
             flow_confirmed=False,retracted=0.)
         self._pending_file=id(self.sd.current_file)
@@ -416,14 +448,22 @@ class M300PrintControl:
             self._material_was_busy=False
         if not self._position_is(ctx['plan']['target']):
             raise self._error('parked XYZ position changed; cancel this print')
-        elapsed=now-ctx['thermal_since']
-        target=self.hotend.get_temp(now)[1]
+        target = self.hotend.get_temp(now)[1]
+        if target > ctx['last_pause_target']:
+            # The operator can reheat a cooled nozzle to purge while paused.
+            ctx['thermal_since'] = now
+            if self.phase in ('PAUSED_STANDBY', 'PAUSED_NOZZLE_OFF'):
+                self._phase('PAUSED')
+        elapsed = now - ctx['thermal_since']
         if elapsed >= self.off_after and target > 0:
-            self.hotend.set_temp(0.)
+            target = 0.
+            self.hotend.set_temp(target)
             self._phase('PAUSED_NOZZLE_OFF')
         elif elapsed >= self.standby_after and target > self.standby_temp:
-            self.hotend.set_temp(min(self.standby_temp,ctx['targets']['hotend']))
+            target = min(self.standby_temp, ctx['targets']['hotend'])
+            self.hotend.set_temp(target)
             self._phase('PAUSED_STANDBY')
+        ctx['last_pause_target'] = target
 
     def cmd_RESUME(self,gcmd):
         if self.context is None:raise self._error('no protected pause is available')

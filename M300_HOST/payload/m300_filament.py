@@ -726,7 +726,11 @@ class M300Filament:
     def _cleanup(self, success):
         token, phase = self.machine.token, self.machine.phase_id
         self._cleanup_pending = True
-        self._off()
+        # A successful standalone service hands the warm nozzle back to native
+        # controls. Restoring the normal idle timeout also restores idle cooling.
+        standalone = self.native_mode and self._owner_token is None and self.machine.mode in ('LOAD', 'UNLOAD')
+        if not (success and standalone):
+            self._off()
         if self._captured and not self._parser_restored:
             if self.gcode_move.saved_states.get(STATE_NAME) != self._saved_gcode:
                 raise self._error('saved service G-code context was replaced')
