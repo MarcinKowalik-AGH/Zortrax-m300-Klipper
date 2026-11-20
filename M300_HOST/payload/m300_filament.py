@@ -18,6 +18,7 @@ from .m300_filament_state import (FilamentState, FilamentStateError, build_plan,
 from .m300_native_service import (NativeServiceLease, native_service_frame,
                                   native_temperature_ready, require_idle_print)
 
+OEM_MATERIAL_TEMPERATURE = 240.
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
 STATE_NAME = 'M300_M03_SERVICE'
@@ -36,7 +37,7 @@ class M300Filament:
             lambda:(self.machine.token,self.machine.phase_id),
             lambda:self._guard(transport=True),self.cancel) if self.native_mode else None)
         self.filament_qualified = config.getboolean('filament_qualified', False)
-        self.procedure_temperature = self._option('procedure_temperature', 240., 170., 300.)
+        self.procedure_temperature = self._option('procedure_temperature', OEM_MATERIAL_TEMPERATURE, 170., 300.)
         self.use_sensor = config.getboolean('use_filament_sensor', False)
         self.load_length = self._option('load_length', 130., .1, 500.)
         self.unload_length = self._option('unload_length', 110., .1, 500.)
@@ -62,6 +63,7 @@ class M300Filament:
         self.ready = self.installed = False
         self.last_rejection = ''
         self.target = 0.
+        self._load_target = None
         self._expected_target = None
         self._temperature_stable_since = None
         self._phase_started = None
@@ -439,8 +441,8 @@ class M300Filament:
             self._owner_gcode = copy.deepcopy(context['gcode'])
             self.job.sd.verify_resume(self._owner_file, full=False)
             context['filament_service_required'] = True
-            if self.target is None:
-                self.target = self._validate_temperature(context['targets']['hotend'])
+            if self.machine.mode == 'CHANGE' and self._load_target is None:
+                self._load_target = self._validate_temperature(context['targets']['hotend'])
         self._anchor = list(self.toolhead.get_position()[:3])
         command = self.gcode.create_gcode_command('SAVE_GCODE_STATE', 'SAVE_GCODE_STATE', {'NAME': STATE_NAME})
         self.gcode_move.cmd_SAVE_GCODE_STATE(command)
@@ -482,13 +484,19 @@ class M300Filament:
                 or (state in JOB_IDLE and (self.job._ops or self.job._waiting or self.job._executing))
                 or self.job.sd.is_preparing):
             raise self._error('M02 cleanup or file operation still owns resources')
-        # Standalone OEM Load/Unload uses 240C. A print-owned CHANGE/M600
-        # without TEMP keeps its existing paused-print target selection.
-        target = None if temperature is None and operation == 'CHANGE' else self._validate_temperature(
-            self.procedure_temperature if temperature is None else temperature)
-        if native_pause is not None and temperature is None:
-            target = self._validate_temperature(native_pause['target'] if
-                native_pause['target'] >= self.hotend.min_extrude_temp else self.procedure_temperature)
+        load_target = None
+        if operation == 'CHANGE':
+            target = self._validate_temperature(OEM_MATERIAL_TEMPERATURE)
+            if temperature is not None:
+                load_target = self._validate_temperature(temperature)
+            elif native_pause is not None:
+                saved = native_pause['target']
+                load_target = self._validate_temperature(
+                    saved if saved >= self.hotend.min_extrude_temp else self.procedure_temperature)
+            # The legacy job owner supplies its saved print target after parking.
+        else:
+            target = self._validate_temperature(
+                self.procedure_temperature if temperature is None else temperature)
         self._live(native_pause=native_pause)
         self._sensor()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
@@ -501,6 +509,7 @@ class M300Filament:
         self._need_drain = False
         self._move_permit = None
         self.target = target
+        self._load_target = load_target
         self._expected_target = None
         self.last_rejection = ''
         context = {'owner_state': state, 'owner_token': self._owner_token,
@@ -548,7 +557,12 @@ class M300Filament:
     def _ready_temperature(self):
         measured, target = self.job._temperatures(self.reactor.monotonic())['hotend']
         if self.native_mode:
-            return self.hotend.can_extrude and native_temperature_ready(measured,target,self.target,self.hotend)
+            ready = self.hotend.can_extrude and native_temperature_ready(
+                measured, target, self.target, self.hotend)
+            # A hotter previous phase satisfies the OEM lower threshold immediately.
+            # Wait for the new material-change setpoint before starting E motion.
+            return ready and (self.machine.mode != 'CHANGE'
+                              or measured <= self.target + self.tolerance)
         return (target == self.target and abs(measured-self.target) <= self.tolerance
                 and self.hotend.can_extrude and measured >= self.hotend.min_extrude_temp)
 
@@ -661,6 +675,10 @@ class M300Filament:
         segment = self.machine.next_segment(token, self.reactor.monotonic())
         if segment is None:
             self._advance({'LOADING': 'loaded', 'UNLOADING': 'unloaded', 'PURGING': 'purged'}[self.machine.state])
+            if self.machine.state == 'WAIT_INSERT' and self.target != self._load_target:
+                # UNLOADING reached its final native drain before changing the heater.
+                self.target = self._load_target
+                self._set_target(self.target)
             if self.native_mode and self.machine.mode in ('LOAD','CHANGE') and self.machine.state=='WAIT_PURGE':
                 self._advance('finish')
             return
