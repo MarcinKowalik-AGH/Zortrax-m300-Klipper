@@ -7,7 +7,7 @@
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC27. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC28. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 

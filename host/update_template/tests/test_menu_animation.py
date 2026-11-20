@@ -22,6 +22,29 @@ APPROVED = {
 
 
 class MenuAnimationTests(unittest.TestCase):
+    def test_mesh_menu_and_procedure_poll_skip_diagnostics(self):
+        from test_pad_mesh import PadMeshTests
+        from unittest.mock import Mock
+        with session() as h:
+            mesh, _ = PadMeshTests().preflight_case('xyz')
+            mesh.run_id, mesh.state, mesh.phase, mesh.busy = 'mesh', 'PROBING', 'PROBING', True
+            mesh.points_measured, mesh.report = 12, dict(profile='saved')
+            mesh.get_status = Mock(side_effect=AssertionError('full diagnostic read'))
+            h.objects['m300_pad_mesh'] = mesh
+            h.menu.page = 'bed_mesh'
+            view = h.p.view(h.now)
+            self.assertEqual((view['owner'], view['message'], view['progress']),
+                             ('m300_pad_mesh', 'Measuring 13 / 25', 12 / 25))
+            mesh.points_measured += 1
+            self.assertNotEqual(view['view_id'], h.p.view(h.now)['view_id'])
+            rows = dict(h.menu.rows(h.now)[1])
+            self.assertIn('Measuring 14 / 25', rows)
+            self.assertIn('Profile: saved', rows)
+            self.assertEqual(h.menu._procedure_snapshot(mesh, h.now)['session_token'], 'mesh')
+            h.oled._render(h.now)
+            self.assertEqual(h.ui.last_sprite, 'activity:bed_mesh')
+            mesh.get_status.assert_not_called()
+
     def test_approved_artwork_files_are_byte_identical(self):
         root = Path(__file__).resolve().parents[1] / 'payload'
         for name, sha in APPROVED.items():

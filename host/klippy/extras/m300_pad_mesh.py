@@ -661,6 +661,15 @@ class M300PadMesh:
     def get_ownership_status(self, eventtime):
         return dict(state=self.state, busy=self.busy)
 
+    def get_panel_status(self, eventtime):
+        return dict(state=self.state, busy=self.busy, operation='BED_MESH',
+                    session_token=getattr(self, 'run_id', None) or 0,
+                    phase=getattr(self, 'phase', 'IDLE'),
+                    targets=getattr(self, 'targets', None),
+                    points_measured=getattr(self, 'points_measured', 0),
+                    last_error=getattr(self, 'last_error', ''),
+                    result={'profile': self.report.get('profile', '')} if self.report else None)
+
     def get_status(self, eventtime):
         toolhead = self.printer.lookup_object('toolhead', None)
         limits = toolhead.get_kinematics().get_status(eventtime) if toolhead is not None else None
@@ -671,15 +680,13 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(revision='0.13.16.26-SAVED-MESH-VIEW', state=self.state, busy=self.busy, result=self.report,
-                    operation='BED_MESH', session_token=getattr(self,'run_id',None) or 0,
-                    phase=getattr(self,'phase','IDLE'), targets=getattr(self,'targets',None),
-                    run_id=getattr(self,'run_id',None), points_measured=getattr(self,'points_measured',0),
+        return dict(self.get_panel_status(eventtime), revision='0.13.16.26-SAVED-MESH-VIEW',
+                    result=self.report, run_id=getattr(self,'run_id',None),
                     plan_matches_run=getattr(self,'run_points',None) == self.points,
                     measurements=[list(point) for point in getattr(self,'measurements',())],
                     rejected_contact=getattr(self,'rejected_contact',None),
                     native_contact_window=[-SEARCH_MARGIN,CLEARANCE],
-                    total_points=len(self.points), last_error=getattr(self,'last_error',''),
+                    total_points=len(self.points),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.8),
                     geometry=dict(self.geometry), mesh_bounds=mesh_bounds(self.points),
                     contact_regions=regions, probe_points=[list(point) for point in self.points],

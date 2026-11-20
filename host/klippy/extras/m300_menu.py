@@ -14,6 +14,7 @@ import os
 import stat
 import textwrap
 from .m300_release import VERSION
+from .m300_procedures import PAD_MESH_PHASES, read_panel_status
 
 
 OEM_PAGES = ('zortrax', 'maintenance', 'material')
@@ -746,12 +747,11 @@ class M300Menu:
             mesh = self.printer.lookup_object('m300_pad_mesh', None)
             if mesh is None:
                 return 'Bed mesh', back+[('Native pad mesh is not configured', None)]
-            status = mesh.get_status(now)
+            status = read_panel_status(mesh, now)
             context = getattr(self,'_procedure_return',None)
             token = status.get('session_token')
             if context is not None and context['session'] == ('m300_pad_mesh',token):
                 back = [('Back',('procedure_return','m300_pad_mesh',token))]
-            from .m300_procedures import PAD_MESH_PHASES
             phase = status.get('phase',status.get('state','IDLE'))
             measured = status.get('points_measured',0)
             message = ('Measuring %d / 25' % min(measured+1,25) if phase=='PROBING' else
@@ -1025,7 +1025,7 @@ class M300Menu:
     @staticmethod
     def _procedure_snapshot(service, now):
         try:
-            status = service.get_status(now) if service is not None else {}
+            status = read_panel_status(service, now) if service is not None else {}
             return status if isinstance(status, dict) else {}
         except Exception:
             return {}  # Optional UI bookkeeping must not interrupt a command.

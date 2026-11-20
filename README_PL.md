@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.27
+# Zortrax M300 Classic — Klipper 1.0.0-rc.28
 
-**RC27** udostępnia pełne menu Zortrax w oknie Fluidd. Otwórz makro `ZORTRAX_MAIN_MENU`, aby wybrać model, procedurę serwisową lub obsługę filamentu. [Opis wydania](docs/pl/RELEASE_v1.0.0-rc.27.md).
+**RC28** odczytuje krótki stan siatki podczas nawigacji OLED i odświeżania procedury. [Opis wydania i pomiar opóźnienia](docs/pl/RELEASE_v1.0.0-rc.28.md).
 
 **MCU 1.0.8:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.8.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
@@ -8,7 +8,7 @@
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC27](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.27) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC28](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.28) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 

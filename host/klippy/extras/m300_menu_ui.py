@@ -23,6 +23,7 @@ from .m300_nvm import BRIGHTNESS_KEYS
 from .m300_settings_ui import timers_frame, brightness_frame, menu_frame, temperature_frame
 from .m300_activity_graphics import fault_symbol, menu_symbol, procedure_symbol
 from .m300_error_codes import CODES
+from .m300_procedures import read_panel_status
 
 
 class M300MenuUI:
@@ -150,7 +151,7 @@ class M300MenuUI:
             if service is None:
                 return {}
             try:
-                result = service.get_status(now)
+                result = read_panel_status(service, now)
                 return result if isinstance(result, dict) else {}
             except Exception:
                 return {}  # Drawing never attempts owner recovery.

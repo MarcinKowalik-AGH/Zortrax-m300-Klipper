@@ -79,6 +79,30 @@ class PadMeshTests(unittest.TestCase):
         return mesh,NS(events=events,limits=limits,position=position,contact=contact,
                        temps=temps,objects=objects,board=board,clock=clock,freeze=freeze,active_mesh=active_mesh)
 
+    def test_panel_summary_and_full_diagnostic_share_live_values(self):
+        mesh, _ = self.preflight_case('xyz')
+        mesh.run_id, mesh.state, mesh.busy = 'run-28', 'PROBING', True
+        mesh.phase, mesh.points_measured = 'PROBING', 12
+        mesh.measurements = [(x, y, 0.) for x, y in mesh.points[:12]]
+        mesh.report = dict(profile='previous', points=list(mesh.measurements))
+        mesh.targets = dict(hotend=210., bed=60.)
+        for phase, count, state, busy, error in (
+                ('PROBING', 12, 'PROBING', True, ''),
+                ('COMPLETE', 25, 'COMPLETE', False, ''),
+                ('FAILED', 3, 'FAILED', False, 'PC7 contact')):
+            mesh.phase, mesh.points_measured = phase, count
+            mesh.state, mesh.busy, mesh.last_error = state, busy, error
+            panel = mesh.get_panel_status(0.)
+            full = mesh.get_status(0.)
+            self.assertEqual(panel, dict(state=state, busy=busy, operation='BED_MESH',
+                session_token='run-28', phase=phase, targets=mesh.targets,
+                points_measured=count, last_error=error, result=dict(profile='previous')))
+            self.assertEqual(dict(panel, result=mesh.report), {k: full[k] for k in panel})
+            self.assertEqual(full['probe_points'], list(map(list, mesh.points)))
+            self.assertEqual(full['measurements'], list(map(list, mesh.measurements)))
+            self.assertEqual(len(full['contact_regions']), 5)
+            self.assertTrue(full['travel']['fits'])
+
     def start_preparation(self, mesh):
         mesh.busy,mesh.state,mesh.run_id,mesh.cancelled=True,'PROBING','a'*24,False
         mesh._prepare(mesh.run_id)
