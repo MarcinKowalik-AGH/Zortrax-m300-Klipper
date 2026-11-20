@@ -572,8 +572,9 @@ class PrintControlTests(unittest.TestCase):
 
     def test_pause_cooling_does_not_override_material_service_temperature(self):
         h=self.h;h.pause_print();h.run('ZORTRAX_CHANGE TEMP=250');h.control_until('PAUSED')
-        self.assertEqual(h.hotend.target,250.);h.step_control(700.)
-        self.assertEqual(h.hotend.target,250.)
+        self.assertEqual(h.hotend.target,240.);h.step_control(700.)
+        self.assertEqual(h.hotend.target,240.)
+        h.heat(h.f,'WAIT_INSERT');self.assertEqual(h.hotend.target,250.)
 
     def test_near_z_limit_refuses_material_service(self):
         h=self.h;h.position[2]=314.;h.gmove.reset_last_position();h.pause_print()
@@ -582,7 +583,8 @@ class PrintControlTests(unittest.TestCase):
     def test_duplicate_change_during_parking_does_not_replace_explicit_temperature(self):
         h=self.h;h.run('ZORTRAX_CHANGE TEMP=250')
         with self.assertRaises(h.printer.command_error):h.run('M600')
-        h.stop_worker();h.control_until('PAUSED');self.assertEqual(h.f.target,250.)
+        h.stop_worker();h.control_until('PAUSED');self.assertEqual(h.f.target,240.)
+        h.heat(h.f,'WAIT_INSERT');self.assertEqual(h.hotend.target,250.)
 
     def test_change_from_plain_pause_reaches_corner_before_starting_with_custom_lengths(self):
         h = self.h
@@ -599,7 +601,9 @@ class PrintControlTests(unittest.TestCase):
         self.assertFalse(h.f.is_busy())
         h.control_until('PAUSED')
         self.assertTrue(h.f.is_busy())
-        self.assertEqual(h.f.target, 250.)
+        self.assertEqual(h.f.target, 240.)
+        h.heat(h.f, 'WAIT_INSERT')
+        self.assertEqual(h.hotend.target, 250.)
         plan = h.f.machine.plan
         self.assertEqual(plan['planned_mm']['load'], 30.)
         self.assertEqual(plan['planned_mm']['unload'], 20.)

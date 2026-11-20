@@ -7,7 +7,7 @@
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC28. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC29. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -37,7 +37,7 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | [`ZORTRAX_PLATFORM_DOWN`](../../host/config/m300_operations.cfg) | Ruch | Oddalenie platformy od dyszy. | DISTANCE=1 mm, SPEED opcjonalny. |
 | [`ZORTRAX_LOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone ładowanie materiału. | TEMP=240; nie uruchamiać w trwającym wydruku. |
 | [`ZORTRAX_UNLOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone wyładowanie materiału. | TEMP=240. |
-| [`ZORTRAX_CHANGE`](../../host/config/m300_operations.cfg) | Materiał | Wymiana materiału w chronionej pauzie; nie wznawia samoczynnie pliku. | TEMP opcjonalny; wymaga kontekstu zmiany materiału. |
+| [`ZORTRAX_CHANGE`](../../host/config/m300_operations.cfg) | Materiał | Wymiana materiału w chronionej pauzie; nie wznawia samoczynnie pliku. | Wyładunek przy 240°C. Opcjonalny TEMP ustawia temperaturę ładowania. Domyślnie używana jest zapamiętana temperatura druku. |
 | [`ZORTRAX_FAN_TEST_START`](../../host/config/m300_operations.cfg) | Wentylatory | Rozpoczyna wspólny interaktywny test wentylatorów. | Nie znosi automatycznego chłodzenia hotendu. |
 | [`ZORTRAX_FAN_UPPER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie górnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255; niezależna ochrona ma pierwszeństwo. |
 | [`ZORTRAX_FAN_LOWER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie dolnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255. |

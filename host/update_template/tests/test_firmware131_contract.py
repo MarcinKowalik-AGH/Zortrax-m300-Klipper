@@ -49,6 +49,7 @@ class FirmwareMaterialContractTests(unittest.TestCase):
             h.run('ZORTRAX_'+operation);h.hotend.temperature=h.hotend.target
             seen=[]
             for _ in range(3000):
+                h.hotend.temperature = h.hotend.target
                 view=h.p.view(h.now);screen=view.get('leveling_screen')
                 tid=screen.get('text_id') if screen else None
                 if tid in (19,20,21,22) and (not seen or seen[-1]!=tid):seen.append(tid)
@@ -96,13 +97,14 @@ class NativeChangeTests(unittest.TestCase):
     def test_change_preserves_real_pause_state_and_never_resumes_automatically(self):
         h=Harness();paused_print(h,230.)
         saved=copy.deepcopy(h.gmove.saved_states['PAUSE_STATE'])
-        h.run('ZORTRAX_CHANGE');self.assertEqual(h.hotend.target,230.)
+        h.run('ZORTRAX_CHANGE');self.assertEqual(h.hotend.target,240.)
         h.heat(h.f,'WAIT_INSERT')
         self.assertEqual(h.position[3],-93.)
         self.assertEqual(h.gmove.saved_states['PAUSE_STATE'],saved)
         with self.assertRaisesRegex(native_gcode.CommandError,'owns resources'):
             h.run('RESUME')
-        view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
+        self.assertEqual(h.hotend.target,230.)
+        view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.heat(h.f,'COMPLETE')
         self.assertEqual(h.position[3],57.)
         self.assertEqual(h.gmove._get_gcode_position()[3],17.)
         self.assertEqual(h.gmove.saved_states['PAUSE_STATE'],saved)
@@ -113,6 +115,62 @@ class NativeChangeTests(unittest.TestCase):
         h.assert_restored(self)
         h.run('RESUME')
         self.assertFalse(h.pause.is_paused);self.assertEqual(h.print_state,'printing')
+
+    def test_change_moves_at_separate_targets_from_cold_and_hot_prints(self):
+        for print_temp, command, load_temp in (
+                (210., 'M600', 210.), (260., 'ZORTRAX_CHANGE', 260.),
+                (210., 'CHANGE_FILAMENT TEMP=250', 250.),
+                (0., 'ZORTRAX_CHANGE', 240.)):
+            with self.subTest(print_temp=print_temp, command=command):
+                h = Harness()
+                paused_print(h, print_temp)
+                h.hotend.temperature = print_temp or 25.
+                h.run(command)
+                self.assertEqual(h.hotend.target, 240.)
+                for _ in range(30):
+                    h.step()
+                self.assertEqual(h.f.machine.state, 'HEATING')
+                self.assertEqual(h.position[3], 17.)
+                h.hotend.temperature = 238.
+                h.until(h.f, 'UNLOADING')
+                # The final retract may be queued for a while before it drains.
+                for _ in range(1000):
+                    if h.position[3] == -93.:
+                        break
+                    self.assertEqual(h.hotend.target, 240.)
+                    h.step()
+                self.assertEqual(h.position[3], -93.)
+                self.assertGreater(h.busy_until, h.now)
+                self.assertEqual(h.hotend.target, 240.)
+                h.hotend.temperature = 240.
+                h.until(h.f, 'WAIT_INSERT')
+                self.assertEqual(h.hotend.target, load_temp)
+                view = h.p.view(h.now)
+                h.p.action(view['view_id'], 'CONFIRM')
+                if load_temp != 240.:
+                    for _ in range(30):
+                        h.step()
+                    self.assertEqual(h.f.machine.state, 'REHEATING')
+                    self.assertEqual(h.position[3], -93.)
+                h.heat(h.f, 'COMPLETE')
+                self.assertEqual(h.position[3], 57.)
+                self.assertEqual(h.hotend.target, print_temp)
+                self.assertTrue(h.pause.is_paused)
+                h.assert_restored(self)
+
+    def test_cancel_while_cooling_to_load_target_never_feeds_or_resumes(self):
+        h = Harness()
+        paused_print(h, 210.)
+        h.run('M600')
+        h.heat(h.f, 'WAIT_INSERT')
+        h.f.confirm(h.f.machine.token, h.f.machine.phase_id)
+        self.assertEqual(h.f.machine.state, 'REHEATING')
+        h.f.cancel()
+        h.until(h.f, 'CANCELLED')
+        self.assertEqual(h.hotend.target, 0.)
+        self.assertEqual(h.position[3], -93.)
+        self.assertTrue(h.pause.is_paused)
+        h.assert_restored(self)
 
     def test_change_macro_and_m600_require_an_already_paused_native_print(self):
         for state in ('standby','printing'):

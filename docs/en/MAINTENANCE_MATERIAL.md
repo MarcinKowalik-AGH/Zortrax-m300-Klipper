@@ -39,7 +39,7 @@ Material, Settings, Information. Back follows the menu history.
 | Material | Back | Navigation | Return to parent |
 | Material | Unload the material | `ZORTRAX_UNLOAD` | 240°C → confirm removal → retract 110 mm → heater off |
 | Material | Load the material | `ZORTRAX_LOAD` | 240°C → insert and confirm → feed 130 mm → heater off |
-| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Retract 110 mm → insert and confirm → feed 150 mm; remain paused |
+| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Set 240°C → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
 the paused-print context, not the idle Material submenu. Maintenance lists
@@ -102,9 +102,13 @@ retains immediate native shutdown behavior.
 For native Change, first pause the print. The service verifies the real
 pause owner, PAUSE_STATE and file position. It preserves the pause snapshot,
 XYZ and logical E; Resume is blocked while transport owns the printer.
-Change uses the paused print's positive target, or 240°C if that target is
-cold, unless TEMP is explicitly supplied. Successful completion restores the
-previous paused target and leaves the print paused. The operator separately
+Change sets the hotend to 240°C for the entire withdrawal. After the last
+retract segment has drained, it sets the loading temperature to the saved
+print target. An explicit `TEMP` selects the loading temperature. A saved
+target below the extrusion minimum uses `procedure_temperature` (default
+240°C) for loading. Confirmation authorizes feed once the nozzle reaches
+the loading temperature, including when cooling from 240°C. Successful
+completion restores the original print target and leaves the print paused. The operator separately
 chooses Resume. Cancel leaves the print paused with heating off. Cancellation
 or replacement of the paused parent revokes the material service.
 

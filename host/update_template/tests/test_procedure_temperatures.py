@@ -56,11 +56,12 @@ class ProcedureTemperatures(unittest.TestCase):
         self.assertEqual(f.machine.state,'IDLE')
         f.hotend.set_temp.assert_not_called()
 
-    def test_m600_retains_paused_print_temperature_selection(self):
+    def test_legacy_m600_waits_for_pause_before_heating_to_unload(self):
         f=filament();f.job.machine.state='PRINTING'
         f.cmd_m600(NS(get_command_parameters=lambda:{'M':'600'},respond_info=Mock()))
         self.assertEqual(f.machine.state,'WAIT_PAUSE')
-        self.assertIsNone(f.target)
+        self.assertEqual(f.target,240.)
+        self.assertIsNone(f._load_target)
         f.job.pause.assert_called_once_with('M03 filament change')
         f.hotend.set_temp.assert_not_called()
 

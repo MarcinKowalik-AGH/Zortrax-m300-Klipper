@@ -16,7 +16,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.28'
+CURRENT_RELEASE = 'v1.0.0-rc.29'
 CURRENT_MCU = '1.0.8'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
