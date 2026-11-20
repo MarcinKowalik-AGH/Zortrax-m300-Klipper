@@ -663,9 +663,10 @@ class M300Menu:
                     self._confirm[0] if self._confirm else 'Expired confirmation'), 36)])
         if self.page == 'material':
             filament = self.printer.lookup_object('m300_filament', None)
-            target = getattr(filament, 'procedure_temperature', 240.)
+            load = getattr(filament, 'load_temperature', 0.) or getattr(filament, 'procedure_temperature', 240.)
+            unload = getattr(filament, 'unload_temperature', 240.)
             return self.t('Material'), self._notice(back + [
-                ('Load / Unload: %gC' % target, None),
+                ('Load: %gC / Unload: %gC' % (load, unload), None),
                 (self.t('Load the material'), ('material', 'LOAD')),
                 (self.t('Unload the material'), ('material', 'UNLOAD')),
                 (self.t('Change the material'), ('material', 'CHANGE')),
@@ -1243,9 +1244,7 @@ class M300Menu:
                 service = self.printer.lookup_object('m300_material_ui', None)
                 if service is None:
                     service = self._service('m300_filament')
-                filament = self._service('m300_filament')
-                temp = None if action[1] == 'CHANGE' else filament.procedure_temperature
-                service.start(action[1], temperature=temp)
+                service.start(action[1])
                 return 'filament'
             elif kind == 'material_action':
                 if tuple(action[2:4]) != self._material_view:
