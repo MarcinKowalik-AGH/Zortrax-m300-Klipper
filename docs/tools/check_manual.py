@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.32'
+CURRENT_RELEASE = 'v1.0.0-rc.33'
 CURRENT_MCU = '1.0.8'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -162,6 +162,8 @@ def main():
         'host/klippy/extras/m300_native_motion.py',
     }
     current_plate_sources = {
+        # RC33 names the OLED reheat action before material flow verification.
+        'host/klippy/extras/m300_print_ui.py': 'b5cf2c0348edca77aa64a4d2c484dd35782b021d517f16e5490f0a7352d13134',
         'host/config/m300_classic_services.cfg': '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505',
         'host/klippy/extras/m300_menu.py': '40914048224c93030304f1b1ea0df332306a81311f394a0317dd1bf1c4fcec95',
         'host/config/m300_classic_base.cfg': 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64',

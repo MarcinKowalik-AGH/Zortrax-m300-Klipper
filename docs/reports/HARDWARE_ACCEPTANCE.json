@@ -685,6 +685,26 @@
           }
         }
       ]
+    },
+    {
+      "id": "FLUIDD_RECONNECT",
+      "function": "Przeładowanie strony i przyciski Fluidd po restarcie Klippera",
+      "events": [
+        {
+          "date": "2026-11-20",
+          "version": "Wersja interfejsu nieodczytana",
+          "version_basis": "user_report_after_host_update_no_frontend_readback",
+          "test": "Restart Klippera i próba użycia przycisków Fluidd.",
+          "status": "CONFIRMED_UI",
+          "result": "Strona odświeżyła się i przyciski działały.",
+          "problem": "",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "tak po restarcie klipera , cała strona się odświerzyła i przyciski działają .",
+            "date": "2026-11-20"
+          }
+        }
+      ]
     }
   ]
 }

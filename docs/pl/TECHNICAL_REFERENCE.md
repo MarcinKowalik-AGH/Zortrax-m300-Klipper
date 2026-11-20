@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.32**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.33**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co jest parametrem fabrycznym, a co ustawieniem portu
@@ -19,7 +19,7 @@
 | Klipper upstream | `ee2c6fb6b00b2b5d097ef70d0868df7d74943b51` | `PORT.json` |
 | Wersja aplikacji MCU | `1.0.8` | [Wersja i instalacja MCU](MCU_FIRMWARE_1.0.8.md) |
 | Adres aplikacji MCU | `0x08008000`, kontener M300APP.M3B | Pakiet i bootloader |
-| Host / kontroler druku | 1.0.0-rc.32 / `0.13.16.43-MANUAL-E` | Manifest i moduł druku |
+| Host / kontroler druku | 1.0.0-rc.33 / `0.13.16.44-FLOW-CHECK` | Manifest i moduł druku |
 | OLED / szybki podgląd | 256 × 64, 4 bity/piksel, 16 poziomów; NAV-EVENT-1 / NAV-PIPELINE-2 | Kod hosta i frontendu |
 
 Źródła fabryczne: [M300 — producent](https://zortrax.com/3d-printers/m300-/), [specyfikacje serii M](https://support.zortrax.com/m-series-specification/). Parametry portu: [PORT.json](../../PORT.json), [konfiguracja sprzętu](../../host/config/m300_classic_base.cfg). Wymiary granic osi w konfiguracji nie są obietnicą większego niż fabryczny pola drukowania.
@@ -113,7 +113,7 @@ Odtworzenie map jest odrębne od sprawdzenia czujnika, kontaktu termicznego, nap
 | Automatyczny załadunek i wyładunek, także w M600 | `auto` = 240°C i 2 mm/s w obu kierunkach. Cztery nastawy w `[m300_filament]`. |
 | Mesh: domyślny cel hotendu / stołu | 260°C / 60°C; niższy dopuszczalny parametr hotendu 180°C |
 | Kontrola ekstruzji | `min_extrude_temp: 170` |
-| Maksymalne cele robocze w profilu RC32 (dysza / stół) | 305°C / 105°C w `[m300_temperature_policy]` |
+| Maksymalne cele robocze w profilu RC33 (dysza / stół) | 305°C / 105°C w `[m300_temperature_policy]` |
 | Granice pomiaru hotendu w konfiguracji | 5…310°C |
 | Granice pomiaru stołu w konfiguracji | 5…120°C |
 | Chłodzenie hotendu | 50°C ON / 45°C OFF |
@@ -134,9 +134,9 @@ Skala jest zapamiętywana w przeglądarce; jej zmiana przerysowuje ostatnio zdek
 
 ## 7. Rewizje a numer wydania
 
-| Warstwa | Wydanie RC32 |
+| Warstwa | Wydanie RC33 |
 |---|---|
-| Dystrybucja / publiczny host | v1.0.0-rc.32 / 1.0.0-rc.32 |
+| Dystrybucja / publiczny host | v1.0.0-rc.33 / 1.0.0-rc.33 |
 | Interfejs hosta podglądu | NAV-EVENT-1 |
 | Pipeline przeglądarki | NAV-PIPELINE-2 |
 | Sterowanie i układ powiększenia | OLED-ZOOM-2 |

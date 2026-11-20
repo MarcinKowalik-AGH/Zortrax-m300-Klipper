@@ -1,12 +1,12 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.32
+# Zortrax M300 Classic — Klipper 1.0.0-rc.33
 
 [![An M300 Classic printing a flow calibration in OrcaSlicer, with Fluidd temperatures and the live OLED preview](docs/img/m300-orcaslicer-fluidd-printing.png)](docs/img/m300-orcaslicer-fluidd-printing.png?raw=true)
 
 *OrcaSlicer’s Device tab during a print on the M300 Classic, 20 November 2026. The console and the OLED preview show the active `m300_pads` mesh. Click the image for the original.*
 
-[Podręcznik po polsku](README_PL.md) · [Operator handbook](docs/en/USER_GUIDE.md) · [Download RC32](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.32)
+[Podręcznik po polsku](README_PL.md) · [Operator handbook](docs/en/USER_GUIDE.md) · [Download RC33](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.33)
 
-This port runs Klipper on the original **Zortrax M300 Classic** controller with its OLED, encoder and contact plate. The supported pair is host **1.0.0-rc.32** and MCU **1.0.8**. Fluidd runs on port **4480**. In RC32 you can purge or retract with Fluidd’s Tool buttons during a settled pause and before confirming flow after a colour change.
+This port runs Klipper on the original **Zortrax M300 Classic** controller with its OLED, encoder and contact plate. The supported pair is host **1.0.0-rc.33** and MCU **1.0.8**. Fluidd runs on port **4480**. After a colour change, RC33 offers reheating when the nozzle is on standby. Retracting after a flow check requires a new confirmation before resuming.
 
 ## Install and operate
 
@@ -35,6 +35,6 @@ In the Fluidd console run `ZORTRAX_INFO REFRESH=0` to read the host and MCU vers
 
 ## Verification and release status
 
-RC32 is a release candidate. The operator has reported a completed Benchy, bed lowering and head parking after a completed print, and filament handling from the OLED and Fluidd. The register gives the scope and version evidence for each observation. Outstanding hardware checks include repeatability of contact Z, first-layer coverage across the plate, and the RC32 manual-purge/resume sequence on the machine.
+RC33 is a release candidate. The operator has reported a completed Benchy, bed lowering and head parking after a completed print, and filament handling from the OLED and Fluidd. The register gives the scope and version evidence for each observation. Outstanding hardware checks include repeatability of contact Z, first-layer coverage across the plate, and the RC33 manual-purge/resume sequence on the machine.
 
-[RC32 notes](docs/en/RELEASE_v1.0.0-rc.32.md) · [Build and software tests](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Hardware register](docs/pl/ACCEPTANCE_REGISTER.md) · [Source and licences](THIRD_PARTY_NOTICES.md)
+[RC33 notes](docs/en/RELEASE_v1.0.0-rc.33.md) · [Build and software tests](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Hardware register](docs/pl/ACCEPTANCE_REGISTER.md) · [Source and licences](THIRD_PARTY_NOTICES.md)

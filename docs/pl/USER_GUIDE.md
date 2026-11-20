@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.32**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.33**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -57,7 +57,7 @@ Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zm
 
 ## 2b. Tune, All i Calibrate — trzy różne działania
 
-| Działanie | Działanie w RC32 |
+| Działanie | Działanie w RC33 |
 |---|---|
 | Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
 | All w Tune | Wspólne ZORTRAX_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
@@ -88,6 +88,8 @@ natywna siatka stołu Klippera. Procedura porusza wyłącznie ekstruderem
 i pozostawia profil aktywny po zakończeniu.
 
 ![Menu ładowania materiału](../img/oled/material_load@3x.png)
+
+Po zmianie materiału zarówno temperatura zmierzona, jak i zadana muszą osiągać próg ekstruzji. Przy dyszy 230°C i celu 150°C wybierz **Reheat to check flow** na OLED lub **Resume** we Fluidd. Po dogrzaniu drukarka pozostanie w pauzie. Podaj materiał, sprawdź wypływ i wybierz **Confirm material flow** lub wpisz `FILAMENT_READY`. Każde przyjęte ręczne cofnięcie po potwierdzeniu ponawia pytanie o wypływ. Po kolejnym podaniu potwierdź wypływ ponownie, a następnie wybierz **Resume**.
 
 W `[m300_filament]` pola `unload_temperature`, `unload_speed`, `load_temperature` i `load_speed` przyjmują osobno `auto` albo liczbę. W obu kierunkach `auto` oznacza 240°C i 2 mm/s. Po zakończeniu samego Load lub Unload ekstruder pozostaje gorący do wyłączenia grzania lub wystąpienia zwykłej bezczynności. Przy pytaniu o wypływ w pauzie możesz naciskać **Extrude** lub **Retract** w panelu Narzędzie. Dopiero po uzyskaniu czystego koloru potwierdź wypływ i wybierz **Resume**. [Procedura materiałowa](MAINTENANCE_MATERIAL.md).
 
@@ -146,7 +148,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.8 wystarczy aktualizacja hosta. Numer hosta i MCU sprawdzisz poleceniem `ZORTRAX_INFO REFRESH=0`. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-W RC32 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.43-MANUAL-E`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+W RC33 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.44-FLOW-CHECK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ### Czas pracy drukarki
 

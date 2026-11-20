@@ -7,6 +7,7 @@ drain are modeled; passing this suite is not a physical M300 acceptance.
 """
 from pathlib import Path
 from types import SimpleNamespace as NS
+from unittest.mock import PropertyMock, patch
 import copy
 import tempfile
 import unittest
@@ -189,6 +190,89 @@ class PrintControlTests(unittest.TestCase):
         self.assertIsNone(h.sd.work_timer)
         h.run('FILAMENT_READY\nRESUME');h.control_until('IDLE')
         self.assertEqual(h.sd.work_timer,'native')
+
+    def test_flow_confirmation_checks_the_same_nozzle_state_as_the_fluidd_buttons(self):
+        h = self.h
+        ui = M300PrintUI(h.config)
+        ui._ready()
+        h.pause_at_material_park()
+        h.c.material_begin()
+        h.c.material_complete(True)
+        for measured, target in ((230., 150.), (150., 230.), (230., 0.),
+                                 (float('nan'), 230.), (230., float('inf'))):
+            with self.subTest(measured=measured, target=target):
+                h.hotend.temperature, h.hotend.target = measured, target
+                self.assertFalse(h.c.get_status(h.now)['can_confirm_filament'])
+                self.assertEqual(ui.pause_rows(h.now)[0], ('Reheat to check flow', 'resume'))
+                with self.assertRaisesRegex(h.printer.command_error, 'heat the nozzle'):
+                    fluidd_button(h, 30)
+                with self.assertRaisesRegex(h.printer.command_error, 'heat the nozzle'):
+                    h.run('FILAMENT_READY')
+                self.assertFalse(h.c.context['flow_confirmed'])
+
+        h.hotend.temperature = h.hotend.target = 230.
+        with patch.object(type(h.hotend), 'can_extrude', new_callable=PropertyMock, return_value=False):
+            self.assertFalse(h.c.get_status(h.now)['can_confirm_filament'])
+            with self.assertRaisesRegex(h.printer.command_error, 'heat the nozzle'):
+                h.run('FILAMENT_READY')
+            with self.assertRaisesRegex(h.printer.command_error, 'heat the nozzle'):
+                fluidd_button(h, 30)
+
+    def test_cooling_after_flow_confirmation_reheats_without_resuming_the_file(self):
+        h = self.h
+        ui = M300PrintUI(h.config)
+        ui._ready()
+        h.pause_at_material_park()
+        h.c.material_begin()
+        h.c.material_complete(True)
+        for automatic_standby in (False, True):
+            h.run('FILAMENT_READY')
+            if automatic_standby:
+                h.step_control(h.c.standby_after)
+                self.assertFalse(h.c.context['flow_confirmed'])
+            else:
+                h.hotend.set_temp(150.)  # Resume can arrive before the next tick.
+            h.hotend.temperature = 230.
+            self.assertEqual(h.hotend.target, 150.)
+            self.assertEqual(ui.pause_rows(h.now)[0], ('Reheat to check flow', 'resume'))
+            h.run('RESUME')
+            self.assertEqual(h.hotend.target, 240.)
+            h.hotend.temperature = 240.
+            h.control_until('PAUSED', 'WAIT_FILAMENT_READY')
+            self.assertIsNone(h.sd.work_timer)
+            self.assertEqual(ui.pause_rows(h.now)[0], ('Confirm material flow', 'ready'))
+
+    def test_retract_after_flow_confirmation_requires_a_new_confirmation(self):
+        h = self.h
+        ui = M300PrintUI(h.config)
+        ui._ready()
+        h.run('M600')
+        h.stop_worker()
+        h.control_until('PAUSED')
+        h.heat(h.f, 'WAIT_INSERT')
+        h.p.action(h.p.view(h.now)['view_id'], 'CONFIRM')
+        h.heat(h.f, 'COMPLETE')
+        parked = h.position[:3]
+        file_pos = h.sd.file_position
+        h.run('FILAMENT_READY')
+        with self.assertRaises(h.printer.command_error):
+            fluidd_button(h, -55)
+        fluidd_button(h, 1)
+        self.assertFalse(h.c.get_status(h.now)['requires_filament_ready'])
+        self.assertEqual(ui.pause_rows(h.now)[0], ('Resume the print', 'resume'))
+        fluidd_button(h, -30)
+        self.assertTrue(h.c.get_status(h.now)['requires_filament_ready'])
+        self.assertEqual(ui.pause_rows(h.now)[0], ('Confirm material flow', 'ready'))
+        h.run('RESUME')
+        h.control_until('PAUSED', 'WAIT_FILAMENT_READY')
+        fluidd_button(h, 30)
+        self.assertTrue(h.c.get_status(h.now)['requires_filament_ready'])
+        self.assertEqual((h.position[:3], h.sd.file_position), (parked, file_pos))
+        h.run('FILAMENT_READY')
+        self.assertIsNone(h.sd.work_timer)
+        h.run('RESUME')
+        h.control_until('IDLE')
+        self.assertEqual(h.events.count(('native_resume',)), 1)
 
     def test_manual_pause_motion_guards_reject_xyz_absolute_cold_and_overlong_moves(self):
         h = self.h
@@ -792,7 +876,7 @@ class PrintControlTests(unittest.TestCase):
         hot_key=ui.view(h.now)[0]
         self.assertEqual(ui.pause_rows(h.now)[0],('Confirm material flow','ready'))
         h.hotend.temperature=25.;h.hotend.target=0.
-        self.assertEqual(ui.pause_rows(h.now)[0],('Heat nozzle to resume','resume'))
+        self.assertEqual(ui.pause_rows(h.now)[0],('Reheat to check flow','resume'))
         self.assertNotEqual(hot_key,ui.view(h.now)[0])
         h.run('RESUME');h.hotend.temperature=240.;h.control_until('PAUSED','WAIT_FILAMENT_READY')
         self.assertEqual(ui.pause_rows(h.now)[0][1],'ready')

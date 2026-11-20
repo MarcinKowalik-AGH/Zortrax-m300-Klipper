@@ -126,7 +126,7 @@ class M300PrintUI:
             status=control.get_status(now)
             if status['requires_filament_ready'] and status['material_change_complete']:
                 first=(('Confirm material flow','ready') if status['can_confirm_filament']
-                       else ('Heat nozzle to resume','resume'))
+                       else ('Reheat to check flow','resume'))
                 return (first,*PAUSE_ROWS[1:])
         return PAUSE_ROWS
 

@@ -1,7 +1,7 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> | USER_GUIDE.md - Guides an M300 Classic operator from installation through printing, material changes and fault diagnosis. -->
 # M300 Classic operator handbook
 
-This guide follows a job on the original M300 Classic with host 1.0.0-rc.32, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
+This guide follows a job on the original M300 Classic with host 1.0.0-rc.33, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
 
 ## Choose the installation path
 
@@ -35,6 +35,8 @@ After heating, START retracts 10 mm before homing, loads the selected saved mesh
 | Purge | When the flow confirmation appears, set length and speed in **Tool**. **Extrude** pushes filament and **Retract** withdraws it. Repeat until the new colour comes out cleanly. Confirm flow, then choose **Resume**. The same buttons work after an ordinary pause has settled. |
 | Standalone load or unload | Select **Material** on the OLED or open `ZORTRAX_MAIN_MENU` in Fluidd. After automatic transport ends the nozzle stays at the selected target for manual feeding until normal idle cooling or manual switch-off. |
 | End or cancel | A normal end lowers the bed by up to 300 mm within Z travel, then parks at X300 Y305 when there is clearance. The OLED shows **PRINTING DONE**. **Cancel** terminates the file and turns off heating. Only a paused job can be resumed. |
+
+After a material change, the measured and target nozzle temperatures must both reach the extrusion threshold. With a reading of 230°C and a target of 150°C, choose **Reheat to check flow** on the OLED or **Resume** in Fluidd. The print stays paused after reheating. Purge, check the visible flow and choose **Confirm material flow** or enter `FILAMENT_READY`. An accepted manual retraction clears the confirmation. After purging again, confirm the flow and explicitly choose **Resume**.
 
 The four settings in `[m300_filament]` are `unload_temperature`, `unload_speed`, `load_temperature` and `load_speed`. Each accepts `auto` or a number. Auto selects 240°C and 2 mm/s in each direction. The fields in Fluidd's Tool panel set distance and speed for a manual click. After a long pause reheat to the material's working temperature before purging. [Material procedures](MAINTENANCE_MATERIAL.md).
 

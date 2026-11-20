@@ -47,9 +47,13 @@ class PrintFixture:
         self.printer=config.get_printer();self.reactor=self.printer.get_reactor()
         self.gcode=self.printer.lookup_object('gcode')
         self.mode=config.get('mode','lifecycle')
-        self.running=False;self.marks=[];self.actions=[];self.flow=False
+        self.running=False;self.marks=[];self.actions=[]
         self.refusals = []
         self.jogged = set()
+        self.flow_steps = iter([
+            (False, 'FILAMENT_READY'), (True, -30), (False, 'RESUME'),
+            (False, 30), (False, 'FILAMENT_READY'), (True, 'RESUME'),
+        ])
         self.second_job = False
         self.mark_positions = {}
         self.pause_positions = {}
@@ -154,6 +158,10 @@ class PrintFixture:
             finally:self.pending=None
         self.reactor.register_callback(run)
 
+    def _jog(self, distance):
+        self._submit('SAVE_GCODE_STATE NAME=_ui_retract\nM83\nG1 E%d F240\n'
+                     'RESTORE_GCODE_STATE NAME=_ui_retract' % distance, manual_e=distance)
+
     def tick(self,now):
         if not self.running:return self.reactor.NEVER
         c=self.control
@@ -177,18 +185,20 @@ class PrintFixture:
         elif c.state=='PAUSED' and not self.filament.is_busy():
             ctx=c.context
             stage = 'change' if ctx['change_required'] else 'pause'
-            if (self.mode == 'lifecycle' and not self.pending and stage not in self.jogged
+            if self.pending:
+                return now+.05
+            if (self.mode == 'lifecycle' and stage not in self.jogged
                     and (stage == 'pause' or ctx['material_success'])):
                 self.jogged.add(stage)
-                distance = 30 if stage == 'change' else -30
-                self._submit('SAVE_GCODE_STATE NAME=_ui_retract\nM83\nG1 E%d F240\n'
-                             'RESTORE_GCODE_STATE NAME=_ui_retract' % distance, manual_e=distance)
-                return now+.05
-            if ctx['change_required']:
+                self._jog(30 if stage == 'change' else -30)
+            elif ctx['change_required']:
                 if ctx['material_success']:
-                    if not self.flow:
-                        self.flow=True;self._submit('FILAMENT_READY')
-                    else:self._submit('RESUME')
+                    confirmed, action = next(self.flow_steps)
+                    assert ctx['flow_confirmed'] == confirmed and self.sd.work_timer is None
+                    if isinstance(action, int):
+                        self._jog(action)
+                    else:
+                        self._submit(action)
             else:self._submit('RESUME')
         elif self.filament.is_busy():
             status=self.filament.get_status(now)

@@ -1,4 +1,4 @@
-# OLED, Fluidd and Klipper controls in RC32
+# OLED, Fluidd and Klipper controls in RC33
 
 Use `ZORTRAX_MAIN_MENU` in Fluidd or in OrcaSlicer’s Device tab to reach Models, Maintenance, Material, Settings and Information. For example, choose **Material → Unload the material** on either surface and confirm the current phase from either one. During a paused colour change you can purge with the Tool buttons before confirming flow. [Daily operation](USER_GUIDE.md).
 

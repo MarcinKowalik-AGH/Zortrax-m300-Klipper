@@ -134,6 +134,8 @@ After standalone Load or Unload completes, the nozzle stays at the operation’s
 
 During an ordinary pause, wait until parking finishes. During a colour change, wait for the automatic transport to finish and the flow confirmation to appear. In **Tool**, select the filament length and speed, then click **Extrude** to purge or **Retract** to withdraw. Each click moves only the filament. The print stays paused, including after flow confirmation, until you explicitly choose **Resume**. If pause cooling has lowered the nozzle below the extrusion threshold, set the appropriate working temperature and let it heat before using the buttons.
 
+After a material change, the measured and target nozzle temperatures must both reach the extrusion threshold. With a reading of 230°C and a target of 150°C, choose **Reheat to check flow** on the OLED or **Resume** in Fluidd. The print stays paused after reheating. Purge, check the visible flow and choose **Confirm material flow** or enter `FILAMENT_READY`. An accepted manual retraction clears the confirmation. After purging again, confirm the flow and explicitly choose **Resume**.
+
 ## Interactive Fan test
 
 The original menu is Maintenance → Fan test → Back / Toggle upper fan /

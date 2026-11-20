@@ -38,6 +38,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Rzeczywiste odsunięcie PC7 2 mm w homingu | 0.13.16.38 / test 11.11.2026 | Deklarowane zmniejszenie odsunięcia PC7 | Obserwacja częściowa: Użytkownik podał wystarczające odsunięcie 2 mm. Kod beta.24 usuwa wymuszony próg 5 mm. | Odbiór nowego kodu, powtarzalności i pełnego M07 jeszcze oczekuje. |
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
 | Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Zachowanie fabrycznego licznika ID0 po wyłączeniu i ponownym włączeniu drukarki. | Potwierdzone na sprzęcie: Przed wyłączeniem i po ponownym włączeniu MCU zgłosiło 289224 min (4820 h 24 min), bank B, NORMALIZED, CURRENT, pending=false i 149520 rozliczonych sekund. Wartość przetrwała cykl zasilania bez ponownego doliczenia czasu. | Test dotyczył zakończonego zapisu. Przerwanie zasilania w trakcie programowania banku sprawdzono dotąd w symulacji. |
+| Przeładowanie strony i przyciski Fluidd po restarcie Klippera | Wersja interfejsu nieodczytana | Restart Klippera i próba użycia przycisków Fluidd. | Potwierdzone UI: Strona odświeżyła się i przyciski działały. | — |
 
 ## Historia i źródła potwierdzeń
 
@@ -390,6 +391,16 @@ Przed wyłączeniem i po ponownym włączeniu MCU zgłosiło 289224 min (4820 h 
 Zapis użytkownika / treść przesłanego zrzutu: „wyłączyłem drukarkę , włączyłem od razu a następnie wydałem twoje polecenie i je skopiowałem do chat”.
 
 Podstawa wersji: `Wersje odczytane z HW05 o 16:32:38. Operator potwierdził wyłączenie i ponowne włączenie drukarki przed odczytem o 16:37:27.`.
+
+### FLUIDD_RECONNECT — Przeładowanie strony i przyciski Fluidd po restarcie Klippera
+
+**2026-11-20 · Wersja interfejsu nieodczytana · Potwierdzone UI**
+
+Strona odświeżyła się i przyciski działały.
+
+Zapis użytkownika / treść przesłanego zrzutu: „tak po restarcie klipera , cała strona się odświerzyła i przyciski działają .”.
+
+Podstawa wersji: `user_report_after_host_update_no_frontend_readback`.
 
 ## Jak aktualizować
 

@@ -1,6 +1,6 @@
 # Settings and Information
 
-> RC32 controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
+> RC33 controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 OLED menu button audio has two fixed pulse lengths: normal entry and other
 selection/exit clicks are 35 ms, while an explicitly visible **Back** or

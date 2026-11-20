@@ -1,4 +1,4 @@
-# Menu OLED, Fluidd i makra Klippera w RC32
+# Menu OLED, Fluidd i makra Klippera w RC33
 
 We Fluidd i w zakładce Device OrcaSlicera otwórz `ZORTRAX_MAIN_MENU`. Models, Maintenance, Material, Settings i Information odpowiadają pięciu pozycjom menu Zortrax na OLED. Dla przykładu **Material → Unload the material** prowadzi do tej samej procedury z obu urządzeń, a potwierdzenie dotyczy aktualnej fazy. Przy zmianie koloru w pauzie przyciski Extrude/Retract działają przed potwierdzeniem wypływu. [Codzienna obsługa](USER_GUIDE.md).
 
@@ -75,7 +75,7 @@ funkcją serwisową OEM, a nie testem rozwoju portu.
 
 ## Wersje i aktualizacja
 
-Wersja hosta to **1.0.0-rc.32**, a sparowanego MCU **1.0.8**. Information pokazuje krótki numer hosta i
+Wersja hosta to **1.0.0-rc.33**, a sparowanego MCU **1.0.8**. Information pokazuje krótki numer hosta i
 numeryczny numer MCU. Pełny rzeczywisty identyfikator firmware i znaczniki
 zgodności transportu pozostają w diagnostyce; nie udajemy, że MCU otrzymało
 nowe oprogramowanie. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i M300_SD.zip.

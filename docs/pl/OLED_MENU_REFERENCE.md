@@ -1,6 +1,6 @@
 # Menu OLED — struktura, funkcje i rendery z kodu
 
-> **RC32.** [Bieżące menu i sterowanie](RC1_UI.md) obejmuje też regulację czasów OLED i menu materiału we Fluidd. Poniższy atlas przedstawia beta.20. Pozycja Service / Tests z historycznych ilustracji została wycofana w RC1.
+> **RC33.** [Bieżące menu i sterowanie](RC1_UI.md) obejmuje też regulację czasów OLED i menu materiału we Fluidd. Poniższy atlas przedstawia beta.20. Pozycja Service / Tests z historycznych ilustracji została wycofana w RC1.
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 

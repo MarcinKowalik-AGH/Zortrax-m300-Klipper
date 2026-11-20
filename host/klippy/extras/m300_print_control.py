@@ -18,7 +18,7 @@ from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.43-MANUAL-E'
+REVISION = '0.13.16.44-FLOW-CHECK'
 PERIOD = .25
 END_BED_DROP_MM = 300.
 
@@ -353,6 +353,15 @@ class M300PrintControl:
         pos=list(self.toolhead.get_position());pos[3]+=amount
         self._move(pos,self.e_speed,extrusion=True)
 
+    def _nozzle_ready_for_flow(self, now):
+        measured, target = self.hotend.get_temp(now)
+        return (self.hotend.can_extrude and math.isfinite(measured) and math.isfinite(target)
+                and target > 0. and min(measured, target) >= self.hotend.min_extrude_temp)
+
+    def _wait_for_flow(self):
+        self.notice = 'Verify nozzle flow, then FILAMENT_READY and RESUME'
+        self._phase('WAIT_FILAMENT_READY')
+
     def _manual_pause_extrusion(self, gcmd):
         # Fluidd sends SAVE_GCODE_STATE, M83, G1 E... F..., RESTORE_GCODE_STATE.
         # A parked head can be in a compensated mesh frame. Keep physical XYZ
@@ -365,10 +374,7 @@ class M300PrintControl:
         ctx = self.context
         if not self._position_is(ctx['plan']['target']):
             raise self._error('parked position changed')
-        now = self.reactor.monotonic()
-        measured, target = self.hotend.get_temp(now)
-        if (not self.hotend.can_extrude or not math.isfinite(measured) or not math.isfinite(target)
-                or min(measured, target) < self.hotend.min_extrude_temp or target <= 0.):
+        if not self._nozzle_ready_for_flow(self.reactor.monotonic()):
             raise self._error('heat the nozzle before manual extrusion')
         distance = gcmd.get_float('E')
         speed = gcmd.get_float('F', above=0.) / 60.
@@ -379,6 +385,10 @@ class M300PrintControl:
         endpoint = self.toolhead.get_position()[3] + distance
         self.toolhead.manual_move([None, None, None, endpoint], speed)
         ctx['thermal_since'] = self.reactor.monotonic()
+        if distance < 0. and ctx['flow_confirmed']:
+            ctx['flow_confirmed'] = False
+            self._wait_for_flow()
+            gcmd.respond_info('M300: filament retracted; verify visible flow again before Resume')
 
     def cmd_PAUSE(self,gcmd):
         if self.context is not None:
@@ -464,6 +474,8 @@ class M300PrintControl:
             self.hotend.set_temp(target)
             self._phase('PAUSED_STANDBY')
         ctx['last_pause_target'] = target
+        if ctx['flow_confirmed'] and not self._nozzle_ready_for_flow(now):
+            ctx['flow_confirmed'] = False
 
     def cmd_RESUME(self,gcmd):
         if self.context is None:raise self._error('no protected pause is available')
@@ -485,6 +497,10 @@ class M300PrintControl:
             raise self._error('saved print temperature is not valid for extrusion')
         velocity=gcmd.get_float('VELOCITY',self.pause.recover_velocity,above=0.)
         if not math.isfinite(velocity):raise self._error('resume velocity must be finite')
+        # A Fluidd Resume can arrive immediately after a new standby target,
+        # before the pause timer observes it. Check before restoring print heat.
+        if self.context['flow_confirmed'] and not self._nozzle_ready_for_flow(self.reactor.monotonic()):
+            self.context['flow_confirmed'] = False
         self.context['resume_velocity']=velocity
         self.state='RESUMING';self.steps.clear();self.stable_since=None
         self._lease()
@@ -506,10 +522,11 @@ class M300PrintControl:
 
     def _resume_moves(self):
         ctx=self.context
-        if ctx['change_required'] and not ctx['flow_confirmed']:
-            self._release();self.state='PAUSED';ctx['thermal_since']=self.reactor.monotonic()
-            self.notice='Verify nozzle flow, then FILAMENT_READY and RESUME'
-            self._phase('WAIT_FILAMENT_READY')
+        now = self.reactor.monotonic()
+        if ctx['change_required'] and (not ctx['flow_confirmed'] or not self._nozzle_ready_for_flow(now)):
+            ctx['flow_confirmed'] = False
+            self._release();self.state='PAUSED';ctx['thermal_since']=now
+            self._wait_for_flow()
             return
         for pos in ctx['plan']['return_moves']:self.steps.append(('move',pos))
         if ctx['retracted']:self.steps.append(('e',ctx['retracted']))
@@ -521,10 +538,13 @@ class M300PrintControl:
         self._guard(self.generation)
         if not ctx['change_required'] or not ctx['material_success']:
             raise self._error('complete the material change first')
-        measured,target=self.hotend.get_temp(self.reactor.monotonic())
-        if measured < self.hotend.min_extrude_temp or target <= 0:
-            raise self._error('heat the nozzle and verify visible flow before confirming')
+        if not self._nozzle_ready_for_flow(self.reactor.monotonic()):
+            ctx['flow_confirmed'] = False
+            raise self._error('heat the nozzle with Resume, then verify visible flow before confirming')
         ctx['flow_confirmed']=True
+        if self.phase == 'WAIT_FILAMENT_READY':
+            self.notice = ''
+            self._phase('PAUSED')
         gcmd.respond_info('M300: filament flow confirmed; press Resume')
 
     def _can_park_for_material(self, plan):
@@ -958,7 +978,9 @@ class M300PrintControl:
 
     def get_status(self,now):
         ctx=self.context
-        measured,target=self.hotend.get_temp(now) if hasattr(self,'hotend') else (0.,0.)
+        can_confirm = bool(ctx and ctx['material_success'] and self.state == 'PAUSED'
+                           and not ctx['invalid'] and not self._material_busy()
+                           and self._nozzle_ready_for_flow(now))
         return dict(revision=REVISION,state=self.state,phase=self.phase,busy=self.busy,
             model_print_ready=self.model_print_ready,
             active_mesh_profile=self.active_mesh_profile, selected_mesh_profile=self.selected_mesh_profile,
@@ -970,9 +992,9 @@ class M300PrintControl:
                             if self.operation and self.phase=='PLATFORM_SOAK' and self.stable_since is not None else None),
             pause_seconds=max(0.,now-ctx['started']) if ctx else 0.,
             material_change_complete=bool(ctx and ctx['material_success']),
-            can_confirm_filament=bool(ctx and ctx['material_success'] and target>0.
-                                     and measured>=self.hotend.min_extrude_temp),
-            requires_filament_ready=bool(ctx and ctx['change_required'] and not ctx['flow_confirmed']))
+            can_confirm_filament=can_confirm,
+            requires_filament_ready=bool(ctx and ctx['change_required'] and
+                                         (not ctx['flow_confirmed'] or self.state == 'PAUSED' and not can_confirm)))
 
     def cmd_status(self,gcmd):
         gcmd.respond_info('M300_PRINT_CONTROL '+json.dumps(self.get_status(self.reactor.monotonic()),sort_keys=True))

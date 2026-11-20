@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Kontroler w RC32.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+**Kontroler w RC33.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
 oraz parametry ruchu.
 
@@ -99,6 +99,8 @@ własne nastawy mogą skrócić odcinki.
 
 W pauzie poczekaj, aż drukarka zakończy ruch. Przy zmianie koloru poczekaj na pytanie o wypływ. W panelu **Narzędzie** we Fluidd lub w zakładce **Device** w OrcaSlicerze ustaw długość i prędkość filamentu. **Extrude** podaje go, a **Retract** cofa. Możesz powtarzać ruchy przed potwierdzeniem wypływu. Wydruk wznowisz osobno przyciskiem **Resume**.
 
+Po zmianie materiału zarówno temperatura zmierzona, jak i zadana muszą osiągać próg ekstruzji. Przy dyszy 230°C i celu 150°C wybierz **Reheat to check flow** na OLED lub **Resume** we Fluidd. Po dogrzaniu drukarka pozostanie w pauzie. Podaj materiał, sprawdź wypływ i wybierz **Confirm material flow** lub wpisz `FILAMENT_READY`. Każde przyjęte ręczne cofnięcie po potwierdzeniu ponawia pytanie o wypływ. Po kolejnym podaniu potwierdź wypływ ponownie, a następnie wybierz **Resume**.
+
 Domyślny narożnik to X300 Y305. Ruch stołu jest względny i ograniczony do `position_max` osi Z. Przy Z250 i limicie Z300 stół może zjechać jeszcze o 50 mm. Jeżeli dostępny ruch jest mniejszy od `min_park_clearance` (domyślnie 5 mm), głowica pozostaje w XY. Gorąca retrakcja ma domyślnie 2 mm.
 Pauza zachowuje stół i pozycję; domyślnie po 600 s obniża wyższy cel dyszy do
 150°C, a po 1800 s wyłącza jej cel. To parametry konfigurowalne, nie obietnica
@@ -129,7 +131,7 @@ ZORTRAX_ERROR_STATUS
 BED_MESH_OUTPUT
 ```
 
-Sprawdź rewizję `0.13.16.43-MANUAL-E`, fazę i aktywną siatkę. W RC17
+Sprawdź rewizję `0.13.16.44-FLOW-CHECK`, fazę i aktywną siatkę. W RC17
 `model_print_ready: true` potwierdza zakończenie czyszczenia w bieżącym
 pliku SD. Rewizja
 `0.13.16.38-PRINT-DRAIN-XY-PURGE` miała dodatkowe odsunięcie do Z5 pomiędzy
