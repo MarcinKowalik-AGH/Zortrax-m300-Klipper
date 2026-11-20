@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.26'
+VERSION='v1.0.0-rc.27'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -41,7 +41,7 @@ class Rc1Contracts(unittest.TestCase):
             # RC23 restores the cursor after remote and procedure navigation.
             'host/klippy/extras/m300_menu.py': (
                 '36d87ea55349a74610d1dd978cb1eb69f5420bcf0a6dbd09d0b6c0a370b11320',
-                '7814cb4460f499fc7a3eeb3f3536336d3d527848ddf7a7e7ccf2e5c80e894470'),
+                'd7e1c4d8da3ff4a14f1be76f08d93c0975275035bfe34821c8086e9aa91e14df'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
@@ -83,7 +83,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],955)
+        self.assertEqual(meta['self_contained_host_tests'],960)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -101,7 +101,7 @@ class Rc1Contracts(unittest.TestCase):
         names=[]
         for path in (ROOT/'host/config').glob('*.cfg'):
             names += re.findall(r'^\[gcode_macro ([^\]]+)\]',path.read_text(),re.M)
-        self.assertEqual(len(names),43)
+        self.assertEqual(len(names),44)
         self.assertEqual(len(names),len(set(names)))
         self.assertFalse(any(n.startswith('TEST_') for n in names))
         for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS',

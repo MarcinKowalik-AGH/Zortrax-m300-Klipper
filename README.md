@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.26
+# Zortrax M300 Classic — Klipper 1.0.0-rc.27
 
-**RC26** restores sidebar navigation after a view fails to load, including in WebKit. The top bar includes a page reload button for OrcaSlicer. [Release notes](docs/en/RELEASE_v1.0.0-rc.26.md).
+**RC27** brings the five Zortrax menu sections to Fluidd. Open `ZORTRAX_MAIN_MENU` to select a model, run maintenance or handle material. [Release notes](docs/en/RELEASE_v1.0.0-rc.27.md).
 
 **MCU 1.0.8:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.8.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
@@ -8,7 +8,7 @@
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC26](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.26) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC27](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.27) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

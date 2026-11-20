@@ -16,7 +16,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.26'
+CURRENT_RELEASE = 'v1.0.0-rc.27'
 CURRENT_MCU = '1.0.8'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -88,7 +88,7 @@ def main():
     for p in (ROOT/'host/config').glob('*.cfg'):
         names.update(re.findall(r'^\[gcode_macro ([^\]]+)\]',p.read_text(),re.M))
     documented = set(re.findall(r'\[`([A-Z0-9_]+)`\]\(../../host/config/',(ROOT/'docs/pl/MACRO_REFERENCE.md').read_text()))
-    check(names == documented and len(names) == 43, 'all-43-config-macros-covered')
+    check(names == documented and len(names) == 44, 'all-44-config-macros-covered')
     catalog = json.loads((ROOT/'docs/reports/MACRO_MANIFEST.json').read_text())
     check({m['name'] for m in catalog['macros']} == names, 'macro-manifest-matches-source')
     cfg = configparser.ConfigParser(interpolation=None)
@@ -135,9 +135,9 @@ def main():
         'host/klippy/extras/m300_native_motion.py',
     }
     current_plate_sources = {
-        'host/klippy/extras/m300_menu.py': '7814cb4460f499fc7a3eeb3f3536336d3d527848ddf7a7e7ccf2e5c80e894470',
+        'host/klippy/extras/m300_menu.py': 'd7e1c4d8da3ff4a14f1be76f08d93c0975275035bfe34821c8086e9aa91e14df',
         'host/config/m300_classic_base.cfg': 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64',
-        'host/config/m300_operations.cfg': '03b5551d42d954a39d4d73a45ec9e4f08c44b3e6be52d66c9226cb4afc870cda',
+        'host/config/m300_operations.cfg': '73ea7fffd944d4d446a0197bd95c2bf8efed82f78fbba92ebffaf6d9a3b83eb5',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         'host/klippy/extras/m300_pad_mesh.py': '6d565763d5a8e4b7febda77df0b6d59c2d5431925df7616ff6ecc2d1a43ce0d7',
         'host/klippy/extras/m300_activity_graphics.py': '70f2d9d825ebbd3ccd2cf5e9a744c4fea9e44e6b1ff0d1b59375507c911c989c',

@@ -54,8 +54,9 @@ def session(serial=None):
         o,menu,ui,display,packet=physical_panel(h);menu.nvm=h.nvm;menu._last_file=None
         h.oled,h.menu,h.ui=o,menu,ui
         h.panel_display = display
+        h.panel_packet = packet
         for name,body in templates().items():
-            if name in ('ZORTRAX_SETTINGS','ZORTRAX_BUZZER','ZORTRAX_SLEEP_MODE','ZORTRAX_LANGUAGE',
+            if name in ('ZORTRAX_MAIN_MENU','ZORTRAX_SETTINGS','ZORTRAX_BUZZER','ZORTRAX_SLEEP_MODE','ZORTRAX_LANGUAGE',
                         'ZORTRAX_MODELS_SORT','ZORTRAX_INFORMATION','ZORTRAX_HELP','ZORTRAX_LIGHT'):
                 template=ENV.from_string(body)
                 h.gcode.register_command(name,lambda cmd,t=template:h.gcode.run_script_from_command(
@@ -83,6 +84,66 @@ def browser(h):
     h.job.sd.root=str(h.files);h.job.sd.v_sd=NS(executor=NS(submit=lambda f,*a,**k:f(*a,**k)))
     h.job.sd.selected=None;h.job.sd.select=select;h.job.sd.cancel=cancel
     b=M300Browser(h.config);h.objects['m300_browser']=b;b._ready();return b
+
+
+def menu_button(h, label):
+    prefix = '// action:prompt_button ' + label + '|'
+    line = next(line for line in reversed(h.lines) if line.startswith(prefix))
+    return line.split('|')[1]
+
+
+class SharedOperatorMenuTests(unittest.TestCase):
+    def test_web_menu_uses_native_sections_and_distinct_platform_gestures(self):
+        with session() as h:
+            h.run('ZORTRAX_MAIN_MENU')
+            self.assertEqual([line.split('|')[0].split('prompt_button ')[1] for line in h.lines
+                              if 'prompt_button ' in line],
+                             ['Back', 'Models', 'Maintenance', 'Material', 'Settings', 'Information'])
+            h.run(menu_button(h, 'Maintenance'))
+            web = dict(h.settings._web_rows(h.now)[1])
+            for label, action in h.menu.rows(h.now)[1]:
+                if action[0] == 'platform_hold':
+                    self.assertEqual(web[label], ('native_gcode',
+                        'ZORTRAX_PLATFORM_UP' if action[1] == -1 else 'ZORTRAX_PLATFORM_DOWN'))
+                else:
+                    self.assertEqual(web[label], action)
+            self.assertFalse(h.m.is_busy())
+            self.assertEqual(h.hotend.target, 0.)
+
+    def test_web_unload_then_encoder_confirmation(self):
+        with session() as h:
+            h.run('ZORTRAX_MAIN_MENU')
+            h.run(menu_button(h, 'Material'))
+            start = menu_button(h, 'Unload the material')
+            h.run(start)
+            with self.assertRaisesRegex(h.printer.command_error, 'Expired'):
+                h.run(start)
+            h.heat(h.f, 'WAIT_UNLOAD')
+            view = h.p.view(h.now)
+            self.assertEqual(h.menu.page, 'procedure')
+            h.oled._render(h.now)
+            h.panel_display.pump()
+            h.panel_packet(False)
+            h.panel_packet(False, 1, 1, 1)
+            h.until(h.f, 'COMPLETE')
+            with self.assertRaisesRegex(h.printer.command_error, 'expired'):
+                h.p.action(view['view_id'], 'CONFIRM')
+            self.assertEqual(h.hotend.target, 0.)
+
+    def test_panel_unload_then_fluidd_confirmation(self):
+        with session() as h:
+            h.menu.page = 'material'
+            action = dict(h.menu.rows(h.now)[1])['Unload the material']
+            h.menu.select(action, h.now)
+            h.callbacks.pop()(h.now)
+            h.heat(h.f, 'WAIT_UNLOAD')
+            h.run('ZORTRAX_PROCEDURE')
+            command = next(line.split('|')[1] for line in reversed(h.lines)
+                           if 'prompt_button ' in line and ' ACTION=CONFIRM|' in line)
+            h.run(command)
+            h.until(h.f, 'COMPLETE')
+            with self.assertRaisesRegex(h.printer.command_error, 'expired'):
+                h.run(command)
 
 
 class SettingsTreeTests(unittest.TestCase):
@@ -899,7 +960,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.26');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.27');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

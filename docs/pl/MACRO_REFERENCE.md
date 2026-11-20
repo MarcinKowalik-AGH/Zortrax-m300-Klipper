@@ -7,7 +7,7 @@
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 43 sekcji `[gcode_macro ...]`** z siedmiu plików `host/config` w RC20. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC27. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -42,6 +42,7 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | [`ZORTRAX_FAN_UPPER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie górnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255; niezależna ochrona ma pierwszeństwo. |
 | [`ZORTRAX_FAN_LOWER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie dolnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255. |
 | [`ZORTRAX_FAN_TEST_END`](../../host/config/m300_operations.cfg) | Wentylatory | Zamyka test i przywraca właściwą politykę. | Bez parametrów. |
+| [`ZORTRAX_MAIN_MENU`](../../host/config/m300_operations.cfg) | Menu Zortrax | Otwiera Models, Maintenance, Material, Settings i Information. | Bez parametrów. |
 | [`ZORTRAX_SETTINGS`](../../host/config/m300_operations.cfg) | Ustawienia | Otwiera wspólne Settings. | Bez parametrów. |
 | [`ZORTRAX_BUZZER`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejący buzzer. | STATE opcjonalny. |
 | [`ZORTRAX_SLEEP_MODE`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejące usypianie; zachowuje czas z konfiguracji. | STATE opcjonalny. |

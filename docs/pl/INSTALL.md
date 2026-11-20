@@ -1,7 +1,7 @@
 # Aktualizacja działającej instalacji M300 Classic
 
 Nowy host przygotuj według [instrukcji pierwszej instalacji](FIRST_INSTALL.md)
-i użyj [paczki v1.0.0-rc.26](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.26).
+i użyj [paczki v1.0.0-rc.27](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.27).
 Gdy Fluidd pokazuje pustą stronę, [najpierw napraw Fluidd](#napraw-fluidd-a-potem-zaktualizuj-klippera).
 [English](../en/INSTALL.md).
 
@@ -59,12 +59,12 @@ git clone --depth 1 --single-branch --no-tags --branch orange-pi \
 python3 "$m300_src/install-orange-pi.py"
 ```
 
-Zachowaj nową ścieżkę, aby używać jej przy kolejnych aktualizacjach. Pełny ZIP oznaczony wersją umożliwia instalację dokładnie RC26. Po osobnej naprawie Fluidd sprawdź pole `fluidd_http_verified` i otwórz menu na porcie 4480.
+Zachowaj nową ścieżkę, aby używać jej przy kolejnych aktualizacjach. Pełny ZIP oznaczony wersją umożliwia instalację dokładnie RC27. Po osobnej naprawie Fluidd sprawdź pole `fluidd_http_verified` i otwórz menu na porcie 4480.
 
 ## 2. Sprawdź wersję MCU
 
 Jeśli masz już MCU 1.0.8, pomiń aktualizację z SD. Aby wgrać wersję MCU
-dołączoną do RC26, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
+dołączoną do RC27, użyj `MCU/M300APP.M3B` z pełnego wydania albo rozpakuj
 plik z `MCU/M300_SD.zip` lub osobnego
 [ZIP-a MCU na SD](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 Zastosuj procedurę aktualizacji aplikacji posiadanego bootloadera M300.

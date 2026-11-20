@@ -1,6 +1,6 @@
 {
-  "release": "v1.0.0-rc.26",
-  "count": 43,
+  "release": "v1.0.0-rc.27",
+  "count": 44,
   "macros": [
     {
       "name": "BED_MESH",
@@ -213,6 +213,11 @@
       "parameters": [
         "TEMP"
       ]
+    },
+    {
+      "name": "ZORTRAX_MAIN_MENU",
+      "source": "host/config/m300_operations.cfg",
+      "parameters": []
     },
     {
       "name": "ZORTRAX_MODELS_SORT",

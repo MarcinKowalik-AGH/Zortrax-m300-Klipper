@@ -14,7 +14,7 @@ from payload.m300_binary import compile_m300
 from payload.m300_fat import _lfn_checksum
 from payload.m300_models import M300Models, ModelError, _copy_open_native_file
 from payload.m300_sd import M300SD, SDError, SNAPSHOT_BATCH_BYTES
-from test_settings_information import session, browser
+from test_settings_information import session, browser, menu_button
 
 FIXTURES = json.loads((Path(__file__).parent / 'reference/models_zcode.json').read_text())
 
@@ -140,6 +140,41 @@ def prepare(h, source='sd', directory='', name='part.zcode', run=True):
 
 
 class ModelsTests(unittest.TestCase):
+    def test_web_host_and_sd_sources_use_checked_preview_and_explicit_start(self):
+        for source, folder, filename in (('Host files', 'folder', 'part|A.gcode'),
+                                          ('SD card', 'MODELS', 'bench.gcode')):
+            with self.subTest(source=source), model_session() as h:
+                (h.files / 'folder').mkdir()
+                (h.files / 'folder' / 'part|A.gcode').write_text('G90\nM83\nG1 X10\n')
+                h.run('ZORTRAX_MAIN_MENU')
+                for label in ('Models', source, '> ' + folder, filename.replace('|', '/')):
+                    h.run(menu_button(h, label))
+                self.assertEqual(h.menu.page, 'model_file')
+                self.assertIsNone(h.vsd.current_file)
+                h.callbacks.pop()(h.now)
+                h.run(menu_button(h, 'Refresh'))
+                start = menu_button(h, 'Start printing')
+                self.assertEqual(h.models.get_status(h.now)['state'], 'READY')
+                h.run(start)
+                with self.assertRaisesRegex(h.printer.command_error, 'Expired'):
+                    h.run(start)
+                self.assertEqual(h.events.count(('native_worker',)), 1)
+
+    def test_physical_navigation_revokes_web_model_selection(self):
+        with model_session() as h:
+            h.card.qualified = False
+            (h.files / 'part.gcode').write_text('G90\n')
+            h.run('ZORTRAX_MAIN_MENU')
+            h.run(menu_button(h, 'Models'))
+            self.assertIn('// action:prompt_text SD card access is disabled', h.lines)
+            h.run(menu_button(h, 'Host files'))
+            select = menu_button(h, 'part.gcode')
+            h.menu._navigate('material')
+            with self.assertRaisesRegex(h.printer.command_error, 'expired'):
+                h.run(select)
+            self.assertIsNone(h.models.token)
+            self.assertIsNone(h.vsd.current_file)
+
     def test_orca_preheat_reorders_only_known_startup_in_both_native_paths(self):
         with model_session() as h:
             path = h.files / 'orca.gcode'

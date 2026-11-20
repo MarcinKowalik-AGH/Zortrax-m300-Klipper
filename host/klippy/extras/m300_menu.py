@@ -16,6 +16,9 @@ import textwrap
 from .m300_release import VERSION
 
 
+OEM_PAGES = ('zortrax', 'maintenance', 'material')
+
+
 def sort_entries(entries, mode):
     def key(item):
         tail = (item['name'].casefold(), item['name'])
@@ -462,6 +465,35 @@ class M300Menu:
                 self.clean(self.reason), width=36, max_lines=5, placeholder='...'))
         return rows
 
+    def oem_rows(self, page):
+        """Common OEM sections and their operator actions on the panel and web."""
+        if page == 'zortrax':
+            return 'Zortrax M300', [(self.t('Back'), ('page', 'main')),
+                (self.t('Models'), ('page', 'models')),
+                (self.t('Maintenance'), ('page', 'maintenance')),
+                (self.t('Material'), ('page', 'material')),
+                (self.t('Settings'), ('page', 'settings')),
+                (self.t('Information'), ('page', 'information'))]
+        if page == 'maintenance':
+            return self.t('Maintenance'), [(self.t('Back'), ('page', 'zortrax')),
+                (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
+                ('Home X', ('native_gcode', 'ZORTRAX_HOME_X')),
+                ('Home Y', ('native_gcode', 'ZORTRAX_HOME_Y')),
+                ('Home Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
+                ('Home XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
+                ('Home XYZ', ('native_gcode', 'ZORTRAX_HOME_ALL')),
+                (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
+                (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
+                (self.t('Move the platform up'), ('platform_hold',-1)),
+                (self.t('Move the platform down'), ('platform_hold',1)),
+                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START')),
+                ('Current procedure', ('native_gcode', 'ZORTRAX_PROCEDURE'))]
+        if page == 'material':
+            return self.t('Material'), [(self.t('Back'), ('page', 'zortrax')),
+                (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
+                (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))]
+        raise self._error('unknown OEM section')
+
     def rows(self, now):
         ui = self._ui()
         native = getattr(getattr(getattr(self, 'job', None), 'board', None), 'native_control', False)
@@ -474,27 +506,9 @@ class M300Menu:
             return 'M300', self._notice([
                 ('Klipper', ('page', 'klipper')),
                 ('Zortrax M300', ('page', 'zortrax'))])
-        if native and self.page == 'zortrax':
-            return 'Zortrax M300', self._notice([(self.t('Back'), ('page', 'main')),
-                (self.t('Models'), ('page', 'models')),
-                (self.t('Maintenance'), ('page', 'maintenance')),
-                (self.t('Material'), ('page', 'material')),
-                (self.t('Settings'), ('page', 'settings')),
-                (self.t('Information'), ('page', 'information'))])
-        if native and self.page == 'maintenance':
-            return self.t('Maintenance'), self._notice([(self.t('Back'), ('page', 'zortrax')),
-                (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
-                ('Home X', ('native_gcode', 'ZORTRAX_HOME_X')),
-                ('Home Y', ('native_gcode', 'ZORTRAX_HOME_Y')),
-                ('Home Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
-                ('Home XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
-                ('Home XYZ', ('native_gcode', 'ZORTRAX_HOME_ALL')),
-                (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
-                (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
-                (self.t('Move the platform up'), ('platform_hold',-1)),
-                (self.t('Move the platform down'), ('platform_hold',1)),
-                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START')),
-                ('Current procedure', ('native_gcode', 'ZORTRAX_PROCEDURE'))])
+        if native and self.page in OEM_PAGES:
+            title, rows = self.oem_rows(self.page)
+            return title, self._notice(rows)
         if native and self.page == 'fan_test':
             return self._service('m300_procedures').rows(now)
         if native:
@@ -514,10 +528,6 @@ class M300Menu:
                     else:
                         rows[0] = ('Back', ('page', target))
                 return title, self._notice(rows)
-        if native and self.page == 'material':
-            return self.t('Material'), self._notice([(self.t('Back'), ('page', 'zortrax')),
-                (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
-                (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))])
         if native and self.page == 'native_pid':
             stats = self.printer.lookup_object('print_stats', None)
             busy = stats is not None and stats.get_status(now).get('state') in ('printing', 'paused')
