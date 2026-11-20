@@ -158,6 +158,26 @@ class NativeChangeTests(unittest.TestCase):
                 self.assertTrue(h.pause.is_paused)
                 h.assert_restored(self)
 
+    def test_configured_change_speeds_and_targets_and_one_time_override(self):
+        for command, expected in (('M600', 217.), ('ZORTRAX_CHANGE TEMP=225', 225.)):
+            with self.subTest(command=command):
+                h = Harness(filament_options=dict(load_temperature=217., unload_temperature=235.,
+                                                  unload_speed=3.5, load_speed=1.25))
+                paused_print(h, 210.)
+                h.run(command)
+                self.assertEqual(h.hotend.target, 235.)
+                h.heat(h.f, 'WAIT_INSERT')
+                self.assertEqual(h.position[3], -93.)
+                self.assertEqual({e[2] for e in h.events if e[0] == 'move'}, {3.5})
+                self.assertEqual(h.hotend.target, expected)
+                h.events.clear()
+                h.p.action(h.p.view(h.now)['view_id'], 'CONFIRM')
+                self.assertEqual(h.f.machine.state, 'REHEATING')
+                h.heat(h.f, 'COMPLETE')
+                self.assertEqual({e[2] for e in h.events if e[0] == 'move'}, {1.25})
+                self.assertTrue(h.pause.is_paused)
+                self.assertEqual(h.hotend.target, 210.)
+
     def test_cancel_while_cooling_to_load_target_never_feeds_or_resumes(self):
         h = Harness()
         paused_print(h, 210.)

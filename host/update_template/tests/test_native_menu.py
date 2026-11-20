@@ -46,7 +46,7 @@ class NativeMenuTests(unittest.TestCase):
         m._cal_refresh=Mock()
         for operation in ('LOAD','UNLOAD'):
             m.select(('material',operation),100.)
-            filament.start.assert_called_with(operation,temperature=240.)
+            filament.start.assert_called_with(operation)
         m.select(('cal_start',),100.)
         calibration.start.assert_called_once_with(None)
         self.assertEqual(m._temperature['HOTEND'],200.)

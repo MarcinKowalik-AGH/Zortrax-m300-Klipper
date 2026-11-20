@@ -221,7 +221,11 @@ def convert_text(text, stock_xy=None):
             block = minimum(block, 'approach_distance',
                             float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
         elif section == 'm300_filament':
-            block = set_option(block, 'procedure_temperature', '240')
+            defaults = (('unload_temperature', option(block, 'procedure_temperature', '240')),
+                        ('unload_speed', '2'), ('load_temperature', '0'), ('load_speed', '2'))
+            for key, value in defaults:
+                if option(block, key) is None:
+                    block = set_option(block, key, value)
             block = set_option(block, 'filament_qualified', 'True')
         elif section == 'm300_maintenance':
             block = set_option(block, 'qualified', 'True')
@@ -267,10 +271,13 @@ def convert_text(text, stock_xy=None):
             block = re.sub(r'SPEED=\{params\.SPEED\s*\|\s*default\(1\)\s*\|\s*float\}',
                            "{% if 'SPEED' in params %}SPEED={params.SPEED|float}{% endif %}", block)
         elif section in ('gcode_macro ZORTRAX_LOAD', 'gcode_macro ZORTRAX_UNLOAD'):
-            # Existing wrappers live in included files on installed R16.x.
-            # Update the TEMP default while preserving their other commands.
-            block = re.sub(r'params\.TEMP\s*\|\s*default\([^)]*\)',
-                           'params.TEMP|default(240)', block)
+            # Only migrate the stock OP and its historical 0 / 240 TEMP default.
+            op = section.rsplit('_', 1)[1]
+            block = re.sub(r'(?m)^([ \t]*ZORTRAX_PROCEDURE_START[ \t]+OP=' + op
+                           + r')[ \t]+TEMP=\{params\.TEMP\s*\|\s*default\((?:0|240)\)\s*\|\s*float\}',
+                           r'\1 {% if params.TEMP is defined %}TEMP={params.TEMP}{% endif %}', block)
+            block = block.replace('OEM %s material at 240C' % op.title(),
+                                  '%s material using the configured temperature and speed' % op.title())
         elif section == 'gcode_macro CANCEL_PRINT':
             block = ('[gcode_macro CANCEL_PRINT]\ndescription: Cancel native print and heaters\n'
                      'rename_existing: CANCEL_PRINT_BASE\ngcode:\n'

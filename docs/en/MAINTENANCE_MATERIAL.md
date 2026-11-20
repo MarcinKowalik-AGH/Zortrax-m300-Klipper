@@ -37,9 +37,9 @@ Material, Settings, Information. Back follows the menu history.
 | Fan test | Toggle upper fan | `ZORTRAX_FAN_UPPER` | Toggle 0 / 150⁄255 request; automatic cooling has priority |
 | Fan test | Toggle lower fan | `ZORTRAX_FAN_LOWER` | Toggle 0 / 150⁄255 request |
 | Material | Back | Navigation | Return to parent |
-| Material | Unload the material | `ZORTRAX_UNLOAD` | 240°C → confirm removal → retract 110 mm → heater off |
-| Material | Load the material | `ZORTRAX_LOAD` | 240°C → insert and confirm → feed 130 mm → heater off |
-| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Set 240°C → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
+| Material | Unload the material | `ZORTRAX_UNLOAD` | Default 240°C → confirm removal → retract 110 mm → heater off |
+| Material | Load the material | `ZORTRAX_LOAD` | Default 240°C → insert and confirm → feed 130 mm → heater off |
+| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Set withdrawal temperature (default 240°C) → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
 the paused-print context, not the idle Material submenu. Maintenance lists
@@ -102,13 +102,26 @@ retains immediate native shutdown behavior.
 For native Change, first pause the print. The service verifies the real
 pause owner, PAUSE_STATE and file position. It preserves the pause snapshot,
 XYZ and logical E; Resume is blocked while transport owns the printer.
-Change sets the hotend to 240°C for the entire withdrawal. After the last
-retract segment has drained, it sets the loading temperature to the saved
-print target. An explicit `TEMP` selects the loading temperature. A saved
-target below the extrusion minimum uses `procedure_temperature` (default
-240°C) for loading. Confirmation authorizes feed once the nozzle reaches
-the loading temperature, including when cooling from 240°C. Successful
-completion restores the original print target and leaves the print paused. The operator separately
+Set the two temperatures and two speeds in the existing `[m300_filament]`
+section. Speeds are in mm/s. These defaults reproduce RC29:
+
+```ini
+unload_temperature: 240
+unload_speed: 2
+load_temperature: 0
+load_speed: 2
+```
+
+A positive loading temperature applies to both standalone Load and a paused
+Change. Zero selects the saved print target for a Change. Standalone Load
+and a Change whose saved target is below the extrusion minimum use the
+legacy `procedure_temperature` fallback (default 240°C). An explicit `TEMP`
+overrides the corresponding standalone temperature, or just the loading
+temperature for Change. The unload target stays active until the last
+retraction has drained. The service waits for the next temperature before
+feeding. Apply configuration edits with a Klipper restart while idle. Read
+`ZORTRAX_FILAMENT_STATUS` to check the four settings and the current heater target.
+Successful completion restores the original print target and leaves the print paused. The operator separately
 chooses Resume. Cancel leaves the print paused with heating off. Cancellation
 or replacement of the paused parent revokes the material service.
 

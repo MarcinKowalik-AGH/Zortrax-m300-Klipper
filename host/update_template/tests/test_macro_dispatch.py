@@ -102,7 +102,7 @@ class MacroDispatchTests(unittest.TestCase):
         self.assertEqual(float(moves[0]['F']),2000.)
         self.assertEqual(output,[])
 
-    def test_load_unload_buttons_default_to_240_and_forward_explicit_temp(self):
+    def test_load_unload_buttons_use_service_defaults_and_forward_explicit_temp(self):
         for operation in ('LOAD', 'UNLOAD'):
             g,printer,output=dispatcher();calls=[]
             p=M300Procedures.__new__(M300Procedures)
@@ -114,7 +114,7 @@ class MacroDispatchTests(unittest.TestCase):
                 template.render(params=cmd.get_command_parameters())))
             g.run_script_from_command('ZORTRAX_'+operation)
             g.run_script_from_command('ZORTRAX_'+operation+' TEMP=250')
-            self.assertEqual(calls,[(operation,240.),(operation,250.)])
+            self.assertEqual(calls,[(operation,None),(operation,250.)])
             self.assertEqual(output,[])
 
     def test_status_button_dispatches_every_diagnostic_command(self):

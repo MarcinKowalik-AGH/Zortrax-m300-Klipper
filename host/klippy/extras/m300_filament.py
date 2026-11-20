@@ -38,6 +38,9 @@ class M300Filament:
             lambda:self._guard(transport=True),self.cancel) if self.native_mode else None)
         self.filament_qualified = config.getboolean('filament_qualified', False)
         self.procedure_temperature = self._option('procedure_temperature', OEM_MATERIAL_TEMPERATURE, 170., 300.)
+        self.unload_temperature = self._option('unload_temperature', self.procedure_temperature, 170., 305.)
+        # Zero selects the saved print target for CHANGE and the standalone default for LOAD.
+        self.load_temperature = self._option('load_temperature', 0., 0., 305.)
         self.use_sensor = config.getboolean('use_filament_sensor', False)
         self.load_length = self._option('load_length', 130., .1, 500.)
         self.unload_length = self._option('unload_length', 110., .1, 500.)
@@ -64,6 +67,7 @@ class M300Filament:
         self.last_rejection = ''
         self.target = 0.
         self._load_target = None
+        self._wait_for_cooling = False
         self._expected_target = None
         self._temperature_stable_since = None
         self._phase_started = None
@@ -152,6 +156,10 @@ class M300Filament:
             raise self.config.error('M300 filament segment_length exceeds native max_extrude_only_distance')
         if self.standby_temperature > target_limit(self.hotend):
             raise self.config.error('M300 filament standby_temperature exceeds native heater limit')
+        for name, target in (('unload_temperature', self.unload_temperature),
+                             ('load_temperature', self.load_temperature or self.procedure_temperature)):
+            if not self.hotend.min_extrude_temp <= target <= target_limit(self.hotend):
+                raise self.config.error('M300 filament %s is outside the extruder temperature limits' % name)
         for mode in ('LOAD', 'UNLOAD', 'CHANGE'):
             try:
                 self._profile(mode)
@@ -410,9 +418,10 @@ class M300Filament:
         if not self._valid_session(token, phase):
             return False
         if target:
-            self._live()
+            temperatures = self._live()
             if not self._check_deadline():
                 return False
+            self._wait_for_cooling = temperatures['hotend'][0] > target + self.tolerance
         if self.native_lease is not None:self.native_lease.heat(self.hotend,target)
         else:self.hotend.set_temp(target)
         self._expected_target = target
@@ -428,6 +437,9 @@ class M300Filament:
                 logging.exception('M300 filament heater-off')
         self._expected_target = 0.
 
+    def _automatic_load_target(self, saved):
+        return saved if saved >= self.hotend.min_extrude_temp else self.procedure_temperature
+
     def _capture(self):
         token, phase = self.machine.token, self.machine.phase_id
         self._live()
@@ -442,7 +454,8 @@ class M300Filament:
             self.job.sd.verify_resume(self._owner_file, full=False)
             context['filament_service_required'] = True
             if self.machine.mode == 'CHANGE' and self._load_target is None:
-                self._load_target = self._validate_temperature(context['targets']['hotend'])
+                self._load_target = self._validate_temperature(
+                    self._automatic_load_target(context['targets']['hotend']))
         self._anchor = list(self.toolhead.get_position()[:3])
         command = self.gcode.create_gcode_command('SAVE_GCODE_STATE', 'SAVE_GCODE_STATE', {'NAME': STATE_NAME})
         self.gcode_move.cmd_SAVE_GCODE_STATE(command)
@@ -486,17 +499,17 @@ class M300Filament:
             raise self._error('M02 cleanup or file operation still owns resources')
         load_target = None
         if operation == 'CHANGE':
-            target = self._validate_temperature(OEM_MATERIAL_TEMPERATURE)
-            if temperature is not None:
-                load_target = self._validate_temperature(temperature)
-            elif native_pause is not None:
-                saved = native_pause['target']
+            target = self._validate_temperature(self.unload_temperature)
+            if temperature is not None or self.load_temperature:
                 load_target = self._validate_temperature(
-                    saved if saved >= self.hotend.min_extrude_temp else self.procedure_temperature)
-            # The legacy job owner supplies its saved print target after parking.
+                    self.load_temperature if temperature is None else temperature)
+            elif native_pause is not None:
+                load_target = self._validate_temperature(self._automatic_load_target(native_pause['target']))
+            # The legacy job owner supplies the automatic load target after parking.
         else:
-            target = self._validate_temperature(
-                self.procedure_temperature if temperature is None else temperature)
+            default = (self.unload_temperature if operation == 'UNLOAD'
+                       else self.load_temperature or self.procedure_temperature)
+            target = self._validate_temperature(default if temperature is None else temperature)
         self._live(native_pause=native_pause)
         self._sensor()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
@@ -561,8 +574,9 @@ class M300Filament:
                 measured, target, self.target, self.hotend)
             # A hotter previous phase satisfies the OEM lower threshold immediately.
             # Wait for the new material-change setpoint before starting E motion.
-            return ready and (self.machine.mode != 'CHANGE'
-                              or measured <= self.target + self.tolerance)
+            if self.machine.mode == 'CHANGE' or self._wait_for_cooling:
+                return ready and measured <= self.target + self.tolerance
+            return ready
         return (target == self.target and abs(measured-self.target) <= self.tolerance
                 and self.hotend.can_extrude and measured >= self.hotend.min_extrude_temp)
 
@@ -850,6 +864,8 @@ class M300Filament:
                 'temperature': measured, 'target': actual_target,
                 'requested_target': self.target, 'completed_mm': snapshot['completed_mm'],
                 'procedure_temperature': self.procedure_temperature,
+                'load_temperature': self.load_temperature, 'load_speed': self.load_speed,
+                'unload_temperature': self.unload_temperature, 'unload_speed': self.unload_speed,
                 'issued_mm': snapshot['issued_mm'], 'budget_mm': snapshot['plan'].get('total_budget_mm', 0.),
                 'remaining_budget_mm': snapshot['remaining_budget'],
                 'purge_requests_remaining': snapshot['purge_requests_remaining'],

@@ -95,7 +95,7 @@ class NativeIntegrationR3(unittest.TestCase):
         self.assertFalse(any(e[0]=='native_pause' for e in h.events))
     def test_mesh_profile_and_service_temperatures_are_not_replaced_with_maxima(self):
         text=(Path(__file__).resolve().parents[1]/'payload/m300_operations.cfg').read_text()
-        self.assertIn("OP=LOAD TEMP={params.TEMP|default(240)",text)
+        self.assertIn("OP=LOAD {% if params.TEMP is defined %}TEMP={params.TEMP}{% endif %}",text)
         self.assertIn("OP=LEVEL TEMP={params.TEMP|default(260)",text)
     def test_oled_offers_105_and_not_110_or_120(self):
         from test_native_menu import fixture

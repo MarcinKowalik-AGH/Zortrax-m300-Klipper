@@ -46,7 +46,7 @@ class Heater:
 
 
 class Harness:
-    def __init__(self,connect=True):
+    def __init__(self,connect=True,filament_options=None):
         self.now,self.shutdown=1.,False
         self.events,self.callbacks,self.lines=[],[],[]
         self.handlers=defaultdict(list)
@@ -123,7 +123,10 @@ class Harness:
         self.objects['gcode_move']=self.gmove
         self.pause=PauseResume(self.config)
         self.objects['pause_resume']=self.pause
-        self.f=M300Filament(self.config)
+        filament_config = copy.copy(self.config)
+        if filament_options:
+            filament_config.getfloat = lambda name, default, **kw: filament_options.get(name, default)
+        self.f=M300Filament(filament_config)
         self.objects['m300_filament']=self.f
         self.m=M300NativeMaintenance(self.config)
         self.hold_actions = []
@@ -242,6 +245,38 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertEqual(h.position,[150.,158.,5.,-93.])
         self.assertEqual(h.hotend.target,0.)
         h.assert_restored(self)
+
+    def test_configured_standalone_temperatures_and_speeds_reach_actual_moves(self):
+        options = dict(unload_temperature=224., unload_speed=3.5, load_temperature=216., load_speed=1.25)
+        for op, command, measured, expected in (
+                ('LOAD', 'ZORTRAX_LOAD', 240., 216.), ('UNLOAD', 'ZORTRAX_UNLOAD', 256., 224.),
+                ('LOAD', 'LOAD_FILAMENT', 25., 216.), ('UNLOAD', 'UNLOAD_FILAMENT TEMP=232', 25., 232.)):
+            with self.subTest(command=command):
+                h = Harness(filament_options=options)
+                h.hotend.temperature = measured
+                h.run(command)
+                status = h.f.get_status(h.now)
+                self.assertEqual({k: status[k] for k in options}, options)
+                self.assertEqual(h.hotend.target, expected)
+                for _ in range(30):
+                    h.step()
+                self.assertEqual(h.f.machine.state, 'HEATING')
+                self.assertEqual(h.position[3], 17.)
+                h.heat(h.f, 'WAIT_INSERT' if op == 'LOAD' else 'WAIT_UNLOAD')
+                h.p.action(h.p.view(h.now)['view_id'], 'CONFIRM')
+                h.until(h.f, 'COMPLETE')
+                speeds = {e[2] for e in h.events if e[0] == 'move'}
+                self.assertEqual(speeds, {options[op.lower() + '_speed']})
+                self.assertEqual(h.position[3], 147. if op == 'LOAD' else -93.)
+
+    def test_configured_temperature_must_fit_actual_extruder_limits(self):
+        for options in (dict(load_temperature=60.), dict(unload_temperature=304.)):
+            with self.subTest(options=options):
+                h = Harness(filament_options=options)
+                with self.assertRaisesRegex(RuntimeError, 'extruder temperature limits'):
+                    h.f._audit_config()
+                self.assertFalse(any(e[0] == 'move' for e in h.events))
+                self.assertEqual(h.hotend.target, 0.)
 
     def test_standalone_material_operations_preserve_active_native_bed_mesh(self):
         for operation, wait_state, endpoint in (('LOAD', 'WAIT_INSERT', 147.),

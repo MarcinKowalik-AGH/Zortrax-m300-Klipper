@@ -53,15 +53,29 @@ class InstallerTests(unittest.TestCase):
         self.config.write_text(source);path=self.config.parent/'m300_tests.cfg';path.write_text(macros)
         receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
         self.assertIn('procedure_temperature: 260',self.config.read_text())
-        self.assertIn('procedure_temperature: 240',self.config.read_text())
+        self.assertIn('unload_temperature: 240',self.config.read_text())
+        self.assertIn('load_temperature: 0',self.config.read_text())
         self.assertIn('filament_qualified: True',self.config.read_text())
         self.assertIn('default(180)',path.read_text())
-        self.assertEqual(path.read_text().count('default(240)'),2)
+        self.assertEqual(path.read_text().count('TEMP={params.TEMP}{% endif %}'),2)
         self.assertIn('M118 My retained command',path.read_text())
         self.assertEqual(install.plan(self.root,self.config),[])
         install.rollback(receipt,self.root,self.config)
         self.assertEqual(self.config.read_text(),source)
         self.assertEqual(path.read_text(),macros)
+
+    def test_material_upgrade_preserves_operator_profile_and_custom_wrapper(self):
+        source = ('[m300_filament]\nunload_temperature: 235\nload_temperature: 216\n'
+                  'load_speed: 1.4\nunload_speed: 3.2\nprocedure_temperature: 230\n'
+                  '[gcode_macro ZORTRAX_UNLOAD]\ngcode:\n'
+                  '    ZORTRAX_PROCEDURE_START OP=UNLOAD TEMP={params.TEMP|default(232)|float}\n')
+        self.config.write_text(source)
+        receipt = install.apply(self.root, self.config, install.plan(self.root, self.config))
+        for line in source.splitlines():
+            self.assertIn(line, self.config.read_text())
+        self.assertEqual(install.plan(self.root, self.config), [])
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(self.config.read_text(), source)
 
     def test_native_m07_upgrade_preserves_sensor_include_pid_e_z315_and_existing_test_macros(self):
         source=('[mcu]\nserial: /dev/ttyS1\nbaud: 1500000\n'
