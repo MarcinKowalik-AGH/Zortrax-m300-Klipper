@@ -50,7 +50,7 @@ including changes in heater targets during a raft-to-model transition.
 Preparation, operator pause and faults retain their status colors.
 [Lighting settings](SETTINGS_INFORMATION.md).
 
-Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.42-AUDIT`
+Use `PRINT_CONTROL_STATUS` to check revision `0.13.16.43-MANUAL-E`
 and `model_print_ready: true` after purge for the active SD file. The legacy `0.13.16.38-PRINT-DRAIN-XY-PURGE` commanded a Z5 lift between the Y
 and X pairs. From `0.13.16.39-PRINT-PREP`, the crossover uses the commanded
 purge height, usually Z0.28. Bed Mesh can still move physical Z as XY
@@ -60,7 +60,7 @@ and check the reported event in `ZORTRAX_ERROR_STATUS`.
 
 ## Fluidd
 
-Pause, Resume and Cancel on the dashboard operate on native Klipper state.
+Pause, Resume and Cancel on the dashboard operate on native Klipper state. Once parking or automatic material transport finishes, **Extrude** and **Retract** move only the filament. You can purge before confirming a colour change. Reheating a cooled nozzle and using these buttons restart the pause cooling timer.
 A physical SD print has a unique virtual filename in print history. Fluidd's
 dashboard Reprint sends that filename through Moonraker, and Klipper matches
 it to the retained copy of that exact print. An older virtual filename is

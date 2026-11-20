@@ -49,6 +49,7 @@ class PrintFixture:
         self.mode=config.get('mode','lifecycle')
         self.running=False;self.marks=[];self.actions=[];self.flow=False
         self.refusals = []
+        self.jogged = set()
         self.second_job = False
         self.mark_positions = {}
         self.pause_positions = {}
@@ -134,12 +135,22 @@ class PrintFixture:
         self.gcode.run_script_from_command('SDCARD_PRINT_FILE FILENAME="Print lifecycle.gcode"')
         self.reactor.update_timer(self.timer,self.reactor.NOW)
 
-    def _submit(self,script):
+    def _submit(self,script,*,manual_e=None):
         if self.pending:return
         self.pending=script
         def run(now):
             try:
+                if manual_e is not None:
+                    toolhead = self.printer.lookup_object('toolhead')
+                    move = self.printer.lookup_object('gcode_move')
+                    xyz_e = toolhead.get_position()[:]
+                    logical_e = move.get_status(now)['gcode_position'].e
                 self.actions.append(script);self.gcode.run_script(script)
+                if manual_e is not None:
+                    end = toolhead.get_position()
+                    assert xyz_e[:3] == end[:3] and abs(end[3]-xyz_e[3]-manual_e)<1.e-6
+                    assert abs(move.get_status(now)['gcode_position'].e-logical_e)<1.e-6
+                    assert self.control.state == 'PAUSED' and self.sd.work_timer is None
             finally:self.pending=None
         self.reactor.register_callback(run)
 
@@ -165,6 +176,14 @@ class PrintFixture:
             self._submit('CANCEL_PRINT')
         elif c.state=='PAUSED' and not self.filament.is_busy():
             ctx=c.context
+            stage = 'change' if ctx['change_required'] else 'pause'
+            if (self.mode == 'lifecycle' and not self.pending and stage not in self.jogged
+                    and (stage == 'pause' or ctx['material_success'])):
+                self.jogged.add(stage)
+                distance = 30 if stage == 'change' else -30
+                self._submit('SAVE_GCODE_STATE NAME=_ui_retract\nM83\nG1 E%d F240\n'
+                             'RESTORE_GCODE_STATE NAME=_ui_retract' % distance, manual_e=distance)
+                return now+.05
             if ctx['change_required']:
                 if ctx['material_success']:
                     if not self.flow:

@@ -128,7 +128,7 @@ class SharedOperatorMenuTests(unittest.TestCase):
             h.until(h.f, 'COMPLETE')
             with self.assertRaisesRegex(h.printer.command_error, 'expired'):
                 h.p.action(view['view_id'], 'CONFIRM')
-            self.assertEqual(h.hotend.target, 0.)
+            self.assertEqual(h.hotend.target, 240.)
 
     def test_panel_unload_then_fluidd_confirmation(self):
         with session() as h:
@@ -960,7 +960,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.31');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.32');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])

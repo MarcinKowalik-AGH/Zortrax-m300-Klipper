@@ -37,8 +37,8 @@ Material, Settings, Information. Back follows the menu history.
 | Fan test | Toggle upper fan | `ZORTRAX_FAN_UPPER` | Toggle 0 / 150⁄255 request; automatic cooling has priority |
 | Fan test | Toggle lower fan | `ZORTRAX_FAN_LOWER` | Toggle 0 / 150⁄255 request |
 | Material | Back | Navigation | Return to parent |
-| Material | Unload the material | `ZORTRAX_UNLOAD` | Default 240°C → confirm removal → retract 110 mm → heater off |
-| Material | Load the material | `ZORTRAX_LOAD` | Default 240°C → insert and confirm → feed 130 mm → heater off |
+| Material | Unload the material | `ZORTRAX_UNLOAD` | Default 240°C → confirm removal → retract 110 mm → nozzle stays at the material target |
+| Material | Load the material | `ZORTRAX_LOAD` | Default 240°C → insert and confirm → feed 130 mm → nozzle stays at the material target |
 | Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Set withdrawal temperature (default 240°C) → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
@@ -128,6 +128,12 @@ Successful completion restores the original print target and leaves the print pa
 chooses Resume. Cancel leaves the print paused with heating off. Cancellation
 or replacement of the paused parent revokes the material service.
 
+## Manual extrusion in Fluidd and OrcaSlicer
+
+After standalone Load or Unload completes, the nozzle stays at the operation’s target for manual feeding or retraction. Set the hotend target to zero when finished or let the normal Klipper idle timeout turn it off.
+
+During an ordinary pause, wait until parking finishes. During a colour change, wait for the automatic transport to finish and the flow confirmation to appear. In **Tool**, select the filament length and speed, then click **Extrude** to purge or **Retract** to withdraw. Each click moves only the filament. The print stays paused, including after flow confirmation, until you explicitly choose **Resume**. If pause cooling has lowered the nozzle below the extrusion threshold, set the appropriate working temperature and let it heat before using the buttons.
+
 ## Interactive Fan test
 
 The original menu is Maintenance → Fan test → Back / Toggle upper fan /
@@ -201,7 +207,7 @@ requiring the disabled legacy M02 print engine.
 ## Deliberate port differences
 
 Successful original Unload returns to Material without clearing its hotend
-target. The port explicitly turns heating off. Material timeouts, stable
+target. The port also leaves the nozzle at the material target after successful standalone Load or Unload. The normal idle timeout controls cooling. Material timeouts, stable
 readiness, bounded segments, token revocation and restoring parser/idle state
 are port protections. They are not presented as literal firmware behavior.
 

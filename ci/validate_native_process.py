@@ -470,6 +470,10 @@ def main():
                 assert positions['RESUMED'] == positions['CHANGED'] == [x, y, z],result
                 assert positions['ENDED'] == [300.,305.,cp.getfloat('stepper_z','position_max')],result
                 assert 'FILAMENT_READY' in result['actions'] and result['actions'].count('RESUME')==2,result
+                for distance in (-30, 30):
+                    script = ('SAVE_GCODE_STATE NAME=_ui_retract\nM83\nG1 E%d F240\n'
+                              'RESTORE_GCODE_STATE NAME=_ui_retract' % distance)
+                    assert result['actions'].count(script) == 1, result
         if name == 'native_controls':
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)

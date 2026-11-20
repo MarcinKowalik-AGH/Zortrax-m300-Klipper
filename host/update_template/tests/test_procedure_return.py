@@ -134,7 +134,7 @@ class ProcedureReturnTests(unittest.TestCase):
                 service=getattr(h,name);h.heat(service,waiting)
                 h.action('CONFIRM');h.until(service,'COMPLETE');h.p._tick(h.now)
                 self.assertEqual(h.oled.page,'status')
-                self.assertEqual(h.hotend.target,0.)
+                self.assertEqual(h.hotend.target, 0. if command == 'ZORTRAX_HEAT' else 240.)
         with session() as h:
             h.oled._show_status();h.run('ZORTRAX_FAN_TEST_START');h.p._tick(h.now)
             self.assertEqual(h.menu.page,'fan_test')

@@ -78,12 +78,13 @@ class FirmwareMaterialContractTests(unittest.TestCase):
             self.assertEqual(h.position[3],17.)
             self.assertEqual(h.hotend.target,0.);h.assert_restored(self)
 
-    def test_unload_heater_off_is_an_explicit_port_difference(self):
+    def test_standalone_unload_releases_motion_with_its_target_active(self):
         original=next(m for m in REFERENCE['material'] if m['operation']=='UNLOAD' and m['accept'])
         self.assertFalse(any(e['kind']=='target' for e in original['events']))
         h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         h.f.confirm(h.f.machine.token,h.f.machine.phase_id);h.until(h.f,'COMPLETE')
-        self.assertEqual(h.hotend.target,0.)
+        self.assertEqual(h.hotend.target,240.)
+        h.assert_restored(self)
 
     def test_readiness_is_a_minimum_threshold_at_238_including_small_overshoot(self):
         for measured,ready in ((237.9,False),(238.,True),(244.,True)):

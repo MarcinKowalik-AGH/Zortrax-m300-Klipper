@@ -97,6 +97,8 @@ własne nastawy mogą skrócić odcinki.
 | END_PRINT | Po ostatnim ruchu modelu stół opuszcza się o 300 mm lub do limitu Z. Po zakończeniu tego ruchu głowica parkuje w prawym tylnym rogu przy dostatecznym prześwicie. Następuje wyłączenie grzania i nawiewu modelu, odczyt końca pliku i komunikat PRINTING DONE. |
 | M600 / ZORTRAX_CHANGE | Po odsunięciu stołu głowica parkuje w miejscu serwisowym. Przy wymianie wybranej podczas zwykłej pauzy dojeżdża tam na już osiągniętej wysokości. Po wymianie potwierdź wypływ i wybierz RESUME. |
 
+W pauzie poczekaj, aż drukarka zakończy ruch. Przy zmianie koloru poczekaj na pytanie o wypływ. W panelu **Narzędzie** we Fluidd lub w zakładce **Device** w OrcaSlicerze ustaw długość i prędkość filamentu. **Extrude** podaje go, a **Retract** cofa. Możesz powtarzać ruchy przed potwierdzeniem wypływu. Wydruk wznowisz osobno przyciskiem **Resume**.
+
 Domyślny narożnik to X300 Y305. Ruch stołu jest względny i ograniczony do `position_max` osi Z. Przy Z250 i limicie Z300 stół może zjechać jeszcze o 50 mm. Jeżeli dostępny ruch jest mniejszy od `min_park_clearance` (domyślnie 5 mm), głowica pozostaje w XY. Gorąca retrakcja ma domyślnie 2 mm.
 Pauza zachowuje stół i pozycję; domyślnie po 600 s obniża wyższy cel dyszy do
 150°C, a po 1800 s wyłącza jej cel. To parametry konfigurowalne, nie obietnica
@@ -127,7 +129,7 @@ ZORTRAX_ERROR_STATUS
 BED_MESH_OUTPUT
 ```
 
-Sprawdź rewizję `0.13.16.42-AUDIT`, fazę i aktywną siatkę. W RC17
+Sprawdź rewizję `0.13.16.43-MANUAL-E`, fazę i aktywną siatkę. W RC17
 `model_print_ready: true` potwierdza zakończenie czyszczenia w bieżącym
 pliku SD. Rewizja
 `0.13.16.38-PRINT-DRAIN-XY-PURGE` miała dodatkowe odsunięcie do Z5 pomiędzy

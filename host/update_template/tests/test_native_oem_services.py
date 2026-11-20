@@ -226,7 +226,7 @@ class NativeMaterialTests(unittest.TestCase):
         h.until(h.f,'COMPLETE')
         self.assertEqual(h.position,[150.,158.,5.,147.])
         self.assertEqual(h.homed,'')
-        self.assertEqual(h.hotend.target,0.)
+        self.assertEqual(h.hotend.target,240.)
         self.assertAlmostEqual(h.gmove._get_gcode_position()[3],before['gcode_position'].e)
         self.assertFalse(h.gmove.absolute_coord)
         self.assertFalse(h.gmove.allow_absolute_extrude)
@@ -236,7 +236,7 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertNotIn('WAIT_PURGE',[e['to'] for e in h.f.machine.snapshot()['history']][-2:])
         h.assert_restored(self)
 
-    def test_unload_confirms_before_retracting_then_turns_heat_off(self):
+    def test_unload_confirms_before_retracting_and_leaves_nozzle_available(self):
         h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         self.assertEqual(h.position,[150.,158.,5.,17.])
         self.assertFalse(any(e[0]=='move' for e in h.events))
@@ -244,7 +244,7 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertTrue(h.f.get_status(h.now)['can_confirm'])
         view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
         self.assertEqual(h.position,[150.,158.,5.,-93.])
-        self.assertEqual(h.hotend.target,0.)
+        self.assertEqual(h.hotend.target,240.)
         h.assert_restored(self)
 
     def test_configured_standalone_temperatures_and_speeds_reach_actual_moves(self):
@@ -341,7 +341,7 @@ class NativeMaterialTests(unittest.TestCase):
                 self.assertIs(h.gmove.move_with_transform, transformed_move)
                 self.assertIs(mesh.get_mesh(), active_mesh)
                 self.assertEqual(h.gmove.get_status(h.now)['gcode_position'], before['gcode_position'])
-                self.assertEqual(h.hotend.target, 0.)
+                self.assertEqual(h.hotend.target, 240.)
 
     def test_native_printing_or_paused_rejects_material_and_maintenance_before_heat(self):
         for state in ('printing','paused'):
@@ -911,7 +911,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
             packet(False);packet(False,1,1,1)
             h.until(service,'COMPLETE');h.p._tick(h.now)
             self.assertEqual(menu.page,page)
-            self.assertEqual(o.page,'m04');self.assertEqual(h.hotend.target,0.)
+            self.assertEqual(o.page,'m04');self.assertEqual(h.hotend.target,240. if owner=='f' else 0.)
             self.assertEqual(h.lines[-1],'// action:prompt_end')
             packet(False, 1, 1, 1)  # Refresh telemetry after simulated extrusion.
             for clicks, expected in ((2, 'zortrax'), (3, 'main'), (4, 'status')):

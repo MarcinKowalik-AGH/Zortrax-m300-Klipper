@@ -127,6 +127,11 @@ class Harness(oem.Harness):
         self.pause_print()
 
 
+def fluidd_button(h, distance):
+    h.run('SAVE_GCODE_STATE NAME=_ui_retract\nM83\nG1 E%g F240\n'
+          'RESTORE_GCODE_STATE NAME=_ui_retract' % distance)
+
+
 class PrintControlTests(unittest.TestCase):
     def setUp(self):self.h=Harness();self.addCleanup(self.h.close)
 
@@ -139,6 +144,113 @@ class PrintControlTests(unittest.TestCase):
         h.control_until('PAUSED');self.assertEqual(h.position[:3],[100.,110.,15.])
         moves=[e[1] for e in h.events if e[0]=='move']
         self.assertEqual(moves, [(100.,110.,10.,15.), (100.,110.,15.,15.)])
+
+    def test_fluidd_jogs_plain_pause_and_resume_preserves_absolute_file_e(self):
+        h = self.h
+        h.run('G90\nM82\nG92 E80\nM220 S90\nM221 S95')
+        h.pause_print()
+        parked = list(h.position)
+        old = copy.deepcopy(h.gmove.saved_states['PAUSE_STATE'])
+        file_pos = h.sd.file_position
+        fluidd_button(h, 30)
+        self.assertEqual(h.events[-1], ('move', (*parked[:3], parked[3]+30), 4.))
+        fluidd_button(h, -10)
+        self.assertEqual(h.events[-1], ('move', (*parked[:3], parked[3]+20), 4.))
+        self.assertEqual(h.gmove.saved_states['PAUSE_STATE'], old)
+        self.assertTrue(h.gmove.allow_absolute_extrude)
+        self.assertEqual(h.sd.file_position, file_pos)
+        self.assertIsNone(h.sd.work_timer)
+        h.run('RESUME');h.control_until('IDLE')
+        self.assertEqual(h.position[:3], [100.,110.,10.])
+        self.assertAlmostEqual(h.position[3], 37.)
+        self.assertAlmostEqual(h.gmove._get_gcode_position()[3], 80.)
+        h.file_command('G1 E81 F240')
+        self.assertAlmostEqual(h.position[3], 37.95)
+
+    def test_fluidd_jogs_during_material_flow_check_without_resuming(self):
+        h = self.h
+        h.run('M600');h.stop_worker();h.control_until('PAUSED')
+        with self.assertRaises(h.printer.command_error):
+            fluidd_button(h, 30)
+        h.heat(h.f, 'WAIT_INSERT')
+        h.p.action(h.p.view(h.now)['view_id'], 'CONFIRM')
+        h.heat(h.f, 'COMPLETE')
+        ctx = h.c.context
+        self.assertTrue(ctx['material_success'])
+        self.assertFalse(ctx['flow_confirmed'])
+        self.assertEqual(h.position[:2], [300.,305.])
+        parked = list(h.position)
+        fluidd_button(h, 30)
+        self.assertEqual(h.position, parked[:3]+[parked[3]+30])
+        h.run('RESUME');h.control_until('PAUSED','WAIT_FILAMENT_READY')
+        fluidd_button(h, -30)
+        self.assertEqual(h.position, parked)
+        self.assertFalse(ctx['flow_confirmed'])
+        self.assertIsNone(h.sd.work_timer)
+        h.run('FILAMENT_READY\nRESUME');h.control_until('IDLE')
+        self.assertEqual(h.sd.work_timer,'native')
+
+    def test_manual_pause_motion_guards_reject_xyz_absolute_cold_and_overlong_moves(self):
+        h = self.h
+        h.pause_print()
+        parked = list(h.position)
+        for script in ('M82\nG1 E30 F240', 'M83\nG1 X2 E5 F240', 'G0 Z1 E1 F120',
+                       'G1 E5', 'G1 E55 F240', 'G1 E-55 F240', 'G1 E1 F0'):
+            with self.subTest(script=script), self.assertRaises(h.printer.command_error):
+                h.run(script)
+        with self.assertRaises(h.printer.command_error):
+            h.file_command('G1 E5 F240')
+        for measured, target in ((25.,240.), (230.,0.), (230.,150.)):
+            h.hotend.temperature, h.hotend.target = measured, target
+            with self.assertRaisesRegex(h.printer.command_error,'heat the nozzle'):
+                fluidd_button(h, 30)
+        self.assertEqual(h.position, parked)
+        h.hotend.temperature = h.hotend.target = 230.
+        h.position[0] += 1.
+        with self.assertRaisesRegex(h.printer.command_error, 'parked position changed'):
+            fluidd_button(h, 30)
+        h.position = parked[:]
+        h.c._motor_off()
+        with self.assertRaisesRegex(h.printer.command_error, 'position was released'):
+            fluidd_button(h, -30)
+
+    def test_buttons_after_standalone_load_and_unload_then_normal_idle_cooling(self):
+        h = self.h
+        h.stop_worker();h.do_cancel()
+        h.gcode.register_command('TURN_OFF_HEATERS',None)
+        h.gcode.register_command('TURN_OFF_HEATERS',lambda gcmd: h.off())
+        h.gcode.register_command('ZORTRAX_IDLE_RELEASE_XYE',lambda gcmd: None)
+        for command, prompt in (('ZORTRAX_LOAD','WAIT_INSERT'),('ZORTRAX_UNLOAD','WAIT_UNLOAD')):
+            h.run(command);h.heat(h.f,prompt)
+            h.p.action(h.p.view(h.now)['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
+            start = list(h.position)
+            self.assertEqual(h.hotend.target, 240.)
+            fluidd_button(h, 30)
+            self.assertEqual(h.position, start[:3]+[start[3]+30])
+            fluidd_button(h, -30)
+            self.assertEqual(h.position, start)
+            self.assertEqual(h.idle.idle_timeout,600.)
+            h.run('ZORTRAX_PAUSE_IDLE')
+            self.assertEqual(h.hotend.target, 0.)
+
+    def test_reheat_after_standby_or_off_allows_manual_purge_and_restarts_idle_deadlines(self):
+        h = self.h
+        h.pause_print()
+        for elapsed, cooled in ((h.c.standby_after, 150.), (h.c.off_after, 0.)):
+            h.step_control(elapsed)
+            self.assertEqual(h.hotend.target, cooled)
+            h.hotend.temperature = cooled
+            h.hotend.set_temp(230.)
+            h.step_control()
+            self.assertEqual((h.c.phase, h.hotend.target), ('PAUSED', 230.))
+            with self.assertRaisesRegex(h.printer.command_error, 'heat the nozzle'):
+                fluidd_button(h, 30)
+            h.hotend.temperature = 230.
+            fluidd_button(h, 30)
+            self.assertIsNone(h.sd.work_timer)
+            self.assertEqual(h.c.context['targets']['hotend'], 240.)
+        h.step_control(h.c.off_after)
+        self.assertEqual(h.hotend.target, 0.)
 
     def test_duplicate_pause_does_not_replace_native_saved_state(self):
         h=self.h;h.pause_print();saved=copy.deepcopy(h.c.context['saved']);h.run('PAUSE')
