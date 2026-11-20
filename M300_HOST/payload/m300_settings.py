@@ -14,6 +14,7 @@ import os
 import re
 import urllib.request
 
+from .m300_menu import OEM_PAGES
 from .m300_oled_idle import KEYS as TIMER_KEYS
 from .m300_nvm import BRIGHTNESS_KEYS, BRIGHTNESS_LEVELS, COSMETIC_SETTINGS
 
@@ -44,10 +45,10 @@ PAGES = frozenset(PARENTS)
 WEB_MENU_ROWS = {
     'main': ('Main menu', (('Back', ('close',)), ('Klipper', ('page', 'klipper')),
                            ('Zortrax M300', ('page', 'zortrax')))),
-    'zortrax': ('Menu', (('Back', ('page', 'main')), ('Settings', ('page', 'settings')),
-                         ('Information', ('page', 'information')))),
     'klipper': ('Klipper', (('Back', ('page', 'main')),)),
 }
+MODEL_PAGES = ('models', 'browser', 'model_file')
+WEB_PAGES = frozenset(WEB_MENU_ROWS).union(OEM_PAGES, MODEL_PAGES)
 OLD_PRINTER_PAGES = frozenset(('info_model', 'info_hardware', 'info_serial', 'info_time'))
 
 
@@ -102,6 +103,8 @@ class M300Settings:
         self.ready=False;self.reading=False;self.setting_busy=False
         self.epoch=os.urandom(16).hex();self.generation=0;self.fetch_token=0
         self.page='settings';self.consumed=None
+        self.offered_actions = ()
+        self.model_view = None
         self.history_seconds=None;self.history_error=None;self.history_stamp=None
         self.request_time=None
         self.printer.register_event_handler('klippy:ready',self._ready)
@@ -314,6 +317,35 @@ class M300Settings:
         return False
 
     def _web_rows(self, now):
+        if self.page in OEM_PAGES:
+            menu = self.printer.lookup_object('m300_menu')
+            title, rows = menu.oem_rows(self.page)
+            # A physical hold ends on knob release. A web click is one native step.
+            return ('Menu' if self.page == 'zortrax' else title), [
+                (label, ('native_gcode', 'ZORTRAX_PLATFORM_UP' if action[1] < 0
+                         else 'ZORTRAX_PLATFORM_DOWN') if action[0] == 'platform_hold' else action)
+                for label, action in rows]
+        if self.page in MODEL_PAGES:
+            menu = self.printer.lookup_object('m300_menu')
+            models = self.printer.lookup_object('m300_models', None)
+            if self.page == 'models':
+                rows = [('Back', ('page', 'zortrax'))]
+                if models is None:
+                    return 'Models', rows + [('Model service unavailable', None)]
+                card = self.printer.lookup_object('m300_sd', None)
+                if getattr(card, 'qualified', False):
+                    rows.append(('SD card', ('browse', 'sd', '')))
+                else:
+                    rows.append(('SD card access is disabled', None))
+                return 'Models', rows + [('Host files', ('browse', 'host', ''))]
+            if models is None or menu.page != self.page:
+                raise self.printer.command_error('Model view expired. Reopen Models.')
+            title, rows = menu.rows(now)
+            if self.page == 'browser' and rows[0][1] == ('page', 'zortrax'):
+                rows[0] = ('Back', ('page', 'models'))
+            if self.page == 'model_file':
+                rows.append(('Refresh', ('page', 'model_file')))
+            return title, rows
         if self.page == 'klipper':
             title, rows = WEB_MENU_ROWS[self.page]
             stats = self.printer.lookup_object('print_stats', None)
@@ -330,21 +362,28 @@ class M300Settings:
         if page is not None:
             if page in OLD_PRINTER_PAGES:
                 page = 'info_printer'
-            if page not in PAGES and page not in WEB_MENU_ROWS:
+            if page not in PAGES and page not in WEB_PAGES:
                 raise self.printer.command_error('Unknown M300 menu page')
             self.page=page
         if refresh:self.request_refresh()
         self.generation+=1;self.consumed=None
         now = self.reactor.monotonic()
         title,rows=self._web_rows(now)
+        self.offered_actions = ()
         if self._procedure_busy(now):
+            if self.page == 'zortrax':
+                self.gcode.run_script_from_command('ZORTRAX_PROCEDURE')
+                return
             self.gcode.respond_info('M300 UI '+json.dumps(dict(title=title,lines=[r[0] for r in rows])))
             return
         self._present_on_oled(self.page, now)
+        self.offered_actions = tuple(action for _, action in rows)
+        if self.page in MODEL_PAGES:
+            self.model_view = self.printer.lookup_object('m300_menu').generation
         if both_timers:
             title = 'OLED timers'
         def emit(line):self.gcode.respond_raw('// action:'+line)
-        emit('prompt_end');emit('prompt_begin ZORTRAX M300 - '+title)
+        emit('prompt_end');emit('prompt_begin ZORTRAX M300 - '+display_text(title, 255))
         token=self._view_id()
         if self.page.startswith('setting_') and self.page[8:] in TIMER_KEYS:
             display = self.printer.lookup_object('m300_display', None)
@@ -362,7 +401,7 @@ class M300Settings:
             return
         active=self.active_rows(self.page)
         for index,(label,action) in enumerate(rows):
-            label=label+(' <' if index in active else '')
+            label=display_text(label, 255)+(' <' if index in active else '')
             if action is None:emit('prompt_text '+label.replace('|','/'))
             else:emit('prompt_button %s|ZORTRAX_UI_ACTION VIEW=%s INDEX=%d|primary'%(label,token,index))
         if self.page.startswith('setting_') and self.page[8:] in BRIGHTNESS_KEYS:
@@ -386,13 +425,41 @@ class M300Settings:
     def action(self,token,index):
         self._live()
         now = self.reactor.monotonic()
-        _, rows = self._web_rows(now)
         if (token!=self._view_id() or token==self.consumed or type(index) is not int
-                or not 0<=index<len(rows) or rows[index][1] is None):
+                or not 0<=index<len(self.offered_actions) or self.offered_actions[index] is None):
             raise self.printer.command_error('Expired Settings view; refresh before choosing')
         self.consumed=token
-        action=rows[index][1]
+        action = self.offered_actions[index]
         kind = action[0]
+        if self.page in OEM_PAGES or self.page in MODEL_PAGES:
+            if self._procedure_busy(now):
+                self.gcode.run_script_from_command('ZORTRAX_PROCEDURE')
+                return
+        if self.page in MODEL_PAGES:
+            menu = self.printer.lookup_object('m300_menu')
+            _, current_rows = self._web_rows(now)
+            if (self.model_view != menu.generation or menu._busy
+                    or action not in (row[1] for row in current_rows)):
+                raise self.printer.command_error('Model view expired. Reopen Models.')
+            if kind != 'page':
+                self._model_action(menu, action)
+                return
+        if self.page in ('material', 'maintenance') and kind == 'native_gcode':
+            menu = self.printer.lookup_object('m300_menu')
+            oled = self.printer.lookup_object('m300_oled', None)
+            if oled is not None and oled.connected and oled.page == 'm04' and menu.page == self.page:
+                oled.selection = index
+                menu._refresh_panel(oled)
+            self.gcode.respond_raw('// action:prompt_end')
+            try:
+                self.gcode.run_script_from_command(action[1])
+            except self.printer.command_error:
+                if self.ready and not self.printer.is_shutdown() and not self._procedure_busy(now):
+                    self.show()
+                raise
+            if action[1] in ('ZORTRAX_PLATFORM_UP', 'ZORTRAX_PLATFORM_DOWN'):
+                self.show('maintenance')
+            return
         if kind == 'close':
             if not self._procedure_busy(now):
                 self._present_on_oled('status', now)
@@ -406,6 +473,42 @@ class M300Settings:
         else:
             self.page = 'setting_' + action[1] if kind == 'setting' else action[1]
         self.show(refresh=self.page in ('information', 'info_printer'))
+
+    def _model_action(self, menu, action):
+        models = self.printer.lookup_object('m300_models')
+        # The web handler already holds the G-code mutex. In particular, do
+        # not call the physical encoder's model_start wrapper and lock twice.
+        try:
+            kind = action[0]
+            if kind in ('browse', 'directory', 'file'):
+                models._idle()
+                if menu.page in ('motion_jog', 'fan_test'):
+                    raise self.printer.command_error('Finish the active panel operation before browsing models')
+            if kind in ('browse', 'directory'):
+                menu._browse(action[1], action[2])
+            elif kind == 'file':
+                menu._select_file(action[1], action[2])
+            elif kind == 'model_cancel':
+                if action[1] is not None:
+                    models.cancel(action[1])
+                menu._navigate('browser', remember=False)
+            elif kind == 'model_start':
+                models.start(action[1])
+                self.gcode.respond_raw('// action:prompt_end')
+                self._present_on_oled('status', self.reactor.monotonic())
+                return
+            else:
+                raise self.printer.command_error('Unsupported model action')
+        except (ValueError, OSError, self.printer.command_error) as exc:
+            if self.ready and not self.printer.is_shutdown() and not self._procedure_busy(self.reactor.monotonic()):
+                self.show('models')
+            raise self.printer.command_error(display_text(exc)) from exc
+        oled = self.printer.lookup_object('m300_oled', None)
+        if oled is not None and oled.connected and oled.page == 'm04':
+            oled.selection = 0
+            menu._refresh_panel(oled)
+            self.reactor.update_timer(oled.timer, self.reactor.NOW)
+        self.show(menu.page)
 
     def get_status(self,now):
         settings={key:choice_value(self.nvm,key) for key in CHOICES}
