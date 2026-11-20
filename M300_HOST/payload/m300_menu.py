@@ -663,7 +663,7 @@ class M300Menu:
                     self._confirm[0] if self._confirm else 'Expired confirmation'), 36)])
         if self.page == 'material':
             filament = self.printer.lookup_object('m300_filament', None)
-            load = getattr(filament, 'load_temperature', 0.) or getattr(filament, 'procedure_temperature', 240.)
+            load = getattr(filament, 'load_temperature', 240.)
             unload = getattr(filament, 'unload_temperature', 240.)
             return self.t('Material'), self._notice(back + [
                 ('Load: %gC / Unload: %gC' % (load, unload), None),
