@@ -18,7 +18,7 @@ def filament():
     printer=NS(get_reactor=lambda:reactor,command_error=RuntimeError,is_shutdown=lambda:False,
                lookup_object=lambda name,default=None:default if name=='m300_print_control' else NS(register_command=Mock()),
                load_object=lambda config,name:job,register_event_handler=Mock())
-    config=NS(get_printer=lambda:printer,getfloat=lambda name,default,**kw:default,
+    config=NS(get_printer=lambda:printer,get=lambda name,default:default,getfloat=lambda name,default,**kw:default,
               getboolean=lambda name,default:True if name=='filament_qualified' else default,
               error=RuntimeError)
     f=M300Filament(config)
@@ -40,7 +40,7 @@ class ProcedureTemperatures(unittest.TestCase):
 
     def test_raw_load_unload_commands_allow_omitted_or_explicit_temp(self):
         for name in ('cmd_load','cmd_unload'):
-            for requested,expected in ((None,240.),(250.,250.)):
+            for requested,expected in ((None,240.),(250.,250.),('AUTO',240.)):
                 f=filament()
                 params={} if requested is None else {'TEMP':requested}
                 cmd=NS(get_command_parameters=lambda:params,
@@ -61,7 +61,7 @@ class ProcedureTemperatures(unittest.TestCase):
         f.cmd_m600(NS(get_command_parameters=lambda:{'M':'600'},respond_info=Mock()))
         self.assertEqual(f.machine.state,'WAIT_PAUSE')
         self.assertEqual(f.target,240.)
-        self.assertIsNone(f._load_target)
+        self.assertEqual(f._load_target,240.)
         f.job.pause.assert_called_once_with('M03 filament change')
         f.hotend.set_temp.assert_not_called()
 

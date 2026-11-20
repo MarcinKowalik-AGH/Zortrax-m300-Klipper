@@ -16,7 +16,7 @@ This extends the earlier acceptance inventory below; hardware acceptance remains
 | Heat the extruder | Native maintenance owner and ZORTRAX_HEAT | OEM 260/258 readiness and confirmation-to-off flow |
 | Manual platform movement | Same native maintenance owner | OLED hold/release/freshness; finite Fluidd distance; genuine homed Z required |
 | Interactive upper/lower fan test | Shared native fan session and four macros | Original 0/150 duty, entry/Back flow and 12 complete cold-menu frames; upper thermostat and MCU cooling have priority |
-| Load / Unload | Native filament owner and matching macros | Configurable temperatures and speeds (standalone defaults 240°C and 2 mm/s), confirmation-before-transport, nominal 130/110 mm, native calibrated E |
+| Load / Unload | Native filament owner and matching macros | Configurable temperatures and speeds (auto uses 240°C and 2 mm/s for either direction, including a paused change), confirmation-before-transport, nominal 130/110 mm, native calibrated E |
 | Change during pause | Real native pause/file owner | 110 mm out / 150 mm in, one insertion confirmation, preserved pause and explicit Resume |
 | English interface | Shared presenter and NVM-facing language policy | Old saved PL/FR/DE/ES choices cannot alter runtime text; OLED runtime labels remain English; user documentation is available in Polish and English |
 | Original dialogs / sprites | Recovered text, 13-pixel font and existing sprite decoder | 110 original dialog frames plus 12 English fan-menu frames retained as evidence |

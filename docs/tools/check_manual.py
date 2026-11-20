@@ -16,7 +16,7 @@ import sys
 sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
-CURRENT_RELEASE = 'v1.0.0-rc.30'
+CURRENT_RELEASE = 'v1.0.0-rc.31'
 CURRENT_MCU = '1.0.8'
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
@@ -135,10 +135,10 @@ def main():
         'host/klippy/extras/m300_native_motion.py',
     }
     current_plate_sources = {
-        'host/config/m300_classic_services.cfg': 'a78a90ca49c8bf7410700a0bddf9e91b17efab306e345a51a16b497ec72e7232',
-        'host/klippy/extras/m300_menu.py': '36e3435c3f48c3f7cbab979fe97538b254555f604e85191d1fab014f3501572b',
+        'host/config/m300_classic_services.cfg': '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505',
+        'host/klippy/extras/m300_menu.py': '40914048224c93030304f1b1ea0df332306a81311f394a0317dd1bf1c4fcec95',
         'host/config/m300_classic_base.cfg': 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64',
-        'host/config/m300_operations.cfg': '180fc661101a0c199916e387d01a0e39103dd9e4098333a73613cfb1d163e98c',
+        'host/config/m300_operations.cfg': '9ef3ef80e4b41702809587590551452885d2937d7aad3aeca43e8cbd0e5cc056',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         'host/klippy/extras/m300_pad_mesh.py': 'c8a21696a4e17fe9797074d6e0e0cc732167ecfe225aeb23c4487ab838de1f7b',
         'host/klippy/extras/m300_activity_graphics.py': '70f2d9d825ebbd3ccd2cf5e9a744c4fea9e44e6b1ff0d1b59375507c911c989c',

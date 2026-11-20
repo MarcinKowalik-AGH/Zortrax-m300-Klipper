@@ -53,8 +53,8 @@ class InstallerTests(unittest.TestCase):
         self.config.write_text(source);path=self.config.parent/'m300_tests.cfg';path.write_text(macros)
         receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
         self.assertIn('procedure_temperature: 260',self.config.read_text())
-        self.assertIn('unload_temperature: 240',self.config.read_text())
-        self.assertIn('load_temperature: 0',self.config.read_text())
+        self.assertIn('unload_temperature: auto',self.config.read_text())
+        self.assertIn('load_temperature: auto',self.config.read_text())
         self.assertIn('filament_qualified: True',self.config.read_text())
         self.assertIn('default(180)',path.read_text())
         self.assertEqual(path.read_text().count('TEMP={params.TEMP}{% endif %}'),2)
@@ -76,6 +76,19 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(install.plan(self.root, self.config), [])
         install.rollback(receipt, self.root, self.config)
         self.assertEqual(self.config.read_text(), source)
+
+    def test_rc30_default_and_mixed_profiles_migrate_once(self):
+        import m300_profile as profile
+        keys = ('unload_temperature', 'unload_speed', 'load_temperature', 'load_speed')
+        for old, new in ((('240', '2', '0.0', '2'), ('auto',)*4),
+                         (('235', '2', '0e0', '1.5'), ('235','2','auto','1.5')),
+                         (('240', '2', '240', '2'), ('240','2','240','2'))):
+            with self.subTest(old=old):
+                block = '[m300_filament]\n' + ''.join(k+': '+v+' # saved\n' for k,v in zip(keys,old))
+                converted = profile.convert_text(block)
+                self.assertEqual(tuple(profile.option(converted,k) for k in keys),new)
+                self.assertEqual(converted.count('# saved'),4)
+                self.assertEqual(profile.convert_text(converted),converted)
 
     def test_native_m07_upgrade_preserves_sensor_include_pid_e_z315_and_existing_test_macros(self):
         source=('[mcu]\nserial: /dev/ttyS1\nbaud: 1500000\n'

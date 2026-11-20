@@ -11,6 +11,7 @@ import json
 import math
 import os
 
+from .m300_filament import material_command_temperature
 from .m300_material_ui_state import MESSAGES
 from .m300_leveling_oem import describe, format_deviation
 from .m300_oem_procedure_ui import describe as describe_service
@@ -514,7 +515,8 @@ class M300Procedures:
         if operation not in ('LOAD', 'UNLOAD', 'CHANGE', 'LEVEL','HEAT','HEAT_BED',
                              'FANS','FAN_UPPER','FAN_LOWER','FAN_BACK', *HOMING_TITLES):
             raise self.printer.command_error('M300: unknown procedure')
-        temp = gcmd.get_float('TEMP', None)
+        temp = (material_command_temperature(gcmd) if operation in ('LOAD', 'UNLOAD', 'CHANGE')
+                else gcmd.get_float('TEMP', None))
         try:
             if operation in HOMING_TITLES:
                 motion = self.printer.lookup_object('m300_motion', None)

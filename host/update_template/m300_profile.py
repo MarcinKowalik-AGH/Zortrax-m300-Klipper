@@ -84,6 +84,29 @@ def set_option(block, name, value):
     return ''.join(lines)
 
 
+def migrate_material_options(block):
+    previous = {'unload_temperature': 240., 'unload_speed': 2.,
+                'load_temperature': 0., 'load_speed': 2.}
+    def equals(raw, number):
+        try:
+            return float(raw) == number
+        except (TypeError, ValueError):
+            return False
+
+    legacy = option(block, 'procedure_temperature', '240')
+    values = {key: option(block, key) for key in previous}
+    stock = equals(legacy, 240.) and all(
+        raw is None or equals(raw, previous[key]) for key, raw in values.items())
+    for key, raw in values.items():
+        if raw is None and key.endswith('_temperature') and not equals(legacy, 240.):
+            block = set_option(block, key, legacy)
+        elif raw is None or stock or (key == 'load_temperature' and equals(raw, 0.)):
+            block = set_option(block, key, 'auto')
+    return block.replace(
+        '# 0 uses the saved print temperature during a change and 240 C for standalone loading.',
+        '# auto = 240 C for either temperature, 2 mm/s for either filament speed.')
+
+
 def minimum(block, name, value):
     current = float(option(block, name, value))
     if not math.isfinite(current) or current <= 0:
@@ -221,11 +244,7 @@ def convert_text(text, stock_xy=None):
             block = minimum(block, 'approach_distance',
                             float(option(block, 'safe_z')) + float(option(block, 'probe_search_margin')))
         elif section == 'm300_filament':
-            defaults = (('unload_temperature', option(block, 'procedure_temperature', '240')),
-                        ('unload_speed', '2'), ('load_temperature', '0'), ('load_speed', '2'))
-            for key, value in defaults:
-                if option(block, key) is None:
-                    block = set_option(block, key, value)
+            block = migrate_material_options(block)
             block = set_option(block, 'filament_qualified', 'True')
         elif section == 'm300_maintenance':
             block = set_option(block, 'qualified', 'True')
@@ -266,7 +285,7 @@ def convert_text(text, stock_xy=None):
             block = ('[gcode_macro ZORTRAX_CHANGE]\n'
                      'description: Change material in a paused native print; explicit Resume\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=CHANGE '
-                     '{% if params.TEMP is defined %}TEMP={params.TEMP|float}{% endif %}\n\n')
+                     '{% if params.TEMP is defined %}TEMP={params.TEMP}{% endif %}\n\n')
         elif section in ('gcode_macro ZORTRAX_PLATFORM_UP', 'gcode_macro ZORTRAX_PLATFORM_DOWN'):
             block = re.sub(r'SPEED=\{params\.SPEED\s*\|\s*default\(1\)\s*\|\s*float\}',
                            "{% if 'SPEED' in params %}SPEED={params.SPEED|float}{% endif %}", block)

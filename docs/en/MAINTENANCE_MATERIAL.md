@@ -103,24 +103,27 @@ For native Change, first pause the print. The service verifies the real
 pause owner, PAUSE_STATE and file position. It preserves the pause snapshot,
 XYZ and logical E; Resume is blocked while transport owns the printer.
 Set the two temperatures and two speeds in the existing `[m300_filament]`
-section. Speeds are in mm/s. These defaults reproduce RC29:
+section. Each option independently accepts `auto` or a number:
 
 ```ini
-unload_temperature: 240
-unload_speed: 2
-load_temperature: 0
-load_speed: 2
+unload_temperature: auto
+unload_speed: auto
+load_temperature: auto
+load_speed: auto
 ```
 
-A positive loading temperature applies to both standalone Load and a paused
-Change. Zero selects the saved print target for a Change. Standalone Load
-and a Change whose saved target is below the extrusion minimum use the
-legacy `procedure_temperature` fallback (default 240°C). An explicit `TEMP`
-overrides the corresponding standalone temperature, or just the loading
-temperature for Change. The unload target stays active until the last
-retraction has drained. The service waits for the next temperature before
-feeding. Apply configuration edits with a Klipper restart while idle. Read
-`ZORTRAX_FILAMENT_STATUS` to check the four settings and the current heater target.
+Automatic withdrawal and loading both use 240°C and 2 mm/s, including
+during a paused change. A number sets the temperature in °C or the filament
+speed in mm/s for that direction. For example, set only `unload_speed: 3`
+to change withdrawal speed alone. The per-command `TEMP` option overrides
+the temperature for a standalone operation or the load phase of Change.
+`TEMP=auto` selects 240°C for that invocation.
+
+The unload target stays active until the last retraction has drained. Feed
+waits for insertion confirmation and the loading temperature. Apply config
+edits with a Klipper restart while idle. In `ZORTRAX_FILAMENT_STATUS`,
+`configured_material` shows the selected options and the four top-level
+material settings show the numeric values the procedure will use by default.
 Successful completion restores the original print target and leaves the print paused. The operator separately
 chooses Resume. Cancel leaves the print paused with heating off. Cancellation
 or replacement of the paused parent revokes the material service.

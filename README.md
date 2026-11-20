@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.30
+# Zortrax M300 Classic — Klipper 1.0.0-rc.31
 
-**RC30** reads separate loading and withdrawal temperatures and speeds from Klipper configuration. [Settings and update instructions](docs/en/RELEASE_v1.0.0-rc.30.md).
+**RC31** accepts `auto` or a number for each filament setting. Automatic loading and withdrawal use 240°C and 2 mm/s. [Settings and update instructions](docs/en/RELEASE_v1.0.0-rc.31.md).
 
 **MCU 1.0.8:** [lifetime counter storage, compatibility and qualification](docs/en/MCU_FIRMWARE_1.0.8.md). [Separate application ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
@@ -8,7 +8,7 @@
 OLED, encoder, temperature sensors and contact bed. This repository is not the
 M300 Plus, M300 Dual or Inventure port. UI language: English. [Polski](README_PL.md).
 
-[Download RC30](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.30) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
+[Download RC31](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.31) · [First installation](docs/en/FIRST_INSTALL.md) · [Update an existing installation](docs/en/INSTALL.md) · [OLED / Fluidd controls](docs/en/RC1_UI.md) · [Illustrated manual](docs/pl/OLED_FUNCTIONS.md)
 
 ## Included
 

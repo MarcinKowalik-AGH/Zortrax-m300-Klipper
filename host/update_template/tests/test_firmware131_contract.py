@@ -103,7 +103,7 @@ class NativeChangeTests(unittest.TestCase):
         self.assertEqual(h.gmove.saved_states['PAUSE_STATE'],saved)
         with self.assertRaisesRegex(native_gcode.CommandError,'owns resources'):
             h.run('RESUME')
-        self.assertEqual(h.hotend.target,230.)
+        self.assertEqual(h.hotend.target,240.)
         view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.heat(h.f,'COMPLETE')
         self.assertEqual(h.position[3],57.)
         self.assertEqual(h.gmove._get_gcode_position()[3],17.)
@@ -118,7 +118,7 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_change_moves_at_separate_targets_from_cold_and_hot_prints(self):
         for print_temp, command, load_temp in (
-                (210., 'M600', 210.), (260., 'ZORTRAX_CHANGE', 260.),
+                (210., 'M600', 240.), (260., 'ZORTRAX_CHANGE', 240.),
                 (210., 'CHANGE_FILAMENT TEMP=250', 250.),
                 (0., 'ZORTRAX_CHANGE', 240.)):
             with self.subTest(print_temp=print_temp, command=command):
@@ -159,7 +159,8 @@ class NativeChangeTests(unittest.TestCase):
                 h.assert_restored(self)
 
     def test_configured_change_speeds_and_targets_and_one_time_override(self):
-        for command, expected in (('M600', 217.), ('ZORTRAX_CHANGE TEMP=225', 225.)):
+        for command, expected in (('M600', 217.), ('ZORTRAX_CHANGE TEMP=225', 225.),
+                                  ('ZORTRAX_CHANGE TEMP=auto', 240.)):
             with self.subTest(command=command):
                 h = Harness(filament_options=dict(load_temperature=217., unload_temperature=235.,
                                                   unload_speed=3.5, load_speed=1.25))
@@ -179,7 +180,7 @@ class NativeChangeTests(unittest.TestCase):
                 self.assertEqual(h.hotend.target, 210.)
 
     def test_cancel_while_cooling_to_load_target_never_feeds_or_resumes(self):
-        h = Harness()
+        h = Harness(filament_options=dict(load_temperature=210.))
         paused_print(h, 210.)
         h.run('M600')
         h.heat(h.f, 'WAIT_INSERT')

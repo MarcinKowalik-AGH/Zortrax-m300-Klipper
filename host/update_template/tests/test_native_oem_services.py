@@ -124,8 +124,9 @@ class Harness:
         self.pause=PauseResume(self.config)
         self.objects['pause_resume']=self.pause
         filament_config = copy.copy(self.config)
-        if filament_options:
-            filament_config.getfloat = lambda name, default, **kw: filament_options.get(name, default)
+        options = filament_options or {}
+        filament_config.get = lambda name, default: str(options.get(name, default))
+        filament_config.getfloat = lambda name, default, **kw: float(options.get(name, default))
         self.f=M300Filament(filament_config)
         self.objects['m300_filament']=self.f
         self.m=M300NativeMaintenance(self.config)
@@ -272,11 +273,29 @@ class NativeMaterialTests(unittest.TestCase):
     def test_configured_temperature_must_fit_actual_extruder_limits(self):
         for options in (dict(load_temperature=60.), dict(unload_temperature=304.)):
             with self.subTest(options=options):
+                with self.assertRaisesRegex(RuntimeError, 'between|extruder temperature limits'):
+                    Harness(filament_options=options).f._audit_config()
+
+    def test_auto_and_numbers_can_be_mixed_independently_in_both_directions(self):
+        keys = ('load_temperature', 'unload_temperature', 'load_speed', 'unload_speed')
+        factory = (240., 240., 2., 2.)
+        custom = (211., 235., 1.25, 3.5)
+        for mask in range(16):
+            with self.subTest(mask=mask):
+                options = {k: str(custom[i]) if mask & (1 << i) else 'AuTo' for i,k in enumerate(keys)}
+                options['procedure_temperature'] = '225'
                 h = Harness(filament_options=options)
-                with self.assertRaisesRegex(RuntimeError, 'extruder temperature limits'):
-                    h.f._audit_config()
-                self.assertFalse(any(e[0] == 'move' for e in h.events))
-                self.assertEqual(h.hotend.target, 0.)
+                status = h.f.get_status(h.now)
+                for i, k in enumerate(keys):
+                    selected = bool(mask & (1 << i))
+                    self.assertEqual(status[k], custom[i] if selected else factory[i])
+                    self.assertEqual(status['configured_material'][k], custom[i] if selected else 'auto')
+
+    def test_invalid_auto_or_numeric_input_is_rejected(self):
+        for key, bad in (('load_speed','AUTO2'), ('unload_speed', 0), ('load_speed', 'nan'),
+                         ('unload_temperature', 0), ('load_temperature', 'inf'), ('load_speed',21)):
+            with self.subTest(key=key,bad=bad), self.assertRaisesRegex(RuntimeError, key):
+                Harness(filament_options={key:bad})
 
     def test_standalone_material_operations_preserve_active_native_bed_mesh(self):
         for operation, wait_state, endpoint in (('LOAD', 'WAIT_INSERT', 147.),

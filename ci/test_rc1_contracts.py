@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.30'
+VERSION='v1.0.0-rc.31'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -38,13 +38,13 @@ class Rc1Contracts(unittest.TestCase):
         native_service = 'host/klippy/extras/m300_native_service.py'
         # Reviewed startup, print lighting and pause/end motion updates through RC17.
         updated_runtime = {
-            # RC30 exposes direction-specific material settings in the menu and profile.
+            # RC31 exposes direction-specific material settings in the menu and profile.
             'host/config/m300_classic_services.cfg': (
                 'f199715dd59536b5c701e145a0c5c2b1adf6ef4936f9f05a2454e7eee26461f4',
-                'a78a90ca49c8bf7410700a0bddf9e91b17efab306e345a51a16b497ec72e7232'),
+                '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505'),
             'host/klippy/extras/m300_menu.py': (
                 '36d87ea55349a74610d1dd978cb1eb69f5420bcf0a6dbd09d0b6c0a370b11320',
-                '36e3435c3f48c3f7cbab979fe97538b254555f604e85191d1fab014f3501572b'),
+                '40914048224c93030304f1b1ea0df332306a81311f394a0317dd1bf1c4fcec95'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
@@ -86,7 +86,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],968)
+        self.assertEqual(meta['self_contained_host_tests'],971)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

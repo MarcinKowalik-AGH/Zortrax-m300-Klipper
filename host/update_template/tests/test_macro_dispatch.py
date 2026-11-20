@@ -114,7 +114,8 @@ class MacroDispatchTests(unittest.TestCase):
                 template.render(params=cmd.get_command_parameters())))
             g.run_script_from_command('ZORTRAX_'+operation)
             g.run_script_from_command('ZORTRAX_'+operation+' TEMP=250')
-            self.assertEqual(calls,[(operation,None),(operation,250.)])
+            g.run_script_from_command('ZORTRAX_'+operation+' TEMP=auto')
+            self.assertEqual(calls,[(operation,None),(operation,250.),(operation,240.)])
             self.assertEqual(output,[])
 
     def test_status_button_dispatches_every_diagnostic_command(self):

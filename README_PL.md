@@ -1,6 +1,6 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.30
+# Zortrax M300 Classic — Klipper 1.0.0-rc.31
 
-**RC30** pozwala ustawić osobno temperaturę i prędkość wyładunku oraz załadunku filamentu. [Parametry i aktualizacja](docs/pl/RELEASE_v1.0.0-rc.30.md).
+**RC31** przyjmuje `auto` lub liczbę dla każdej z czterech nastaw filamentu. W trybie automatycznym załadunek i wyładunek odbywają się przy 240°C i 2 mm/s. [Parametry i aktualizacja](docs/pl/RELEASE_v1.0.0-rc.31.md).
 
 **MCU 1.0.8:** [zapis licznika, zgodność i zakres testów](docs/pl/MCU_FIRMWARE_1.0.8.md). [Osobny ZIP aplikacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.8).
 
@@ -8,7 +8,7 @@
 wyświetlaczem OLED, pokrętłem, czujnikami i stołem kontaktowym. To nie jest port
 dla M300 Plus, M300 Dual ani Inventure. Język interfejsu: angielski. [English](README.md).
 
-[Wydanie RC30](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.30) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
+[Wydanie RC31](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.31) · [Pierwsza instalacja](docs/pl/FIRST_INSTALL.md) · [Aktualizacja działającej instalacji](docs/pl/INSTALL.md) · [OLED i makra](docs/pl/RC1_UI.md) · [Instrukcja z 65 ekranami](docs/pl/OLED_FUNCTIONS.md)
 
 ## Funkcje
 

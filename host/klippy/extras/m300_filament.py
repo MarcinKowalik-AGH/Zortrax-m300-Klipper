@@ -19,9 +19,17 @@ from .m300_native_service import (NativeServiceLease, native_service_frame,
                                   native_temperature_ready, require_idle_print)
 
 OEM_MATERIAL_TEMPERATURE = 240.
+DEFAULT_MATERIAL_SPEED = 2.
 PERIOD = .1
 JOB_IDLE = {'IDLE', 'COMPLETE', 'CANCELLED', 'FILE_ERROR'}
 STATE_NAME = 'M300_M03_SERVICE'
+
+
+def material_command_temperature(gcmd):
+    raw = gcmd.get_command_parameters().get('TEMP')
+    if isinstance(raw, str) and raw.strip().lower() == 'auto':
+        return OEM_MATERIAL_TEMPERATURE
+    return gcmd.get_float('TEMP', None)
 
 
 class M300Filament:
@@ -38,9 +46,9 @@ class M300Filament:
             lambda:self._guard(transport=True),self.cancel) if self.native_mode else None)
         self.filament_qualified = config.getboolean('filament_qualified', False)
         self.procedure_temperature = self._option('procedure_temperature', OEM_MATERIAL_TEMPERATURE, 170., 300.)
-        self.unload_temperature = self._option('unload_temperature', self.procedure_temperature, 170., 305.)
-        # Zero selects the saved print target for CHANGE and the standalone default for LOAD.
-        self.load_temperature = self._option('load_temperature', 0., 0., 305.)
+        self.configured_material = {}
+        self.unload_temperature = self._material_option('unload_temperature', OEM_MATERIAL_TEMPERATURE, 170., 305.)
+        self.load_temperature = self._material_option('load_temperature', OEM_MATERIAL_TEMPERATURE, 170., 305.)
         self.use_sensor = config.getboolean('use_filament_sensor', False)
         self.load_length = self._option('load_length', 130., .1, 500.)
         self.unload_length = self._option('unload_length', 110., .1, 500.)
@@ -48,8 +56,8 @@ class M300Filament:
         self.segment_length = self._option('segment_length', 5., .1, 20.)
         self.purge_length = self._option('purge_length', 5., .1, 50.)
         self.max_purge_length = self._option('max_purge_length', 20., 0., 200.)
-        self.load_speed = self._option('load_speed', 2., .1, 20.)
-        self.unload_speed = self._option('unload_speed', 2., .1, 20.)
+        self.load_speed = self._material_option('load_speed', DEFAULT_MATERIAL_SPEED, .1, 20.)
+        self.unload_speed = self._material_option('unload_speed', DEFAULT_MATERIAL_SPEED, .1, 20.)
         self.purge_speed = self._option('purge_speed', 1., .1, 10.)
         self.heat_timeout = self._option('heat_timeout', 1200., 1., 7200.)
         self.confirm_timeout = self._option('confirm_timeout', 600., 1., 7200.)
@@ -117,6 +125,23 @@ class M300Filament:
             raise self.config.error('M300 filament %s must be finite' % name)
         return value
 
+    def _material_option(self, name, automatic, minimum, maximum):
+        raw = self.config.get(name, 'auto').strip().lower()
+        if raw != 'auto':
+            try:
+                value = float(raw)
+            except ValueError:
+                raise self.config.error('%s must be auto or a number' % name)
+            # RC30 wrote zero for an automatic load temperature.
+            if name != 'load_temperature' or value != 0.:
+                if not minimum <= value <= maximum:
+                    raise self.config.error('%s must be auto or between %g and %g' %
+                                            (name, minimum, maximum))
+                self.configured_material[name] = value
+                return value
+        self.configured_material[name] = 'auto'
+        return automatic
+
     def _bind(self):
         self.job._bind_resources()
         self.toolhead, self.hotend = self.job.toolhead, self.job.hotend
@@ -157,7 +182,7 @@ class M300Filament:
         if self.standby_temperature > target_limit(self.hotend):
             raise self.config.error('M300 filament standby_temperature exceeds native heater limit')
         for name, target in (('unload_temperature', self.unload_temperature),
-                             ('load_temperature', self.load_temperature or self.procedure_temperature)):
+                             ('load_temperature', self.load_temperature)):
             if not self.hotend.min_extrude_temp <= target <= target_limit(self.hotend):
                 raise self.config.error('M300 filament %s is outside the extruder temperature limits' % name)
         for mode in ('LOAD', 'UNLOAD', 'CHANGE'):
@@ -437,9 +462,6 @@ class M300Filament:
                 logging.exception('M300 filament heater-off')
         self._expected_target = 0.
 
-    def _automatic_load_target(self, saved):
-        return saved if saved >= self.hotend.min_extrude_temp else self.procedure_temperature
-
     def _capture(self):
         token, phase = self.machine.token, self.machine.phase_id
         self._live()
@@ -453,9 +475,6 @@ class M300Filament:
             self._owner_gcode = copy.deepcopy(context['gcode'])
             self.job.sd.verify_resume(self._owner_file, full=False)
             context['filament_service_required'] = True
-            if self.machine.mode == 'CHANGE' and self._load_target is None:
-                self._load_target = self._validate_temperature(
-                    self._automatic_load_target(context['targets']['hotend']))
         self._anchor = list(self.toolhead.get_position()[:3])
         command = self.gcode.create_gcode_command('SAVE_GCODE_STATE', 'SAVE_GCODE_STATE', {'NAME': STATE_NAME})
         self.gcode_move.cmd_SAVE_GCODE_STATE(command)
@@ -497,19 +516,12 @@ class M300Filament:
                 or (state in JOB_IDLE and (self.job._ops or self.job._waiting or self.job._executing))
                 or self.job.sd.is_preparing):
             raise self._error('M02 cleanup or file operation still owns resources')
+        default = self.unload_temperature if operation == 'UNLOAD' else self.load_temperature
+        target = self._validate_temperature(default if temperature is None else temperature)
         load_target = None
         if operation == 'CHANGE':
+            load_target = target
             target = self._validate_temperature(self.unload_temperature)
-            if temperature is not None or self.load_temperature:
-                load_target = self._validate_temperature(
-                    self.load_temperature if temperature is None else temperature)
-            elif native_pause is not None:
-                load_target = self._validate_temperature(self._automatic_load_target(native_pause['target']))
-            # The legacy job owner supplies the automatic load target after parking.
-        else:
-            default = (self.unload_temperature if operation == 'UNLOAD'
-                       else self.load_temperature or self.procedure_temperature)
-            target = self._validate_temperature(default if temperature is None else temperature)
         self._live(native_pause=native_pause)
         self._sensor()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
@@ -864,6 +876,7 @@ class M300Filament:
                 'temperature': measured, 'target': actual_target,
                 'requested_target': self.target, 'completed_mm': snapshot['completed_mm'],
                 'procedure_temperature': self.procedure_temperature,
+                'configured_material': dict(self.configured_material),
                 'load_temperature': self.load_temperature, 'load_speed': self.load_speed,
                 'unload_temperature': self.unload_temperature, 'unload_speed': self.unload_speed,
                 'issued_mm': snapshot['issued_mm'], 'budget_mm': snapshot['plan'].get('total_budget_mm', 0.),
@@ -882,15 +895,15 @@ class M300Filament:
 
     def cmd_load(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LENGTH'})
-        self.start('LOAD', temperature=gcmd.get_float('TEMP', None), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
+        self.start('LOAD', temperature=material_command_temperature(gcmd), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
 
     def cmd_unload(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LENGTH'})
-        self.start('UNLOAD', temperature=gcmd.get_float('TEMP', None), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
+        self.start('UNLOAD', temperature=material_command_temperature(gcmd), length=gcmd.get_float('LENGTH', None), gcmd=gcmd)
 
     def cmd_change(self, gcmd):
         self._command_keys(gcmd, {'TEMP', 'LOAD_LENGTH', 'UNLOAD_LENGTH'})
-        temperature = gcmd.get_float('TEMP', None)
+        temperature = material_command_temperature(gcmd)
         load = gcmd.get_float('LOAD_LENGTH', None)
         unload = gcmd.get_float('UNLOAD_LENGTH', None)
         control = self.printer.lookup_object('m300_print_control', None)

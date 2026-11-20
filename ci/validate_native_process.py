@@ -225,8 +225,8 @@ def main():
             assert cp.getfloat(section, 'step_pulse_duration') == .000002
         assert cp.getfloat('m300_motion', 'z_home_hotend_target') == 180
         assert cp.getfloat('m300_calibration', 'procedure_temperature') == 260
-        assert cp.getfloat('m300_filament', 'unload_temperature') == 240
-        assert cp.getfloat('m300_filament', 'load_temperature') == 0
+        for key in ('unload_temperature', 'load_temperature', 'unload_speed', 'load_speed'):
+            assert cp.get('m300_filament', key) == 'auto'
         assert cp.getfloat('printer', 'max_velocity') >= 300
         for color in 'rgb':
             led = 'output_pin m300_led_' + color
@@ -476,7 +476,7 @@ def main():
             filament=next(json.loads(line.split('M300_FILAMENT ',1)[1]) for line in text.splitlines()
                           if 'M300_FILAMENT ' in line)
             assert calibration['procedure_temperature'] == 260.
-            assert filament['unload_temperature'] == 240. and filament['load_temperature'] == 0.
+            assert filament['unload_temperature'] == 240. and filament['load_temperature'] == 240.
             assert filament['unload_speed'] == filament['load_speed'] == 2.
         if name == 'native_300_M220_150':
             view = next(json.loads(line.split('M300_MOTION ', 1)[1]) for line in text.splitlines()
