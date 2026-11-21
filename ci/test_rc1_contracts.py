@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.34'
+VERSION=json.loads((ROOT/'PORT.json').read_text())['distribution_version']
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -36,7 +36,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertGreaterEqual(len(report['protected_sha256']),14)
         oled = 'host/klippy/extras/m300_oled.py'
         native_service = 'host/klippy/extras/m300_native_service.py'
-        # Reviewed startup, print lighting and pause/end motion updates through RC17.
+        # Reviewed startup, print lighting, pause/end and 1.0.0 preflight updates.
         updated_runtime = {
             # RC34 updates the macro keys used to select the same OLED artwork.
             'host/klippy/extras/m300_oem_graphics.py': (
@@ -60,7 +60,7 @@ class Rc1Contracts(unittest.TestCase):
                 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd'),
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
-                '47c10c8da74c7fccf5edef7cba462e8303c805d0693977c48ed0493243c95bc4'),
+                '2b11607eeab6ae6ea25d49577c6bcb386d32dd194a077bbda38b0af63e95ea54'),
             'host/klippy/extras/m300_native_motion.py': (
                 '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
                 '9a858e5603c07776d76a2741c2a9723a29f1b615b77c78376f0e8ec904a92be9'),
@@ -90,7 +90,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],983)
+        self.assertEqual(meta['self_contained_host_tests'],989)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

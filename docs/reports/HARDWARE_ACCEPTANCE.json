@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-11-20",
+  "updated": "2026-11-21",
   "printer": "M300_CLASSIC",
   "rules": [
     "CI_PASS is never hardware acceptance.",
@@ -295,6 +295,18 @@
             "kind": "user_message",
             "quote": "ok pausa wyładowywanie i aładowywanie działa z oled i ekranu."
           }
+        },
+        {
+          "date": "2026-11-21",
+          "version": "Host 1.0.0 / MCU 1.0.8",
+          "version_basis": "final_source_audit_2026-11-21; no printer version readback in this audit",
+          "status": "AWAITING_TEST",
+          "test": "Pauza i parkowanie na finalnym hoście; odrzucone żądanie wymiany zachowuje ważny kontekst pauzy.",
+          "result": "Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii.",
+          "problem": "Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
         }
       ]
     },
@@ -310,6 +322,18 @@
           "status": "AWAITING_TEST",
           "result": "Brak jawnego wyniku sprzętowego w dostępnej rozmowie; nie oznacza, że funkcji nie zaimplementowano.",
           "problem": "",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        },
+        {
+          "date": "2026-11-21",
+          "version": "Host 1.0.0 / MCU 1.0.8",
+          "version_basis": "final_source_audit_2026-11-21; no printer version readback in this audit",
+          "status": "AWAITING_TEST",
+          "test": "Dogrzanie, ręczne podanie/cofnięcie, potwierdzenie wypływu i powrót do tego samego miejsca po pauzie.",
+          "result": "Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii.",
+          "problem": "Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce.",
           "evidence": {
             "kind": "no_hardware_confirmation"
           }
@@ -406,6 +430,18 @@
           "evidence": {
             "kind": "user_message",
             "quote": "ok pausa wyładowywanie i aładowywanie działa z oled i ekranu."
+          }
+        },
+        {
+          "date": "2026-11-21",
+          "version": "Host 1.0.0 / MCU 1.0.8",
+          "version_basis": "final_source_audit_2026-11-21; no printer version readback in this audit",
+          "status": "AWAITING_TEST",
+          "test": "Zmiana materiału, schłodzenie, dogrzanie, potwierdzenie, retrakcja i ponowne potwierdzenie przed Resume.",
+          "result": "Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii.",
+          "problem": "Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
           }
         }
       ]

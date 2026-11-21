@@ -241,6 +241,35 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(install.rollback(receipt, self.root, self.config), len(changes))
         self.assertEqual({path: path.read_bytes() for path in tracked}, tracked)
 
+    def test_rc34_upgrade_and_rollback_use_verified_prior_runtime_bytes(self):
+        extras = self.root / 'klippy/extras'
+        payload = ROOT / 'payload'
+        for name in install.NAMES:
+            (extras / name).write_bytes((payload / name).read_bytes())
+        previous = {}
+        for source in (ROOT / 'tests/reference/rc34').glob('*.txt'):
+            path = extras / (source.stem + '.py')
+            previous[path] = source.read_bytes()
+            path.write_bytes(previous[path])
+        self.assertEqual(len(previous), 3)
+        before = self.config.read_bytes()
+        changes = install.plan(self.root, self.config)
+        self.assertTrue(previous.keys() <= {path for path, _, _ in changes})
+        self.assertEqual({path: path.read_bytes() for path in previous}, previous)
+        receipt = install.apply(self.root, self.config, changes)
+        for path in previous:
+            self.assertEqual(path.read_bytes(), (payload / path.name).read_bytes())
+        self.assertEqual(install.plan(self.root, self.config), [])
+        install.rollback(receipt, self.root, self.config)
+        self.assertEqual(self.config.read_bytes(), before)
+        self.assertEqual({path: path.read_bytes() for path in previous}, previous)
+        # Recognizing a release does not permit overwriting user modifications.
+        edited = extras / 'm300_filament.py'
+        edited.write_bytes(previous[edited] + b'\n# local operator change\n')
+        with self.assertRaisesRegex(ValueError, 'unknown M300 runtime module'):
+            install.plan(self.root, self.config)
+        self.assertEqual(self.config.read_bytes(), before)
+
     def test_preserve_existing_valid_display_settings(self):
         settings = self.config.parent / 'm300_display.cfg'
         data = b'[m300_display]\ntimeout: 600\ndim_contrast: 20\n'

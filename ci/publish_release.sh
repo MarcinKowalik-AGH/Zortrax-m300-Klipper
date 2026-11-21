@@ -4,7 +4,7 @@
 # Publish only an immutable, successful main-branch build; never rebuild assets.
 set -euo pipefail
 tag=$(jq -er .distribution_version PORT.json)
-[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(beta|rc)\.[0-9]+$ ]]
+[[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?$ ]]
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
 test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
@@ -55,14 +55,18 @@ notes="$work/notes.md"
 cp "docs/en/RELEASE_$tag.md" "$notes"
 printf '\nSource commit: `%s`. [Successful build and deployment](https://github.com/%s/actions/runs/%s).\n' \
     "$SOURCE_SHA" "$GITHUB_REPOSITORY" "$SOURCE_RUN" >> "$notes"
+release_flags=(--latest)
+if [[ "$tag" == *-* ]]; then
+    release_flags=(--prerelease)
+fi
 gh release create "$tag" "$work/$name.zip" "$work/SHA256SUMS-$tag.txt" \
     "$work/FIRST_INSTALL_EN.md" "$work/FIRST_INSTALL_PL.md" \
-    --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease \
+    --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" "${release_flags[@]}" \
     --title "Zortrax M300 Classic — $tag" --notes-file "$notes"
 
 previous=$(jq -r '.supersedes_version // empty' PORT.json)
 if [[ -n "$previous" ]]; then
-    [[ "$previous" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(beta|rc)\.[0-9]+$ ]]
+    [[ "$previous" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?$ ]]
     gh release view "$previous" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$work/previous-notes.md"
     {
         printf '> Superseded by [%s](https://github.com/%s/releases/tag/%s).\n' "$tag" "$GITHUB_REPOSITORY" "$tag"

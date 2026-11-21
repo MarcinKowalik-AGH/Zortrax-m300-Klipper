@@ -1,5 +1,7 @@
 # Procedure error reporting audit — 2026-11-07
 
+Historical audit of the stated baseline. For the current release, use the [21 November final audit](FINAL_AUDIT_2026-11-21.md) and [procedure inventory](PROCEDURE_INVENTORY.md).
+
 Scope: the current native M300 host, all supplied operator procedures/macros,
 compatibility fault boundaries, and their existing MCU safety bindings. Source
 baseline: `7844e5de5dec0f719131f911aa0f27e11dabe81f`. No physical printer was

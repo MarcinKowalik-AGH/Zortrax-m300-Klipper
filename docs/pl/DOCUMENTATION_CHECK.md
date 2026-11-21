@@ -1,6 +1,6 @@
 # Kontrola podręcznika i pochodzenie ilustracji
 
-Podręcznik jest przygotowany dla M300 Classic z hostem 1.0.0-rc.34 i MCU 1.0.8. [Strona projektu](../../README_PL.md) prowadzi do instalacji, eksploatacji oraz prób sprzętowych. [Podręcznik operatora](USER_GUIDE.md) łączy czynności od pomiaru płyty po zakończenie wydruku. Źródłami wersji i limitów są [manifest portu](../../PORT.json) i [profil drukarki](../../host/config/m300_classic_base.cfg).
+Podręcznik jest przygotowany dla M300 Classic z hostem 1.0.0 i MCU 1.0.8. [Strona projektu](../../README_PL.md) prowadzi do instalacji, eksploatacji oraz prób sprzętowych. [Podręcznik operatora](USER_GUIDE.md) łączy czynności od pomiaru płyty po zakończenie wydruku. Źródłami wersji i limitów są [manifest portu](../../PORT.json) i [profil drukarki](../../host/config/m300_classic_base.cfg).
 
 ## Obrazy
 

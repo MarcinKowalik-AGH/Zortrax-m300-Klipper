@@ -1,5 +1,7 @@
 # Native configuration audit and cleanup — 2026-11-07
 
+Historical audit of the stated baseline. For the current release, use the [21 November final audit](FINAL_AUDIT_2026-11-21.md) and [procedure inventory](PROCEDURE_INVENTORY.md).
+
 The supplied Orange Pi configuration snapshot was compared with source
 `77546c99dbce7d922c3218cf12c36836911a7d97`, including native motion,
 factory Z selection, OEM leveling, 25-point pad mesh, heater/fan ownership,

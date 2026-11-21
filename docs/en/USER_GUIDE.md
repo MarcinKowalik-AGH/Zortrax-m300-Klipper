@@ -1,7 +1,7 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> | USER_GUIDE.md - Guides an M300 Classic operator from installation through printing, material changes and fault diagnosis. -->
 # M300 Classic operator handbook
 
-This guide follows a job on the original M300 Classic with host 1.0.0-rc.34, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
+This guide follows a job on the original M300 Classic with host 1.0.0, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
 
 ## Choose the installation path
 

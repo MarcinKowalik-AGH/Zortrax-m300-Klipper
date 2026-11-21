@@ -49,6 +49,7 @@ jobs:
           python ci/test_release23_contracts.py
           python ci/test_package_guides.py
           python ci/test_rc1_contracts.py
+          python ci/test_publish_release.py
           python ci/acceptance_register.py --check
 
       - name: Install GNU ARM and native test compiler

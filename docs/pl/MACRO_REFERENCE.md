@@ -2,14 +2,14 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.34**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC34. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w 1.0.0. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
 
-W RC34 poprzednie wywołania 36 makr `ZORTRAX_…` trafiają do makr `M300_…`. W starszych instalacjach może dodatkowo występować `PID_STATUS`. Pełna lista aktualnie załadowanych poleceń jest dostępna przez `HELP`.
+W 1.0.0 poprzednie wywołania 36 makr `ZORTRAX_…` trafiają do makr `M300_…`. W starszych instalacjach może dodatkowo występować `PID_STATUS`. Pełna lista aktualnie załadowanych poleceń jest dostępna przez `HELP`.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 

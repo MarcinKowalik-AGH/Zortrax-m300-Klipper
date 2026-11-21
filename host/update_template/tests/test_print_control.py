@@ -776,6 +776,71 @@ class PrintControlTests(unittest.TestCase):
         h=self.h;h.position[2]=314.;h.gmove.reset_last_position();h.pause_print()
         with self.assertRaisesRegex(h.printer.command_error,'clearance'):h.run('M300_CHANGE')
 
+    def test_invalid_change_macro_does_not_pause_an_active_print(self):
+        h = self.h
+        before = list(h.events)
+        with self.assertRaisesRegex(h.printer.command_error, 'native extrusion/heater limits'):
+            h.run('M300_CHANGE TEMP=999')
+        self.assertEqual(h.events, before)
+        self.assertEqual(h.c.state, 'IDLE')
+        self.assertIsNone(h.c.context)
+        self.assertFalse(h.pause.is_paused)
+        self.assertEqual(h.sd.work_timer, 'native')
+
+    def test_invalid_change_request_preserves_a_settled_pause(self):
+        h = self.h
+        h.pause_print()
+        context, position = copy.deepcopy(h.c.context), list(h.position)
+        for options in ({'temperature': float('nan')}, {'load_length': -1.},
+                        {'unload_length': 1001.}):
+            with self.assertRaises(h.printer.command_error):
+                h.c.request_change(h.c._command('M600'), **options)
+            self.assertEqual(h.c.context, context)
+            self.assertEqual(h.position, position)
+            self.assertEqual(h.c.state, 'PAUSED')
+        h.run('RESUME')
+        h.control_until('IDLE')
+        self.assertEqual(h.sd.work_timer, 'native')
+
+    def test_rejected_material_preflight_does_not_require_a_change_to_resume(self):
+        h = self.h
+        h.pause_at_material_park()
+        before = copy.deepcopy(h.c.context)
+        for boundary in ('_live', '_sensor'):
+            with patch.object(h.f, boundary, side_effect=h.printer.command_error('preflight unavailable')):
+                with self.assertRaisesRegex(h.printer.command_error, 'preflight unavailable'):
+                    h.f.start('CHANGE')
+            self.assertEqual(h.c.context, before)
+            self.assertFalse(h.f.is_busy())
+            self.assertIsNone(h.c.lease)
+        h.run('RESUME')
+        h.control_until('IDLE')
+
+    def test_readiness_loss_during_material_park_leaves_a_resumable_pause(self):
+        h = self.h
+        h.pause_print()
+        h.run('M600')
+        with patch.object(h.f, '_sensor', side_effect=h.printer.command_error('filament sensor is stale')):
+            h.control_until('PAUSED')
+        self.assertIn('filament sensor is stale', h.c.notice)
+        self.assertEqual((h.hotend.target, h.bed.target), (240., 60.))
+        self.assertFalse(h.c.context['change_required'])
+        self.assertFalse(h.f.is_busy())
+        self.assertFalse(any(e[0] == 'shutdown' for e in h.events))
+        h.run('RESUME')
+        h.control_until('IDLE')
+        self.assertEqual(h.position[:3], [100., 110., 10.])
+
+    def test_accepted_material_start_failure_still_faults_and_turns_heat_off(self):
+        h = self.h
+        h.pause_at_material_park()
+        with patch.object(h.f, '_capture', side_effect=h.printer.command_error('capture failed')):
+            with self.assertRaisesRegex(h.printer.command_error, 'capture failed'):
+                h.run('M600')
+        self.assertEqual(h.f.machine.state, 'FAULT')
+        self.assertEqual(h.hotend.target, 0.)
+        self.assertTrue(any(e[0] == 'shutdown' for e in h.events))
+
     def test_duplicate_change_during_parking_does_not_replace_explicit_temperature(self):
         h=self.h;h.run('M300_CHANGE TEMP=250')
         with self.assertRaises(h.printer.command_error):h.run('M600')

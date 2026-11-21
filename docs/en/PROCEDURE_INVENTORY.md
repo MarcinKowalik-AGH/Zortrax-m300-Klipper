@@ -1,10 +1,10 @@
 # Klipper, OLED and Fluidd procedure inventory
 
-This inventory covers the native M300 Classic profile. The OLED selects
+Current inventory: host **1.0.0**, MCU **1.0.8**, 21 November 2026. This inventory covers the native M300 Classic profile. The OLED selects
 actions, Klippy owns the running procedure, and Fluidd sends commands to the
-same owner. The R14.5 MCU owns the physical I/O, input capture, local fault
+same owner. MCU 1.0.8 owns the physical I/O, input capture, local fault
 response and protective cooling. Legacy M02 print and M08 cycle paths are
-separate diagnostic code.
+separate diagnostic code. [Final audit and current software evidence](FINAL_AUDIT_2026-11-21.md).
 
 ## Entry points and ownership
 
@@ -22,10 +22,10 @@ separate diagnostic code.
 | Maintenance → Move the platform up/down | Native Z with an acknowledged held row on OLED, or M300_PLATFORM_UP/DOWN for a finite command. | Up is negative Z toward the nozzle. Down is positive Z. Release, row change or stale input stops new quanta. Fluidd commands specify a finite distance and speed. |
 | Maintenance → Fan test | M300_FAN_TEST_START, M300_FAN_UPPER, M300_FAN_LOWER and M300_FAN_TEST_END use the same fan-test session. | Each toggle requests 0 or 150/255. The automatic upper fan requirement overrides the requested off state. Back restores the lower request and recomputes the current upper thermostat requirement. |
 | Material → Load / Unload | M300_LOAD and M300_UNLOAD share native E-only transport. | Default 240°C, 238°C readiness, operator confirmation before transport. Load defaults to 130 mm and Unload to 110 mm. Both release the hot nozzle to manual control until idle cooling or manual switch-off. |
-| Paused print → Change the material | M300_CHANGE or M600 first uses the protected pause/park, then verifies native pause ownership, saved PAUSE_STATE and file position. | Retract 110 mm at the configured withdrawal temperature (default 240°C), select the configured loading temperature (auto is 240°C) or command override, wait for insertion confirmation, load 150 mm and restore the pause state and original print target. Use Extrude or Retract as needed, confirm flow, then explicitly Resume. |
+| Paused print → Change the material | M300_CHANGE or M600 first uses the protected pause/park, then verifies native pause ownership, saved PAUSE_STATE and file position. | Retract 110 mm at the configured withdrawal temperature (default 240°C), select the configured loading temperature (auto is 240°C) or command override, wait for insertion confirmation, load 150 mm and restore the pause state and original print target. Use Extrude or Retract as needed, confirm flow, then explicitly Resume. All request parameters are checked before pausing/parking; a rejected preflight leaves an intact pause resumable. |
 | Settings | Shared host NVM for light, buzzer, display sleep and model sorting. English is the only operator language. | Choice changes take effect on both surfaces. Sorting changes expire the browser generation. Re-selecting an active value avoids an NVM write. |
 | Information / Help | Existing MCU identity, build/config metadata and optional Moonraker history refresh. | History is asynchronous and reports cache or error status. Printer serial is unavailable without actual serial data. Help links to the project repository. |
-| Service / Tests | Separate diagnostic status, material/calibration aliases and deliberate XY motion checks. | Use motion and heating tests while idle. Test results describe the tested setup and do not grant automatic hardware qualification. |
+| Diagnostics / legacy development tests | The current diagnostics page reads status. Historical TEST_ZORTRAX macros remain isolated in the legacy fixture. | No Service / Tests menu or laboratory macros are installed in the production operator catalogue. |
 
 [Maintenance and Material](MAINTENANCE_MATERIAL.md) ·
 [Settings and Information](SETTINGS_INFORMATION.md) ·
@@ -78,7 +78,7 @@ filename alone cannot prove which snapshot the operator selected.
 | M07 correction | Measure 0 → 1 → 4 → 3 and fix the maximum initial corner raw count as the reference. Compare rear left then rear right and remeasure the pair. Use the signed truncating mean of points 0 and 1 for the front screw. Rear limits are inclusive from −0.20 to +0.10 mm. Front limits are strict. Round required turns upward to quarters with the original binary32 coefficient. Measure point 2 for review. The saved observation does not apply a live mesh. |
 | Native services | Gate exclusive procedures on actual job ownership, MCU freshness, position when required, and native heater/fan limits. Contact search and release have finite endpoints and deadlines. Standalone material transport can run without XY/Z home. Material and platform movement use bounded segments or quanta and stop issuing work on cancellation. |
 | Normal pause and stop | PAUSE saves native PAUSE_STATE, drains motion, holds XY and lowers the bed by up to 5 mm by default. The motors hold position. RESUME returns to the saved position. At successful END_PRINT the bed descends by up to 300 mm before the rear-right park. Cancel revokes preparation before native file cancellation. M112 is the native emergency stop. |
-| Display and panel | Acknowledge frame transfers. Bind actions to view/session/phase, expire queued clicks on context changes, and keep a visible progress screen dim while busy after inactivity. Idle shows the moon notice and then turns off. An invisible wake gesture is consumed before accepting actions on the visible screen. |
+| Display and panel | Acknowledge frame transfers. Bind actions to view/session/phase and expire queued clicks on context changes. DIM and SLEEP deadlines apply during printing, pause and idle. Display sleep does not resume a job. An invisible wake gesture is consumed before accepting actions on the visible screen. |
 | Cooling and faults | Local MCU protective cooling and guard remain independent of the OLED. A fan-test session can request a duty, but automatic upper cooling keeps priority. A fault or lifecycle change revokes service and gesture authority. |
 | Host reconnect | After identification, permit one native restart attempt for a recognized previous-session heartbeat loss or a still-armed prior host session. Fresh native configuration and guard evidence are required. Restart clears old operation authority. |
 
@@ -98,7 +98,7 @@ filename alone cannot prove which snapshot the operator selected.
   can prove. It requires a new explicit operator confirmation and a ready,
   idle printer. Test print completion, normal stop, errors, restart,
   source replacement and another job starting before confirmation.
-- The R16.9 baseline has 299 host tests, 16 native Klippy FILEOUTPUT cases
+- The historical R16.9 baseline had 299 host tests, 16 native Klippy FILEOUTPUT cases
   and 28 modeled MCU SD scenario groups. Those cover both file types through
   native EOF, plus modeled FAT16/FAT32 and OLED import. The earlier suites
   cover original UI frames, homing and screw math, material transport,

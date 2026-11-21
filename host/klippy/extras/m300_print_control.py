@@ -18,7 +18,7 @@ from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.44-FLOW-CHECK'
+REVISION = '0.13.16.45-MATERIAL-PREFLIGHT'
 PERIOD = .25
 END_BED_DROP_MM = 300.
 
@@ -571,6 +571,12 @@ class M300PrintControl:
         if self.busy or self._material_busy():
             raise self._error('wait for the active material/pause operation')
         options = dict(temperature=temperature, load_length=load_length, unload_length=unload_length)
+        material = self._material()
+        if material is None:
+            raise self._error('material service is not configured')
+        # Every caller (OLED, macro, M600 and raw CHANGE_FILAMENT) reaches
+        # this boundary before PAUSE or a material park can move the machine.
+        material.plan_request('CHANGE', **options)
         ctx = self.context
         if ctx is None:
             self.cmd_PAUSE(self._command('PAUSE'))
@@ -598,7 +604,17 @@ class M300PrintControl:
     def _begin_change(self, options):
         obj=self._material()
         if obj is None:raise self._error('material service is not configured')
-        obj.start('CHANGE', **options)
+        try:
+            obj.start('CHANGE', **options)
+        except self.printer.command_error as exc:
+            # Readiness can change while the park drains. A rejected preflight
+            # has acquired nothing and must leave this intact pause resumable.
+            # Failures after acceptance retain the material owner's fault path.
+            if self.printer.is_shutdown() or obj.is_busy():
+                raise
+            obj.last_rejection = str(exc)
+            self.notice = 'Material change was not started: %s; print remains paused' % exc
+            self.gcode.respond_info('M300: ' + self.notice)
 
     def cmd_idle(self,gcmd):
         if self.context is not None or self.busy:

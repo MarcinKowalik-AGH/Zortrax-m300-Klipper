@@ -32,5 +32,5 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
-      - name: Publish one immutable prerelease from the successful build
+      - name: Publish one immutable version from the successful build
         run: bash ci/publish_release.sh
