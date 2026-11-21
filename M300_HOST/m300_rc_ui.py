@@ -10,9 +10,9 @@ import m300_profile as profile
 
 HERE = Path(__file__).resolve().parent
 RETIRED = frozenset(('TEST_ZORTRAX_STATUS', 'TEST_ZORTRAX_XY', 'ZORTRAX_PRINT', 'ZORTRAX_OLED_PERF'))
-UPDATED = frozenset(('ZORTRAX_LIGHT', 'ZORTRAX_BUZZER', 'ZORTRAX_SLEEP_MODE',
-                    'ZORTRAX_MODELS_SORT', 'ZORTRAX_FULL_PLATFORM_PREHEAT',
-                    'ZORTRAX_INFORMATION', 'ZORTRAX_PLATFORM_UP', 'ZORTRAX_PLATFORM_DOWN'))
+UPDATED = frozenset(('M300_LIGHT', 'M300_BUZZER', 'M300_SLEEP_MODE',
+                    'M300_MODELS_SORT', 'M300_FULL_PLATFORM_PREHEAT',
+                    'M300_INFORMATION', 'M300_PLATFORM_UP', 'M300_PLATFORM_DOWN'))
 
 
 def command_hash(block):
@@ -37,7 +37,8 @@ def apply_to_plan(desired, config):
         for section, block in chunks:
             name = section[12:] if section.startswith('gcode_macro ') else None
             signature = command_hash(block) if name else None
-            stock = signature is not None and signature in baselines.get(name, ())
+            baseline_name = ('ZORTRAX_' + name[5:] if name and name.startswith('M300_') else name)
+            stock = signature is not None and signature in baselines.get(baseline_name, ())
             if name in RETIRED and stock:
                 continue
             if name in UPDATED and stock:

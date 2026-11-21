@@ -477,22 +477,22 @@ class M300Menu:
                 (self.t('Information'), ('page', 'information'))]
         if page == 'maintenance':
             return self.t('Maintenance'), [(self.t('Back'), ('page', 'zortrax')),
-                (self.t('Autocalibration'), ('native_gcode','ZORTRAX_LEVEL')),
-                ('Home X', ('native_gcode', 'ZORTRAX_HOME_X')),
-                ('Home Y', ('native_gcode', 'ZORTRAX_HOME_Y')),
-                ('Home Z', ('native_gcode', 'ZORTRAX_HOME_Z')),
-                ('Home XY', ('native_gcode', 'ZORTRAX_HOME_XY')),
-                ('Home XYZ', ('native_gcode', 'ZORTRAX_HOME_ALL')),
-                (self.t('Heat the extruder'), ('native_gcode','ZORTRAX_HEAT')),
-                (self.t('Heat the platform'), ('native_gcode','ZORTRAX_HEAT_PLATFORM')),
+                (self.t('Autocalibration'), ('native_gcode','M300_LEVEL')),
+                ('Home X', ('native_gcode', 'M300_HOME_X')),
+                ('Home Y', ('native_gcode', 'M300_HOME_Y')),
+                ('Home Z', ('native_gcode', 'M300_HOME_Z')),
+                ('Home XY', ('native_gcode', 'M300_HOME_XY')),
+                ('Home XYZ', ('native_gcode', 'M300_HOME_ALL')),
+                (self.t('Heat the extruder'), ('native_gcode','M300_HEAT')),
+                (self.t('Heat the platform'), ('native_gcode','M300_HEAT_PLATFORM')),
                 (self.t('Move the platform up'), ('platform_hold',-1)),
                 (self.t('Move the platform down'), ('platform_hold',1)),
-                (self.t('Fan test'), ('native_gcode','ZORTRAX_FAN_TEST_START')),
-                ('Current procedure', ('native_gcode', 'ZORTRAX_PROCEDURE'))]
+                (self.t('Fan test'), ('native_gcode','M300_FAN_TEST_START')),
+                ('Current procedure', ('native_gcode', 'M300_PROCEDURE'))]
         if page == 'material':
             return self.t('Material'), [(self.t('Back'), ('page', 'zortrax')),
-                (self.t('Unload the material'), ('native_gcode','ZORTRAX_UNLOAD')),
-                (self.t('Load the material'), ('native_gcode','ZORTRAX_LOAD'))]
+                (self.t('Unload the material'), ('native_gcode','M300_UNLOAD')),
+                (self.t('Load the material'), ('native_gcode','M300_LOAD'))]
         raise self._error('unknown OEM section')
 
     def rows(self, now):
@@ -550,7 +550,7 @@ class M300Menu:
             if state == 'printing':
                 rows.append(('Pause', ('native_gcode', 'PAUSE')))
             if state == 'paused':
-                rows.append(('Change the material', ('native_gcode', 'ZORTRAX_CHANGE')))
+                rows.append(('Change the material', ('native_gcode', 'M300_CHANGE')))
                 rows.append(('Resume', ('native_gcode', 'RESUME')))
             if state in ('printing', 'paused'):
                 rows.append(('Cancel', ('native_gcode', 'CANCEL_PRINT')))
@@ -1006,22 +1006,22 @@ class M300Menu:
             operation = {'X':'HOME_X','Y':'HOME_Y','Z':'HOME_Z',
                          'XY':'HOME_XY','XYZ':'HOME_ALL'}.get(axes)
             return ('m300_motion',operation) if operation else None
-        return {'ZORTRAX_HOME_X':('m300_motion','HOME_X'),
-                'ZORTRAX_HOME_Y':('m300_motion','HOME_Y'),
-                'ZORTRAX_HOME_XY':('m300_motion','HOME_XY'),
-                'ZORTRAX_HOME_Z':('m300_motion','HOME_Z'),
-                'ZORTRAX_HOME_ALL':('m300_motion','HOME_ALL'),
+        return {'M300_HOME_X':('m300_motion','HOME_X'),
+                'M300_HOME_Y':('m300_motion','HOME_Y'),
+                'M300_HOME_XY':('m300_motion','HOME_XY'),
+                'M300_HOME_Z':('m300_motion','HOME_Z'),
+                'M300_HOME_ALL':('m300_motion','HOME_ALL'),
                 'BED_MESH':('m300_pad_mesh','BED_MESH'),
                 'BED_MESH_CALIBRATE':('m300_pad_mesh','BED_MESH'),
-                'ZORTRAX_LEVEL':('m300_calibration',None),
-                'ZORTRAX_HEAT':('m300_maintenance','HOTEND'),
-                'ZORTRAX_HEAT_PLATFORM':('m300_maintenance','BED'),
-                'ZORTRAX_LOAD':('m300_filament','LOAD'),
-                'ZORTRAX_UNLOAD':('m300_filament','UNLOAD'),
-                'ZORTRAX_CHANGE':('m300_filament','CHANGE'),
-                'ZORTRAX_FAN_TEST_START':('m300_fans','FAN_TEST'),
-                'ZORTRAX_FAN_UPPER':('m300_fans','FAN_TEST'),
-                'ZORTRAX_FAN_LOWER':('m300_fans','FAN_TEST')}.get(command)
+                'M300_LEVEL':('m300_calibration',None),
+                'M300_HEAT':('m300_maintenance','HOTEND'),
+                'M300_HEAT_PLATFORM':('m300_maintenance','BED'),
+                'M300_LOAD':('m300_filament','LOAD'),
+                'M300_UNLOAD':('m300_filament','UNLOAD'),
+                'M300_CHANGE':('m300_filament','CHANGE'),
+                'M300_FAN_TEST_START':('m300_fans','FAN_TEST'),
+                'M300_FAN_UPPER':('m300_fans','FAN_TEST'),
+                'M300_FAN_LOWER':('m300_fans','FAN_TEST')}.get(command)
 
     @staticmethod
     def _procedure_snapshot(service, now):
@@ -1266,9 +1266,9 @@ class M300Menu:
                     # procedure owner as their Fluidd macros. Keep the
                     # original selected row until a real procedure borrows
                     # the OLED; completion restores that captured cursor.
-                    command = {'x':'ZORTRAX_HOME_X', 'y':'ZORTRAX_HOME_Y',
-                               'z':'ZORTRAX_HOME_Z', 'xy':'ZORTRAX_HOME_XY',
-                               'xyz':'ZORTRAX_HOME_ALL'}[axes]
+                    command = {'x':'M300_HOME_X', 'y':'M300_HOME_Y',
+                               'z':'M300_HOME_Z', 'xy':'M300_HOME_XY',
+                               'xyz':'M300_HOME_ALL'}[axes]
                     self._native_script(command, origin=origin)
                 else:
                     self._navigate('motion_status')

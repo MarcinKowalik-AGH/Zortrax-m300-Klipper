@@ -176,6 +176,13 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
                     'Existing unknown M300 runtime module: %s (SHA-256: %s). '
                     'Refusing to overwrite unverified local changes.' %
                     (p, installed_sha256))
+    parser = root / 'klippy/gcode.py'
+    parser_data = (HERE / 'core/gcode.py').read_bytes()
+    original = snapshot(parser)
+    if original != parser_data and (original is None or digest(original) !=
+            'a2bcd6949b4263f608eaa71ba1cdfb713553542b7b90de739241b624f06415ae'):
+        raise ValueError('Unrecognized Klipper G-code parser: ' + str(parser))
+    desired[parser] = parser_data
     settings = config.parent / 'm300_display.cfg'
     settings_data = snapshot(settings)
     if settings_data is None:
@@ -192,6 +199,15 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
         if not path.is_relative_to(config.parent):
             raise ValueError('Configuration include outside printer config directory: ' + str(path))
         desired[path] = profile.convert_text(text, stock_xy).encode()
+    # Abort before applying anything if a user already defined the new name.
+    seen_macros = {}
+    for path in tree:
+        for name, _ in profile.blocks(desired[path].decode())[1]:
+            key = name.upper()
+            if key.startswith('GCODE_MACRO M300_') and key[17:] in profile.PUBLIC_MACROS:
+                if key in seen_macros:
+                    raise ValueError('Conflicting macro %s in %s and %s' % (key, seen_macros[key], path))
+                seen_macros[key] = path
     existing = {name.lower() for path in tree for name, _ in
                 profile.blocks(desired[path].decode())[1]}
     additions = []
@@ -317,6 +333,7 @@ def rollback(receipt, root, config):
                 if Path(row['path']).suffix == '.cfg'
                 and Path(row['path']).resolve().is_relative_to(config.parent.resolve())}
     allowed.add(config.parent.resolve()/'moonraker.conf')
+    allowed.add(root.resolve()/'klippy/gcode.py')
     entries = []
     for row in doc['changes']:
         p = Path(row['path'])
