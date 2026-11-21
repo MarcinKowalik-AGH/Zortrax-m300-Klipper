@@ -171,7 +171,7 @@ def main():
         'host/config/m300_classic_base.cfg': 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64',
         'host/config/m300_operations.cfg': 'acf1f2de2d43479f895af856f8f32b8cdab5b02bfa082a27c5b487c19c198274',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
-        'host/klippy/extras/m300_pad_mesh.py': 'c8a21696a4e17fe9797074d6e0e0cc732167ecfe225aeb23c4487ab838de1f7b',
+        'host/klippy/extras/m300_pad_mesh.py': '443f47a524e792f29b946afba00c27c963878d2f0f0081a72b9db48732be7f12',
         'host/klippy/extras/m300_activity_graphics.py': '51b7f4992070ccd5363ce7a74237c4a6a320c365ce7dadd059ba20bef3429037',
         'host/klippy/extras/m300_settings_ui.py': 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd',
         'host/klippy/extras/m300_klipper_status.py': '6bde411f82ee2f1a86e53b40b967000d715bc4f10ee656521493a7a2e8ae45c1',

@@ -226,6 +226,7 @@ class NativeLevelingTests(unittest.TestCase):
                 self.assertEqual(h.c.machine.state,'COMPLETE')
                 self.assertIsNotNone(h.record)
                 self.assertAlmostEqual(h.position[2],5.)
+                self.assertEqual(h.position[:2], [300.,305.])
                 self.assertEqual(h.position[3],17.)
                 self.assertEqual(h.c._frame_offset,0.)
                 self.assertEqual(h.toolhead.move,h.original_move)

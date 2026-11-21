@@ -1,6 +1,6 @@
 # Klipper, OLED and Fluidd procedure inventory
 
-Current inventory: host **1.0.1**, MCU **1.0.8**, 21 November 2026. This inventory covers the native M300 Classic profile. The OLED selects
+Current inventory: host **1.0.2**, MCU **1.0.8**, 21 November 2026. This inventory covers the native M300 Classic profile. The OLED selects
 actions, Klippy owns the running procedure, and Fluidd sends commands to the
 same owner. MCU 1.0.8 owns the physical I/O, input capture, local fault
 response and protective cooling. Legacy M02 print and M08 cycle paths are

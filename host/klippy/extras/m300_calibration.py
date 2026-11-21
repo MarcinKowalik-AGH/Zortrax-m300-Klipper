@@ -515,7 +515,10 @@ class M300Calibration:
                     self.machine.check(token, phase)
                     self._guard()
                     self.machine.complete(token, phase, self.reactor.monotonic())
-                    self._finish_cleanup()
+                    self._finish_cleanup(park=self.native_mode)
+                except Exception as exc:
+                    self._fault(str(exc))
+                    raise
                 finally:
                     self._committing = False
             return self.get_status(self.reactor.monotonic())
@@ -566,7 +569,7 @@ class M300Calibration:
         if shutdown and not self.printer.is_shutdown():
             self.printer.invoke_async_shutdown('M300 calibration: ' + str(reason))
 
-    def _finish_cleanup(self):
+    def _finish_cleanup(self, park=False):
         self._off()
         if self._frame_offset:
             if not self.printer.is_shutdown():
@@ -577,6 +580,16 @@ class M300Calibration:
                     raise self._error('cannot restore leveling frame within native Z bounds')
                 self._native_set_position(position)
             self._frame_offset = 0.
+        if park:
+            from .m300_native_service import park_calibration
+            generation = self._cancel_generation
+            def check():
+                if generation != self._cancel_generation:
+                    raise self._error('calibration park cancelled')
+                self._guard()
+            park_calibration(self, self._queue_move, check, self.endstop,
+                             *self.job._axis_bounds())
+            self._wait_until = self._move_deadline = None
         if self._idle_saved is not None:
             self.job.idle.idle_timeout = self._idle_saved
             self._idle_saved = None

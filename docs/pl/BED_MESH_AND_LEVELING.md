@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.2**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Dwie odrębne procedury
@@ -127,3 +127,5 @@ M300 nie wykonuje nowego mesh przy każdym starcie. To różnica względem przed
 ![Wynik procedury](../img/oled/level_result@3x.png)
 
 Rendery przedstawiają wybrane stany kodu M07 na danych demonstracyjnych. Kierunku i liczby obrotów nie przepisuj z obrazka: wiążące jest wskazanie dla bieżącego pomiaru Twojej drukarki. Szczegółowy audyt OEM: [LEVELING](../en/LEVELING.md).
+
+Po udanym pomiarze 25 punktów oraz po zatwierdzeniu wyniku kalibracji Zortrax głowica parkuje domyślnie przy X300 Y305. Przejazd odbywa się po przywróceniu zwykłej ramy współrzędnych, na co najmniej Z5 i po sprawdzeniu rozwarcia PC7.

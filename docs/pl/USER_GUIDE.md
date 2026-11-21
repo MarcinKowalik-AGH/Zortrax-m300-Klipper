@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.1**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.2**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -57,7 +57,7 @@ Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zm
 
 ## 2b. Tune, All i Calibrate — trzy różne działania
 
-| Działanie | Działanie w 1.0.1 |
+| Działanie | Działanie w 1.0.2 |
 |---|---|
 | Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
 | All w Tune | Wspólne M300_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
@@ -148,7 +148,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.8 wystarczy aktualizacja hosta. Numer hosta i MCU sprawdzisz poleceniem `ZORTRAX_INFO REFRESH=0`. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-W 1.0.1 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.44-FLOW-CHECK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+W 1.0.2 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.44-FLOW-CHECK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ### Czas pracy drukarki
 

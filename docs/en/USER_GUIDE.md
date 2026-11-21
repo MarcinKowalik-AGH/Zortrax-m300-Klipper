@@ -1,7 +1,7 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> | USER_GUIDE.md - Guides an M300 Classic operator from installation through printing, material changes and fault diagnosis. -->
 # M300 Classic operator handbook
 
-This guide follows a job on the original M300 Classic with host 1.0.1, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
+This guide follows a job on the original M300 Classic with host 1.0.2, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
 
 ## Choose the installation path
 
@@ -58,3 +58,5 @@ Read `ZORTRAX_HARDWARE_STATUS` for the factory counter. After a completed write,
 | An OEM fault or link error appears | Collect `ZORTRAX_ERROR_STATUS`, `ZORTRAX_LINK_STATUS` and `klippy.log` before restarting. For verbose M300 diagnostics set `debug: True` in the existing `[m300_mcu]` section and reload while idle. Return to `False` for normal logging. [Error catalogue](ERRORS.md). |
 
 Hardware results, including the operator's completed print and the counter readback after power cycling, are documented in the [acceptance register](../pl/ACCEPTANCE_REGISTER.md). Results that still require a printer are recorded there alongside the specific operation to verify.
+
+After a successful 25-point mesh, or confirmation of the Zortrax leveling result, the head parks at the configured corner (normally X300 Y305). It uses the restored native coordinate frame, at least Z5 clearance and an open PC7 contact.

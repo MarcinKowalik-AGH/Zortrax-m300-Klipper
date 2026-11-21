@@ -51,7 +51,7 @@ class Rc1Contracts(unittest.TestCase):
                 'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
-                '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
+                '7a7c6557c2b8b4861fdc693eaab8d878e7443ab5e58d95e804a38b33a498b735'),
             'host/config/m300_classic_base.cfg': (
                 '1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a',
                 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64'),
@@ -66,7 +66,7 @@ class Rc1Contracts(unittest.TestCase):
                 '9a858e5603c07776d76a2741c2a9723a29f1b615b77c78376f0e8ec904a92be9'),
             'host/klippy/extras/m300_pad_mesh.py': (
                 'd7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836',
-                'c8a21696a4e17fe9797074d6e0e0cc732167ecfe225aeb23c4487ab838de1f7b'),
+                '443f47a524e792f29b946afba00c27c963878d2f0f0081a72b9db48732be7f12'),
         }
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
@@ -85,12 +85,12 @@ class Rc1Contracts(unittest.TestCase):
                     # RC13 allows active native Bed Mesh for E-only filament moves.
                     # Preserve the RC6 reference and pin the reviewed RC13 code.
                     self.assertEqual(expected, '40f12fab2334dfef5e99cdfe1dffc09c4392c143b4bf3454867144237c908b15')
-                    expected = 'de18e8952209fcbd45e24b1b51dc3a6134ccf2f661e57419457d84a469275b8d'
+                    expected = '5910e3bf4a9a990419e7244c2832d59b2598738887d561d144721dc40fc4117a'
                 self.assertEqual(hashlib.sha256(data).hexdigest(), expected)
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],992)
+        self.assertEqual(meta['self_contained_host_tests'],995)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

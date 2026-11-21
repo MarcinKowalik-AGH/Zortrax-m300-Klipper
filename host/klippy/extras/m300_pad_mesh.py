@@ -598,6 +598,12 @@ class M300PadMesh:
             self._publish(profile, readings)
             self._check_session(token)
             self.motion.move_contact_filament(CONTACT_RETRACT_MM, lambda: self._check_session(token))
+            from .m300_native_service import park_calibration
+            self.phase = 'PARKING'
+            park_calibration(self, self.toolhead.manual_move,
+                             lambda: self._check_session(token), self.endstop,
+                             *[self.kin.get_status(self.reactor.monotonic())[key]
+                               for key in ('axis_minimum', 'axis_maximum')])
             self._restore_targets(token)
             control = self.printer.lookup_object('m300_print_control', None)
             if control is not None:

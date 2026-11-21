@@ -110,6 +110,7 @@ class PadMeshTests(unittest.TestCase):
     def complete_command(self, mesh, case, publish=None):
         mesh.toolhead=case.objects['toolhead']
         mesh.toolhead.set_position=lambda position:case.position.__setitem__(slice(None),position)
+        mesh.toolhead.manual_move=lambda position,speed:case.position.__setitem__(slice(None),position)
         mesh.gcode.create_gcode_command=lambda name,text,params:params
         mesh._publish=publish or (lambda profile,readings:None)
         mesh.probe_points=NS(update_probe_points=lambda *args:None,
@@ -127,6 +128,7 @@ class PadMeshTests(unittest.TestCase):
                 case.temps.update(hotend=(measured,0.),bed=(25.,0.))
                 self.complete_command(mesh,case)
                 self.assertEqual(mesh.state,'COMPLETE')
+                self.assertEqual(case.position[:2], [300.,305.])
                 self.assertEqual([event for event in case.events if isinstance(event,tuple) and event[0]=='filament'], [('filament',-10.),('filament',10.)])
                 self.assertEqual((case.temps['hotend'][1],case.temps['bed'][1]),(0.,0.))
                 self.assertEqual(mesh.targets['hotend'],max(measured,180.))
@@ -620,7 +622,13 @@ class PadMeshTests(unittest.TestCase):
                            set_position=lambda pos: positions.append(pos[:]),
                            wait_moves=lambda: None)
         cleared = []
-        mesh.kin = NS(clear_homing_state=cleared.append)
+        mesh.kin = NS(clear_homing_state=cleared.append, get_status=lambda now:dict(
+            homed_axes='xyz', axis_minimum=(0.,0.,0.), axis_maximum=(300.,305.,315.)))
+        mesh.toolhead.get_kinematics=lambda:mesh.kin
+        mesh.toolhead.get_last_move_time=lambda:0.
+        mesh.toolhead.manual_move=lambda pos,speed:positions.append(pos[:])
+        mesh.endstop=NS(query_endstop=lambda when:False)
+        mesh.reactor=NS(monotonic=lambda:0.)
         mesh.gcode = NS(create_gcode_command=lambda _, __, params: params)
         gcmd = NS(get=lambda _, default: default, get_command_parameters=dict,
                   get_int=lambda _, default, **kw: default,
@@ -711,7 +719,13 @@ class PadMeshTests(unittest.TestCase):
         positions, cleared, published = [[150.,158.,5.,0.]], [], []
         mesh.toolhead = NS(get_position=lambda:positions[-1][:],
                            set_position=lambda pos:positions.append(pos[:]), wait_moves=lambda:None)
-        mesh.kin = NS(clear_homing_state=cleared.append)
+        mesh.kin = NS(clear_homing_state=cleared.append, get_status=lambda now:dict(
+            homed_axes='xyz', axis_minimum=(0.,0.,0.), axis_maximum=(300.,305.,315.)))
+        mesh.toolhead.get_kinematics=lambda:mesh.kin
+        mesh.toolhead.get_last_move_time=lambda:0.
+        mesh.toolhead.manual_move=lambda pos,speed:positions.append(pos[:])
+        mesh.endstop=NS(query_endstop=lambda when:False)
+        mesh.reactor=NS(monotonic=lambda:0.)
         mesh.gcode = NS(create_gcode_command=lambda _,__,params:params)
         params, observed = {}, []
         gcmd = NS(get=lambda key,default:params.get(key,default), get_command_parameters=lambda:params,
