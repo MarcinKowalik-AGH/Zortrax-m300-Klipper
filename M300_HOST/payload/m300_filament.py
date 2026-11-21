@@ -314,6 +314,17 @@ class M300Filament:
             raise self._error('TEMP must be finite and within native extrusion/heater limits')
         return float(target)
 
+    def plan_request(self, operation, temperature=None, length=None,
+                     load_length=None, unload_length=None):
+        """Validate a request without acquiring resources or changing a pause."""
+        plan = self._profile(operation, length, load_length, unload_length)
+        default = self.unload_temperature if operation == 'UNLOAD' else self.load_temperature
+        target = self._validate_temperature(default if temperature is None else temperature)
+        load_target = target if operation == 'CHANGE' else None
+        if operation == 'CHANGE':
+            target = self._validate_temperature(self.unload_temperature)
+        return plan, target, load_target
+
     def _pause_identity(self):
         pause = self.printer.lookup_object('pause_resume', None)
         stats = self.printer.lookup_object('print_stats', None)
@@ -496,7 +507,8 @@ class M300Filament:
             raise self._error('operation must be LOAD, UNLOAD or CHANGE')
         if self.is_busy():
             raise self._error('another material operation is active or faulted')
-        plan = self._profile(operation, length, load_length, unload_length)
+        plan, target, load_target = self.plan_request(
+            operation, temperature, length, load_length, unload_length)
         state = self.job.machine.state
         native_pause = None
         if self.native_mode and operation == 'CHANGE':
@@ -504,9 +516,6 @@ class M300Filament:
                 raise self._error('legacy job owns resources')
             native_pause = dict(identity=self._pause_identity(),
                                 target=self.hotend.get_temp(self.reactor.monotonic())[1])
-            control=self.printer.lookup_object('m300_print_control',None)
-            if control is not None:
-                native_pause['target']=control.material_begin()
         if operation == 'CHANGE':
             if native_pause is None and state not in ('PRINTING', 'PAUSING', 'PAUSED'):
                 raise self._error('CHANGE requires a printing or paused M02 job')
@@ -516,14 +525,12 @@ class M300Filament:
                 or (state in JOB_IDLE and (self.job._ops or self.job._waiting or self.job._executing))
                 or self.job.sd.is_preparing):
             raise self._error('M02 cleanup or file operation still owns resources')
-        default = self.unload_temperature if operation == 'UNLOAD' else self.load_temperature
-        target = self._validate_temperature(default if temperature is None else temperature)
-        load_target = None
-        if operation == 'CHANGE':
-            load_target = target
-            target = self._validate_temperature(self.unload_temperature)
         self._live(native_pause=native_pause)
         self._sensor()
+        if native_pause is not None:
+            control = self.printer.lookup_object('m300_print_control', None)
+            if control is not None:
+                native_pause['target'] = control.material_begin()
         self._owner_token = self.job.machine.token if state not in JOB_IDLE else None
         self._owner_file = self._owner_gcode = self._owner_context = None
         self._parent_cancelled = self._cleanup_pending = False
@@ -912,10 +919,6 @@ class M300Filament:
         unload = gcmd.get_float('UNLOAD_LENGTH', None)
         control = self.printer.lookup_object('m300_print_control', None)
         if self.native_mode and control is not None and control.context is not None:
-            # Reject invalid material settings before moving away from a plain pause.
-            self._profile('CHANGE', None, load, unload)
-            if temperature is not None:
-                self._validate_temperature(temperature)
             control.request_change(gcmd, temperature, load_length=load, unload_length=unload)
             return
         self.start('CHANGE', temperature=temperature, load_length=load, unload_length=unload, gcmd=gcmd)
