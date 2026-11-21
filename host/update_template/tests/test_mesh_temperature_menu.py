@@ -13,16 +13,16 @@ from test_settings_information import session
 
 class MeshTemperatureMenuTests(unittest.TestCase):
     def test_new_platform_and_print_macros_are_grouped_even_before_settings_contains_them(self):
-        configfile = dict(settings={'gcode_macro ZORTRAX_STATUS':{}}, config={
-            'gcode_macro ZORTRAX_HEAT_PLATFORM':{},
-            'gcode_macro ZORTRAX_FULL_PLATFORM_PREHEAT':{},
+        configfile = dict(settings={'gcode_macro M300_STATUS':{}}, config={
+            'gcode_macro M300_HEAT_PLATFORM':{},
+            'gcode_macro M300_FULL_PLATFORM_PREHEAT':{},
             'gcode_macro START_PRINT':{},'gcode_macro END_PRINT':{},
-            'gcode_macro zortrax_status':{}})
+            'gcode_macro m300_status':{}})
         names = configured_macro_names(configfile)
         self.assertEqual(len(names),5)
         after,assigned = merge_groups({},names)
-        self.assertEqual(assigned['ZORTRAX_HEAT_PLATFORM'],'ZORTRAX M300')
-        self.assertEqual(assigned['ZORTRAX_FULL_PLATFORM_PREHEAT'],'ZORTRAX M300')
+        self.assertEqual(assigned['M300_HEAT_PLATFORM'],'ZORTRAX M300')
+        self.assertEqual(assigned['M300_FULL_PLATFORM_PREHEAT'],'ZORTRAX M300')
         self.assertEqual(assigned['START_PRINT'],'Klipper')
         self.assertEqual(assigned['END_PRINT'],'Klipper')
         self.assertEqual(merge_groups(after,names)[0],after)
@@ -61,11 +61,11 @@ class MeshTemperatureMenuTests(unittest.TestCase):
     def test_mesh_moves_to_klipper_group_without_unhiding_or_recoloring_the_macro(self):
         before=dict(categories=[dict(id='z',name='ZORTRAX M300')],stored=[
             dict(name='ZORTRAX_BED_MESH',categoryId='z',visible=False,color='purple')])
-        after,assigned=merge_groups(before,['BED_MESH','ZORTRAX_LEVEL'])
+        after,assigned=merge_groups(before,['BED_MESH','M300_LEVEL'])
         target=next(c['id'] for c in after['categories'] if c['name']=='Klipper')
         self.assertEqual(after['stored'][0],dict(name='BED_MESH',categoryId=target,visible=False,color='purple'))
         self.assertEqual(assigned['BED_MESH'],'Klipper')
-        self.assertEqual(category('ZORTRAX_LEVEL'),'ZORTRAX M300')
+        self.assertEqual(category('M300_LEVEL'),'ZORTRAX M300')
         self.assertEqual(merge_groups(after,list(assigned))[0],after)
 
     def test_bed_mesh_rename_keeps_custom_arguments_and_saved_profile_text(self):
@@ -95,7 +95,7 @@ class MeshTemperatureMenuTests(unittest.TestCase):
             with self.subTest(operation=operation),session() as h:
                 h.menu.page='maintenance'
                 _,rows=h.menu.rows(h.now)
-                command='ZORTRAX_'+operation
+                command='M300_'+operation
                 selected=next(i for i,(_,action) in enumerate(rows) if action==('native_gcode',command))
                 frames=[h.ui.get_oem_sprite('m04',rows,selected,i*.5)[2] for i in range(4)]
                 self.assertEqual(h.ui.last_sprite,key)

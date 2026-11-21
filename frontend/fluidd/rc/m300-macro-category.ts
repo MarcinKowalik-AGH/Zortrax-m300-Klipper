@@ -16,7 +16,7 @@ export function m300MacroHidden (name: string, model: unknown): boolean {
 export function m300MacroDefaultCategory (name: string, model: unknown): string | undefined {
   if (model !== 'M300_CLASSIC' || m300MacroHidden(name, model)) return
   const key = name.toUpperCase()
-  if (key.startsWith('ZORTRAX_')) return 'ZORTRAX M300'
+  if (key.startsWith('M300_') || key.startsWith('ZORTRAX_')) return 'ZORTRAX M300'
   if (key.startsWith('PID_') || ['START_PRINT', 'END_PRINT', 'BED_MESH', 'PAUSE',
     'RESUME', 'CANCEL_PRINT', 'M600', 'M601', 'COOLDOWN', 'OLED_TIMERS', 'PRINT_CONTROL_STATUS'].includes(key)) {
     return 'Klipper'

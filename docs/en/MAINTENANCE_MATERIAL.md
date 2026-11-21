@@ -22,24 +22,24 @@ Material, Settings, Information. Back follows the menu history.
 | Menu | Item | Macro | Behavior |
 |---|---|---|---|
 | Maintenance | Back | Navigation | Return to parent |
-| Maintenance | Autocalibration | `ZORTRAX_LEVEL` | 260°C, five points and three manual screws |
-| Maintenance | Home X | `ZORTRAX_HOME_X` → native `G28 X` | X only, blinking X; available independently of Y |
-| Maintenance | Home Y | `ZORTRAX_HOME_Y` → native `G28 Y` | Y only, blinking Y; available independently of X |
-| Maintenance | Home Z | `ZORTRAX_HOME_Z` | Native `G28 Z`; XY must already be homed, 180°C minimum unchanged |
-| Maintenance | Home XY | `ZORTRAX_HOME_XY` | Native `G28 X Y`; blinking X and Y |
-| Maintenance | Home XYZ | `ZORTRAX_HOME_ALL` | Native `G28`; blinking X, Y and Z |
-| Maintenance | Heat the extruder | `ZORTRAX_HEAT` | 260°C, ready from 258°C, confirm to turn off |
-| Maintenance | Heat the platform | `ZORTRAX_HEAT_PLATFORM TEMP=60` | Native bed only, no homing required, ±2°C readiness, confirmation or Cancel turns bed off |
-| Maintenance | Move the platform up | `ZORTRAX_PLATFORM_UP` | Negative native Z, toward the nozzle |
-| Maintenance | Move the platform down | `ZORTRAX_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
-| Maintenance | Fan test | `ZORTRAX_FAN_TEST_START` | Open the original interactive submenu |
-| Fan test | Back | `ZORTRAX_FAN_TEST_END` | Restore lower request and current upper thermostat policy |
-| Fan test | Toggle upper fan | `ZORTRAX_FAN_UPPER` | Toggle 0 / 150⁄255 request; automatic cooling has priority |
-| Fan test | Toggle lower fan | `ZORTRAX_FAN_LOWER` | Toggle 0 / 150⁄255 request |
+| Maintenance | Autocalibration | `M300_LEVEL` | 260°C, five points and three manual screws |
+| Maintenance | Home X | `M300_HOME_X` → native `G28 X` | X only, blinking X; available independently of Y |
+| Maintenance | Home Y | `M300_HOME_Y` → native `G28 Y` | Y only, blinking Y; available independently of X |
+| Maintenance | Home Z | `M300_HOME_Z` | Native `G28 Z`; XY must already be homed, 180°C minimum unchanged |
+| Maintenance | Home XY | `M300_HOME_XY` | Native `G28 X Y`; blinking X and Y |
+| Maintenance | Home XYZ | `M300_HOME_ALL` | Native `G28`; blinking X, Y and Z |
+| Maintenance | Heat the extruder | `M300_HEAT` | 260°C, ready from 258°C, confirm to turn off |
+| Maintenance | Heat the platform | `M300_HEAT_PLATFORM TEMP=60` | Native bed only, no homing required, ±2°C readiness, confirmation or Cancel turns bed off |
+| Maintenance | Move the platform up | `M300_PLATFORM_UP` | Negative native Z, toward the nozzle |
+| Maintenance | Move the platform down | `M300_PLATFORM_DOWN` | Positive native Z, away from the nozzle |
+| Maintenance | Fan test | `M300_FAN_TEST_START` | Open the original interactive submenu |
+| Fan test | Back | `M300_FAN_TEST_END` | Restore lower request and current upper thermostat policy |
+| Fan test | Toggle upper fan | `M300_FAN_UPPER` | Toggle 0 / 150⁄255 request; automatic cooling has priority |
+| Fan test | Toggle lower fan | `M300_FAN_LOWER` | Toggle 0 / 150⁄255 request |
 | Material | Back | Navigation | Return to parent |
-| Material | Unload the material | `ZORTRAX_UNLOAD` | Default 240°C → confirm removal → retract 110 mm → nozzle stays at the material target |
-| Material | Load the material | `ZORTRAX_LOAD` | Default 240°C → insert and confirm → feed 130 mm → nozzle stays at the material target |
-| Klipper / Print status, while paused | Change the material | `ZORTRAX_CHANGE`, `M600` | Set withdrawal temperature (default 240°C) → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
+| Material | Unload the material | `M300_UNLOAD` | Default 240°C → confirm removal → retract 110 mm → nozzle stays at the material target |
+| Material | Load the material | `M300_LOAD` | Default 240°C → insert and confirm → feed 130 mm → nozzle stays at the material target |
+| Klipper / Print status, while paused | Change the material | `M300_CHANGE`, `M600` | Set withdrawal temperature (default 240°C) → retract 110 mm → select loading temperature → insert and confirm → feed 150 mm → return to pause |
 
 Maintenance includes the requested Fan test submenu. Change belongs to
 the paused-print context, not the idle Material submenu. Maintenance lists
@@ -84,8 +84,8 @@ Fluidd platform macros execute a finite distance. The default is 1 mm.
 Supply any positive distance whose endpoint fits the homed Z travel:
 
 ```gcode
-ZORTRAX_PLATFORM_UP DISTANCE=1 SPEED=1
-ZORTRAX_PLATFORM_DOWN DISTANCE=20 SPEED=1
+M300_PLATFORM_UP DISTANCE=1 SPEED=1
+M300_PLATFORM_DOWN DISTANCE=20 SPEED=1
 ```
 
 The full requested endpoint must fit the actual homed Z range. The service

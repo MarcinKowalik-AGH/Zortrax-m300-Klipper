@@ -48,7 +48,7 @@ diff --git a/src/components/widgets/bedmesh/BedMeshControls.vue b/src/components
 +
 +  homeAll () {
 +    if (!this.klippyReady || this.printerBusy || this.m300OperationBusy) return
-+    this.sendGcode(this.m300PadMode ? 'ZORTRAX_HOME_ALL' : 'G28', this.$waits.onHomeAll)
++    this.sendGcode(this.m300PadMode ? 'M300_HOME_ALL' : 'G28', this.$waits.onHomeAll)
 +  }
 +
    calibrate () {

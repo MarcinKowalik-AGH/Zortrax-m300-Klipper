@@ -13,7 +13,7 @@ from .m300_print_hold import PrintHold
 from .m300_settings_ui import MENU_LABEL_PIXELS, SPRITE_LABEL_PIXELS
 from .m300_ui_m11_state import clean_label, fit_label
 
-COMMANDS = {'pause': 'PAUSE', 'resume': 'RESUME', 'change': 'ZORTRAX_CHANGE',
+COMMANDS = {'pause': 'PAUSE', 'resume': 'RESUME', 'change': 'M300_CHANGE',
             'stop': 'CANCEL_PRINT', 'ready': 'FILAMENT_READY'}
 PAUSE_ROWS = (('Resume the print', 'resume'), ('Change the material', 'change'),
               ('Stop the print', 'ask_stop'))

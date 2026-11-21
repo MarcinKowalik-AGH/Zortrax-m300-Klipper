@@ -1,7 +1,7 @@
 <!-- Marcin Kowalik <mkowalik@agh.edu.pl> | USER_GUIDE.md - Guides an M300 Classic operator from installation through printing, material changes and fault diagnosis. -->
 # M300 Classic operator handbook
 
-This guide follows a job on the original M300 Classic with host 1.0.0-rc.33, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
+This guide follows a job on the original M300 Classic with host 1.0.0-rc.34, MCU 1.0.8 and the M300 edition of Fluidd on port 4480. The physical menu uses English labels. [Polski](../pl/USER_GUIDE.md).
 
 ## Choose the installation path
 
@@ -33,7 +33,7 @@ After heating, START retracts 10 mm before homing, loads the selected saved mesh
 | Pause | Use **Pause** in Fluidd or the OLED print controls. Ordinary pause holds the current XY, lowers the bed by 5 mm by default and keeps the motors engaged. |
 | Change colour | Choose **Change the material** or use `M600`. The head parks at the service corner when clearance allows. Wait for withdrawal, insert the new filament when prompted and confirm. |
 | Purge | When the flow confirmation appears, set length and speed in **Tool**. **Extrude** pushes filament and **Retract** withdraws it. Repeat until the new colour comes out cleanly. Confirm flow, then choose **Resume**. The same buttons work after an ordinary pause has settled. |
-| Standalone load or unload | Select **Material** on the OLED or open `ZORTRAX_MAIN_MENU` in Fluidd. After automatic transport ends the nozzle stays at the selected target for manual feeding until normal idle cooling or manual switch-off. |
+| Standalone load or unload | Select **Material** on the OLED or open `M300_MAIN_MENU` in Fluidd. After automatic transport ends the nozzle stays at the selected target for manual feeding until normal idle cooling or manual switch-off. |
 | End or cancel | A normal end lowers the bed by up to 300 mm within Z travel, then parks at X300 Y305 when there is clearance. The OLED shows **PRINTING DONE**. **Cancel** terminates the file and turns off heating. Only a paused job can be resumed. |
 
 After a material change, the measured and target nozzle temperatures must both reach the extrusion threshold. With a reading of 230°C and a target of 150°C, choose **Reheat to check flow** on the OLED or **Resume** in Fluidd. The print stays paused after reheating. Purge, check the visible flow and choose **Confirm material flow** or enter `FILAMENT_READY`. An accepted manual retraction clears the confirmation. After purging again, confirm the flow and explicitly choose **Resume**.
@@ -42,7 +42,7 @@ The four settings in `[m300_filament]` are `unload_temperature`, `unload_speed`,
 
 ## Display and print-time settings
 
-The OLED and `ZORTRAX_MAIN_MENU` in Fluidd share Models, Maintenance, Material, Settings and Information. A confirmation from either surface advances the current procedure. To reopen its dialog use `ZORTRAX_PROCEDURE`.
+The OLED and `M300_MAIN_MENU` in Fluidd share Models, Maintenance, Material, Settings and Information. A confirmation from either surface advances the current procedure. To reopen its dialog use `M300_PROCEDURE`.
 
 In **Settings**, **OLED dim time** and **OLED sleep time** each edit one value from 1 to 60 minutes since the last interaction. Turn and press to save. The board retains the preferred DIM. Shortening SLEEP below it shortens effective DIM, and lengthening SLEEP restores DIM up to its preference. The first knob gesture wakes the panel. OLED and cabinet LED brightness have independent levels from 1 to 16. [Display controls and readback](SETTINGS_INFORMATION.md).
 

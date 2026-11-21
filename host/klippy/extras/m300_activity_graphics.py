@@ -194,24 +194,24 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
         if kind == 'native_gcode':
             command = str(target).strip().upper()
             name = command.split(maxsplit=1)[0] if command else ''
-            homing = {'ZORTRAX_HOME_X':'HOME_X', 'ZORTRAX_HOME_Y':'HOME_Y',
-                      'ZORTRAX_HOME_XY':'HOME_XY', 'ZORTRAX_HOME_Z':'HOME_Z',
-                      'ZORTRAX_HOME_ALL':'HOME_ALL'}.get(name)
+            homing = {'M300_HOME_X':'HOME_X', 'M300_HOME_Y':'HOME_Y',
+                      'M300_HOME_XY':'HOME_XY', 'M300_HOME_Z':'HOME_Z',
+                      'M300_HOME_ALL':'HOME_ALL'}.get(name)
             if homing:
                 return Symbol(HOMING_ICONS[homing], True)
             if name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
                 return symbol('bed_mesh', True)
-            if name in ('ZORTRAX_HEAT', 'M104', 'M109'):
+            if name in ('M300_HEAT', 'M104', 'M109'):
                 return symbol('heat_nozzle', True)
-            if name in ('ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
+            if name in ('M300_HEAT_PLATFORM', 'M300_FULL_PLATFORM_PREHEAT', 'M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
                 return symbol('heat_bed', True)
             if name == 'PID_CALIBRATE':
                 return symbol('heat_nozzle', True)
             if name in ('TURN_OFF_HEATERS', 'ZORTRAX_COOL'):
                 return symbol('cooling', True)
-            if name in ('ZORTRAX_FAN_TEST_START', 'ZORTRAX_FAN_UPPER', 'ZORTRAX_FANS'):
+            if name in ('M300_FAN_TEST_START', 'M300_FAN_UPPER', 'M300_FANS'):
                 return symbol('fan_upper', True)
-            if name == 'ZORTRAX_FAN_LOWER':
+            if name == 'M300_FAN_LOWER':
                 return symbol('fan_lower', True)
             if name in ('FIRMWARE_RESTART', 'RESTART', 'SAVE_CONFIG'):
                 return symbol('firmware_update', True)

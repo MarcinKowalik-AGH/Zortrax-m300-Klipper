@@ -187,12 +187,12 @@ def choose_icon(*, menu_page='main', panel_page='m04', rows=(), selected=0,
             if action[0]=='platform_hold':
                 return '0x0801cb24' if action[1]<0 else '0x0801cc24'
             if action[0]=='native_gcode':
-                icon={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
-                      'ZORTRAX_HOME_X':HOMING_ICONS['HOME_X'],
-                      'ZORTRAX_HOME_Y':HOMING_ICONS['HOME_Y'],
-                      'ZORTRAX_HOME_XY':HOMING_ICONS['HOME_XY'],'ZORTRAX_HOME_Z':HOMING_ICONS['HOME_Z'],
-                      'ZORTRAX_HOME_ALL':HOMING_ICONS['HOME_ALL'],
-                      'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}.get(action[1])
+                icon={'M300_LEVEL':'0x0801ca28','M300_HEAT':'0x0801c2b8',
+                      'M300_HOME_X':HOMING_ICONS['HOME_X'],
+                      'M300_HOME_Y':HOMING_ICONS['HOME_Y'],
+                      'M300_HOME_XY':HOMING_ICONS['HOME_XY'],'M300_HOME_Z':HOMING_ICONS['HOME_Z'],
+                      'M300_HOME_ALL':HOMING_ICONS['HOME_ALL'],
+                      'M300_UNLOAD':'0x0801cfb0','M300_LOAD':'0x0801d0b8'}.get(action[1])
                 if icon:return icon
             if action[0]=='page' and len(action)>1:
                 return PAGES.get(action[1], PAGES.get(menu_page,'0x0801dc08'))

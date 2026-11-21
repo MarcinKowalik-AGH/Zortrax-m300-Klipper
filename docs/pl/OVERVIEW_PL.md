@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.33**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.34**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## Warstwy systemu

@@ -2,14 +2,14 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.33**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.34**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Dwie odrębne procedury
 
 | Funkcja | Autokalibracja OEM | Mesh Klippera |
 |---|---|---|
-| Polecenie | `ZORTRAX_LEVEL` | `BED_MESH` lub przechwycone `BED_MESH_CALIBRATE` |
+| Polecenie | `M300_LEVEL` | `BED_MESH` lub przechwycone `BED_MESH_CALIBRATE` |
 | Cel | Mechaniczne ustawienie platformy śrubami | Pomiar wysokości i programowa kompensacja Z |
 | Model | Odtworzony przebieg M07, pięć pól | 25 pozycji: po pięć w każdym z pięciu pól |
 | Udział operatora | Potwierdzenia i regulacja śrub według ekranu | Świadome uruchomienie BED_MESH; przygotowanie i pomiar są automatyczne |
@@ -24,7 +24,7 @@ Nie utożsamiaj autokalibracji śrub, bazowania Z i mapy mesh. Bazowanie wyznacz
 
 Wejście do Tune przez ikonę suwaków pokazuje przygotowanie również w pierwotnym IDLE, gdy nie powstał identyfikator sesji pomiarowej. Samo otwarcie nie wysyła G-code, nie grzeje, nie bazuje i nie aktywuje zapisanego profilu.
 
-**All** wywołuje wspólne `ZORTRAX_HOME_ALL` i pokazuje postęp/temperatury. **Calibrate** uruchamia `BED_MESH`, tak samo jak makro; przygotowanie temperatury i niezbędnego bazowania należy do tej procedury. Przycisk All nie jest wymaganym osobnym pierwszym krokiem kalibracji M300.
+**All** wywołuje wspólne `M300_HOME_ALL` i pokazuje postęp/temperatury. **Calibrate** uruchamia `BED_MESH`, tak samo jak makro; przygotowanie temperatury i niezbędnego bazowania należy do tej procedury. Przycisk All nie jest wymaganym osobnym pierwszym krokiem kalibracji M300.
 
 Schemat płyty i pól kontaktu pozostaje **nad heatmapą** we wszystkich stanach. Stary zrzut poniżej ma odwrotną kolejność i jest zachowany jako zapis rzeczywistego pomiaru, nie wzór układu beta.20. Brak nowego pomiaru nie oznacza błędu, a saved preview nie oznacza aktywnej kompensacji. Nie kasuj `m300_pads` tylko dlatego, że wcześniej interfejs nie pokazywał panelu przygotowania.
 

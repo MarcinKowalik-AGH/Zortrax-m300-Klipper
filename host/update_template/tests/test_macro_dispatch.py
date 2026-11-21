@@ -15,7 +15,7 @@ from setup_fluidd import merge_groups
 
 ROOT=Path(__file__).resolve().parents[1]
 ENV=jinja2.Environment(variable_start_string='{',variable_end_string='}')
-spec=importlib.util.spec_from_file_location('macro_native_gcode',ROOT/'tests/reference/native_gcode.py')
+spec=importlib.util.spec_from_file_location('macro_native_gcode',ROOT/'core/gcode.py')
 native=importlib.util.module_from_spec(spec);spec.loader.exec_module(native)
 
 
@@ -54,10 +54,37 @@ class MacroDispatchTests(unittest.TestCase):
                     g.run_script_from_command(name)
                     self.assertEqual(called,[name]);self.assertEqual(output,[])
 
+    def test_m300_and_numbered_macro_parameters_do_not_collide(self):
+        g, _, output = dispatcher()
+        calls = []
+        for name in ('M300', 'M300_OLED_TIMERS'):
+            g.register_command(name, lambda cmd: calls.append((cmd.get_command(), dict(cmd.get_command_parameters()))))
+        g.run_script_from_command('M300 S440 P100')
+        self.assertEqual(calls[0][0], 'M300')
+        self.assertEqual(calls[0][1]['S'], '440')
+        for label in ('m300_oled_timers', 'zortrax_oled_timers'):
+            g.run_script_from_command('N9 ' + label + ' DIM=7 NOTE="Mixed Case"*12')
+            self.assertEqual(calls[-1][1], {'DIM': '7', 'NOTE': 'Mixed Case'})
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(output, [])
+
+    def test_every_old_button_executes_the_same_registered_macro_with_parameters(self):
+        g, _, output = dispatcher()
+        received = []
+        names = {n for n in templates() if n.startswith('M300_')}
+        self.assertEqual({name[5:] for name in names}, m300_profile.PUBLIC_MACROS)
+        for name in sorted(names):
+            g.register_command(name, lambda cmd, name=name: received.append((name, cmd.get('MARK'))))
+            for spelling in (name, 'ZORTRAX_' + name[5:]):
+                g.run_script_from_command(spelling + ' MARK="Mixed Case"')
+            self.assertEqual(received[-2:], [(name, 'Mixed Case')] * 2)
+        self.assertEqual(len(received), 2 * len(names))
+        self.assertEqual(output, [])
+
     def test_single_axis_fluidd_macro_buttons_dispatch_shared_procedure_start(self):
         for axis in ('X','Y'):
             with self.subTest(axis=axis):
-                name='ZORTRAX_HOME_'+axis
+                name='M300_HOME_'+axis
                 text=templates()[name]
                 self.assertIn('ZORTRAX_PROCEDURE_START OP=HOME_'+axis,text)
                 g,printer,output=dispatcher()
@@ -77,10 +104,10 @@ class MacroDispatchTests(unittest.TestCase):
         p.printer=NS(lookup_object=lambda name:NS(start=lambda temp:calls.append(temp)))
         p.reactor=NS(NOW=0.,update_timer=lambda *args:None);p.timer='procedure'
         g.register_command('ZORTRAX_PROCEDURE_START',p.cmd_start)
-        template=ENV.from_string(templates()['ZORTRAX_LEVEL'])
-        g.register_command('ZORTRAX_LEVEL',lambda cmd:g.run_script_from_command(
+        template=ENV.from_string(templates()['M300_LEVEL'])
+        g.register_command('M300_LEVEL',lambda cmd:g.run_script_from_command(
             template.render(params=cmd.get_command_parameters())))
-        g.run_script_from_command('ZORTRAX_LEVEL')
+        g.run_script_from_command('M300_LEVEL')
         self.assertEqual(calls,[260.]);self.assertEqual(output,[])
 
     def test_xy_button_renders_and_dispatches_all_seven_native_moves(self):
@@ -109,18 +136,18 @@ class MacroDispatchTests(unittest.TestCase):
             p.printer=NS(lookup_object=lambda name:NS(start=lambda op,temperature:calls.append((op,temperature))))
             p.reactor=NS(NOW=0.,update_timer=lambda *args:None);p.timer='procedure'
             g.register_command('ZORTRAX_PROCEDURE_START',p.cmd_start)
-            template=ENV.from_string(templates()['ZORTRAX_'+operation])
-            g.register_command('ZORTRAX_'+operation,lambda cmd:g.run_script_from_command(
+            template=ENV.from_string(templates()['M300_'+operation])
+            g.register_command('M300_'+operation,lambda cmd:g.run_script_from_command(
                 template.render(params=cmd.get_command_parameters())))
-            g.run_script_from_command('ZORTRAX_'+operation)
-            g.run_script_from_command('ZORTRAX_'+operation+' TEMP=250')
-            g.run_script_from_command('ZORTRAX_'+operation+' TEMP=auto')
+            g.run_script_from_command('M300_'+operation)
+            g.run_script_from_command('M300_'+operation+' TEMP=250')
+            g.run_script_from_command('M300_'+operation+' TEMP=auto')
             self.assertEqual(calls,[(operation,None),(operation,250.),(operation,240.)])
             self.assertEqual(output,[])
 
     def test_status_button_dispatches_every_diagnostic_command(self):
         g,printer,output=dispatcher();calls=[]
-        script=templates()['ZORTRAX_DIAGNOSTICS']
+        script=templates()['M300_DIAGNOSTICS']
         names=[line.strip() for line in script.splitlines() if line.strip()]
         for name in names:g.register_command(name,lambda cmd:calls.append(cmd.get_command()))
         g.run_script_from_command(script)
@@ -136,12 +163,12 @@ class MacroDispatchTests(unittest.TestCase):
         before={'stored':[{'name':'TEST_M300_STATUS','visible':False,'color':'red'},
                           {'name':'TEST_M300_LEVEL','visible':True},
                           {'name':'TEST_ZORTRAX_LEVEL','visible':True}]}
-        after,assigned=merge_groups(before,['TEST_ZORTRAX_STATUS','ZORTRAX_LEVEL'])
+        after,assigned=merge_groups(before,['TEST_ZORTRAX_STATUS','M300_LEVEL'])
         self.assertEqual(after['stored'][0]['name'],'TEST_ZORTRAX_STATUS')
         self.assertFalse(after['stored'][0]['visible']);self.assertEqual(after['stored'][0]['color'],'red')
         self.assertNotIn('TEST_ZORTRAX_STATUS', assigned)
-        self.assertEqual(assigned['ZORTRAX_LEVEL'],'ZORTRAX M300')
-        self.assertEqual([row['name'] for row in after['stored']], ['TEST_ZORTRAX_STATUS', 'ZORTRAX_LEVEL'])
+        self.assertEqual(assigned['M300_LEVEL'],'ZORTRAX M300')
+        self.assertEqual([row['name'] for row in after['stored']], ['TEST_ZORTRAX_STATUS', 'M300_LEVEL'])
         self.assertEqual(len(before['stored']),3)
 
 

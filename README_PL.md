@@ -1,12 +1,12 @@
-# Zortrax M300 Classic — Klipper 1.0.0-rc.33
+# Zortrax M300 Classic — Klipper 1.0.0-rc.34
 
 [![Test przepływu na M300 Classic w zakładce Device OrcaSlicera. Fluidd pokazuje temperatury i podgląd OLED drukarki.](docs/img/m300-orcaslicer-fluidd-printing.png)](docs/img/m300-orcaslicer-fluidd-printing.png?raw=true)
 
 *Wydruk na M300 Classic, 20 listopada 2026 r. W konsoli oraz na podglądzie OLED widać aktywną siatkę `m300_pads`. Kliknij obraz, aby otworzyć oryginał.*
 
-[English](README.md) · [Podręcznik obsługi](docs/pl/USER_GUIDE.md) · [Pobierz RC33](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.33)
+[English](README.md) · [Podręcznik obsługi](docs/pl/USER_GUIDE.md) · [Pobierz RC34](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.0-rc.34)
 
-Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.0-rc.33** i MCU **1.0.8**. Fluidd działa na porcie **4480**. Po zmianie koloru RC33 proponuje dogrzanie dyszy, gdy grzałka przeszła w tryb czuwania. Ręczne cofnięcie po sprawdzeniu wypływu wymaga ponownego potwierdzenia przed wznowieniem.
+Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.0-rc.34** i MCU **1.0.8**. Fluidd działa na porcie **4480**. W RC34 nazwy 36 makr operatorskich zaczynają się od `M300_`. Zapisane pliki G-code nadal mogą wywoływać poprzednie nazwy `ZORTRAX_`.
 
 ## Instalacja i obsługa
 
@@ -35,6 +35,6 @@ W konsoli Fluidd wpisz `ZORTRAX_INFO REFRESH=0`, aby odczytać wersję hosta ora
 
 ## Stan przed wydaniem finalnym
 
-RC33 jest kandydatem do wydania. Operator potwierdził ukończenie Benchy, opuszczenie stołu i parkowanie po zakończeniu wydruku oraz obsługę filamentu z OLED i Fluidd. Rejestr podaje zakres każdej obserwacji. Do odbioru na maszynie pozostają m.in. powtarzalność kontaktowego Z, pierwsza warstwa na całej płycie oraz ręczne przepłukanie i wznowienie na RC33.
+RC34 jest kandydatem do wydania. Operator potwierdził ukończenie Benchy, opuszczenie stołu i parkowanie po zakończeniu wydruku oraz obsługę filamentu z OLED i Fluidd. Rejestr podaje zakres każdej obserwacji. Do odbioru na maszynie pozostają m.in. powtarzalność kontaktowego Z, pierwsza warstwa na całej płycie oraz ręczne przepłukanie i wznowienie na RC34.
 
-[Opis RC33](docs/pl/RELEASE_v1.0.0-rc.33.md) · [Wyniki kompilacji i testów](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md) · [Źródła i licencje](THIRD_PARTY_NOTICES.md)
+[Opis RC34](docs/pl/RELEASE_v1.0.0-rc.34.md) · [Wyniki kompilacji i testów](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md) · [Źródła i licencje](THIRD_PARTY_NOTICES.md)

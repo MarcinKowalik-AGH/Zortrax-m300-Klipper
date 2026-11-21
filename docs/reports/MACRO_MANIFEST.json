@@ -1,5 +1,5 @@
 {
-  "release": "v1.0.0-rc.33",
+  "release": "v1.0.0-rc.34",
   "count": 44,
   "macros": [
     {
@@ -80,161 +80,161 @@
       ]
     },
     {
-      "name": "ZORTRAX_BUZZER",
+      "name": "M300_BUZZER",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "STATE"
       ]
     },
     {
-      "name": "ZORTRAX_CHANGE",
+      "name": "M300_CHANGE",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"
       ]
     },
     {
-      "name": "ZORTRAX_DIAGNOSTICS",
+      "name": "M300_DIAGNOSTICS",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FANS",
+      "name": "M300_FANS",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FAN_LOWER",
+      "name": "M300_FAN_LOWER",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FAN_TEST_END",
+      "name": "M300_FAN_TEST_END",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FAN_TEST_START",
+      "name": "M300_FAN_TEST_START",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FAN_UPPER",
+      "name": "M300_FAN_UPPER",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_FULL_PLATFORM_PREHEAT",
+      "name": "M300_FULL_PLATFORM_PREHEAT",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "STATE"
       ]
     },
     {
-      "name": "ZORTRAX_HEAT",
+      "name": "M300_HEAT",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"
       ]
     },
     {
-      "name": "ZORTRAX_HEAT_PLATFORM",
+      "name": "M300_HEAT_PLATFORM",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"
       ]
     },
     {
-      "name": "ZORTRAX_HELP",
+      "name": "M300_HELP",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_HOME_ALL",
+      "name": "M300_HOME_ALL",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_HOME_X",
+      "name": "M300_HOME_X",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_HOME_XY",
+      "name": "M300_HOME_XY",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_HOME_Y",
+      "name": "M300_HOME_Y",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_HOME_Z",
+      "name": "M300_HOME_Z",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_INFORMATION",
+      "name": "M300_INFORMATION",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "REFRESH"
       ]
     },
     {
-      "name": "ZORTRAX_LANGUAGE",
+      "name": "M300_LANGUAGE",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_LED_BRIGHTNESS",
+      "name": "M300_LED_BRIGHTNESS",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "LEVEL"
       ]
     },
     {
-      "name": "ZORTRAX_LEVEL",
+      "name": "M300_LEVEL",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"
       ]
     },
     {
-      "name": "ZORTRAX_LIGHT",
+      "name": "M300_LIGHT",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "MODE"
       ]
     },
     {
-      "name": "ZORTRAX_LOAD",
+      "name": "M300_LOAD",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"
       ]
     },
     {
-      "name": "ZORTRAX_MAIN_MENU",
+      "name": "M300_MAIN_MENU",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_MODELS_SORT",
+      "name": "M300_MODELS_SORT",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "MODE"
       ]
     },
     {
-      "name": "ZORTRAX_OLED_BRIGHTNESS",
+      "name": "M300_OLED_BRIGHTNESS",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "LEVEL"
       ]
     },
     {
-      "name": "ZORTRAX_OLED_TIMERS",
+      "name": "M300_OLED_TIMERS",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "DIM",
@@ -242,7 +242,7 @@
       ]
     },
     {
-      "name": "ZORTRAX_PLATFORM_DOWN",
+      "name": "M300_PLATFORM_DOWN",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "DISTANCE",
@@ -250,7 +250,7 @@
       ]
     },
     {
-      "name": "ZORTRAX_PLATFORM_UP",
+      "name": "M300_PLATFORM_UP",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "DISTANCE",
@@ -258,39 +258,39 @@
       ]
     },
     {
-      "name": "ZORTRAX_PROCEDURE",
+      "name": "M300_PROCEDURE",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_REPRINT",
+      "name": "M300_REPRINT",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_SCREEN",
+      "name": "M300_SCREEN",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_SETTINGS",
+      "name": "M300_SETTINGS",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_SLEEP_MODE",
+      "name": "M300_SLEEP_MODE",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "STATE"
       ]
     },
     {
-      "name": "ZORTRAX_STATUS",
+      "name": "M300_STATUS",
       "source": "host/config/m300_operations.cfg",
       "parameters": []
     },
     {
-      "name": "ZORTRAX_UNLOAD",
+      "name": "M300_UNLOAD",
       "source": "host/config/m300_operations.cfg",
       "parameters": [
         "TEMP"

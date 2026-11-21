@@ -1,8 +1,8 @@
-# OLED, Fluidd and Klipper controls in RC33
+# OLED, Fluidd and Klipper controls in RC34
 
-Use `ZORTRAX_MAIN_MENU` in Fluidd or in OrcaSlicer’s Device tab to reach Models, Maintenance, Material, Settings and Information. For example, choose **Material → Unload the material** on either surface and confirm the current phase from either one. During a paused colour change you can purge with the Tool buttons before confirming flow. [Daily operation](USER_GUIDE.md).
+Use `M300_MAIN_MENU` in Fluidd or in OrcaSlicer’s Device tab to reach Models, Maintenance, Material, Settings and Information. For example, choose **Material → Unload the material** on either surface and confirm the current phase from either one. During a paused colour change you can purge with the Tool buttons before confirming flow. [Daily operation](USER_GUIDE.md).
 
-The current OLED timers count from the last operator interaction in Ready, during a print and while paused. Set them in **OLED_TIMERS** or **ZORTRAX_OLED_TIMERS**. For example, `DIM=1 SLEEP=2` dims at one minute and turns the display off at two. Both values are in the range 1–60 minutes with effective DIM equal to the earlier of the preferred DIM and SLEEP. The first knob gesture wakes the panel. [OLED timing](RELEASE_v1.0.0-rc.23.md).
+The current OLED timers count from the last operator interaction in Ready, during a print and while paused. Set them in **OLED_TIMERS** or **M300_OLED_TIMERS**. For example, `DIM=1 SLEEP=2` dims at one minute and turns the display off at two. Both values are in the range 1–60 minutes with effective DIM equal to the earlier of the preferred DIM and SLEEP. The first knob gesture wakes the panel. [OLED timing](RELEASE_v1.0.0-rc.23.md).
 
 The original shared controls were introduced in **1.0.0-rc.1**. There are no parallel motion procedures:
 buttons call the same procedure owners as the OLED. Settings without an argument
@@ -10,25 +10,25 @@ open the shared selector; an explicit argument updates the same persistent value
 
 | OLED Settings entry | Public macro | Optional argument |
 |---|---|---|
-| Light | ZORTRAX_LIGHT | MODE=DYNAMIC/WHITE/DISABLED |
-| Buzzer | ZORTRAX_BUZZER | STATE=ENABLED/DISABLED |
-| Sleep mode | ZORTRAX_SLEEP_MODE | STATE=ENABLED/DISABLED |
-| Language | ZORTRAX_LANGUAGE | English only |
-| Models sorting | ZORTRAX_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
-| Full platform preheating | ZORTRAX_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
-| OLED dim time / OLED sleep time | ZORTRAX_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
-| OLED brightness | ZORTRAX_OLED_BRIGHTNESS | LEVEL=1..16 |
-| LED brightness | ZORTRAX_LED_BRIGHTNESS | LEVEL=1..16 |
+| Light | M300_LIGHT | MODE=DYNAMIC/WHITE/DISABLED |
+| Buzzer | M300_BUZZER | STATE=ENABLED/DISABLED |
+| Sleep mode | M300_SLEEP_MODE | STATE=ENABLED/DISABLED |
+| Language | M300_LANGUAGE | English only |
+| Models sorting | M300_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
+| Full platform preheating | M300_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
+| OLED dim time / OLED sleep time | M300_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
+| OLED brightness | M300_OLED_BRIGHTNESS | LEVEL=1..16 |
+| LED brightness | M300_LED_BRIGHTNESS | LEVEL=1..16 |
 
 Brightness is validated as an integer, never rounded from a float. A bare click
 does not change settings. The physical slider and remote setting share existing
-NVM/events. ZORTRAX_SCREEN is still a read-only display status command.
+NVM/events. M300_SCREEN is still a read-only display status command.
 
 Homing, autocalibration, pad mesh, heating, material handling, print controls and
 PID keep their existing safety owners. Platform movement uses the same native
 service: physical hold on OLED, a bounded step in Fluidd. Current procedure is
-available through ZORTRAX_PROCEDURE and Maintenance; it reopens a session, not a
-new operation. ZORTRAX_DIAGNOSTICS reads configuration, board, OLED and cooling.
+available through M300_PROCEDURE and Maintenance; it reopens a session, not a
+new operation. M300_DIAGNOSTICS reads configuration, board, OLED and cooling.
 The original fan test is retained as an OEM maintenance function.
 
 The OLED root contains Klipper and Zortrax M300, without Service / Tests.

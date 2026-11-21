@@ -81,11 +81,11 @@ class NativeMenuTests(unittest.TestCase):
         m, _ = fixture()
         m.page = 'maintenance'
         rows=dict(m.rows(100.)[1])
-        for label,command in (('Home X','ZORTRAX_HOME_X'),
-                              ('Home Y','ZORTRAX_HOME_Y'),
-                              ('Home Z','ZORTRAX_HOME_Z'),
-                              ('Home XY','ZORTRAX_HOME_XY'),
-                              ('Home XYZ','ZORTRAX_HOME_ALL')):
+        for label,command in (('Home X','M300_HOME_X'),
+                              ('Home Y','M300_HOME_Y'),
+                              ('Home Z','M300_HOME_Z'),
+                              ('Home XY','M300_HOME_XY'),
+                              ('Home XYZ','M300_HOME_ALL')):
             with self.subTest(label=label):
                 self.assertEqual(rows[label],('native_gcode',command))
                 self.assertEqual(m._script_procedure(command)[1],

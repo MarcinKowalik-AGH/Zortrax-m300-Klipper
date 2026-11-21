@@ -10,7 +10,7 @@ from test_normal_operations import motion_fixture
 from payload.m300_error_codes import report, SHUTDOWN
 from payload.m300_thermal import M300Thermal
 from payload.m300_models import M300Models
-from tests.reference.native_gcode import CommandError
+from core.gcode import CommandError
 
 
 def thermal(h):
@@ -29,7 +29,7 @@ def thermal(h):
 class ProcedureErrorsTests(unittest.TestCase):
     def test_filament_fault_reports_original_cause_before_shutdown_and_cuts_heat(self):
         with errors_session() as h:
-            h.run('ZORTRAX_LOAD')
+            h.run('M300_LOAD')
             h.f._fault('native material queue drain deadline expired')
             record = h.errors.current
             self.assertEqual(record['source'], 'm300_filament')
@@ -54,7 +54,7 @@ class ProcedureErrorsTests(unittest.TestCase):
 
     def test_reporting_failure_cannot_prevent_native_maintenance_shutdown(self):
         with errors_session() as h:
-            h.run('ZORTRAX_HEAT')
+            h.run('M300_HEAT')
             h.errors.record = Mock(side_effect=RuntimeError('observer failed'))
             with self.assertLogs(level='ERROR'):
                 h.m._fault('native move failed')

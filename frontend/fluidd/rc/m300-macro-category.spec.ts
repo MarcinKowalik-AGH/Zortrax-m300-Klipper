@@ -7,7 +7,7 @@ import { getters } from '@/store/macros/getters'
 import type { MacrosState } from '@/store/macros/types'
 import type { RootState } from '@/store/types'
 
-const names = ['ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'START_PRINT', 'END_PRINT']
+const names = ['M300_HEAT_PLATFORM', 'M300_FULL_PLATFORM_PREHEAT', 'START_PRINT', 'END_PRINT']
 
 function macros (stored: MacrosState['stored'] = [], model = 'M300_CLASSIC') {
   const state: MacrosState = {
@@ -28,7 +28,7 @@ describe('M300 defaults for newly introduced macros', () => {
   it('groups the two platform macros under Zortrax and Start/End under Klipper without stored rows', () => {
     const ctx = macros()
     expect(ctx.get().map(macro => [macro.name, macro.categoryId]))
-      .toEqual(names.map(name => [name, name.startsWith('ZORTRAX_') ? 'z' : 'k']))
+      .toEqual(names.map(name => [name, name.startsWith('M300_') ? 'z' : 'k']))
     expect(ctx.state.stored).toEqual([])
   })
 
@@ -54,7 +54,7 @@ describe('M300 defaults for newly introduced macros', () => {
 })
 
 describe('RC1 production macro surface', () => {
-  it.each(['ZORTRAX_OLED_BRIGHTNESS', 'ZORTRAX_LED_BRIGHTNESS', 'ZORTRAX_PROCEDURE', 'ZORTRAX_DIAGNOSTICS'])(
+  it.each(['M300_OLED_BRIGHTNESS', 'M300_LED_BRIGHTNESS', 'M300_PROCEDURE', 'M300_DIAGNOSTICS'])(
     'exposes %s in the Zortrax group', name => {
       expect(m300MacroDefaultCategory(name, 'M300_CLASSIC')).toBe('ZORTRAX M300')
       expect(m300MacroHidden(name, 'M300_CLASSIC')).toBe(false)
@@ -76,7 +76,7 @@ describe('RC1 production macro surface', () => {
     expect(JSON.stringify(ctx.state)).toBe(before)
   })
   it('keeps OEM fan service and unrelated user tests available', () => {
-    expect(m300MacroHidden('ZORTRAX_FAN_TEST_START', 'M300_CLASSIC')).toBe(false)
+    expect(m300MacroHidden('M300_FAN_TEST_START', 'M300_CLASSIC')).toBe(false)
     expect(m300MacroHidden('MY_TEST', 'M300_CLASSIC')).toBe(false)
   })
 })

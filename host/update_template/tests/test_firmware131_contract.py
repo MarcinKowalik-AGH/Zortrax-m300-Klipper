@@ -12,7 +12,7 @@ import test_display
 from test_native_oem_services import Harness, physical_panel
 from test_native_leveling import Harness as ContactHarness, homing
 from test_normal_operations import motion_fixture
-from tests.reference import native_gcode
+from core import gcode as native_gcode
 from payload.m300_leveling_state import LevelingState, CalibrationError
 from payload.m300_stock_geometry import stock_xy_offsets
 from payload.m300_native_z import M300ZRefinement
@@ -33,7 +33,7 @@ def paused_print(h,target=230.):
 
 class FirmwareMaterialContractTests(unittest.TestCase):
     def test_status_polling_does_not_copy_the_full_segment_plan(self):
-        h=Harness();h.run('ZORTRAX_LOAD')
+        h=Harness();h.run('M300_LOAD')
         full=h.f.machine.snapshot()
         with patch.object(type(h.f.machine),'plan',new_callable=PropertyMock,
                           side_effect=AssertionError('full plan copied during polling')):
@@ -46,7 +46,7 @@ class FirmwareMaterialContractTests(unittest.TestCase):
             if not original['accept']:continue
             h=Harness();operation=original['operation']
             if operation=='CHANGE':paused_print(h)
-            h.run('ZORTRAX_'+operation);h.hotend.temperature=h.hotend.target
+            h.run('M300_'+operation);h.hotend.temperature=h.hotend.target
             seen=[]
             for _ in range(3000):
                 h.hotend.temperature = h.hotend.target
@@ -70,7 +70,7 @@ class FirmwareMaterialContractTests(unittest.TestCase):
     def test_cancelled_original_prompts_have_no_native_transport(self):
         for original in REFERENCE['material']:
             if original['accept']:continue
-            h=Harness();h.run('ZORTRAX_'+original['operation'])
+            h=Harness();h.run('M300_'+original['operation'])
             h.heat(h.f,'WAIT_INSERT' if original['operation']=='LOAD' else 'WAIT_UNLOAD')
             view=h.p.view(h.now);h.p.action(view['view_id'],'CANCEL')
             h.until(h.f,'CANCELLED')
@@ -81,14 +81,14 @@ class FirmwareMaterialContractTests(unittest.TestCase):
     def test_standalone_unload_releases_motion_with_its_target_active(self):
         original=next(m for m in REFERENCE['material'] if m['operation']=='UNLOAD' and m['accept'])
         self.assertFalse(any(e['kind']=='target' for e in original['events']))
-        h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
+        h=Harness();h.run('M300_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         h.f.confirm(h.f.machine.token,h.f.machine.phase_id);h.until(h.f,'COMPLETE')
         self.assertEqual(h.hotend.target,240.)
         h.assert_restored(self)
 
     def test_readiness_is_a_minimum_threshold_at_238_including_small_overshoot(self):
         for measured,ready in ((237.9,False),(238.,True),(244.,True)):
-            h=Harness();h.run('ZORTRAX_UNLOAD');h.hotend.temperature=measured
+            h=Harness();h.run('M300_UNLOAD');h.hotend.temperature=measured
             for _ in range(25):h.step()
             self.assertEqual(h.f.machine.state=='WAIT_UNLOAD',ready)
             self.assertEqual(h.position[3],17.)
@@ -98,7 +98,7 @@ class NativeChangeTests(unittest.TestCase):
     def test_change_preserves_real_pause_state_and_never_resumes_automatically(self):
         h=Harness();paused_print(h,230.)
         saved=copy.deepcopy(h.gmove.saved_states['PAUSE_STATE'])
-        h.run('ZORTRAX_CHANGE');self.assertEqual(h.hotend.target,240.)
+        h.run('M300_CHANGE');self.assertEqual(h.hotend.target,240.)
         h.heat(h.f,'WAIT_INSERT')
         self.assertEqual(h.position[3],-93.)
         self.assertEqual(h.gmove.saved_states['PAUSE_STATE'],saved)
@@ -119,9 +119,9 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_change_moves_at_separate_targets_from_cold_and_hot_prints(self):
         for print_temp, command, load_temp in (
-                (210., 'M600', 240.), (260., 'ZORTRAX_CHANGE', 240.),
+                (210., 'M600', 240.), (260., 'M300_CHANGE', 240.),
                 (210., 'CHANGE_FILAMENT TEMP=250', 250.),
-                (0., 'ZORTRAX_CHANGE', 240.)):
+                (0., 'M300_CHANGE', 240.)):
             with self.subTest(print_temp=print_temp, command=command):
                 h = Harness()
                 paused_print(h, print_temp)
@@ -160,8 +160,8 @@ class NativeChangeTests(unittest.TestCase):
                 h.assert_restored(self)
 
     def test_configured_change_speeds_and_targets_and_one_time_override(self):
-        for command, expected in (('M600', 217.), ('ZORTRAX_CHANGE TEMP=225', 225.),
-                                  ('ZORTRAX_CHANGE TEMP=auto', 240.)):
+        for command, expected in (('M600', 217.), ('M300_CHANGE TEMP=225', 225.),
+                                  ('M300_CHANGE TEMP=auto', 240.)):
             with self.subTest(command=command):
                 h = Harness(filament_options=dict(load_temperature=217., unload_temperature=235.,
                                                   unload_speed=3.5, load_speed=1.25))
@@ -196,7 +196,7 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_change_macro_and_m600_require_an_already_paused_native_print(self):
         for state in ('standby','printing'):
-            for command in ('ZORTRAX_CHANGE','M600'):
+            for command in ('M300_CHANGE','M600'):
                 h=Harness();h.print_state=state
                 with self.assertRaisesRegex(native_gcode.CommandError,'pause the native print'):
                     h.run(command)
@@ -212,7 +212,7 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_cancel_during_change_leaves_print_paused_and_heater_off(self):
         h=Harness();paused_print(h)
-        h.run('ZORTRAX_CHANGE');h.heat(h.f,'WAIT_INSERT')
+        h.run('M300_CHANGE');h.heat(h.f,'WAIT_INSERT')
         view=h.p.view(h.now);h.p.action(view['view_id'],'CANCEL');h.until(h.f,'CANCELLED')
         self.assertEqual(h.hotend.target,0.)
         self.assertTrue(h.pause.is_paused);self.assertEqual(h.print_state,'paused')
@@ -221,7 +221,7 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_cancel_print_during_change_drains_without_resume_or_fake_position(self):
         h=Harness();paused_print(h)
-        h.run('ZORTRAX_CHANGE');h.heat(h.f,'WAIT_INSERT')
+        h.run('M300_CHANGE');h.heat(h.f,'WAIT_INSERT')
         h.run('CANCEL_PRINT');h.until(h.f,'CANCELLED')
         self.assertEqual(h.print_state,'cancelled')
         self.assertFalse(h.pause.is_paused);self.assertEqual(h.hotend.target,0.)
@@ -230,7 +230,7 @@ class NativeChangeTests(unittest.TestCase):
 
     def test_paused_file_identity_change_revokes_change_session(self):
         h=Harness();paused_print(h)
-        h.run('ZORTRAX_CHANGE');h.heat(h.f,'WAIT_INSERT')
+        h.run('M300_CHANGE');h.heat(h.f,'WAIT_INSERT')
         h.file_position+=1;h.until(h.f,'CANCELLED')
         self.assertEqual(h.hotend.target,0.)
         self.assertEqual(h.position[3],-93.)
@@ -240,7 +240,7 @@ class NativeChangeTests(unittest.TestCase):
         from test_native_menu import fixture
         menu,objects=fixture();menu.page='native_job'
         objects['print_stats']=NS(get_status=lambda now:dict(state='paused'))
-        self.assertIn(('Change the material',('native_gcode','ZORTRAX_CHANGE')),menu.rows(1.)[1])
+        self.assertIn(('Change the material',('native_gcode','M300_CHANGE')),menu.rows(1.)[1])
 
 
 class FirmwareLevelingContractTests(unittest.TestCase):
@@ -570,7 +570,7 @@ class EnglishOnlyTests(unittest.TestCase):
         self.assertEqual(ui.language(),'EN')
         self.assertEqual(MenuHistory(4).translate('Maintenance','PL',
                          {'Maintenance':{'pl':'Konserwacja'}}),'Maintenance')
-        h=Harness();h.language='PL';h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
+        h=Harness();h.language='PL';h.run('M300_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         view=h.p.view(h.now);self.assertEqual(view['leveling_screen']['language'],'EN')
         self.assertIn('Press button',view['message'])
 
@@ -590,7 +590,7 @@ class EnglishOnlyTests(unittest.TestCase):
     def test_runtime_prompts_ignore_a_non_english_saved_language_and_close_on_completion(self):
         h=Harness();h.language='DE';o,menu,ui,display,packet=physical_panel(h)
         menu.page='material';o.selection=0
-        h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
+        h.run('M300_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         self.assertEqual(h.p.view(h.now)['leveling_screen']['language'],'EN')
         view=h.p.view(h.now);h.p.action(view['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
         self.assertEqual(menu.page,'material')

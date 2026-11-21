@@ -532,9 +532,9 @@ class GroupTests(unittest.TestCase):
     def test_classifies_confirmed_and_unconfirmed_functions(self):
         for name in ('PID_SAVE', 'PID_HOTEND', 'CANCEL_PRINT'):
             self.assertEqual(category(name), 'Klipper')
-        for name in ('ZORTRAX_STATUS', 'ZORTRAX_LIGHT', 'ZORTRAX_FANS',
-                     'ZORTRAX_LEVEL','ZORTRAX_LOAD','ZORTRAX_UNLOAD',
-                     'ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP','ZORTRAX_PLATFORM_DOWN'):
+        for name in ('M300_STATUS', 'M300_LIGHT', 'M300_FANS',
+                     'M300_LEVEL','M300_LOAD','M300_UNLOAD',
+                     'M300_HEAT','M300_PLATFORM_UP','M300_PLATFORM_DOWN'):
             self.assertEqual(category(name), 'ZORTRAX M300')
         for name in ('ZORTRAX_PRINT', 'TEST_M300_XY'):
             self.assertIsNone(category(name))
@@ -544,12 +544,12 @@ class GroupTests(unittest.TestCase):
         before = {'categories': [{'id': 'other', 'name': 'Other'}],
                   'stored': [{'name': 'PID_SAVE', 'categoryId': 'other', 'visible': False, 'color': 'red'},
                              {'name': 'MY_MACRO', 'categoryId': 'other'}], 'other_setting': 5}
-        after, assigned = merge_groups(before, ['PID_SAVE', 'TEST_M300_XY', 'ZORTRAX_STATUS'])
+        after, assigned = merge_groups(before, ['PID_SAVE', 'TEST_M300_XY', 'M300_STATUS'])
         self.assertEqual(before['stored'][0]['categoryId'], 'other')
         self.assertEqual(after['stored'][1], before['stored'][1])
         self.assertFalse(after['stored'][0]['visible'])
         self.assertEqual(after['stored'][0]['color'], 'red')
-        self.assertEqual(merge_groups(after, ['PID_SAVE', 'TEST_M300_XY', 'ZORTRAX_STATUS'])[0], after)
+        self.assertEqual(merge_groups(after, ['PID_SAVE', 'TEST_M300_XY', 'M300_STATUS'])[0], after)
 
     def test_duplicate_macro_or_category_is_rejected(self):
         for before in ({'stored': [{'name': 'PID_SAVE'}, {'name': 'pid_save'}]},
@@ -571,9 +571,9 @@ class NormalMenuTests(unittest.TestCase):
         self.assertFalse(any('TEST' in label or 'CONFIRM' in label or 'SPLIT' in label for label, _ in rows))
 
     def test_klipper_home_buttons_keep_cursor_and_queue_matching_fluidd_macros(self):
-        for suffix,macro in (('x','ZORTRAX_HOME_X'),('y','ZORTRAX_HOME_Y'),
-                             ('xy','ZORTRAX_HOME_XY'),('z','ZORTRAX_HOME_Z'),
-                             ('xyz','ZORTRAX_HOME_ALL')):
+        for suffix,macro in (('x','M300_HOME_X'),('y','M300_HOME_Y'),
+                             ('xy','M300_HOME_XY'),('z','M300_HOME_Z'),
+                             ('xyz','M300_HOME_ALL')):
             with self.subTest(axis=suffix):
                 menu,objects=menu_fixture()
                 # The compact menu fixture has no clock; real M300Menu does.

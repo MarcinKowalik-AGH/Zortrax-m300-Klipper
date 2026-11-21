@@ -23,7 +23,7 @@
         small
         color="primary"
         :disabled="!changes.length"
-        @click="$emit('save', 'ZORTRAX_OLED_TIMERS ' + changes.join(' '))"
+        @click="$emit('save', 'M300_OLED_TIMERS ' + changes.join(' '))"
       >
         Save
       </v-btn>

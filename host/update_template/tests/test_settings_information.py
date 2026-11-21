@@ -56,8 +56,8 @@ def session(serial=None):
         h.panel_display = display
         h.panel_packet = packet
         for name,body in templates().items():
-            if name in ('ZORTRAX_MAIN_MENU','ZORTRAX_SETTINGS','ZORTRAX_BUZZER','ZORTRAX_SLEEP_MODE','ZORTRAX_LANGUAGE',
-                        'ZORTRAX_MODELS_SORT','ZORTRAX_INFORMATION','ZORTRAX_HELP','ZORTRAX_LIGHT'):
+            if name in ('M300_MAIN_MENU','M300_SETTINGS','M300_BUZZER','M300_SLEEP_MODE','M300_LANGUAGE',
+                        'M300_MODELS_SORT','M300_INFORMATION','M300_HELP','M300_LIGHT'):
                 template=ENV.from_string(body)
                 h.gcode.register_command(name,lambda cmd,t=template:h.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))
@@ -95,7 +95,7 @@ def menu_button(h, label):
 class SharedOperatorMenuTests(unittest.TestCase):
     def test_web_menu_uses_native_sections_and_distinct_platform_gestures(self):
         with session() as h:
-            h.run('ZORTRAX_MAIN_MENU')
+            h.run('M300_MAIN_MENU')
             self.assertEqual([line.split('|')[0].split('prompt_button ')[1] for line in h.lines
                               if 'prompt_button ' in line],
                              ['Back', 'Models', 'Maintenance', 'Material', 'Settings', 'Information'])
@@ -104,7 +104,7 @@ class SharedOperatorMenuTests(unittest.TestCase):
             for label, action in h.menu.rows(h.now)[1]:
                 if action[0] == 'platform_hold':
                     self.assertEqual(web[label], ('native_gcode',
-                        'ZORTRAX_PLATFORM_UP' if action[1] == -1 else 'ZORTRAX_PLATFORM_DOWN'))
+                        'M300_PLATFORM_UP' if action[1] == -1 else 'M300_PLATFORM_DOWN'))
                 else:
                     self.assertEqual(web[label], action)
             self.assertFalse(h.m.is_busy())
@@ -112,7 +112,7 @@ class SharedOperatorMenuTests(unittest.TestCase):
 
     def test_web_unload_then_encoder_confirmation(self):
         with session() as h:
-            h.run('ZORTRAX_MAIN_MENU')
+            h.run('M300_MAIN_MENU')
             h.run(menu_button(h, 'Material'))
             start = menu_button(h, 'Unload the material')
             h.run(start)
@@ -137,7 +137,7 @@ class SharedOperatorMenuTests(unittest.TestCase):
             h.menu.select(action, h.now)
             h.callbacks.pop()(h.now)
             h.heat(h.f, 'WAIT_UNLOAD')
-            h.run('ZORTRAX_PROCEDURE')
+            h.run('M300_PROCEDURE')
             command = next(line.split('|')[1] for line in reversed(h.lines)
                            if 'prompt_button ' in line and ' ACTION=CONFIRM|' in line)
             h.run(command)
@@ -400,21 +400,21 @@ class SettingsTreeTests(unittest.TestCase):
 
     def test_cli_macro_bindings_reach_same_settings(self):
         with session() as h:
-            for cmd,key,value in (('ZORTRAX_LIGHT MODE=DISABLED','light_mode','DISABLE'),
-                    ('ZORTRAX_BUZZER STATE=DISABLED','sound',False),
-                    ('ZORTRAX_SLEEP_MODE STATE=DISABLED','sleep_mode','OFF'),
-                    ('ZORTRAX_MODELS_SORT MODE=NAME_CASE','sort_mode','NAME_CASE'),
-                    ('ZORTRAX_LANGUAGE','language','EN')):
+            for cmd,key,value in (('M300_LIGHT MODE=DISABLED','light_mode','DISABLE'),
+                    ('M300_BUZZER STATE=DISABLED','sound',False),
+                    ('M300_SLEEP_MODE STATE=DISABLED','sleep_mode','OFF'),
+                    ('M300_MODELS_SORT MODE=NAME_CASE','sort_mode','NAME_CASE'),
+                    ('M300_LANGUAGE','language','EN')):
                 h.run(cmd);self.assertEqual(h.nvm.get_setting(key),value)
                 self.assertEqual((h.oled.page, h.menu.page), ('m04', 'setting_' + key))
 
     def test_closed_choice_macros_open_buttons_without_editing_the_current_choice(self):
         cases = (
-            ('ZORTRAX_LIGHT', ['Dynamic', 'White', 'Disabled']),
-            ('ZORTRAX_BUZZER', ['Enabled', 'Disabled']),
-            ('ZORTRAX_SLEEP_MODE', ['Enabled', 'Disabled']),
-            ('ZORTRAX_LANGUAGE', ['English']),
-            ('ZORTRAX_MODELS_SORT', ['Date', 'Name', 'Case-sensitive name', 'File size']),
+            ('M300_LIGHT', ['Dynamic', 'White', 'Disabled']),
+            ('M300_BUZZER', ['Enabled', 'Disabled']),
+            ('M300_SLEEP_MODE', ['Enabled', 'Disabled']),
+            ('M300_LANGUAGE', ['English']),
+            ('M300_MODELS_SORT', ['Date', 'Name', 'Case-sensitive name', 'File size']),
         )
         with session() as h:
             original = h.nvm.ui_snapshot()
@@ -427,7 +427,7 @@ class SettingsTreeTests(unittest.TestCase):
                           for line in h.lines if 'action:prompt_button ' in line]
                 self.assertEqual(labels, ['Back'] + choices)
                 self.assertEqual(h.nvm.ui_snapshot(), original)
-            h.run('ZORTRAX_LIGHT')
+            h.run('M300_LIGHT')
             button = next(line.split('|')[1] for line in h.lines
                           if 'action:prompt_button White|' in line)
             h.run(button)
@@ -456,7 +456,7 @@ class SettingsTreeTests(unittest.TestCase):
 
     def test_cosmetic_settings_apply_during_procedure_and_save_afterwards(self):
         with session() as h:
-            h.run('ZORTRAX_LOAD')
+            h.run('M300_LOAD')
             before = h.nvm.store._published['revision']
             h.settings.set_option('led_brightness', 8)
             h.settings.set_option('light_mode', 'WHITE')
@@ -483,7 +483,7 @@ class SettingsTreeTests(unittest.TestCase):
     def test_web_settings_bypass_busy_gcode_for_one_cosmetic_command_only(self):
         with session() as h, h.gcode.get_mutex():
             h.objects['m300_motion'] = NS(get_status=lambda now: dict(state='HOMING', busy=True))
-            self.assertTrue(h.settings.try_web_script('ZORTRAX_SETTINGS'))
+            self.assertTrue(h.settings.try_web_script('M300_SETTINGS'))
             command = 'ZORTRAX_UI_SETTING NAME=led_brightness VALUE=7'
             self.assertTrue(h.settings.try_web_script(command))
             self.assertEqual(h.nvm.get_setting('led_brightness'), 7)
@@ -675,7 +675,7 @@ class SettingsTreeTests(unittest.TestCase):
         with session() as h:
             h.settings.show('setting_led_brightness')
             token = h.settings._view_id()
-            h.run('ZORTRAX_LOAD')
+            h.run('M300_LOAD')
             h.menu._navigate('setting_led_brightness')
             h.oled.selection = 12
             h.run('ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5')
@@ -708,11 +708,11 @@ class SettingsTreeTests(unittest.TestCase):
 class IndicatorAndSleepTests(unittest.TestCase):
     def test_light_modes_use_existing_outputs_and_dynamic_native_print_state(self):
         with session() as h:
-            h.run('ZORTRAX_LIGHT MODE=WHITE')
+            h.run('M300_LIGHT MODE=WHITE')
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,1.])
-            h.run('ZORTRAX_LIGHT MODE=DISABLED')
+            h.run('M300_LIGHT MODE=DISABLED')
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[0.,0.,0.])
-            h.run('ZORTRAX_LIGHT MODE=DYNAMIC')
+            h.run('M300_LIGHT MODE=DYNAMIC')
             h.print_state='printing';h.m._indicators(h.now)
             self.assertEqual([h.pins['m300_led_'+c] for c in 'rgb'],[1.,1.,1.])
             h.print_state='paused';h.m._indicators(h.now)
@@ -743,9 +743,9 @@ class IndicatorAndSleepTests(unittest.TestCase):
             for nozzle, bed in ((205., 55.), (240., 65.), (235., 65.), (240., 61.)):
                 h.hotend.temperature, h.bed.temperature = nozzle, bed
                 self.assertEqual(rgb(), [.5, .5, .5])
-            h.run('ZORTRAX_LIGHT MODE=DISABLED')
+            h.run('M300_LIGHT MODE=DISABLED')
             self.assertEqual(rgb(), [0., 0., 0.])
-            h.run('ZORTRAX_LIGHT MODE=DYNAMIC')
+            h.run('M300_LIGHT MODE=DYNAMIC')
             h.print_state = 'paused'
             self.assertEqual(rgb(), [.5, 0., .5])
             h.print_state = 'error'
@@ -783,7 +783,7 @@ class IndicatorAndSleepTests(unittest.TestCase):
             self.assertEqual(h.m._beep_timeout(start+.140),h.reactor.NEVER)
             self.assertEqual(h.pins['m300_buzzer'],0.)
             h.m.click('back')
-            h.run('ZORTRAX_BUZZER STATE=DISABLED')
+            h.run('M300_BUZZER STATE=DISABLED')
             self.assertEqual(h.m._beep_until,0.)
             self.assertEqual(h.m._beep_timeout(start+.2),h.reactor.NEVER)
             self.assertEqual(h.pins['m300_buzzer'],0.)
@@ -809,17 +809,17 @@ class IndicatorAndSleepTests(unittest.TestCase):
     def test_buzzer_disable_stops_active_pulse_and_suppresses_future_clicks(self):
         with session() as h:
             h.m.click();self.assertEqual(h.pins['m300_buzzer'],1.)
-            h.run('ZORTRAX_BUZZER STATE=DISABLED')
+            h.run('M300_BUZZER STATE=DISABLED')
             self.assertEqual(h.pins['m300_buzzer'],0.);self.assertEqual(h.m._beep_until,0.)
             h.m.click();self.assertEqual(h.pins['m300_buzzer'],0.)
-            h.run('ZORTRAX_BUZZER STATE=ENABLED');h.m.click()
+            h.run('M300_BUZZER STATE=ENABLED');h.m.click()
             self.assertEqual(h.pins['m300_buzzer'],1.)
 
     def test_sleep_disable_uses_existing_wake_path_and_preserves_timeout_contrast_and_notice(self):
         with session() as h:
             p,d=attach_display(h);saved=(d.timeout,d.normal,d.dim,d.notice_seconds)
             p.reactor.now=301.;d._tick(301.);self.assertEqual(d.phase,'ENTERING_SLEEP')
-            h.run('ZORTRAX_SLEEP_MODE STATE=DISABLED')
+            h.run('M300_SLEEP_MODE STATE=DISABLED')
             self.assertEqual(d.phase,test_display.AWAKE);self.assertTrue(d._presentation_wait)
             p.reactor.now=10000.;d._tick(10000.)
             self.assertEqual(d.phase,test_display.AWAKE);self.assertEqual(saved,(d.timeout,d.normal,d.dim,d.notice_seconds))
@@ -827,17 +827,17 @@ class IndicatorAndSleepTests(unittest.TestCase):
 
     def test_disabled_sleep_is_restored_on_start_and_enabled_reuses_same_timer(self):
         with session() as h:
-            h.run('ZORTRAX_SLEEP_MODE STATE=DISABLED');p,d=attach_display(h)
+            h.run('M300_SLEEP_MODE STATE=DISABLED');p,d=attach_display(h)
             self.assertFalse(d.sleep_enabled);p.reactor.now=1000.;d._tick(1000.)
             self.assertEqual(d.phase,test_display.AWAKE)
-            h.run('ZORTRAX_SLEEP_MODE STATE=ENABLED')
+            h.run('M300_SLEEP_MODE STATE=ENABLED')
             p.reactor.now=1300.;d._tick(1300.);self.assertEqual(d.phase,'ENTERING_SLEEP')
             self.assertEqual(d.timeout,300.)
 
     def test_disabled_sleep_does_not_dim_active_print_or_change_its_state(self):
         with session() as h:
             p,d=attach_display(h);h.print_state='printing'
-            h.run('ZORTRAX_SLEEP_MODE STATE=DISABLED');p.reactor.now=1000.;d._tick(1000.)
+            h.run('M300_SLEEP_MODE STATE=DISABLED');p.reactor.now=1000.;d._tick(1000.)
             self.assertEqual(d.phase,test_display.AWAKE);self.assertEqual(h.print_state,'printing')
             self.assertEqual(h.hotend.target,0.)
 
@@ -866,7 +866,7 @@ class InformationTests(unittest.TestCase):
                 self.assertEqual(h.lines[-1], '// action:prompt_show')
                 self.assertEqual((h.settings.page, h.menu.page, h.oled.page), (page, page, 'm04'))
 
-            h.run('ZORTRAX_LIGHT')
+            h.run('M300_LIGHT')
             assert_page('setting_light_mode', 'Light')
             click('Back')
             assert_page('settings', 'Settings')
@@ -898,8 +898,8 @@ class InformationTests(unittest.TestCase):
     def test_back_reaches_the_status_screen_after_opening_a_fluidd_macro(self):
         with session() as h:
             for command, route in (
-                    ('ZORTRAX_HELP', ('help', 'information', 'zortrax', 'main')),
-                    ('ZORTRAX_MODELS_SORT', ('setting_sort_mode', 'settings', 'zortrax', 'main'))):
+                    ('M300_HELP', ('help', 'information', 'zortrax', 'main')),
+                    ('M300_MODELS_SORT', ('setting_sort_mode', 'settings', 'zortrax', 'main'))):
                 with self.subTest(command=command):
                     h.run(command)
                     child = None
@@ -920,7 +920,7 @@ class InformationTests(unittest.TestCase):
     def test_fluidd_navigation_invalidates_previous_panel_view_and_keeps_print_context(self):
         with session() as h:
             previous = h.oled._input_context()
-            h.run('ZORTRAX_INFORMATION REFRESH=0')
+            h.run('M300_INFORMATION REFRESH=0')
             self.assertEqual((h.oled.page, h.menu.page), ('m04', 'information'))
             self.assertNotEqual(h.oled._input_context(), previous)
             self.assertNotIn('m300-information', h.allocations)
@@ -930,10 +930,10 @@ class InformationTests(unittest.TestCase):
             self.assertEqual(h.menu.page, 'information')
             h.settings.action(h.settings._view_id(), 0)
             self.assertEqual(h.menu.page, 'zortrax')
-            h.run('ZORTRAX_SETTINGS')
+            h.run('M300_SETTINGS')
             self.assertEqual(h.menu.page, 'settings')
             h.objects['m300_print_ui'] = NS(view=lambda now: ('PRINTING', None))
-            h.run('ZORTRAX_HELP')
+            h.run('M300_HELP')
             self.assertEqual(h.menu.page, 'settings')
 
     def test_printer_information_uses_four_shared_rows_in_stock_order(self):
@@ -960,7 +960,7 @@ class InformationTests(unittest.TestCase):
     def test_real_available_fields_and_no_inferred_serial_or_lifetime(self):
         with session() as h:
             info=h.settings.information(h.now)
-            self.assertEqual(info['host_version'],'1.0.0-rc.33');self.assertEqual(info['hardware_version'],'HW05')
+            self.assertEqual(info['host_version'],'1.0.0-rc.34');self.assertEqual(info['hardware_version'],'HW05')
             self.assertIsNone(info['serial_number']);self.assertIsNone(info['total_print_seconds'])
             self.assertEqual(info['total_printing_time'],'Unavailable')
             self.assertIn('0.13.14.5',info['mcu_version'])
@@ -1011,7 +1011,7 @@ class InformationTests(unittest.TestCase):
 
     def test_help_targets_only_the_project_github_on_both_surfaces(self):
         with session() as h:
-            h.run('ZORTRAX_HELP')
+            h.run('M300_HELP')
             self.assertTrue(any(PROJECT_URL in line for line in h.lines))
             self.assertEqual((h.oled.page, h.menu.page), ('m04', 'help'))
             lines = [label for label,action in h.menu.rows(h.now)[1] if action is None]

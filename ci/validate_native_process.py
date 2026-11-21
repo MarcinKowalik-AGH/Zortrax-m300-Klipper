@@ -94,18 +94,18 @@ def main():
         base += '\n' + native_config.convert_text(extra)
         existing.update(name.lower() for name, _ in native_config.blocks(extra)[1])
     settings_script = (
-        'ZORTRAX_NATIVE_STATUS\nZORTRAX_SETTINGS\n'
-        'ZORTRAX_LIGHT MODE=WHITE\nZORTRAX_BUZZER STATE=DISABLED\n'
-        'ZORTRAX_SLEEP_MODE STATE=DISABLED\nZORTRAX_MODELS_SORT MODE=NAME_CASE\n'
+        'ZORTRAX_NATIVE_STATUS\nM300_SETTINGS\n'
+        'M300_LIGHT MODE=WHITE\nM300_BUZZER STATE=DISABLED\n'
+        'M300_SLEEP_MODE STATE=DISABLED\nM300_MODELS_SORT MODE=NAME_CASE\n'
         'ZORTRAX_UI_SETTING NAME=oled_brightness VALUE=8\n'
         'ZORTRAX_UI_SETTING NAME=led_brightness VALUE=5\n'
-        'ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED\n'
-        'ZORTRAX_FULL_PLATFORM_PREHEAT STATE=DISABLED\n'
+        'M300_FULL_PLATFORM_PREHEAT STATE=ENABLED\n'
+        'M300_FULL_PLATFORM_PREHEAT STATE=DISABLED\n'
         'ZORTRAX_CONFIG_STATUS\n'
-        'ZORTRAX_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
-        'ZORTRAX_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nZORTRAX_HELP\n'
-        'ZORTRAX_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n'
-        'ZORTRAX_LIGHT\nZORTRAX_BUZZER\nZORTRAX_SLEEP_MODE\nZORTRAX_MODELS_SORT\n'
+        'M300_LANGUAGE\nZORTRAX_SETTINGS_STATUS\nZORTRAX_DISPLAY_STATUS\n'
+        'M300_INFORMATION REFRESH=0\nZORTRAX_INFO REFRESH=0\nM300_HELP\n'
+        'M300_SLEEP_MODE STATE=ENABLED\nZORTRAX_DISPLAY_STATUS\n'
+        'M300_LIGHT\nM300_BUZZER\nM300_SLEEP_MODE\nM300_MODELS_SORT\n'
         'ZORTRAX_SETTINGS_STATUS\n')
     model_fixtures = {
         'native_models_gcode': ('Model text.gcode',
@@ -149,7 +149,7 @@ def main():
         ('native_oem_error_shutdown',
          'ZORTRAX_NATIVE_STATUS\nM112\nZORTRAX_ERROR_STATUS\nZORTRAX_ERROR_SHOW\n',
          False, 'Shutdown due to M112 command'),
-        ('native_settings_information',settings_script + '\nOLED_TIMERS\nZORTRAX_SETTINGS_STATUS\nZORTRAX_OLED_TIMERS\nZORTRAX_SETTINGS_STATUS\n',False,None),
+        ('native_settings_information',settings_script + '\nOLED_TIMERS\nZORTRAX_SETTINGS_STATUS\nM300_OLED_TIMERS\nZORTRAX_SETTINGS_STATUS\n',False,None),
         ('native_pad_mesh', pad_mesh_script, False, 'requires an idle native M300 with a physical MCU'),
         ('native_pad_mesh_zero_margin',
          'ZORTRAX_NATIVE_STATUS\nBED_MESH PREVIEW=1\nZORTRAX_PAD_MESH_STATUS\n'
@@ -163,8 +163,8 @@ def main():
          'BED_MESH REAR_RIGHT_BOUNDS=260,263,300,305 PREVIEW=1\n'
          'ZORTRAX_CI_PAD_MESH CHECK=7\nBED_MESH_CLEAR\nBED_MESH_CALIBRATE\n',
          False,'requires an idle native M300 with a physical MCU'),
-        ('native_controls','ZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
-        ('native_bed_heat_guard','ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_PREPARE\nZORTRAX_HEAT_PLATFORM TEMP=60\n',False,
+        ('native_controls','M300_STATUS\nZORTRAX_STATUS\nZORTRAX_NATIVE_STATUS\nZORTRAX_CALIBRATION_STATUS\nZORTRAX_FILAMENT_STATUS\nM104 S40\nM140 S40\nM106 S128\nM107\nTURN_OFF_HEATERS\nPID_SAVE\n',False,None),
+        ('native_bed_heat_guard','ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_PRINT_PREPARE\nM300_HEAT_PLATFORM TEMP=60\n',False,
          'FILEOUTPUT cannot actuate a physical maintenance service'),
         ('native_unhomed_xyz','ZORTRAX_NATIVE_STATUS\nG1 X1 F60\n',False,'Must home axis first'),
         ('native_e_planning_FILEOUTPUT','ZORTRAX_NATIVE_STATUS\nG1 E1 F60\n',False,None),
@@ -476,6 +476,8 @@ def main():
                 assert actions == [jog(-30), 'RESUME', jog(30), 'FILAMENT_READY', jog(-30),
                                    'RESUME', jog(30), 'FILAMENT_READY', 'RESUME'], result
         if name == 'native_controls':
+            assert text.count('M300_MCU {') >= 2, text[-6000:]
+            assert 'Unknown command:"M300' not in text and 'Unknown command:"ZORTRAX_STATUS' not in text
             calibration=next(json.loads(line[line.index('{'):]) for line in text.splitlines()
                              if 'calibration_api_version' in line and 'procedure_temperature' in line)
             filament=next(json.loads(line.split('M300_FILAMENT ',1)[1]) for line in text.splitlines()

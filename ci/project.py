@@ -6,6 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +92,15 @@ def stage_host_update(destination):
                     ignore=shutil.ignore_patterns('__pycache__', '*.pyc', 'README_PL.md'))
     shutil.copytree(ROOT / 'docs', target / 'docs', dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('pl'))
+    core = target / 'core'
+    core.mkdir()
+    parser = core / 'gcode.py'
+    source = target/'tests/reference/native_gcode.py'
+    if digest(source) != 'a2bcd6949b4263f608eaa71ba1cdfb713553542b7b90de739241b624f06415ae':
+        raise ValueError('Unexpected upstream G-code parser')
+    shutil.copyfile(source, parser)
+    subprocess.run(['patch', '--silent', '--batch', '--fuzz=0', str(parser),
+                    str(ROOT/'host/patches/m300-gcode.patch')], check=True)
     payload = target / 'payload'
     payload.mkdir()
     for name in META['host_update_files']:

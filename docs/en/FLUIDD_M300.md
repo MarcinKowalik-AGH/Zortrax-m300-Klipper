@@ -2,7 +2,7 @@
 
 Open Fluidd at `http://<printer-host>:4480/` in a browser or in OrcaSlicer's Device tab. The Thermals card includes the M300 OLED preview. Its ×1/×2/×3 and HIDE controls affect the local view. To operate the printer use the Tool controls, macros or the physical encoder. The circular arrow in the Fluidd toolbar reloads the embedded page if a sidebar route stops responding.
 
-Use `ZORTRAX_MAIN_MENU` for Models, Maintenance, Material, Settings and Information. During a settled pause or the material-flow confirmation, use Tool → Extrude or Retract before resuming. The [operator handbook](USER_GUIDE.md) walks through the workflow. For a blank page or zero-byte web assets follow the [current installer and repair procedure](INSTALL.md). The sections below document earlier frontend revisions and layouts.
+Use `M300_MAIN_MENU` for Models, Maintenance, Material, Settings and Information. During a settled pause or the material-flow confirmation, use Tool → Extrude or Retract before resuming. The [operator handbook](USER_GUIDE.md) walks through the workflow. For a blank page or zero-byte web assets follow the [current installer and repair procedure](INSTALL.md). The sections below document earlier frontend revisions and layouts.
 
 [Screen illustrations](../pl/OLED_FUNCTIONS.md) · [Historical beta.20 UI reference](FRONTEND_BETA20.md)
 
@@ -143,8 +143,8 @@ existing Moonraker connection.
 
 ## Homing macros shared with the native OLED
 
-`ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`,
-`ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` are grouped under
+`M300_HOME_X`, `M300_HOME_Y`, `M300_HOME_XY`,
+`M300_HOME_Z` and `M300_HOME_ALL` are grouped under
 **ZORTRAX M300** by the existing Moonraker/Fluidd macro manager.
 Each calls `ZORTRAX_PROCEDURE_START` with `HOME_X/Y/XY/Z/ALL` and
 therefore invokes the **same** protected native G28 implementation and
@@ -158,7 +158,7 @@ After an OLED click finishes, the cursor returns to the previous Home row,
 not to Back. A rejected operation does not create a false success status.
 
 
-**ZORTRAX_LEVEL** is the single standard Autocalibration macro. It opens the
+**M300_LEVEL** is the single standard Autocalibration macro. It opens the
 same review as the physical OLED. Stock Fluidd shows the five readings as
 text. The M300 build renders those readings in the same prompt as a platform
 diagram. Point 4 is rear left, 3 rear right, 2 center, 1 front left and 0
@@ -177,7 +177,7 @@ no scrolling timer, new display transport or encoder polling is added.
 **Home X**, **Home Y**, **Home Z**, **Home XY** and **Home XYZ** appear in that
 order in both the Klipper and Maintenance OLED menus. Independent X/Y actions
 call native `G28 X` / `G28 Y`. The existing Fluidd macros
-`ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` and `ZORTRAX_HOME_ALL` continue to
+`M300_HOME_XY`, `M300_HOME_Z` and `M300_HOME_ALL` continue to
 call `G28 X Y`, `G28 Z` and `G28`. The `Home Z` label no longer includes
 `(180C)`; the actual 180°C minimum and XY prerequisite are unchanged.
 On completion the OLED returns to its invoking screen, cursor and history;
@@ -199,7 +199,7 @@ or additional MCU polling is needed.
 
 ## Native pad mesh in Tune
 
-**Beta.18–20:** direct Tune entry presents IDLE preparation without G-code. All uses ZORTRAX_HOME_ALL; Calibrate uses BED_MESH. The contact-area drawing always precedes the heatmap. See [current guide](FRONTEND_BETA20.md).
+**Beta.18–20:** direct Tune entry presents IDLE preparation without G-code. All uses M300_HOME_ALL; Calibrate uses BED_MESH. The contact-area drawing always precedes the heatmap. See [current guide](FRONTEND_BETA20.md).
 
 
 `BED_MESH` is the visible Klipper macro, including the matching OLED action.
@@ -233,8 +233,8 @@ in Fluidd's macro settings without disabling ordinary printer functions.
 
 | Macro | Effect | Fluidd category |
 | --- | --- | --- |
-| `ZORTRAX_HEAT_PLATFORM TEMP=60` | Starts bed heating now, with shared OLED/Fluidd progress; confirm after heating to switch the bed heater off. | ZORTRAX M300 |
-| `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` | Saves a setting for print start; adds the configured stabilization interval after temperatures settle. The default extra interval is 60 seconds. It does not start heating by itself. | ZORTRAX M300 |
+| `M300_HEAT_PLATFORM TEMP=60` | Starts bed heating now, with shared OLED/Fluidd progress; confirm after heating to switch the bed heater off. | ZORTRAX M300 |
+| `M300_FULL_PLATFORM_PREHEAT STATE=ENABLED` | Saves a setting for print start; adds the configured stabilization interval after temperatures settle. The default extra interval is 60 seconds. It does not start heating by itself. | ZORTRAX M300 |
 | `START_PRINT`, `END_PRINT` | Native print preparation and completion. | Klipper |
 
 The grouping migration uses both raw configuration and accessed settings.

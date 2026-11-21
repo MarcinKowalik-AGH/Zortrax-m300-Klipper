@@ -159,6 +159,7 @@ class ConfigLayoutTests(unittest.TestCase):
             moonraker=folder/'moonraker.conf'
             moonraker.write_text('[server]\nport: 7125\n[update_manager fluidd]\ntype: web\nrepo: fluidd-core/fluidd\n')
             original[moonraker]=moonraker.read_bytes()
+            (root/'klippy/gcode.py').write_bytes((install.HERE/'core/gcode.py').read_bytes())
             with patch.object(install,'check_api',return_value=None):
                 changes=install.plan(root,config,organize_config=True)
                 receipt=install.apply(root,config,changes)

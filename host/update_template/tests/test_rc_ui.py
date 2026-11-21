@@ -18,14 +18,14 @@ from payload.m300_release import VERSION, display_mcu_version
 
 ROOT=Path(__file__).resolve().parents[1]
 SETTINGS={
-    'light_mode': ('ZORTRAX_LIGHT','MODE','WHITE'),
-    'sound': ('ZORTRAX_BUZZER','STATE','DISABLED'),
-    'sleep_mode': ('ZORTRAX_SLEEP_MODE','STATE','DISABLED'),
-    'language': ('ZORTRAX_LANGUAGE',None,None),
-    'sort_mode': ('ZORTRAX_MODELS_SORT','MODE','NAME'),
-    'full_platform_preheat': ('ZORTRAX_FULL_PLATFORM_PREHEAT','STATE','ENABLED'),
-    'oled_brightness': ('ZORTRAX_OLED_BRIGHTNESS','LEVEL','8'),
-    'led_brightness': ('ZORTRAX_LED_BRIGHTNESS','LEVEL','12'),
+    'light_mode': ('M300_LIGHT','MODE','WHITE'),
+    'sound': ('M300_BUZZER','STATE','DISABLED'),
+    'sleep_mode': ('M300_SLEEP_MODE','STATE','DISABLED'),
+    'language': ('M300_LANGUAGE',None,None),
+    'sort_mode': ('M300_MODELS_SORT','MODE','NAME'),
+    'full_platform_preheat': ('M300_FULL_PLATFORM_PREHEAT','STATE','ENABLED'),
+    'oled_brightness': ('M300_OLED_BRIGHTNESS','LEVEL','8'),
+    'led_brightness': ('M300_LED_BRIGHTNESS','LEVEL','12'),
 }
 
 
@@ -62,7 +62,7 @@ class PublicSettingsTests(unittest.TestCase):
 
     def test_invalid_brightness_does_not_round_or_mutate(self):
         with session() as h:
-            for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS'):
+            for name in ('M300_OLED_BRIGHTNESS','M300_LED_BRIGHTNESS'):
                 register(h,name)
                 for raw in ('0','17','-1','2.5','NaN','bad'):
                     before=h.nvm.ui_snapshot()
@@ -77,7 +77,7 @@ class PublicSettingsTests(unittest.TestCase):
     def test_brightness_change_does_not_move_or_heat(self):
         with session() as h:
             initial=h.position[:];target=h.hotend.target
-            for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS'):
+            for name in ('M300_OLED_BRIGHTNESS','M300_LED_BRIGHTNESS'):
                 register(h,name);h.run(name+' LEVEL=4')
             self.assertEqual(h.position,initial);self.assertEqual(h.hotend.target,target)
 
@@ -90,15 +90,15 @@ class PublicSettingsTests(unittest.TestCase):
 
     def test_maintenance_keeps_useful_fan_and_current_procedure_actions(self):
         menu,_=fixture();menu.page='maintenance';rows=menu.rows(1)[1]
-        self.assertIn(('Fan test',('native_gcode','ZORTRAX_FAN_TEST_START')),rows)
-        self.assertIn(('Current procedure',('native_gcode','ZORTRAX_PROCEDURE')),rows)
-        self.assertFalse(hidden_test('ZORTRAX_FAN_TEST_START'))
-        self.assertFalse(hidden_test('ZORTRAX_PROCEDURE'))
+        self.assertIn(('Fan test',('native_gcode','M300_FAN_TEST_START')),rows)
+        self.assertIn(('Current procedure',('native_gcode','M300_PROCEDURE')),rows)
+        self.assertFalse(hidden_test('M300_FAN_TEST_START'))
+        self.assertFalse(hidden_test('M300_PROCEDURE'))
         menu.page='klipper'
         self.assertIn(('Diagnostics',('page','diagnostics')),menu.rows(1)[1])
 
     def test_public_firmware_label_is_clean_but_unknown_identity_not_faked(self):
-        self.assertEqual(VERSION,'1.0.0-rc.33')
+        self.assertEqual(VERSION,'1.0.0-rc.34')
         self.assertEqual(display_mcu_version('0.13.14.19-TONED-OLED-UART8'),'0.13.14.19')
         self.assertEqual(display_mcu_version('foreign MCU'),'foreign MCU')
         self.assertEqual(display_mcu_version(None),'Unavailable')
@@ -114,7 +114,7 @@ class RcMigrationTests(unittest.TestCase):
         self.assertNotIn('m300_tests.cfg',[p.name for p,_,_ in changes])
         cfg='\n'.join(data.decode() for p,_,data in changes if p.suffix=='.cfg')
         self.assertNotIn('[gcode_macro TEST_',cfg)
-        self.assertIn('[gcode_macro ZORTRAX_OLED_BRIGHTNESS]',cfg)
+        self.assertIn('[gcode_macro M300_OLED_BRIGHTNESS]',cfg)
 
     def test_stock_laboratory_macros_removed_backup_preserved_and_rollback_exact(self):
         h=self.setup_install();p=h.config.parent/'m300_tests.cfg'
@@ -173,10 +173,10 @@ class RcMigrationTests(unittest.TestCase):
 
     def test_fluidd_clears_empty_test_category_and_hides_custom_lab_macro(self):
         old={'categories':[{'id':'t','name':'TEST M300'}], 'stored':[
-            {'name':'ZORTRAX_PROCEDURE','categoryId':'t','visible':True},
+            {'name':'M300_PROCEDURE','categoryId':'t','visible':True},
             {'name':'TEST_ZORTRAX_XY','categoryId':'t','visible':True,'color':'red'},
             {'name':'ZORTRAX_OLED_PERF','categoryId':'t','visible':True}]}
-        names=['ZORTRAX_PROCEDURE','TEST_ZORTRAX_XY','ZORTRAX_OLED_BRIGHTNESS']
+        names=['M300_PROCEDURE','TEST_ZORTRAX_XY','M300_OLED_BRIGHTNESS']
         result,_=merge_groups(old,names)
         self.assertNotIn('TEST M300',[c['name'] for c in result['categories']])
         rows={m['name']:m for m in result['stored']}

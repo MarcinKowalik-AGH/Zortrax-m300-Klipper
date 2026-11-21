@@ -11,6 +11,17 @@ HEADER = re.compile(r'^\[([^]\r\n]+)\]\s*(?:[#;].*)?$', re.M)
 MACRO_RENAMES = {'TEST_M300_STATUS': 'TEST_ZORTRAX_STATUS',
                  'TEST_M300_XY': 'TEST_ZORTRAX_XY',
                  'ZORTRAX_BED_MESH': 'BED_MESH'}
+# Only the published operator macros change names. Native protocol commands
+# and operator-defined ZORTRAX_ macros keep their existing identities.
+PUBLIC_MACROS = frozenset(('''BUZZER CHANGE DIAGNOSTICS FANS FAN_LOWER
+FAN_TEST_END FAN_TEST_START FAN_UPPER FULL_PLATFORM_PREHEAT HEAT
+HEAT_PLATFORM HELP HOME_ALL HOME_X HOME_XY
+HOME_Y HOME_Z INFORMATION LANGUAGE LED_BRIGHTNESS
+LEVEL LIGHT LOAD MAIN_MENU MODELS_SORT
+OLED_BRIGHTNESS OLED_TIMERS PLATFORM_DOWN PLATFORM_UP PROCEDURE
+REPRINT SCREEN SETTINGS SLEEP_MODE STATUS
+UNLOAD''').split())
+MACRO_RENAMES.update({'ZORTRAX_' + suffix: 'M300_' + suffix for suffix in PUBLIC_MACROS})
 RETIRED_LEVEL_MACROS = {'TEST_M300_LEVEL', 'TEST_ZORTRAX_LEVEL'}
 LEVEL_WRAPPER = re.compile(
     r'ZORTRAX_PROCEDURE_START OP=LEVEL TEMP=\{params\.TEMP\|default\((180|260)\)\|float\}')
@@ -22,10 +33,10 @@ IDLE_GCODE = ('gcode:\n'
     '        ZORTRAX_IDLE_RELEASE_XYE\n'
     '    {% endif %}\n')
 CHOICE_MACROS = {
-    'gcode_macro ZORTRAX_LIGHT': ('light_mode', 'MODE'),
-    'gcode_macro ZORTRAX_BUZZER': ('buzzer', 'STATE'),
-    'gcode_macro ZORTRAX_SLEEP_MODE': ('sleep', 'STATE'),
-    'gcode_macro ZORTRAX_MODELS_SORT': ('sort', 'MODE'),
+    'gcode_macro M300_LIGHT': ('light_mode', 'MODE'),
+    'gcode_macro M300_BUZZER': ('buzzer', 'STATE'),
+    'gcode_macro M300_SLEEP_MODE': ('sleep', 'STATE'),
+    'gcode_macro M300_MODELS_SORT': ('sort', 'MODE'),
 }
 PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
@@ -157,6 +168,31 @@ def migrate_start(block):
         return block[:match.start()] + START_GCODE + '\n'
     return block
 
+# Match command tokens and explicit macro-object references, leaving filenames,
+# message text and the separately stored SAVE_CONFIG section untouched.
+_MACRO_CALL = re.compile(r'^([ \t]*)(ZORTRAX_[A-Z_]+)(?=[ \t;#\r\n]|$)', re.M | re.I)
+_MACRO_OBJECT = re.compile(r"""((?:printer\[["']gcode_macro |\b(?:SET_GCODE_VARIABLE|GET_GCODE_VARIABLE)[ \t]+MACRO=))(ZORTRAX_[A-Z_]+)\b""", re.I)
+
+
+def stock_material_wrapper(block, operation):
+    options = {k.strip().lower() for k in re.findall(r'^([^\s#;][^:=\r\n]*?)[=:]', block, re.M)}
+    if options - {'description', 'gcode'}:
+        return False
+    _, commands = gcode_body(block)
+    if operation == 'CHANGE':
+        return commands == ['ZORTRAX_PROCEDURE_START OP=CHANGE']
+    if len(commands) == 1 and LEVEL_WRAPPER.fullmatch(commands[0]):
+        return True
+    # R15.5 required an explicit 195–245 °C temperature in the Jinja body.
+    return hashlib.sha256('\n'.join(commands).encode()).hexdigest() == '19a88f73d15514dd854596d91193267404f2104029a1b42d4a3adcfe128e4a11'
+
+
+def migrate_macro_calls(block):
+    def rename(match):
+        return match[1] + MACRO_RENAMES.get(match[2].upper(), match[2])
+    return _MACRO_OBJECT.sub(rename, _MACRO_CALL.sub(rename, block))
+
+
 def convert_text(text, stock_xy=None):
     prefix, chunks, saved = blocks(text)
     output = [prefix]
@@ -164,7 +200,7 @@ def convert_text(text, stock_xy=None):
         if section in DROP:
             continue
         if section.startswith('gcode_macro '):
-            old = section[12:]
+            old = section[12:].upper()
             if old=='START_PRINT':
                 block=migrate_start(block)
             if old in RETIRED_LEVEL_MACROS:
@@ -274,22 +310,22 @@ def convert_text(text, stock_xy=None):
                        "VALUE={params.%s}{%% endif %%}") % (key, param, param)
             block = re.sub(old_command, lambda match: match[1] + command,
                            block, flags=re.MULTILINE)
-        elif section == 'gcode_macro ZORTRAX_LANGUAGE':
+        elif section == 'gcode_macro M300_LANGUAGE':
             block = re.sub(r'^(\s*ZORTRAX_UI_SETTING NAME=language) VALUE=EN[ \t]*$',
                            r'\1', block, flags=re.MULTILINE)
-        elif section == 'gcode_macro ZORTRAX_LEVEL':
-            block = ('[gcode_macro ZORTRAX_LEVEL]\n'
+        elif section == 'gcode_macro M300_LEVEL' and stock_material_wrapper(block, 'LEVEL'):
+            block = ('[gcode_macro M300_LEVEL]\n'
                      'description: OEM Autocalibration at 260C; shared OLED and Fluidd steps\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(260)|float}\n\n')
-        elif section == 'gcode_macro ZORTRAX_CHANGE':
-            block = ('[gcode_macro ZORTRAX_CHANGE]\n'
+        elif section == 'gcode_macro M300_CHANGE' and stock_material_wrapper(block, 'CHANGE'):
+            block = ('[gcode_macro M300_CHANGE]\n'
                      'description: Change material in a paused native print; explicit Resume\n'
                      'gcode:\n    ZORTRAX_PROCEDURE_START OP=CHANGE '
                      '{% if params.TEMP is defined %}TEMP={params.TEMP}{% endif %}\n\n')
-        elif section in ('gcode_macro ZORTRAX_PLATFORM_UP', 'gcode_macro ZORTRAX_PLATFORM_DOWN'):
+        elif section in ('gcode_macro M300_PLATFORM_UP', 'gcode_macro M300_PLATFORM_DOWN'):
             block = re.sub(r'SPEED=\{params\.SPEED\s*\|\s*default\(1\)\s*\|\s*float\}',
                            "{% if 'SPEED' in params %}SPEED={params.SPEED|float}{% endif %}", block)
-        elif section in ('gcode_macro ZORTRAX_LOAD', 'gcode_macro ZORTRAX_UNLOAD'):
+        elif section in ('gcode_macro M300_LOAD', 'gcode_macro M300_UNLOAD'):
             # Only migrate the stock OP and its historical 0 / 240 TEMP default.
             op = section.rsplit('_', 1)[1]
             block = re.sub(r'(?m)^([ \t]*ZORTRAX_PROCEDURE_START[ \t]+OP=' + op
@@ -303,7 +339,7 @@ def convert_text(text, stock_xy=None):
                      '    TURN_OFF_HEATERS\n    CANCEL_PRINT_BASE\n\n')
         if section in PINS:
             block = set_option(block, *PINS[section])
-        output.append(block)
+        output.append(migrate_macro_calls(block))
     return ''.join(output) + saved
 
 

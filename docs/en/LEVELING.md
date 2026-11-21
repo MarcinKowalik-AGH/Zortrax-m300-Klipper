@@ -35,7 +35,7 @@ XY settings. Z lift, contact approach and release use their separate speeds.
 
 ## Wizard
 
-1. Start Maintenance → Autocalibration or `ZORTRAX_LEVEL`. Require an idle
+1. Start Maintenance → Autocalibration or `M300_LEVEL`. Require an idle
    native print, healthy connector/MCU and fresh native temperature status,
    empty motion queue. Establish 5 mm Z clearance before heating or XY motion,
    then require an open PC7 contact.
@@ -471,7 +471,7 @@ An excessive span produces a detailed error with the measured span and the
 configured limit. Tune retains the rejected attempt's pad diagnostics, without
 offering a new profile or Save button. The previous accepted profile is left
 unchanged. `SAVE_CONFIG` after a failed measurement does not make it valid or
-create the rejected profile. Run OEM `ZORTRAX_LEVEL` to adjust the screws,
+create the rejected profile. Run OEM `M300_LEVEL` to adjust the screws,
 then repeat the mesh at the same stabilized temperatures. A span rejection
 alone does not establish whether the remaining difference is tilt or curvature.
 The reported 75-contact case is covered by regression data: median heights span

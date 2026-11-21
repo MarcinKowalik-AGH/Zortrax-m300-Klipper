@@ -64,7 +64,7 @@ class ReleaseContracts(unittest.TestCase):
                         self.assertNotIn('--port', command, path)
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
-            self.assertIn('releases/download/v1.0.0-rc.33/',text)
+            self.assertIn('releases/download/v1.0.0-rc.34/',text)
             commands = [shlex.split(line) for line in text.splitlines()
                         if line.startswith('python3 install-fresh.py ')]
             self.assertEqual(len(commands), 2, lang)
@@ -75,9 +75,9 @@ class ReleaseContracts(unittest.TestCase):
 
     def test_host_release_and_numeric_mcu_identity(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.33')
+        self.assertEqual(meta['distribution_version'],'v1.0.0-rc.34')
         self.assertEqual(meta['mcu_release'],'1.0.8')
-        self.assertEqual(meta['self_contained_host_tests'],979)
+        self.assertEqual(meta['self_contained_host_tests'],983)
         self.assertEqual(meta['print_control_revision'],'0.13.16.44-FLOW-CHECK')
 
 if __name__=='__main__':unittest.main(verbosity=2)

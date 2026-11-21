@@ -11,9 +11,9 @@ This extends the earlier acceptance inventory below; hardware acceptance remains
 |---|---|---|
 | Native XYZE, heaters, fans, PID, SAVE_CONFIG | Existing Klipper objects and Klipper menu | Native bindings, preserved calibration and FILEOUTPUT planning |
 | Factory Z400/Z800 | Existing hardware identity reader before native configuration | Factory decoder and both synthetic hardware profiles; physical scale measurement remains separate |
-| Autocalibration | Native M07; OLED and ZORTRAX_LEVEL | Original wizard ordering/math, bounded PC7 acquisition, explicit operator decisions |
+| Autocalibration | Native M07; OLED and M300_LEVEL | Original wizard ordering/math, bounded PC7 acquisition, explicit operator decisions |
 | Ordinary Z homing | Native G28 adapter and five successive release references | 180°C minimum; actual HomingMove in modeled tests; physical acceptance pending |
-| Heat the extruder | Native maintenance owner and ZORTRAX_HEAT | OEM 260/258 readiness and confirmation-to-off flow |
+| Heat the extruder | Native maintenance owner and M300_HEAT | OEM 260/258 readiness and confirmation-to-off flow |
 | Manual platform movement | Same native maintenance owner | OLED hold/release/freshness; finite Fluidd distance; genuine homed Z required |
 | Interactive upper/lower fan test | Shared native fan session and four macros | Original 0/150 duty, entry/Back flow and 12 complete cold-menu frames; upper thermostat and MCU cooling have priority |
 | Load / Unload | Native filament owner and matching macros | Configurable temperatures and speeds (auto uses 240°C and 2 mm/s for either direction, including a paused change), confirmation-before-transport, nominal 130/110 mm, native calibrated E |

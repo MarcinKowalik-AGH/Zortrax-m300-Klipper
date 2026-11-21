@@ -47,14 +47,14 @@ class PlatformHeatTests(unittest.TestCase):
         self.assertEqual((h.hotend.target,h.bed.target),(0.,0.))
 
     def test_macro_heats_only_the_platform_without_requiring_homing(self):
-        h=self.h;h.hotend.target=210.;h.run('ZORTRAX_HEAT_PLATFORM TEMP=65')
+        h=self.h;h.hotend.target=210.;h.run('M300_HEAT_PLATFORM TEMP=65')
         self.assertEqual((h.hotend.target,h.bed.target),(210.,65.));self.assertEqual(h.homed,'')
         self.assertFalse(any(e[0]=='move' for e in h.events))
         view=h.p.view(h.now);self.assertEqual(view['title'],'Heat the platform')
         self.assertEqual(view['target_bed'],65.);self.assertEqual(view['target_hotend'],210.)
 
     def test_wait_confirm_is_at_bed_temperature_and_rejects_stale_phase(self):
-        h=self.h;h.run('ZORTRAX_HEAT_PLATFORM');h.bed.temperature=80.;h.step()
+        h=self.h;h.run('M300_HEAT_PLATFORM');h.bed.temperature=80.;h.step()
         self.assertEqual(h.m.state,'HEATING')
         h.bed.temperature=60.;h.until(h.m,'WAIT_CONFIRM');token,phase=h.m.token,h.m.phase_id
         with self.assertRaises(h.printer.command_error):h.m.confirm(token,phase-1)
@@ -63,7 +63,7 @@ class PlatformHeatTests(unittest.TestCase):
         h.assert_restored(self)
 
     def test_cancel_turns_bed_off_and_preserves_unrelated_hotend_target(self):
-        h=self.h;h.hotend.target=210.;h.run('ZORTRAX_HEAT_PLATFORM TEMP=70')
+        h=self.h;h.hotend.target=210.;h.run('M300_HEAT_PLATFORM TEMP=70')
         h.m.cancel();h.until(h.m,'CANCELLED')
         self.assertEqual((h.hotend.target,h.bed.target),(210.,0.));h.assert_restored(self)
 
@@ -71,7 +71,7 @@ class PlatformHeatTests(unittest.TestCase):
         h=self.h
         for value in ('nan','-1','0','999'):
             with self.subTest(value=value),self.assertRaises(h.printer.command_error):
-                h.run('ZORTRAX_HEAT_PLATFORM TEMP='+value)
+                h.run('M300_HEAT_PLATFORM TEMP='+value)
         self.assertEqual((h.hotend.target,h.bed.target),(0.,0.));self.assertEqual(h.m.state,'IDLE')
 
     def test_printing_or_paused_print_blocks_a_standalone_platform_service(self):
@@ -79,10 +79,10 @@ class PlatformHeatTests(unittest.TestCase):
         for state in ('printing','paused'):
             h.print_state=state
             with self.subTest(state=state),self.assertRaises(h.printer.command_error):
-                h.run('ZORTRAX_HEAT_PLATFORM')
+                h.run('M300_HEAT_PLATFORM')
 
     def test_bed_animation_matches_heater_and_keeps_original_hotend_screen(self):
-        h=self.h;h.run('ZORTRAX_HEAT_PLATFORM');status=h.m.get_status(h.now)
+        h=self.h;h.run('M300_HEAT_PLATFORM');status=h.m.get_status(h.now)
         self.assertEqual(procedure_symbol('m300_maintenance',status).key,'activity:heat_bed')
         self.assertTrue(procedure_symbol('m300_maintenance',status).animated)
         self.assertEqual(describe('m300_maintenance',status)['sprite'],'activity:heat_bed')
@@ -113,7 +113,7 @@ gcode:
     def test_platform_heat_preserves_an_active_bed_mesh_without_moving(self):
         h=self.h;mesh=NS(get_mesh=lambda:object())
         h.objects['bed_mesh']=mesh;h.gmove.move_transform=mesh
-        h.run('ZORTRAX_HEAT_PLATFORM');h.bed.temperature=60.;h.until(h.m,'WAIT_CONFIRM')
+        h.run('M300_HEAT_PLATFORM');h.bed.temperature=60.;h.until(h.m,'WAIT_CONFIRM')
         h.m.confirm(h.m.token,h.m.phase_id)
         self.assertIs(h.gmove.move_transform,mesh)
         self.assertFalse(any(e[0]=='move' for e in h.events));self.assertEqual(h.bed.target,0.)

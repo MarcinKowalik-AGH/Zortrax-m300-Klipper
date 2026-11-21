@@ -1817,7 +1817,7 @@ index 0000000..02bc72f
 +import type { MacrosState } from '@/store/macros/types'
 +import type { RootState } from '@/store/types'
 +
-+const names = ['ZORTRAX_HEAT_PLATFORM', 'ZORTRAX_FULL_PLATFORM_PREHEAT', 'START_PRINT', 'END_PRINT']
++const names = ['M300_HEAT_PLATFORM', 'M300_FULL_PLATFORM_PREHEAT', 'START_PRINT', 'END_PRINT']
 +
 +function macros (stored: MacrosState['stored'] = [], model = 'M300_CLASSIC') {
 +  const state: MacrosState = {
@@ -1838,7 +1838,7 @@ index 0000000..02bc72f
 +  it('groups the two platform macros under Zortrax and Start/End under Klipper without stored rows', () => {
 +    const ctx = macros()
 +    expect(ctx.get().map(macro => [macro.name, macro.categoryId]))
-+      .toEqual(names.map(name => [name, name.startsWith('ZORTRAX_') ? 'z' : 'k']))
++      .toEqual(names.map(name => [name, name.startsWith('M300_') ? 'z' : 'k']))
 +    expect(ctx.state.stored).toEqual([])
 +  })
 +
@@ -1875,8 +1875,8 @@ index 0000000..5e9d4c1
 +export function m300MacroDefaultCategory (name: string, model: unknown): string | undefined {
 +  if (model !== 'M300_CLASSIC') return
 +  switch (name.toUpperCase()) {
-+    case 'ZORTRAX_HEAT_PLATFORM':
-+    case 'ZORTRAX_FULL_PLATFORM_PREHEAT':
++    case 'M300_HEAT_PLATFORM':
++    case 'M300_FULL_PLATFORM_PREHEAT':
 +      return 'ZORTRAX M300'
 +    case 'START_PRINT':
 +    case 'END_PRINT':

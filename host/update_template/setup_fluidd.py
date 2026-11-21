@@ -36,7 +36,7 @@ def category(name):
                                           'START_PRINT', 'END_PRINT', 'FILAMENT_READY', 'M600', 'M601',
                                           'PRINT_CONTROL_STATUS', 'PAUSE_TEMP_STATUS', 'OLED_TIMERS', 'COOLDOWN'):
         return 'Klipper'
-    if name.startswith('ZORTRAX_'):
+    if name.startswith(('M300_', 'ZORTRAX_')):
         return 'ZORTRAX M300'
     return None
 
@@ -88,7 +88,11 @@ def merge_groups(before, names):
             if len(rows) > 1:
                 raise ValueError('Duplicate Fluidd macro: ' + name)
             if rows:
-                rows[0]['categoryId'] = cid
+                selected = rows[0].get('categoryId')
+                custom = any(c['id'] == selected and c['name'] not in (*GROUPS, 'TEST M300')
+                             and c['id'] != '0' for c in categories)
+                if not custom:
+                    rows[0]['categoryId'] = cid
             else:
                 stored.append({'name': name, 'categoryId': cid, 'visible': True})
     # Lab macros cannot reappear through stale browser preferences. Preserve

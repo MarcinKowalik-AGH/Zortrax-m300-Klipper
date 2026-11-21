@@ -1,8 +1,8 @@
-# Menu OLED, Fluidd i makra Klippera w RC33
+# Menu OLED, Fluidd i makra Klippera w RC34
 
-We Fluidd i w zakładce Device OrcaSlicera otwórz `ZORTRAX_MAIN_MENU`. Models, Maintenance, Material, Settings i Information odpowiadają pięciu pozycjom menu Zortrax na OLED. Dla przykładu **Material → Unload the material** prowadzi do tej samej procedury z obu urządzeń, a potwierdzenie dotyczy aktualnej fazy. Przy zmianie koloru w pauzie przyciski Extrude/Retract działają przed potwierdzeniem wypływu. [Codzienna obsługa](USER_GUIDE.md).
+We Fluidd i w zakładce Device OrcaSlicera otwórz `M300_MAIN_MENU`. Models, Maintenance, Material, Settings i Information odpowiadają pięciu pozycjom menu Zortrax na OLED. Dla przykładu **Material → Unload the material** prowadzi do tej samej procedury z obu urządzeń, a potwierdzenie dotyczy aktualnej fazy. Przy zmianie koloru w pauzie przyciski Extrude/Retract działają przed potwierdzeniem wypływu. [Codzienna obsługa](USER_GUIDE.md).
 
-W aktualnym wydaniu oba czasy OLED mierzy się od ostatniej obsługi w Ready, podczas druku i w pauzie. Ustaw je w **OLED_TIMERS** lub **ZORTRAX_OLED_TIMERS**. Przykład `DIM=1 SLEEP=2` przygasza ekran po minucie i wyłącza go po dwóch. Obie wartości mieszczą się w zakresie 1–60 min, a rzeczywisty DIM jest mniejszą z dwóch wartości: wybranego DIM i aktualnego SLEEP. Pierwszy gest wybudza panel. [Opis działania](RELEASE_v1.0.0-rc.23.md).
+W aktualnym wydaniu oba czasy OLED mierzy się od ostatniej obsługi w Ready, podczas druku i w pauzie. Ustaw je w **OLED_TIMERS** lub **M300_OLED_TIMERS**. Przykład `DIM=1 SLEEP=2` przygasza ekran po minucie i wyłącza go po dwóch. Obie wartości mieszczą się w zakresie 1–60 min, a rzeczywisty DIM jest mniejszą z dwóch wartości: wybranego DIM i aktualnego SLEEP. Pierwszy gest wybudza panel. [Opis działania](RELEASE_v1.0.0-rc.23.md).
 
 [Instrukcja główna](../../README_PL.md) · [Katalog makr](MACRO_REFERENCE.md) · [Odbiory sprzętowe](ACCEPTANCE_REGISTER.md)
 
@@ -15,44 +15,44 @@ sesję procedury. Zamknięcie okna nie jest zgodą na następny ruch.
 
 | OLED: Settings | Makro we Fluidd | Parametr |
 |---|---|---|
-| Light | ZORTRAX_LIGHT | MODE=DYNAMIC/WHITE/DISABLED |
-| Buzzer | ZORTRAX_BUZZER | STATE=ENABLED/DISABLED |
-| Sleep mode | ZORTRAX_SLEEP_MODE | STATE=ENABLED/DISABLED |
-| Language | ZORTRAX_LANGUAGE | English; brak innych języków |
-| Models sorting | ZORTRAX_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
-| Full platform preheating | ZORTRAX_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
-| OLED dim time / OLED sleep time | ZORTRAX_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
-| OLED brightness | ZORTRAX_OLED_BRIGHTNESS | LEVEL=1…16 |
-| LED brightness | ZORTRAX_LED_BRIGHTNESS | LEVEL=1…16 |
+| Light | M300_LIGHT | MODE=DYNAMIC/WHITE/DISABLED |
+| Buzzer | M300_BUZZER | STATE=ENABLED/DISABLED |
+| Sleep mode | M300_SLEEP_MODE | STATE=ENABLED/DISABLED |
+| Language | M300_LANGUAGE | English; brak innych języków |
+| Models sorting | M300_MODELS_SORT | MODE=DATE/NAME/NAME_CASE/SIZE |
+| Full platform preheating | M300_FULL_PLATFORM_PREHEAT | STATE=ENABLED/DISABLED |
+| OLED dim time / OLED sleep time | M300_OLED_TIMERS | DIM=1..60, SLEEP=1..60 |
+| OLED brightness | M300_OLED_BRIGHTNESS | LEVEL=1…16 |
+| LED brightness | M300_LED_BRIGHTNESS | LEVEL=1…16 |
 
 Bez parametru makro otwiera aktualny wybór bez zmiany ustawienia. Przykład:
 
 ```gcode
-ZORTRAX_OLED_BRIGHTNESS
-ZORTRAX_LED_BRIGHTNESS LEVEL=8
+M300_OLED_BRIGHTNESS
+M300_LED_BRIGHTNESS LEVEL=8
 ```
 
 LEVEL jest liczbą całkowitą 1–16. Wartości 0, 17, ułamki i nieprawidłowy tekst
 są odrzucane przez wspólnego właściciela ustawień, bez zaokrąglania. Zapis
 nadal trafia do istniejącego m300_nvm. Synchronizacja otwartego regulatora OLED
 z przeglądarką i zapamiętywanie ustawień nie zostały zastąpione nową obsługą.
-ZORTRAX_SCREEN pozostaje odczytem statusu wyświetlacza, nie regulatorem jasności.
+M300_SCREEN pozostaje odczytem statusu wyświetlacza, nie regulatorem jasności.
 
 ## Ruch, serwis i druk
 
 | Funkcja OLED | Wejście Fluidd / konsola | Wspólna realizacja |
 |---|---|---|
-| Home X/Y/Z/XY/XYZ | ZORTRAX_HOME_X/Y/Z/XY/ALL | ZORTRAX_PROCEDURE_START i natywne bazowanie |
-| Autocalibration | ZORTRAX_LEVEL | M07, potwierdzenia aktualnej fazy |
+| Home X/Y/Z/XY/XYZ | M300_HOME_X/Y/Z/XY/ALL | ZORTRAX_PROCEDURE_START i natywne bazowanie |
+| Autocalibration | M300_LEVEL | M07, potwierdzenia aktualnej fazy |
 | Bed mesh | BED_MESH | m300_pad_mesh, 25 pozycji kontaktowych |
-| Heat extruder / platform | ZORTRAX_HEAT / ZORTRAX_HEAT_PLATFORM | dotychczasowa procedura grzania i potwierdzenia |
-| Load / Unload / Change | ZORTRAX_LOAD / UNLOAD / CHANGE | wspólna obsługa materiału; wznowienie osobno |
-| Move platform up/down | ZORTRAX_PLATFORM_UP/DOWN | natywny ruch Z i kontrola zakresu; przytrzymanie na OLED, krok we Fluidd |
-| Fan test | ZORTRAX_FAN_TEST_START / UPPER / LOWER / END | OEM-owa kontrola wentylatorów; chłodzenie ochronne ma pierwszeństwo |
-| Current procedure | ZORTRAX_PROCEDURE | ponowne otwarcie istniejącej sesji bez uruchamiania nowej |
+| Heat extruder / platform | M300_HEAT / M300_HEAT_PLATFORM | dotychczasowa procedura grzania i potwierdzenia |
+| Load / Unload / Change | M300_LOAD / UNLOAD / CHANGE | wspólna obsługa materiału; wznowienie osobno |
+| Move platform up/down | M300_PLATFORM_UP/DOWN | natywny ruch Z i kontrola zakresu; przytrzymanie na OLED, krok we Fluidd |
+| Fan test | M300_FAN_TEST_START / UPPER / LOWER / END | OEM-owa kontrola wentylatorów; chłodzenie ochronne ma pierwszeństwo |
+| Current procedure | M300_PROCEDURE | ponowne otwarcie istniejącej sesji bez uruchamiania nowej |
 | Pause / Resume / Cancel | PAUSE / RESUME / CANCEL_PRINT | m300_print_control; warunki wydruku i pozycja nadal sprawdzane |
 | PID calibration | PID_HOTEND / PID_BED / PID_SAVE | natywny PID; zapis i restart wyłącznie na postoju |
-| Information / Help | ZORTRAX_INFORMATION / ZORTRAX_HELP | wspólne dane wersji, drukarki i błędów |
+| Information / Help | M300_INFORMATION / M300_HELP | wspólne dane wersji, drukarki i błędów |
 
 Modele we Fluidd wybiera się także przez standardową kartę plików. Nie dodano
 makra, które obchodzi sprawdzanie wybranego pliku. Nie dodano eksperymentalnej
@@ -69,13 +69,13 @@ usuwana; grupa zawierająca niepowiązane własne makra nie jest kasowana.
 Instalator wycofuje tylko rozpoznane ciała starych makr. Własne dodatkowe
 polecenia, zmienne lub zmodyfikowana definicja nie są usuwane. Kopia i rollback
 obejmują zmienione pliki. Testy programowe pozostają w repozytorium; nie są
-instalowane jako przyciski na drukarce. ZORTRAX_DIAGNOSTICS zapewnia wygodny
+instalowane jako przyciski na drukarce. M300_DIAGNOSTICS zapewnia wygodny
 odczyt stanu bez ruchu i grzania. Test wentylatorów pozostaje, bo jest rzeczywistą
 funkcją serwisową OEM, a nie testem rozwoju portu.
 
 ## Wersje i aktualizacja
 
-Wersja hosta to **1.0.0-rc.33**, a sparowanego MCU **1.0.8**. Information pokazuje krótki numer hosta i
+Wersja hosta to **1.0.0-rc.34**, a sparowanego MCU **1.0.8**. Information pokazuje krótki numer hosta i
 numeryczny numer MCU. Pełny rzeczywisty identyfikator firmware i znaczniki
 zgodności transportu pozostają w diagnostyce; nie udajemy, że MCU otrzymało
 nowe oprogramowanie. Pakiet używa nazw M300_HOST, M300_FLUIDD.zip i M300_SD.zip.

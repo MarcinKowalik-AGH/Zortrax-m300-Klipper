@@ -8,7 +8,7 @@ import unittest
 from test_settings_information import session
 from payload.m300_error_codes import CODES, KINDS, classify, TIMER, LINK, PLATFORM, SENSOR, SHUTDOWN
 from payload.m300_errors import M300Errors
-from tests.reference.native_gcode import CommandError
+from core.gcode import CommandError
 from payload.m300_leveling_oem import width
 
 

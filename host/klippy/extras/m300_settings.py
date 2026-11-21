@@ -297,7 +297,7 @@ class M300Settings:
         if not self.ready or not self.gcode.get_mutex().test() or '\n' in script or '\r' in script:
             return False
         command = script.strip()
-        if command == 'ZORTRAX_SETTINGS':
+        if command == 'M300_SETTINGS':
             self.show('settings')
             return True
         match = re.fullmatch(r'ZORTRAX_UI_SETTING NAME=([a-z_]+) VALUE=([A-Z0-9]+)', command)
@@ -322,8 +322,8 @@ class M300Settings:
             title, rows = menu.oem_rows(self.page)
             # A physical hold ends on knob release. A web click is one native step.
             return ('Menu' if self.page == 'zortrax' else title), [
-                (label, ('native_gcode', 'ZORTRAX_PLATFORM_UP' if action[1] < 0
-                         else 'ZORTRAX_PLATFORM_DOWN') if action[0] == 'platform_hold' else action)
+                (label, ('native_gcode', 'M300_PLATFORM_UP' if action[1] < 0
+                         else 'M300_PLATFORM_DOWN') if action[0] == 'platform_hold' else action)
                 for label, action in rows]
         if self.page in MODEL_PAGES:
             menu = self.printer.lookup_object('m300_menu')
@@ -372,7 +372,7 @@ class M300Settings:
         self.offered_actions = ()
         if self._procedure_busy(now):
             if self.page == 'zortrax':
-                self.gcode.run_script_from_command('ZORTRAX_PROCEDURE')
+                self.gcode.run_script_from_command('M300_PROCEDURE')
                 return
             self.gcode.respond_info('M300 UI '+json.dumps(dict(title=title,lines=[r[0] for r in rows])))
             return
@@ -433,7 +433,7 @@ class M300Settings:
         kind = action[0]
         if self.page in OEM_PAGES or self.page in MODEL_PAGES:
             if self._procedure_busy(now):
-                self.gcode.run_script_from_command('ZORTRAX_PROCEDURE')
+                self.gcode.run_script_from_command('M300_PROCEDURE')
                 return
         if self.page in MODEL_PAGES:
             menu = self.printer.lookup_object('m300_menu')
@@ -457,7 +457,7 @@ class M300Settings:
                 if self.ready and not self.printer.is_shutdown() and not self._procedure_busy(now):
                     self.show()
                 raise
-            if action[1] in ('ZORTRAX_PLATFORM_UP', 'ZORTRAX_PLATFORM_DOWN'):
+            if action[1] in ('M300_PLATFORM_UP', 'M300_PLATFORM_DOWN'):
                 self.show('maintenance')
             return
         if kind == 'close':

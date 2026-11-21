@@ -53,8 +53,8 @@ class ProcedureReturnTests(unittest.TestCase):
     def test_oled_macro_keeps_the_clicked_row_before_the_dispatcher_resets_cursor(self):
         with session() as h:
             status,update=motion(h)
-            h.gcode.register_command('ZORTRAX_HOME_XY',None)
-            h.gcode.register_command('ZORTRAX_HOME_XY',lambda cmd:update())
+            h.gcode.register_command('M300_HOME_XY',None)
+            h.gcode.register_command('M300_HOME_XY',lambda cmd:update())
             h.menu.page='maintenance'
             rows=h.menu.rows(h.now)[1]
             selected=next(i for i,row in enumerate(rows) if row[0]=='Home XY')
@@ -105,9 +105,9 @@ class ProcedureReturnTests(unittest.TestCase):
         with session() as h:
             status,update=motion(h)
             def refuse(cmd):raise h.printer.command_error('test rejection')
-            h.gcode.register_command('ZORTRAX_HOME_XY',None)
-            h.gcode.register_command('ZORTRAX_HOME_XY',refuse)
-            h.menu._native_script('ZORTRAX_HOME_XY')
+            h.gcode.register_command('M300_HOME_XY',None)
+            h.gcode.register_command('M300_HOME_XY',refuse)
+            h.menu._native_script('M300_HOME_XY')
             h.callbacks.pop()(h.now)
             self.assertIsNone(h.menu._procedure_launch)
             h.oled.selection=3;update();update('COMPLETE')
@@ -126,17 +126,17 @@ class ProcedureReturnTests(unittest.TestCase):
             self.assertEqual(h.oled.page,'status')
 
     def test_native_service_completions_from_fluidd_return_to_status(self):
-        for command,name,waiting in (('ZORTRAX_HEAT','m','WAIT_CONFIRM'),
-                                    ('ZORTRAX_LOAD','f','WAIT_INSERT'),
-                                    ('ZORTRAX_UNLOAD','f','WAIT_UNLOAD')):
+        for command,name,waiting in (('M300_HEAT','m','WAIT_CONFIRM'),
+                                    ('M300_LOAD','f','WAIT_INSERT'),
+                                    ('M300_UNLOAD','f','WAIT_UNLOAD')):
             with self.subTest(command=command),session() as h:
                 h.oled._show_status();h.run(command);h.p._tick(h.now)
                 service=getattr(h,name);h.heat(service,waiting)
                 h.action('CONFIRM');h.until(service,'COMPLETE');h.p._tick(h.now)
                 self.assertEqual(h.oled.page,'status')
-                self.assertEqual(h.hotend.target, 0. if command == 'ZORTRAX_HEAT' else 240.)
+                self.assertEqual(h.hotend.target, 0. if command == 'M300_HEAT' else 240.)
         with session() as h:
-            h.oled._show_status();h.run('ZORTRAX_FAN_TEST_START');h.p._tick(h.now)
+            h.oled._show_status();h.run('M300_FAN_TEST_START');h.p._tick(h.now)
             self.assertEqual(h.menu.page,'fan_test')
             h.action('BACK');h.p._tick(h.now)
             self.assertEqual(h.oled.page,'status')

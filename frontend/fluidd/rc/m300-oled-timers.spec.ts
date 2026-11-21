@@ -36,7 +36,7 @@ describe('paired OLED timer controls', () => {
     await wrapper.find(`input[aria-label="${field}"]`).setValue('10')
     await wrapper.find('button').trigger('click')
     expect(sendGcode).toHaveBeenCalledTimes(1)
-    expect(sendGcode).toHaveBeenCalledWith('ZORTRAX_OLED_TIMERS ' + field + '=10')
+    expect(sendGcode).toHaveBeenCalledWith('M300_OLED_TIMERS ' + field + '=10')
     wrapper.destroy()
   })
 
@@ -48,7 +48,7 @@ describe('paired OLED timer controls', () => {
     expect(control.findAll('input').length).toBe(1)
     await control.find('input').setValue('30')
     await control.find('button').trigger('click')
-    expect(control.emitted('save')).toEqual([['ZORTRAX_OLED_TIMERS SLEEP=30']])
+    expect(control.emitted('save')).toEqual([['M300_OLED_TIMERS SLEEP=30']])
     control.destroy()
   })
 
@@ -80,7 +80,7 @@ describe('paired OLED timer controls', () => {
     expect(bars.at(1).findAll('.filled').length).toBe(16)
     expect(control.emitted('save')).toBeUndefined()
     await control.find('button').trigger('click')
-    expect(control.emitted('save')).toEqual([['ZORTRAX_OLED_TIMERS DIM=8 SLEEP=60']])
+    expect(control.emitted('save')).toEqual([['M300_OLED_TIMERS DIM=8 SLEEP=60']])
     control.destroy()
   })
 })

@@ -1,6 +1,6 @@
 # Settings and Information
 
-> RC33 controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
+> RC34 controls: [current OLED/macro reference](RC1_UI.md). The [65-screen illustrated guide](../pl/OLED_FUNCTIONS.md) retains explicitly historical beta.20 renders. Implementation history and raw ABI identities below remain evidence, not RC display labels.
 
 OLED menu button audio has two fixed pulse lengths: normal entry and other
 selection/exit clicks are 35 ms, while an explicitly visible **Back** or
@@ -12,7 +12,7 @@ prevents future menu clicks from sounding. Stale/unrecognized Back action
 receipts are not allowed to produce the long confirmation.
 
 
-Open **Zortrax M300 → Settings** on the OLED or run `ZORTRAX_SETTINGS` in
+Open **Zortrax M300 → Settings** on the OLED or run `M300_SETTINGS` in
 Fluidd. Both surfaces use the same English labels, saved choices and action
 handlers. The `<` mark identifies the current choice on list pages.
 Brightness uses two independent 16-segment controls. Turn the encoder to
@@ -26,12 +26,12 @@ receipts. Back remains valid after saving; leaving and reopening a dialog,
 restart and shutdown still expire the old view. Reading the preview writes
 neither NVM nor UART commands.
 
-RC1 adds direct `ZORTRAX_OLED_BRIGHTNESS LEVEL=8` and
-`ZORTRAX_LED_BRIGHTNESS LEVEL=8` shortcuts. Omit LEVEL to open the shared
+RC1 adds direct `M300_OLED_BRIGHTNESS LEVEL=8` and
+`M300_LED_BRIGHTNESS LEVEL=8` shortcuts. Omit LEVEL to open the shared
 control. Only integers 1..16 are accepted; no rounding or separate settings store.
 
 In Fluidd, the setting macros open button dialogs when called without
-arguments. Explicit console arguments such as `ZORTRAX_LIGHT MODE=WHITE`
+arguments. Explicit console arguments such as `M300_LIGHT MODE=WHITE`
 still apply the selected value directly.
 
 Back from Settings or Information opens the Zortrax M300 menu in Fluidd.
@@ -49,15 +49,15 @@ qualified hardware detector. Acknowledgement never clears a safety latch.
 
 | Settings page | Choices | Fluidd access |
 |---|---|---|
-| Light | Dynamic, White, Disabled | `ZORTRAX_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |
-| Buzzer | Enabled, Disabled | `ZORTRAX_BUZZER STATE=ENABLED` or `DISABLED` |
-| Sleep mode | Enabled, Disabled | `ZORTRAX_SLEEP_MODE STATE=ENABLED` or `DISABLED` |
-| Language | English | `ZORTRAX_LANGUAGE` |
-| Models sorting | Date, Name, Case-sensitive name, File size | `ZORTRAX_MODELS_SORT MODE=DATE`, `NAME`, `NAME_CASE` or `SIZE` |
-| Full platform preheating | Enabled, Disabled | `ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED` or `DISABLED` |
-| OLED dim time / OLED sleep time | 1–60 minutes each | `ZORTRAX_OLED_TIMERS` |
-| OLED brightness | 1–16 | `ZORTRAX_SETTINGS` → OLED brightness |
-| LED brightness | 1–16 | `ZORTRAX_SETTINGS` → LED brightness |
+| Light | Dynamic, White, Disabled | `M300_LIGHT MODE=DYNAMIC`, `WHITE` or `DISABLED` |
+| Buzzer | Enabled, Disabled | `M300_BUZZER STATE=ENABLED` or `DISABLED` |
+| Sleep mode | Enabled, Disabled | `M300_SLEEP_MODE STATE=ENABLED` or `DISABLED` |
+| Language | English | `M300_LANGUAGE` |
+| Models sorting | Date, Name, Case-sensitive name, File size | `M300_MODELS_SORT MODE=DATE`, `NAME`, `NAME_CASE` or `SIZE` |
+| Full platform preheating | Enabled, Disabled | `M300_FULL_PLATFORM_PREHEAT STATE=ENABLED` or `DISABLED` |
+| OLED dim time / OLED sleep time | 1–60 minutes each | `M300_OLED_TIMERS` |
+| OLED brightness | 1–16 | `M300_SETTINGS` → OLED brightness |
+| LED brightness | 1–16 | `M300_SETTINGS` → LED brightness |
 
 The existing host NVM saves choices. Selecting the active value avoids a disk
 write. Disabled Buzzer also ends an active host beep. Dynamic Light follows the
@@ -118,7 +118,7 @@ largest first. Name uses case-insensitive comparison with a stable spelling
 tie-breaker. Case-sensitive name compares the stored spelling. Change the sort
 mode, then reopen Models to get a new listing.
 
-Open **Zortrax M300 → Information** or run `ZORTRAX_INFORMATION` in Fluidd.
+Open **Zortrax M300 → Information** or run `M300_INFORMATION` in Fluidd.
 
 | Page | Displayed data |
 |---|---|

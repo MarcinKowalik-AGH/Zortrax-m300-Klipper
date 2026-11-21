@@ -304,7 +304,7 @@ class PrintControlTests(unittest.TestCase):
         h.gcode.register_command('TURN_OFF_HEATERS',None)
         h.gcode.register_command('TURN_OFF_HEATERS',lambda gcmd: h.off())
         h.gcode.register_command('ZORTRAX_IDLE_RELEASE_XYE',lambda gcmd: None)
-        for command, prompt in (('ZORTRAX_LOAD','WAIT_INSERT'),('ZORTRAX_UNLOAD','WAIT_UNLOAD')):
+        for command, prompt in (('M300_LOAD','WAIT_INSERT'),('M300_UNLOAD','WAIT_UNLOAD')):
             h.run(command);h.heat(h.f,prompt)
             h.p.action(h.p.view(h.now)['view_id'],'CONFIRM');h.until(h.f,'COMPLETE')
             start = list(h.position)
@@ -764,20 +764,20 @@ class PrintControlTests(unittest.TestCase):
     def test_material_uses_original_target_after_standby(self):
         h=self.h;h.pause_print();h.step_control(600.)
         self.assertEqual(h.hotend.target,150.)
-        h.run('ZORTRAX_CHANGE');h.control_until('PAUSED');self.assertEqual(h.f.target,240.)
+        h.run('M300_CHANGE');h.control_until('PAUSED');self.assertEqual(h.f.target,240.)
 
     def test_pause_cooling_does_not_override_material_service_temperature(self):
-        h=self.h;h.pause_print();h.run('ZORTRAX_CHANGE TEMP=250');h.control_until('PAUSED')
+        h=self.h;h.pause_print();h.run('M300_CHANGE TEMP=250');h.control_until('PAUSED')
         self.assertEqual(h.hotend.target,240.);h.step_control(700.)
         self.assertEqual(h.hotend.target,240.)
         h.heat(h.f,'WAIT_INSERT');self.assertEqual(h.hotend.target,250.)
 
     def test_near_z_limit_refuses_material_service(self):
         h=self.h;h.position[2]=314.;h.gmove.reset_last_position();h.pause_print()
-        with self.assertRaisesRegex(h.printer.command_error,'clearance'):h.run('ZORTRAX_CHANGE')
+        with self.assertRaisesRegex(h.printer.command_error,'clearance'):h.run('M300_CHANGE')
 
     def test_duplicate_change_during_parking_does_not_replace_explicit_temperature(self):
-        h=self.h;h.run('ZORTRAX_CHANGE TEMP=250')
+        h=self.h;h.run('M300_CHANGE TEMP=250')
         with self.assertRaises(h.printer.command_error):h.run('M600')
         h.stop_worker();h.control_until('PAUSED');self.assertEqual(h.f.target,240.)
         h.heat(h.f,'WAIT_INSERT');self.assertEqual(h.hotend.target,250.)

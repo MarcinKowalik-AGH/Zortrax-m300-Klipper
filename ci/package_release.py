@@ -129,6 +129,7 @@ def main():
                     ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     if list((runtime/'klippy/extras').glob('m300_ci_*')):
         raise ValueError('CI-only helpers must never ship in the runtime')
+    shutil.copy2(host/'core/gcode.py', runtime/'klippy/gcode.py')
     first=release/'FIRST_INSTALL';first.mkdir()
     for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
         shutil.copy2(ROOT/'host/config'/name,first/name)

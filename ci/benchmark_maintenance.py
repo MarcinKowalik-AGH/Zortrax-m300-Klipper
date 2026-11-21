@@ -58,7 +58,7 @@ def main():
         result['baseline_mcu_snapshots_per_status']=h.board_reads
         result['baseline_fan_status']=measure(lambda:baseline.get_status(h.now))
         result['baseline_source_sha256']=hashlib.sha256(args.baseline.read_bytes()).hexdigest()
-    h.run('ZORTRAX_FAN_TEST_START')
+    h.run('M300_FAN_TEST_START')
     result['active_fan_status']=measure(lambda:h.fans.get_status(h.now))
     result['shared_procedure_view']=measure(lambda:h.p.view(h.now))
     font();fan_frame.cache_clear();cold=[]

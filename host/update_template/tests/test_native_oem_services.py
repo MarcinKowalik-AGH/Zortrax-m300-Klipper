@@ -12,7 +12,8 @@ from types import SimpleNamespace as NS
 import unittest
 
 import test_display
-from tests.reference import native_gcode, native_gcode_move
+from core import gcode as native_gcode
+from tests.reference import native_gcode_move
 from tests.reference.native_pause_resume import PauseResume
 from test_macro_dispatch import templates, ENV
 from test_native_menu import fixture as menu_fixture
@@ -136,8 +137,8 @@ class Harness:
         self.p=M300Procedures(self.config)
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
-            if name in ('ZORTRAX_LEVEL','ZORTRAX_HEAT','ZORTRAX_HEAT_PLATFORM','ZORTRAX_HOME_X','ZORTRAX_HOME_Y','ZORTRAX_HOME_XY','ZORTRAX_HOME_Z','ZORTRAX_HOME_ALL','ZORTRAX_PLATFORM_UP',
-                        'ZORTRAX_PLATFORM_DOWN','ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_CHANGE'):
+            if name in ('M300_LEVEL','M300_HEAT','M300_HEAT_PLATFORM','M300_HOME_X','M300_HOME_Y','M300_HOME_XY','M300_HOME_Z','M300_HOME_ALL','M300_PLATFORM_UP',
+                        'M300_PLATFORM_DOWN','M300_LOAD','M300_UNLOAD','M300_CHANGE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))
@@ -218,7 +219,7 @@ class NativeMaterialTests(unittest.TestCase):
     def test_load_macro_heats_then_waits_for_insert_and_finishes_without_extra_purge(self):
         h=Harness();h.run('G91\nM83\nG92 E3\nM220 S87\nM221 S92')
         before=copy.deepcopy(h.gmove.get_status(h.now))
-        h.run('ZORTRAX_LOAD')
+        h.run('M300_LOAD')
         self.assertEqual(h.hotend.target,240.)
         h.heat(h.f,'WAIT_INSERT')
         self.assertFalse(any(e[0]=='move' for e in h.events))
@@ -237,7 +238,7 @@ class NativeMaterialTests(unittest.TestCase):
         h.assert_restored(self)
 
     def test_unload_confirms_before_retracting_and_leaves_nozzle_available(self):
-        h=Harness();h.run('ZORTRAX_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
+        h=Harness();h.run('M300_UNLOAD');h.heat(h.f,'WAIT_UNLOAD')
         self.assertEqual(h.position,[150.,158.,5.,17.])
         self.assertFalse(any(e[0]=='move' for e in h.events))
         self.assertEqual(h.hotend.target,240.)
@@ -250,7 +251,7 @@ class NativeMaterialTests(unittest.TestCase):
     def test_configured_standalone_temperatures_and_speeds_reach_actual_moves(self):
         options = dict(unload_temperature=224., unload_speed=3.5, load_temperature=216., load_speed=1.25)
         for op, command, measured, expected in (
-                ('LOAD', 'ZORTRAX_LOAD', 240., 216.), ('UNLOAD', 'ZORTRAX_UNLOAD', 256., 224.),
+                ('LOAD', 'M300_LOAD', 240., 216.), ('UNLOAD', 'M300_UNLOAD', 256., 224.),
                 ('LOAD', 'LOAD_FILAMENT', 25., 216.), ('UNLOAD', 'UNLOAD_FILAMENT TEMP=232', 25., 232.)):
             with self.subTest(command=command):
                 h = Harness(filament_options=options)
@@ -327,7 +328,7 @@ class NativeMaterialTests(unittest.TestCase):
                     menu.select(action, h.now)
                     h.callbacks.pop()(h.now)
                 else:
-                    h.run('ZORTRAX_LOAD')
+                    h.run('M300_LOAD')
 
                 h.heat(h.f, wait_state)
                 view = h.p.view(h.now)
@@ -345,7 +346,7 @@ class NativeMaterialTests(unittest.TestCase):
 
     def test_native_printing_or_paused_rejects_material_and_maintenance_before_heat(self):
         for state in ('printing','paused'):
-            for command in ('ZORTRAX_LOAD','ZORTRAX_UNLOAD','ZORTRAX_HEAT','ZORTRAX_PLATFORM_UP'):
+            for command in ('M300_LOAD','M300_UNLOAD','M300_HEAT','M300_PLATFORM_UP'):
                 h=Harness();h.print_state=state;h.homed='z'
                 with self.assertRaisesRegex(native_gcode.CommandError,'idle native print'):
                     h.run(command)
@@ -354,7 +355,7 @@ class NativeMaterialTests(unittest.TestCase):
                 h.assert_restored(self)
 
     def test_cancel_waits_for_native_queue_drain_and_never_issues_another_segment(self):
-        h=Harness();h.run('ZORTRAX_LOAD');h.heat(h.f,'WAIT_INSERT')
+        h=Harness();h.run('M300_LOAD');h.heat(h.f,'WAIT_INSERT')
         h.f.confirm(h.f.machine.token,h.f.machine.phase_id);h.step()
         self.assertEqual(h.position[3],22.)
         h.f.cancel();self.assertEqual(h.hotend.target,0.)
@@ -363,7 +364,7 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertEqual(h.position[3],22.);h.assert_restored(self)
 
     def test_native_commands_and_direct_motion_cannot_bypass_material_owner(self):
-        h=Harness();h.run('ZORTRAX_LOAD')
+        h=Harness();h.run('M300_LOAD')
         for command in ('G28','G1 X1','G92 E0','RESTORE_GCODE_STATE NAME=foo',
                         'SET_GCODE_OFFSET Z=1','M109 S250'):
             with self.assertRaisesRegex(native_gcode.CommandError,'owns resources'):
@@ -377,7 +378,7 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertEqual(h.gmove.homing_position[2],1.)
 
     def test_temperature_loss_faults_before_next_e_segment_and_cuts_heat(self):
-        h=Harness();h.run('ZORTRAX_LOAD');h.heat(h.f,'WAIT_INSERT')
+        h=Harness();h.run('M300_LOAD');h.heat(h.f,'WAIT_INSERT')
         h.f.confirm(h.f.machine.token,h.f.machine.phase_id)
         h.hotend.temperature=160.;h.step()
         self.assertTrue(h.shutdown);self.assertEqual(h.f.machine.state,'FAULT')
@@ -385,7 +386,7 @@ class NativeMaterialTests(unittest.TestCase):
         self.assertEqual(h.position[3],17.)
 
     def test_stale_shared_confirmation_cannot_advance_new_material_phase(self):
-        h=Harness();h.run('ZORTRAX_LOAD');old=h.p.view(h.now)['view_id']
+        h=Harness();h.run('M300_LOAD');old=h.p.view(h.now)['view_id']
         h.heat(h.f,'WAIT_INSERT')
         with self.assertRaisesRegex(native_gcode.CommandError,'expired'):
             h.p.action(old,'CONFIRM')
@@ -397,7 +398,7 @@ class NativeMaterialTests(unittest.TestCase):
     def test_two_material_sessions_restore_exact_native_extended_handlers(self):
         h=Harness()
         for operation in ('LOAD','UNLOAD'):
-            h.run('ZORTRAX_'+operation)
+            h.run('M300_'+operation)
             h.heat(h.f,'WAIT_INSERT' if operation=='LOAD' else 'WAIT_UNLOAD')
             h.f.confirm(h.f.machine.token,h.f.machine.phase_id)
             h.until(h.f,'COMPLETE');h.assert_restored(self)
@@ -407,7 +408,7 @@ class NativeMaterialTests(unittest.TestCase):
 
 class NativeMaintenanceTests(unittest.TestCase):
     def test_heat_macro_uses_original_260_258_boundary_and_confirmation_turns_off(self):
-        h=Harness();h.run('ZORTRAX_HEAT')
+        h=Harness();h.run('M300_HEAT')
         h.hotend.temperature=257.9;h.step();self.assertEqual(h.m.state,'HEATING')
         h.hotend.temperature=258.;h.step();self.assertEqual(h.m.state,'WAIT_CONFIRM')
         self.assertEqual(h.hotend.target,260.)
@@ -417,9 +418,9 @@ class NativeMaintenanceTests(unittest.TestCase):
 
     def test_platform_macros_use_native_z_only_with_correct_up_down_sign(self):
         h=Harness();h.homed='z';h.run('G91\nM83\nG92 Z2')
-        h.run('ZORTRAX_PLATFORM_UP DISTANCE=2');h.until(h.m,'COMPLETE')
+        h.run('M300_PLATFORM_UP DISTANCE=2');h.until(h.m,'COMPLETE')
         self.assertEqual(h.position,[150.,158.,3.,17.])
-        h.run('ZORTRAX_PLATFORM_DOWN DISTANCE=3');h.until(h.m,'COMPLETE')
+        h.run('M300_PLATFORM_DOWN DISTANCE=3');h.until(h.m,'COMPLETE')
         self.assertEqual(h.position,[150.,158.,6.,17.])
         self.assertFalse(h.gmove.absolute_coord);self.assertFalse(h.gmove.allow_absolute_extrude)
         self.assertEqual(h.gmove.base_position[2],3.)
@@ -432,7 +433,7 @@ class NativeMaintenanceTests(unittest.TestCase):
                 h.homed = 'z'
                 h.position[2] = 7.
                 h.m.timeout = 2.
-                h.run('ZORTRAX_PLATFORM_DOWN DISTANCE=%d' % distance)
+                h.run('M300_PLATFORM_DOWN DISTANCE=%d' % distance)
                 h.until(h.m, 'COMPLETE')
                 moves = [event[1] for event in h.events if event[0] == 'move']
                 self.assertEqual(moves, [(150., 158., float(z), 17.)
@@ -443,7 +444,7 @@ class NativeMaintenanceTests(unittest.TestCase):
         h = Harness()
         h.homed = 'z'
         h.position[2] = 7.
-        h.run('ZORTRAX_PLATFORM_DOWN DISTANCE=20')
+        h.run('M300_PLATFORM_DOWN DISTANCE=20')
         h.step()
         view = h.p.view(h.now)
         h.p.action(view['view_id'], 'CANCEL')
@@ -453,11 +454,11 @@ class NativeMaintenanceTests(unittest.TestCase):
         h.assert_restored(self)
 
     def test_platform_refuses_unhomed_and_out_of_bounds_before_acquiring_lease(self):
-        for homed,z,command in (('',5.,'ZORTRAX_PLATFORM_UP'),
-                                ('z',0.,'ZORTRAX_PLATFORM_UP'),
-                                ('z',315.,'ZORTRAX_PLATFORM_DOWN'),
-                                ('z',300.,'ZORTRAX_PLATFORM_DOWN DISTANCE=20'),
-                                ('z',5.,'ZORTRAX_PLATFORM_DOWN DISTANCE=311')):
+        for homed,z,command in (('',5.,'M300_PLATFORM_UP'),
+                                ('z',0.,'M300_PLATFORM_UP'),
+                                ('z',315.,'M300_PLATFORM_DOWN'),
+                                ('z',300.,'M300_PLATFORM_DOWN DISTANCE=20'),
+                                ('z',5.,'M300_PLATFORM_DOWN DISTANCE=311')):
             h=Harness();h.homed=homed;h.position[2]=z
             with self.assertRaises(native_gcode.CommandError):h.run(command)
             self.assertFalse(any(e[0]=='move' for e in h.events));h.assert_restored(self)
@@ -587,8 +588,8 @@ class OEMMenuIntegrationTests(unittest.TestCase):
             else:self.assertEqual((h.f.machine.mode,h.hotend.target),(operation,240.))
 
     def test_selected_rows_use_original_menu_sprites(self):
-        expected={'ZORTRAX_LEVEL':'0x0801ca28','ZORTRAX_HEAT':'0x0801c2b8',
-                  'ZORTRAX_UNLOAD':'0x0801cfb0','ZORTRAX_LOAD':'0x0801d0b8'}
+        expected={'M300_LEVEL':'0x0801ca28','M300_HEAT':'0x0801c2b8',
+                  'M300_UNLOAD':'0x0801cfb0','M300_LOAD':'0x0801d0b8'}
         for script,icon in expected.items():
             self.assertEqual(choose_icon(rows=[('',('native_gcode',script))]),icon)
         for direction,icon in ((-1,'0x0801cb24'),(1,'0x0801cc24')):
@@ -622,7 +623,7 @@ class OEMMenuIntegrationTests(unittest.TestCase):
         names = ['ZORTRAX_' + name for name in (
             'LEVEL', 'HEAT', 'HOME_X', 'HOME_Y', 'HOME_XY', 'HOME_Z', 'HOME_ALL', 'PLATFORM_UP', 'PLATFORM_DOWN', 'LOAD', 'UNLOAD')]
         before=dict(categories=[dict(id='tests',name='TEST M300')],
-                    stored=[dict(name='ZORTRAX_LOAD',categoryId='tests',visible=False)])
+                    stored=[dict(name='M300_LOAD',categoryId='tests',visible=False)])
         after,assigned=merge_groups(before,names)
         self.assertEqual(set(assigned.values()),{'ZORTRAX M300'})
         self.assertFalse(after['stored'][0]['visible'])
@@ -706,11 +707,11 @@ def physical_panel(h):
 class PhysicalPanelDispatchTests(unittest.TestCase):
     def test_homing_macros_and_oled_rows_share_native_progress(self):
         for axes, label, command, g28 in (
-                ('x', 'Home X', 'ZORTRAX_HOME_X', 'G28 X'),
-                ('y', 'Home Y', 'ZORTRAX_HOME_Y', 'G28 Y'),
-                ('xy', 'Home XY', 'ZORTRAX_HOME_XY', 'G28 X Y'),
-                ('z', 'Home Z', 'ZORTRAX_HOME_Z', 'G28 Z'),
-                ('xyz', 'Home XYZ', 'ZORTRAX_HOME_ALL', 'G28')):
+                ('x', 'Home X', 'M300_HOME_X', 'G28 X'),
+                ('y', 'Home Y', 'M300_HOME_Y', 'G28 Y'),
+                ('xy', 'Home XY', 'M300_HOME_XY', 'G28 X Y'),
+                ('z', 'Home Z', 'M300_HOME_Z', 'G28 Z'),
+                ('xyz', 'Home XYZ', 'M300_HOME_ALL', 'G28')):
             with self.subTest(axes=axes):
                 h = Harness()
                 oled, menu, ui, _, _ = physical_panel(h)
@@ -779,7 +780,7 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         h.gcode.register_command('G28', None)
         h.gcode.register_command('G28', lambda gcmd: motion.home(axes='z'))
         with self.assertRaisesRegex(native_gcode.CommandError, 'Home Z requires homed X and Y'):
-            h.run('ZORTRAX_HOME_Z')
+            h.run('M300_HOME_Z')
         self.assertEqual(motion.events, [])
 
     def test_platform_hold_uses_oled_without_opening_fluidd_even_on_shutdown(self):
@@ -899,9 +900,9 @@ class PhysicalPanelDispatchTests(unittest.TestCase):
         self.assertEqual(h.position[2],5.)
 
     def test_external_heat_load_and_unload_share_modal_oled_and_return_to_submenu(self):
-        for command,owner,waiting,page in (('ZORTRAX_HEAT','m','WAIT_CONFIRM','maintenance'),
-                   ('ZORTRAX_LOAD','f','WAIT_INSERT','material'),
-                   ('ZORTRAX_UNLOAD','f','WAIT_UNLOAD','material')):
+        for command,owner,waiting,page in (('M300_HEAT','m','WAIT_CONFIRM','maintenance'),
+                   ('M300_LOAD','f','WAIT_INSERT','material'),
+                   ('M300_UNLOAD','f','WAIT_UNLOAD','material')):
             h=Harness();o,menu,ui,display,packet=physical_panel(h)
             menu.page=page;o.selection=0
             h.run(command);h.p._tick(h.now)

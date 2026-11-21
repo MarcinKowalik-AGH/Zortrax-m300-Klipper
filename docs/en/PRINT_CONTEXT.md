@@ -68,7 +68,7 @@ refused when its copy is gone. The OLED shows the friendly filename.
 
 For regular host files the standard Fluidd Reprint opens the selected file
 by name. To replay the retained bytes of the last eligible native print,
-open **ZORTRAX_REPRINT** in the M300 macro group or run it in the console,
+open **M300_REPRINT** in the M300 macro group or run it in the console,
 remove the model, then use **Reprint** in the confirmation dialog. The same
 exact-copy action is available from the OLED. A regular native file above the
 configured snapshot size limit remains printable through Fluidd. Exact

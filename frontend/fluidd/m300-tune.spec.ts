@@ -130,7 +130,7 @@ describe('M300 Tune entry, Home All and stable panel order', () => {
     expect(controls.canCalibrate).toBe(true)
     controls.homeAll()
     controls.calibrate()
-    expect(SocketActions.printerGcodeScript).toHaveBeenNthCalledWith(1, 'ZORTRAX_HOME_ALL', { wait: 'onHomeAll' })
+    expect(SocketActions.printerGcodeScript).toHaveBeenNthCalledWith(1, 'M300_HOME_ALL', { wait: 'onHomeAll' })
     expect(SocketActions.printerGcodeScript).toHaveBeenNthCalledWith(2, 'BED_MESH', { wait: 'onMeshCalibrate' })
     wrapper.destroy()
   })

@@ -10,7 +10,7 @@ import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v1.0.0-rc.33'
+VERSION='v1.0.0-rc.34'
 
 
 class Rc1Contracts(unittest.TestCase):
@@ -38,13 +38,17 @@ class Rc1Contracts(unittest.TestCase):
         native_service = 'host/klippy/extras/m300_native_service.py'
         # Reviewed startup, print lighting and pause/end motion updates through RC17.
         updated_runtime = {
+            # RC34 updates the macro keys used to select the same OLED artwork.
+            'host/klippy/extras/m300_oem_graphics.py': (
+                'a86e6483e2f96e82f91183f3a1f4e8e6a14bd7438466b9c831f5cebe074e45d1',
+                'a362428135beaa70d7366902fba0da52c9d631531b26336b1229868c4b446028'),
             # RC31 exposes direction-specific material settings in the menu and profile.
             'host/config/m300_classic_services.cfg': (
                 'f199715dd59536b5c701e145a0c5c2b1adf6ef4936f9f05a2454e7eee26461f4',
                 '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505'),
             'host/klippy/extras/m300_menu.py': (
                 '36d87ea55349a74610d1dd978cb1eb69f5420bcf0a6dbd09d0b6c0a370b11320',
-                '40914048224c93030304f1b1ea0df332306a81311f394a0317dd1bf1c4fcec95'),
+                'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '03dc7cac51fe49e547dac1e7c1f23e9d81e4d4892aafd7b049bd1074ebbec9be'),
@@ -86,7 +90,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],979)
+        self.assertEqual(meta['self_contained_host_tests'],983)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
@@ -107,8 +111,8 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(len(names),44)
         self.assertEqual(len(names),len(set(names)))
         self.assertFalse(any(n.startswith('TEST_') for n in names))
-        for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS',
-                     'ZORTRAX_PROCEDURE','ZORTRAX_DIAGNOSTICS'):
+        for name in ('M300_OLED_BRIGHTNESS','M300_LED_BRIGHTNESS',
+                     'M300_PROCEDURE','M300_DIAGNOSTICS'):
             self.assertIn(name,names)
         catalog=json.loads((ROOT/'docs/reports/MACRO_MANIFEST.json').read_text())
         self.assertEqual({x['name'] for x in catalog['macros']},set(names))
@@ -117,15 +121,15 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_all_settings_have_shared_dispatch_and_public_documentation(self):
         source=(ROOT/'host/config/m300_operations.cfg').read_text()
-        settings={'light_mode':'ZORTRAX_LIGHT','buzzer':'ZORTRAX_BUZZER',
-                  'sleep':'ZORTRAX_SLEEP_MODE','sort':'ZORTRAX_MODELS_SORT',
-                  'language':'ZORTRAX_LANGUAGE','full_platform_preheat':'ZORTRAX_FULL_PLATFORM_PREHEAT',
-                  'oled_brightness':'ZORTRAX_OLED_BRIGHTNESS','led_brightness':'ZORTRAX_LED_BRIGHTNESS'}
+        settings={'light_mode':'M300_LIGHT','buzzer':'M300_BUZZER',
+                  'sleep':'M300_SLEEP_MODE','sort':'M300_MODELS_SORT',
+                  'language':'M300_LANGUAGE','full_platform_preheat':'M300_FULL_PLATFORM_PREHEAT',
+                  'oled_brightness':'M300_OLED_BRIGHTNESS','led_brightness':'M300_LED_BRIGHTNESS'}
         blocks=dict(re.findall(r'\[gcode_macro ([^\]]+)\]\n(.*?)(?=\n\[|\Z)',source,re.S))
         for key,name in settings.items():
             self.assertIn('ZORTRAX_UI_SETTING NAME='+key,blocks[name])
             self.assertIn(name,(ROOT/'docs/pl/RC1_UI.md').read_text())
-        for name in ('ZORTRAX_OLED_BRIGHTNESS','ZORTRAX_LED_BRIGHTNESS'):
+        for name in ('M300_OLED_BRIGHTNESS','M300_LED_BRIGHTNESS'):
             self.assertIn('params.LEVEL',blocks[name])
             self.assertNotIn('|int',blocks[name])
 
@@ -133,8 +137,8 @@ class Rc1Contracts(unittest.TestCase):
         source=(ROOT/'host/klippy/extras/m300_menu.py').read_text()
         self.assertNotIn("('Service / Tests', ('page', 'tests'))",source)
         self.assertNotIn("if native and self.page == 'tests':",source)
-        self.assertIn('ZORTRAX_FAN_TEST_START',source)
-        self.assertIn("('native_gcode', 'ZORTRAX_PROCEDURE')",source)
+        self.assertIn('M300_FAN_TEST_START',source)
+        self.assertIn("('native_gcode', 'M300_PROCEDURE')",source)
         self.assertIn("('Diagnostics', ('page', 'diagnostics'))",source)
 
     def test_frontend_filters_stale_test_preferences_not_only_new_categories(self):

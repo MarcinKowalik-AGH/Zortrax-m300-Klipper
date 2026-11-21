@@ -30,7 +30,7 @@ def main():
                     h.oled.selection=12 if kind=='oled' else 8
                     title=('OLED brightness / 12 of 16' if kind=='oled' else 'LED brightness / 8 of 16')
                 elif kind=='fan':
-                    h.run('ZORTRAX_FAN_TEST_START');h.action('TOGGLE_UPPER');h.p._tick(h.now)
+                    h.run('M300_FAN_TEST_START');h.action('TOGGLE_UPPER');h.p._tick(h.now)
                     h.oled.selection=1;title='Fan test / selected upper fan enabled'
                 elif kind=='info':
                     h.menu.page='info_printer';h.oled.selection=0
@@ -41,7 +41,7 @@ def main():
                     h.objects['m300_pad_mesh']=NS(get_status=lambda now:dict(status))
                     h.menu.page='bed_mesh';h.oled.selection=0;title='Bed mesh / native pad probing active'
                 elif kind=='heat':
-                    h.run('ZORTRAX_HEAT');h.p._tick(h.now);title='Heat the extruder / active heating'
+                    h.run('M300_HEAT');h.p._tick(h.now);title='Heat the extruder / active heating'
                 elif kind=='file':
                     status=dict(state='IMPORTING',busy=True,token='preview',filename='sample.zcode',
                         source='host',bytes_copied=1024,format=None,targets={},error=None)

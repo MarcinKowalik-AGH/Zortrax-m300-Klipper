@@ -146,7 +146,7 @@ class ModelsTests(unittest.TestCase):
             with self.subTest(source=source), model_session() as h:
                 (h.files / 'folder').mkdir()
                 (h.files / 'folder' / 'part|A.gcode').write_text('G90\nM83\nG1 X10\n')
-                h.run('ZORTRAX_MAIN_MENU')
+                h.run('M300_MAIN_MENU')
                 for label in ('Models', source, '> ' + folder, filename.replace('|', '/')):
                     h.run(menu_button(h, label))
                 self.assertEqual(h.menu.page, 'model_file')
@@ -164,7 +164,7 @@ class ModelsTests(unittest.TestCase):
         with model_session() as h:
             h.card.qualified = False
             (h.files / 'part.gcode').write_text('G90\n')
-            h.run('ZORTRAX_MAIN_MENU')
+            h.run('M300_MAIN_MENU')
             h.run(menu_button(h, 'Models'))
             self.assertIn('// action:prompt_text SD card access is disabled', h.lines)
             h.run(menu_button(h, 'Host files'))

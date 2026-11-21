@@ -17,14 +17,14 @@ class InstallerTests(unittest.TestCase):
     def test_existing_fluidd_choices_are_migrated_inside_includes(self):
         source = '[mcu]\nserial: /dev/ttyS1\n[include m300_operations.cfg]\n'
         macros = (
-            "[gcode_macro ZORTRAX_LIGHT]\ngcode:\n"
+            "[gcode_macro M300_LIGHT]\ngcode:\n"
             "    ZORTRAX_SETTING NAME=light_mode VALUE={params.MODE|default('DYNAMIC')}\n"
             "    M118 Retain custom command\n"
-            "[gcode_macro ZORTRAX_BUZZER]\ngcode:\n"
+            "[gcode_macro M300_BUZZER]\ngcode:\n"
             "    ZORTRAX_UI_SETTING NAME=buzzer VALUE={params.STATE|default('ENABLED')}\n"
-            "[gcode_macro ZORTRAX_SLEEP_MODE]\ngcode:\n"
+            "[gcode_macro M300_SLEEP_MODE]\ngcode:\n"
             "    ZORTRAX_UI_SETTING NAME=sleep VALUE={params.STATE|default('ENABLED')}\n"
-            "[gcode_macro ZORTRAX_MODELS_SORT]\ngcode:\n"
+            "[gcode_macro M300_MODELS_SORT]\ngcode:\n"
             "    ZORTRAX_UI_SETTING NAME=sort VALUE={params.MODE|default('NAME')}\n"
         )
         self.config.write_text(source)
@@ -46,9 +46,9 @@ class InstallerTests(unittest.TestCase):
         macros=('[gcode_macro TEST_ZORTRAX_LEVEL]\ngcode:\n'
                 '    ZORTRAX_PROCEDURE_START OP=LEVEL TEMP={params.TEMP|default(180)|float}\n'
                 '    M118 My retained command\n'
-                '[gcode_macro ZORTRAX_LOAD]\ngcode:\n'
+                '[gcode_macro M300_LOAD]\ngcode:\n'
                 '    ZORTRAX_PROCEDURE_START OP=LOAD TEMP={params.TEMP|default(0)|float}\n'
-                '[gcode_macro ZORTRAX_UNLOAD]\ngcode:\n'
+                '[gcode_macro M300_UNLOAD]\ngcode:\n'
                 '    ZORTRAX_PROCEDURE_START OP=UNLOAD TEMP={params.TEMP|default(0)|float}\n')
         self.config.write_text(source);path=self.config.parent/'m300_tests.cfg';path.write_text(macros)
         receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
@@ -67,7 +67,7 @@ class InstallerTests(unittest.TestCase):
     def test_material_upgrade_preserves_operator_profile_and_custom_wrapper(self):
         source = ('[m300_filament]\nunload_temperature: 235\nload_temperature: 216\n'
                   'load_speed: 1.4\nunload_speed: 3.2\nprocedure_temperature: 230\n'
-                  '[gcode_macro ZORTRAX_UNLOAD]\ngcode:\n'
+                  '[gcode_macro M300_UNLOAD]\ngcode:\n'
                   '    ZORTRAX_PROCEDURE_START OP=UNLOAD TEMP={params.TEMP|default(232)|float}\n')
         self.config.write_text(source)
         receipt = install.apply(self.root, self.config, install.plan(self.root, self.config))
@@ -154,6 +154,7 @@ class InstallerTests(unittest.TestCase):
         self.config.parent.mkdir()
         self.original = b'[mcu]\nserial: /dev/ttyS1\n\n#*# <--- SAVE_CONFIG --->\n#*# pid_Kp = 15.152\n'
         self.config.write_bytes(self.original)
+        (self.root / 'klippy/gcode.py').write_bytes((ROOT / 'core/gcode.py').read_bytes())
         self.previous_menu = (ROOT / 'tests/reference/r155_menu.py').read_bytes()
         (self.root / 'klippy/extras/m300_menu.py').write_bytes(self.previous_menu)
         self.previous_ui = (ROOT / 'tests/reference/previous_m11_state.py').read_bytes()
@@ -163,6 +164,24 @@ class InstallerTests(unittest.TestCase):
     def tearDown(self):
         self.api.stop()
         self.temp.cleanup()
+
+    def test_m300_migration_preserves_custom_level_and_change_logic(self):
+        for name in ('LEVEL', 'CHANGE'):
+            source = ('[gcode_macro ZORTRAX_' + name + ']\nvariable_mode: 1\ngcode:\n'
+                      '    M118 operator logic\n    ZORTRAX_LOAD TEMP=230\n')
+            wanted = source.replace('[gcode_macro ZORTRAX_', '[gcode_macro M300_').replace(
+                '    ZORTRAX_LOAD', '    M300_LOAD')
+            self.assertEqual(install.profile.convert_text(source), wanted)
+            self.assertEqual(install.profile.convert_text(wanted), wanted)
+
+    def test_macro_name_conflict_cannot_replace_an_operator_macro(self):
+        self.config.write_text('[gcode_macro ZORTRAX_LOAD]\ngcode: M118 old\n'
+                               '[include custom.cfg]\n')
+        custom = self.config.parent/'custom.cfg'
+        custom.write_text('[gcode_macro m300_load]\ngcode: M118 operator\n')
+        with self.assertRaisesRegex(ValueError, 'Conflicting macro'):
+            install.plan(self.root, self.config)
+        self.assertIn('M118 operator', custom.read_text())
 
     def test_plan_is_read_only_and_places_include_before_save_config(self):
         changes = install.plan(self.root, self.config)

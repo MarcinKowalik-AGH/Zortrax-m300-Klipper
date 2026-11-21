@@ -164,10 +164,10 @@ class ActivityGraphicsTests(unittest.TestCase):
                 ActivityGraphics(path).get('activity:heat_bed')
 
     def test_menu_command_previews_match_operations_and_animate(self):
-        cases={'ZORTRAX_HEAT':'heat_nozzle','M109 S240':'heat_nozzle',
+        cases={'M300_HEAT':'heat_nozzle','M109 S240':'heat_nozzle',
                'M190 S60':'heat_bed','TURN_OFF_HEATERS':'cooling',
-               'BED_MESH':'bed_mesh','ZORTRAX_FAN_LOWER':'fan_lower',
-               'ZORTRAX_FAN_TEST_START':'fan_upper','SAVE_CONFIG':'firmware_update'}
+               'BED_MESH':'bed_mesh','M300_FAN_LOWER':'fan_lower',
+               'M300_FAN_TEST_START':'fan_upper','SAVE_CONFIG':'firmware_update'}
         for command, name in cases.items():
             choice=menu_symbol('klipper','m04',[('',('native_gcode',command))])
             self.assertEqual((choice.key,choice.animated),('activity:'+name,True))
@@ -222,7 +222,7 @@ class ActivityGraphicsTests(unittest.TestCase):
 
     def test_fan_only_animates_for_the_selected_enabled_channel(self):
         with session() as h:
-            h.run('ZORTRAX_FAN_TEST_START');h.p._tick(h.now)
+            h.run('M300_FAN_TEST_START');h.p._tick(h.now)
             h.oled.selection=1
             h.oled._render(h.now);before=h.oled._render_wire
             h.oled._render(h.now+.5)

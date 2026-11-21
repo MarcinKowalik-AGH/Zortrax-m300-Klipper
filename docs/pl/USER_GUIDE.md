@@ -2,7 +2,7 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.33**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, wydanie **1.0.0-rc.34**. Historyczne ilustracje mają jawny punkt odniesienia beta.20. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Kontrola przed pracą
@@ -30,9 +30,9 @@ Stan krańcówek i PC7 musi odpowiadać fizycznej sytuacji. Sam napis Ready nie 
 
 *Zrzut operatora z 20.11.2026. Po lewej widać stan zadania i ruch, po prawej temperatury, OLED i konsolę. Na OLED i w konsoli widać nazwę siatki `m300_pads`.*
 
-Dla nowej instalacji skorzystaj z [pełnego pakietu i procedury uruchomienia](FIRST_INSTALL.md). Działający port ma [osobną instrukcję aktualizacji](INSTALL.md). W przeglądarce i w zakładce Device używaj adresu Fluidd na porcie 4480. Makro `ZORTRAX_MAIN_MENU` prowadzi do Models, Maintenance, Material, Settings i Information. Potwierdzenia z pokrętła i z Fluidd dotyczą tej samej operacji. Aby wrócić do jej okna, wybierz `ZORTRAX_PROCEDURE`.
+Dla nowej instalacji skorzystaj z [pełnego pakietu i procedury uruchomienia](FIRST_INSTALL.md). Działający port ma [osobną instrukcję aktualizacji](INSTALL.md). W przeglądarce i w zakładce Device używaj adresu Fluidd na porcie 4480. Makro `M300_MAIN_MENU` prowadzi do Models, Maintenance, Material, Settings i Information. Potwierdzenia z pokrętła i z Fluidd dotyczą tej samej operacji. Aby wrócić do jej okna, wybierz `M300_PROCEDURE`.
 
-Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. Laboratoryjna grupa **TEST M300** nie jest częścią RC1. Odczyty daje `ZORTRAX_DIAGNOSTICS`; OEM-owy test wentylatorów pozostaje w Maintenance. Jasność otwierają `ZORTRAX_OLED_BRIGHTNESS` i `ZORTRAX_LED_BRIGHTNESS`. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
+Grupa **ZORTRAX M300** zbiera funkcje specyficzne dla drukarki. **Klipper** zawiera m.in. START/END, CANCEL, BED_MESH i PID. Laboratoryjna grupa **TEST M300** nie jest częścią RC1. Odczyty daje `M300_DIAGNOSTICS`; OEM-owy test wentylatorów pozostaje w Maintenance. Jasność otwierają `M300_OLED_BRIGHTNESS` i `M300_LED_BRIGHTNESS`. Rozwijana strzałka przy makrze otwiera parametry; kliknięcie głównej części wykonuje wariant domyślny. [Pełny katalog](MACRO_REFERENCE.md).
 
 W Settings osobno ustawiasz jasność OLED i LED (1–16) oraz czasy od ostatniego użycia pokrętła. Każdy z dwóch edytorów, **OLED dim time** i **OLED sleep time**, ma własny suwak 1–60 min. Skrócenie SLEEP poniżej wybranego DIM skraca efektywny DIM. Wydłużenie SLEEP przywraca zapamiętaną wartość DIM do wysokości nowego SLEEP. Zasada działa także podczas druku i pauzy. Po wyjściu zaznaczenie zostaje na edytowanej pozycji. [Zapis i odczyt nastaw z MCU](MCU_FIRMWARE_1.0.8.md).
 
@@ -41,7 +41,7 @@ W Settings osobno ustawiasz jasność OLED i LED (1–16) oraz czasy od ostatnie
 
 ![Starszy panel makr przed poprawą grupowania](../img/macros_panel.png)
 
-To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `ZORTRAX_HEAT_PLATFORM`, `ZORTRAX_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Zrzut z 20 listopada na początku rozdziału pokazuje nowszy układ podczas druku. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
+To stan wcześniejszej wersji, nie oczekiwany wygląd beta.20. `M300_HEAT_PLATFORM`, `M300_FULL_PLATFORM_PREHEAT` i START/END były wtedy widoczne jako nieprzypisane. Zrzut z 20 listopada na początku rozdziału pokazuje nowszy układ podczas druku. Zachowanie starych ustawień lokalnych lub pamięć przeglądarki może wymagać odświeżenia; nie usuwaj własnych kategorii bez sprawdzenia.
 
 </details>
 
@@ -57,17 +57,17 @@ Po prawej pod HIDE znajdują się trzy przyciski. Wybrany jest podświetlony; zm
 
 ## 2b. Tune, All i Calibrate — trzy różne działania
 
-| Działanie | Działanie w RC33 |
+| Działanie | Działanie w RC34 |
 |---|---|
 | Wejście ikoną suwaków Tune | Odczytowy panel przygotowania, także w IDLE przed pierwszym pomiarem; bez ruchu i grzania |
-| All w Tune | Wspólne ZORTRAX_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
+| All w Tune | Wspólne M300_HOME_ALL; pokazuje postęp bazowania i temperatury, nie tworzy mesh |
 | Calibrate w Tune | BED_MESH z przygotowaniem grzania i bazowania; nie trzeba osobno wykonywać All |
 
 **Stały układ: schemat płyty/pól kontaktu nad heatmapą**, przed, podczas i po pomiarze. Jeżeli nie ma profilu, nie oczekuj kolorowej powierzchni; nie jest to powód do ponownego bazowania. [Pomiar, zapis i aktywacja](BED_MESH_AND_LEVELING.md).
 
 ## 3. Bazowanie i przygotowanie stołu
 
-`ZORTRAX_HOME_X`, `ZORTRAX_HOME_Y`, `ZORTRAX_HOME_XY`, `ZORTRAX_HOME_Z` i `ZORTRAX_HOME_ALL` uruchamiają wspólną logikę z OLED. Przy wspólnym XY kolejność jest **Y, następnie X**. Z wymaga odniesienia XY, odpowiedniej temperatury dyszy oraz sprawnego kontaktu PC7. Samo wybranie Home Z w menu nie usuwa wymogu wstępnego grzania.
+`M300_HOME_X`, `M300_HOME_Y`, `M300_HOME_XY`, `M300_HOME_Z` i `M300_HOME_ALL` uruchamiają wspólną logikę z OLED. Przy wspólnym XY kolejność jest **Y, następnie X**. Z wymaga odniesienia XY, odpowiedniej temperatury dyszy oraz sprawnego kontaktu PC7. Samo wybranie Home Z w menu nie usuwa wymogu wstępnego grzania.
 
 Homing respektuje `z_contact_clearance`: domyślnie 5 mm, a na zakwalifikowanym egzemplarzu 2 mm; PC7 musi zostać rozwarty przed ruchem XY. Niezależna wysokość przejazdów M07 `safe_z` pozostaje 5 mm. Nie zastępuje to sprawdzenia, czy fizycznie jest miejsce na ruch. Z pozytywnym przyrostem Z platforma oddala się od dyszy. Po bazowaniu pozostaje bezpieczny odstęp.
 
@@ -75,13 +75,13 @@ Ordinary Z używa pięciu kolejnych kontaktów/zwolnień; końcowe odniesienie p
 
 ## 4. Grzanie i pełne wygrzewanie platformy
 
-**Ręczne temperatury w Thermals** to zwykłe zadania Klippera. **`ZORTRAX_HEAT`** uruchamia procedurę OEM grzania ekstrudera (domyślnie 260°C) z komunikatem i zakończeniem potwierdzanym przez operatora. **`ZORTRAX_HEAT_PLATFORM TEMP=60`** uruchamia wspólną procedurę stołu.
+**Ręczne temperatury w Thermals** to zwykłe zadania Klippera. **`M300_HEAT`** uruchamia procedurę OEM grzania ekstrudera (domyślnie 260°C) z komunikatem i zakończeniem potwierdzanym przez operatora. **`M300_HEAT_PLATFORM TEMP=60`** uruchamia wspólną procedurę stołu.
 
-**`ZORTRAX_FULL_PLATFORM_PREHEAT STATE=ENABLED`** zapisuje opcję następnego START. Nie zaczyna samodzielnie grzać. Włącza dodatkowy okres stabilizacji platformy, domyślnie 60 s, po osiągnięciu zadanych temperatur. `STATE=DISABLED` wyłącza tę opcję. START odczytuje ustawienie przy rozpoczęciu; zmiana w menu nie modyfikuje rozpoczętej już sesji.
+**`M300_FULL_PLATFORM_PREHEAT STATE=ENABLED`** zapisuje opcję następnego START. Nie zaczyna samodzielnie grzać. Włącza dodatkowy okres stabilizacji platformy, domyślnie 60 s, po osiągnięciu zadanych temperatur. `STATE=DISABLED` wyłącza tę opcję. START odczytuje ustawienie przy rozpoczęciu; zmiana w menu nie modyfikuje rozpoczętej już sesji.
 
 ## 5. Filament
 
-`ZORTRAX_LOAD` i `ZORTRAX_UNLOAD` prowadzą operatora przez nagrzewanie i potwierdzenia. Domyślna temperatura proceduralna wynosi **240°C**, a nominalne długości LOAD/UNLOAD to **130/110 mm**. To parametry procedury portu, nie uniwersalne zalecenie temperaturowe dla każdego filamentu. Wariant wymiany w pauzie wykorzystuje 110 mm wycofania i 150 mm podania.
+`M300_LOAD` i `M300_UNLOAD` prowadzą operatora przez nagrzewanie i potwierdzenia. Domyślna temperatura proceduralna wynosi **240°C**, a nominalne długości LOAD/UNLOAD to **130/110 mm**. To parametry procedury portu, nie uniwersalne zalecenie temperaturowe dla każdego filamentu. Wariant wymiany w pauzie wykorzystuje 110 mm wycofania i 150 mm podania.
 
 Podczas załadunku i rozładunku z OLED lub Fluidd może pozostać aktywna
 natywna siatka stołu Klippera. Procedura porusza wyłącznie ekstruderem
@@ -93,7 +93,7 @@ Po zmianie materiału zarówno temperatura zmierzona, jak i zadana muszą osiąg
 
 W `[m300_filament]` pola `unload_temperature`, `unload_speed`, `load_temperature` i `load_speed` przyjmują osobno `auto` albo liczbę. W obu kierunkach `auto` oznacza 240°C i 2 mm/s. Po zakończeniu samego Load lub Unload ekstruder pozostaje gorący do wyłączenia grzania lub wystąpienia zwykłej bezczynności. Przy pytaniu o wypływ w pauzie możesz naciskać **Extrude** lub **Retract** w panelu Narzędzie. Dopiero po uzyskaniu czystego koloru potwierdź wypływ i wybierz **Resume**. [Procedura materiałowa](MAINTENANCE_MATERIAL.md).
 
-Temperaturę dobierz w granicach materiału i konfiguracji, korzystając z obsługiwanych parametrów. Nie forsuj podawania, gdy materiał się zacina. Dalsza ekstruzja, potwierdzenie i anulowanie zależą od aktualnej fazy; stary przycisk nie jest zgodą na kolejną fazę. Zmiana podczas druku: PAUSE → `ZORTRAX_CHANGE` → potwierdzenie prawidłowego przepływu → jawne RESUME.
+Temperaturę dobierz w granicach materiału i konfiguracji, korzystając z obsługiwanych parametrów. Nie forsuj podawania, gdy materiał się zacina. Dalsza ekstruzja, potwierdzenie i anulowanie zależą od aktualnej fazy; stary przycisk nie jest zgodą na kolejną fazę. Zmiana podczas druku: PAUSE → `M300_CHANGE` → potwierdzenie prawidłowego przepływu → jawne RESUME.
 
 ## 6. START_PRINT i END_PRINT
 
@@ -148,7 +148,7 @@ aktualizacja obejmuje hosta i zachowuje stronę oraz ustawienia Fluidd. Dla
 MCU 1.0.8 wystarczy aktualizacja hosta. Numer hosta i MCU sprawdzisz poleceniem `ZORTRAX_INFO REFRESH=0`. W razie komunikatu o nieznanych
 plikach zachowaj raport i porównaj lokalne zmiany.
 
-W RC33 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.44-FLOW-CHECK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
+W RC34 `PRINT_CONTROL_STATUS` podaje rewizję `0.13.16.44-FLOW-CHECK`; `ZORTRAX_OLED_STATUS` pokazuje `NAV-EVENT-1` dla API hosta. Frontend podglądu ma `data-preview-revision="NAV-PIPELINE-2"` i `data-zoom-controls="OLED-ZOOM-2"`; Tune ma rewizję `TUNE-PREPARE-1`; nie oczekuj tej nazwy w rewizji MCU. Pole `navigation_delivered` powinno rosnąć przy kręceniu pokrętłem i widocznym podglądzie.
 
 ### Czas pracy drukarki
 

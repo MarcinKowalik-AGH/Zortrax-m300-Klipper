@@ -2,12 +2,14 @@
 
 [Spis dokumentacji](../../README_PL.md) · [Obsługa](USER_GUIDE.md) · [Menu OLED](OLED_MENU_REFERENCE.md) · [Ilustrowane funkcje](OLED_FUNCTIONS.md) · [Parametry](TECHNICAL_REFERENCE.md)
 
-> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.33**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
+> Dokumentacja dla **M300 Classic**, stan konfiguracji **v1.0.0-rc.34**. Nie dotyczy M300 Plus, M300 Dual ani Inventure.
 
 
 ## 1. Co obejmuje katalog
 
-Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC33. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+Poniżej są **wszystkie 44 sekcje `[gcode_macro ...]`** z siedmiu plików `host/config` w RC34. Liczba przycisków we Fluidd może być inna: zależy od włączonych plików, ukrytych makr, ustawień użytkownika i komend rejestrowanych bezpośrednio przez moduły. Nazwa grupy w interfejsie nie stanowi zabezpieczenia; opis procedury i jej kontroler określają skutki.
+
+W RC34 poprzednie wywołania 36 makr `ZORTRAX_…` trafiają do makr `M300_…`. W starszych instalacjach może dodatkowo występować `PID_STATUS`. Pełna lista aktualnie załadowanych poleceń jest dostępna przez `HELP`.
 
 W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej sekcji gcode_macro. Końcowa obsługa CANCEL_PRINT jest wiązana przez `m300_print_control`, dlatego samo odczytanie krótkiego makra bazowego nie wyjaśnia całego parkowania i zamknięcia pliku.
 
@@ -18,48 +20,48 @@ W szczególności PAUSE/RESUME oraz część statusów nie muszą mieć osobnej 
 | [`START_PRINT`](../../host/config/m300_operations.cfg) | Druk | Przygotowanie druku: grzanie, natywne bazowanie, profil mesh, 2Y + 2X linii startowych. | EXTRUDER_TEMP i BED_TEMP: cele aktualne, gdy pominięte; MESH=AUTO; PURGE opcjonalny (domyślnie 250 mm w module). |
 | [`END_PRINT`](../../host/config/m300_operations.cfg) | Druk | Po ostatnim ruchu opuszcza stół o maksymalnie 300 mm do limitu Z, parkuje głowicę przy dostatecznym prześwicie i wyłącza cele grzałek oraz nawiew modelu. | Bez parametrów makra. |
 | [`CANCEL_PRINT`](../../host/config/m300_operations.cfg) | Druk | Publiczne anulowanie; moduł m300_print_control wiąże finalną obsługę, zamyka plik i czyści pauzę przed ewentualnym parkowaniem. | Bez parametrów; nie utożsamiać z M112 ani samym ciałem makra bazowego. |
-| [`ZORTRAX_REPRINT`](../../host/config/m300_operations.cfg) | Druk | Potwierdzenie usunięcia modelu i ponowny wydruk zapamiętanego zakończonego zadania. | Wymaga prawidłowego zakończonego zadania. |
-| [`ZORTRAX_STATUS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt stanu MCU, łącza i ruchu. | Bez ruchu/grzania. |
-| [`ZORTRAX_FANS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt sterowania wentylatorami i niezależnej polityki chłodzenia MCU. | Bez uruchamiania testu. |
-| [`ZORTRAX_LIGHT`](../../host/config/m300_operations.cfg) | Ustawienia | Wspólne ustawienie światła. | MODE: DYNAMIC, WHITE, DISABLE; pominięcie otwiera wybór. |
-| [`ZORTRAX_SCREEN`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt stanu bezczynności, jasności i wybudzenia wyświetlacza. | Bez parametrów. |
-| [`ZORTRAX_LEVEL`](../../host/config/m300_operations.cfg) | Poziomowanie | Autokalibracja śrub M07 przez wspólne kroki OLED/Fluidd. | TEMP=260; nie jest mesh. |
+| [`M300_REPRINT`](../../host/config/m300_operations.cfg) | Druk | Potwierdzenie usunięcia modelu i ponowny wydruk zapamiętanego zakończonego zadania. | Wymaga prawidłowego zakończonego zadania. |
+| [`M300_STATUS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt stanu MCU, łącza i ruchu. | Bez ruchu/grzania. |
+| [`M300_FANS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt sterowania wentylatorami i niezależnej polityki chłodzenia MCU. | Bez uruchamiania testu. |
+| [`M300_LIGHT`](../../host/config/m300_operations.cfg) | Ustawienia | Wspólne ustawienie światła. | MODE: DYNAMIC, WHITE, DISABLE; pominięcie otwiera wybór. |
+| [`M300_SCREEN`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt stanu bezczynności, jasności i wybudzenia wyświetlacza. | Bez parametrów. |
+| [`M300_LEVEL`](../../host/config/m300_operations.cfg) | Poziomowanie | Autokalibracja śrub M07 przez wspólne kroki OLED/Fluidd. | TEMP=260; nie jest mesh. |
 | [`BED_MESH`](../../host/config/m300_operations.cfg) | Poziomowanie | Pomiar 25 pozycji kontaktowych i utworzenie profilu; PREVIEW=1 tylko podgląd. | PROFILE, PREVIEW, HOTEND_TEMP, BED_TEMP i parametry geometrii wymienione poniżej. |
-| [`ZORTRAX_HEAT`](../../host/config/m300_operations.cfg) | Termika | Procedura OEM grzania hotendu z potwierdzeniem końca. | TEMP=260. |
-| [`ZORTRAX_HEAT_PLATFORM`](../../host/config/m300_operations.cfg) | Termika | Procedura grzania stołu z widocznym postępem i potwierdzeniem wyłączenia. | TEMP=60. |
-| [`ZORTRAX_FULL_PLATFORM_PREHEAT`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza dodatkową stabilizację platformy przed startem druku; samo nie grzeje. | STATE opcjonalny; pominięcie otwiera wybór. |
-| [`ZORTRAX_HOME_X`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie wyłącznie X wspólną procedurą. | Bez parametrów. |
-| [`ZORTRAX_HOME_Y`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie wyłącznie Y wspólną procedurą. | Bez parametrów. |
-| [`ZORTRAX_HOME_XY`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie XY z właściwym przygotowaniem M300. | Bez parametrów. |
-| [`ZORTRAX_HOME_Z`](../../host/config/m300_operations.cfg) | Ruch | Kontaktowe bazowanie Z po ustaleniu XY i przygotowaniu termicznym. | Bez parametrów. |
-| [`ZORTRAX_HOME_ALL`](../../host/config/m300_operations.cfg) | Ruch | Pełne bazowanie XYZ, w tym wspólne zabezpieczenie odstępu Z. | Bez parametrów. |
-| [`ZORTRAX_PLATFORM_UP`](../../host/config/m300_operations.cfg) | Ruch | Przesunięcie platformy w stronę dyszy, wymaga poprawnego Z. | DISTANCE=1 mm, SPEED opcjonalny. |
-| [`ZORTRAX_PLATFORM_DOWN`](../../host/config/m300_operations.cfg) | Ruch | Oddalenie platformy od dyszy. | DISTANCE=1 mm, SPEED opcjonalny. |
-| [`ZORTRAX_LOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone ładowanie materiału. | Domyślnie load_temperature i load_speed z [m300_filament]. TEMP nadpisuje temperaturę dla tej operacji. |
-| [`ZORTRAX_UNLOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone wyładowanie materiału. | Domyślnie unload_temperature i unload_speed z [m300_filament]. TEMP nadpisuje temperaturę dla tej operacji. |
-| [`ZORTRAX_CHANGE`](../../host/config/m300_operations.cfg) | Materiał | Wymiana materiału w chronionej pauzie; nie wznawia samoczynnie pliku. | Oba etapy korzystają z [m300_filament]. Auto oznacza 240°C i 2 mm/s w obu kierunkach. TEMP nadpisuje temperaturę ładowania dla tej wymiany. |
-| [`ZORTRAX_FAN_TEST_START`](../../host/config/m300_operations.cfg) | Wentylatory | Rozpoczyna wspólny interaktywny test wentylatorów. | Nie znosi automatycznego chłodzenia hotendu. |
-| [`ZORTRAX_FAN_UPPER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie górnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255; niezależna ochrona ma pierwszeństwo. |
-| [`ZORTRAX_FAN_LOWER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie dolnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255. |
-| [`ZORTRAX_FAN_TEST_END`](../../host/config/m300_operations.cfg) | Wentylatory | Zamyka test i przywraca właściwą politykę. | Bez parametrów. |
-| [`ZORTRAX_MAIN_MENU`](../../host/config/m300_operations.cfg) | Menu Zortrax | Otwiera Models, Maintenance, Material, Settings i Information. | Bez parametrów. |
-| [`ZORTRAX_SETTINGS`](../../host/config/m300_operations.cfg) | Ustawienia | Otwiera wspólne Settings. | Bez parametrów. |
-| [`ZORTRAX_BUZZER`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejący buzzer. | STATE opcjonalny. |
-| [`ZORTRAX_SLEEP_MODE`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejące usypianie; zachowuje czas z konfiguracji. | STATE opcjonalny. |
-| [`ZORTRAX_LANGUAGE`](../../host/config/m300_operations.cfg) | Ustawienia | Otwiera wybór języka; obsługiwany jest tylko English. | Nie oferuje tłumaczeń nieobecnych w kodzie. |
-| [`ZORTRAX_MODELS_SORT`](../../host/config/m300_operations.cfg) | Ustawienia | Ustawia sortowanie plików. | MODE: DATE, NAME, NAME_CASE, SIZE. |
-| [`ZORTRAX_INFORMATION`](../../host/config/m300_operations.cfg) | Informacje | Otwiera Information, opcjonalnie odświeża historię Moonrakera. | REFRESH=1. |
-| [`ZORTRAX_HELP`](../../host/config/m300_operations.cfg) | Informacje | Pokazuje pomoc projektu i odnośniki. | Bez parametrów. |
+| [`M300_HEAT`](../../host/config/m300_operations.cfg) | Termika | Procedura OEM grzania hotendu z potwierdzeniem końca. | TEMP=260. |
+| [`M300_HEAT_PLATFORM`](../../host/config/m300_operations.cfg) | Termika | Procedura grzania stołu z widocznym postępem i potwierdzeniem wyłączenia. | TEMP=60. |
+| [`M300_FULL_PLATFORM_PREHEAT`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza dodatkową stabilizację platformy przed startem druku; samo nie grzeje. | STATE opcjonalny; pominięcie otwiera wybór. |
+| [`M300_HOME_X`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie wyłącznie X wspólną procedurą. | Bez parametrów. |
+| [`M300_HOME_Y`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie wyłącznie Y wspólną procedurą. | Bez parametrów. |
+| [`M300_HOME_XY`](../../host/config/m300_operations.cfg) | Ruch | Bazowanie XY z właściwym przygotowaniem M300. | Bez parametrów. |
+| [`M300_HOME_Z`](../../host/config/m300_operations.cfg) | Ruch | Kontaktowe bazowanie Z po ustaleniu XY i przygotowaniu termicznym. | Bez parametrów. |
+| [`M300_HOME_ALL`](../../host/config/m300_operations.cfg) | Ruch | Pełne bazowanie XYZ, w tym wspólne zabezpieczenie odstępu Z. | Bez parametrów. |
+| [`M300_PLATFORM_UP`](../../host/config/m300_operations.cfg) | Ruch | Przesunięcie platformy w stronę dyszy, wymaga poprawnego Z. | DISTANCE=1 mm, SPEED opcjonalny. |
+| [`M300_PLATFORM_DOWN`](../../host/config/m300_operations.cfg) | Ruch | Oddalenie platformy od dyszy. | DISTANCE=1 mm, SPEED opcjonalny. |
+| [`M300_LOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone ładowanie materiału. | Domyślnie load_temperature i load_speed z [m300_filament]. TEMP nadpisuje temperaturę dla tej operacji. |
+| [`M300_UNLOAD`](../../host/config/m300_operations.cfg) | Materiał | Prowadzone wyładowanie materiału. | Domyślnie unload_temperature i unload_speed z [m300_filament]. TEMP nadpisuje temperaturę dla tej operacji. |
+| [`M300_CHANGE`](../../host/config/m300_operations.cfg) | Materiał | Wymiana materiału w chronionej pauzie; nie wznawia samoczynnie pliku. | Oba etapy korzystają z [m300_filament]. Auto oznacza 240°C i 2 mm/s w obu kierunkach. TEMP nadpisuje temperaturę ładowania dla tej wymiany. |
+| [`M300_FAN_TEST_START`](../../host/config/m300_operations.cfg) | Wentylatory | Rozpoczyna wspólny interaktywny test wentylatorów. | Nie znosi automatycznego chłodzenia hotendu. |
+| [`M300_FAN_UPPER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie górnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255; niezależna ochrona ma pierwszeństwo. |
+| [`M300_FAN_LOWER`](../../host/config/m300_operations.cfg) | Wentylatory | Przełącza żądanie dolnego wentylatora w procedurze testu. | Żądanie OEM 0 / 150 z 255. |
+| [`M300_FAN_TEST_END`](../../host/config/m300_operations.cfg) | Wentylatory | Zamyka test i przywraca właściwą politykę. | Bez parametrów. |
+| [`M300_MAIN_MENU`](../../host/config/m300_operations.cfg) | Menu Zortrax | Otwiera Models, Maintenance, Material, Settings i Information. | Bez parametrów. |
+| [`M300_SETTINGS`](../../host/config/m300_operations.cfg) | Ustawienia | Otwiera wspólne Settings. | Bez parametrów. |
+| [`M300_BUZZER`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejący buzzer. | STATE opcjonalny. |
+| [`M300_SLEEP_MODE`](../../host/config/m300_operations.cfg) | Ustawienia | Włącza/wyłącza istniejące usypianie; zachowuje czas z konfiguracji. | STATE opcjonalny. |
+| [`M300_LANGUAGE`](../../host/config/m300_operations.cfg) | Ustawienia | Otwiera wybór języka; obsługiwany jest tylko English. | Nie oferuje tłumaczeń nieobecnych w kodzie. |
+| [`M300_MODELS_SORT`](../../host/config/m300_operations.cfg) | Ustawienia | Ustawia sortowanie plików. | MODE: DATE, NAME, NAME_CASE, SIZE. |
+| [`M300_INFORMATION`](../../host/config/m300_operations.cfg) | Informacje | Otwiera Information, opcjonalnie odświeża historię Moonrakera. | REFRESH=1. |
+| [`M300_HELP`](../../host/config/m300_operations.cfg) | Informacje | Pokazuje pomoc projektu i odnośniki. | Bez parametrów. |
 | [`PID_HOTEND`](../../host/config/klipper_calibration.cfg) | PID | Natywna kalibracja PID hotendu, zapis osobno. | TARGET=200. |
 | [`PID_BED`](../../host/config/klipper_calibration.cfg) | PID | Natywna kalibracja PID stołu, zapis osobno. | TARGET=60. |
 | [`PID_SAVE`](../../host/config/klipper_calibration.cfg) | PID | SAVE_CONFIG — zapis uzyskanej kalibracji i restart Klippera. | Wyłącznie bezczynna drukarka. |
 
 | [`OLED_TIMERS`](../../host/config/m300_operations.cfg) | Klipper | Czas przygaszenia i uśpienia OLED. | DIM i SLEEP w minutach od ostatniej aktywności, 1 ≤ DIM ≤ SLEEP ≤ 60. Bez parametrów otwiera dwa suwaki. |
-| [`ZORTRAX_OLED_TIMERS`](../../host/config/m300_operations.cfg) | Zortrax M300 | Czas przygaszenia i uśpienia OLED. | DIM i SLEEP w minutach od ostatniej aktywności, 1 ≤ DIM ≤ SLEEP ≤ 60. Bez parametrów otwiera dwa suwaki. |
-| [`ZORTRAX_OLED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności fizycznego OLED co w Settings. | LEVEL=1…16; brak parametru otwiera wybór, nie zmienia wartości. |
-| [`ZORTRAX_LED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności oświetlenia drukarki co w Settings. | LEVEL=1…16; brak parametru otwiera wybór. |
-| [`ZORTRAX_DIAGNOSTICS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt konfiguracji, sprzętu, OLED i chłodzenia. | Bez ruchu, grzania i resetowania statystyk. |
-| [`ZORTRAX_PROCEDURE`](../../host/config/m300_operations.cfg) | Serwis | Powrót do bieżącej procedury i jej aktualnych potwierdzeń. | Tylko prezentacja; potwierdzenia nadal sprawdzają tożsamość sesji/fazy. |
+| [`M300_OLED_TIMERS`](../../host/config/m300_operations.cfg) | Zortrax M300 | Czas przygaszenia i uśpienia OLED. | DIM i SLEEP w minutach od ostatniej aktywności, 1 ≤ DIM ≤ SLEEP ≤ 60. Bez parametrów otwiera dwa suwaki. |
+| [`M300_OLED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności fizycznego OLED co w Settings. | LEVEL=1…16; brak parametru otwiera wybór, nie zmienia wartości. |
+| [`M300_LED_BRIGHTNESS`](../../host/config/m300_operations.cfg) | Ustawienia | Ten sam regulator jasności oświetlenia drukarki co w Settings. | LEVEL=1…16; brak parametru otwiera wybór. |
+| [`M300_DIAGNOSTICS`](../../host/config/m300_operations.cfg) | Diagnostyka | Odczyt konfiguracji, sprzętu, OLED i chłodzenia. | Bez ruchu, grzania i resetowania statystyk. |
+| [`M300_PROCEDURE`](../../host/config/m300_operations.cfg) | Serwis | Powrót do bieżącej procedury i jej aktualnych potwierdzeń. | Tylko prezentacja; potwierdzenia nadal sprawdzają tożsamość sesji/fazy. |
 
 ## 3. Parametry makra BED_MESH
 
@@ -91,7 +93,7 @@ Bezpieczna kontrola geometrii bez ruchu: `BED_MESH PREVIEW=1`. Nie publikujemy p
 | `ZORTRAX_DISPLAY_STATUS` | Bezczynność/wybudzenie/jasność warstwy wyświetlacza |
 | `ZORTRAX_FANS_STATUS` | Żądania wentylatorów i stan polityki chłodzenia |
 | `ZORTRAX_UI_SHOW`, `ZORTRAX_UI_SETTING` | Wspólne menu i ustawienia; zwykle wywoływane przez makra |
-| `ZORTRAX_PROCEDURE` | Stan/okno procedury, gdy odpowiedni moduł jest włączony |
+| `M300_PROCEDURE` | Stan/okno procedury, gdy odpowiedni moduł jest włączony |
 | `PID_STATUS` | Odczyt parametrów i stanu kalibracji PID |
 | `BED_MESH_PROFILE`, `BED_MESH_OUTPUT`, `BED_MESH_CLEAR` | Wczytanie/profil, odczyt oraz wyłączenie aktywnej kompensacji |
 | `SAVE_CONFIG` | Trwały zapis i restart, nie wykonywać podczas druku |
@@ -109,8 +111,8 @@ Aktualny pełny zrzut w [instrukcji użytkownika](USER_GUIDE.md) pokazuje grupy 
 
 ## 5. Gdzie zobaczyć funkcję na OLED i w Tune
 
-[Ilustrowana instrukcja funkcji](OLED_FUNCTIONS.md) wiąże każdą z 65 ilustracji z działaniem i właściwym poleceniem Fluidd. Home XYZ i All w Tune używają ZORTRAX_HOME_ALL; Calibrate w Tune używa BED_MESH. Powiększenie ×1/×2/×3 oraz HIDE/SHOW nie są makrami i nie wysyłają poleceń ruchu ani temperatury. Sama lista TEMP w gałęzi Klipper nie jest tym samym co wykonanie Heat.
+[Ilustrowana instrukcja funkcji](OLED_FUNCTIONS.md) wiąże każdą z 65 ilustracji z działaniem i właściwym poleceniem Fluidd. Home XYZ i All w Tune używają M300_HOME_ALL; Calibrate w Tune używa BED_MESH. Powiększenie ×1/×2/×3 oraz HIDE/SHOW nie są makrami i nie wysyłają poleceń ruchu ani temperatury. Sama lista TEMP w gałęzi Klipper nie jest tym samym co wykonanie Heat.
 
 ## RC1: panel produkcyjny
 
-Laboratoryjne TEST_ZORTRAX_XY/STATUS, ZORTRAX_PRINT i ZORTRAX_OLED_PERF nie są przyciskami użytkowymi. Znane fabryczne definicje są wycofywane z aktywnej konfiguracji z kopią w potwierdzeniu instalatora. Własna zmodyfikowana definicja pozostaje nietknięta, ale jest ukryta we Fluidd. ZORTRAX_PROCEDURE nie jest testem: otwiera aktywną procedurę i należy do ZORTRAX M300. OEM Fan test oraz PID pozostają właściwymi funkcjami serwisowymi.
+Laboratoryjne TEST_ZORTRAX_XY/STATUS, ZORTRAX_PRINT i ZORTRAX_OLED_PERF nie są przyciskami użytkowymi. Znane fabryczne definicje są wycofywane z aktywnej konfiguracji z kopią w potwierdzeniu instalatora. Własna zmodyfikowana definicja pozostaje nietknięta, ale jest ukryta we Fluidd. M300_PROCEDURE nie jest testem: otwiera aktywną procedurę i należy do ZORTRAX M300. OEM Fan test oraz PID pozostają właściwymi funkcjami serwisowymi.

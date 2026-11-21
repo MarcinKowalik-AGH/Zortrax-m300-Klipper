@@ -2,7 +2,7 @@
 
 [Instrukcja główna](../../README_PL.md) · [Rejestr odbiorów](ACCEPTANCE_REGISTER.md) · [Mesh](BED_MESH_AND_LEVELING.md)
 
-**Kontroler w RC33.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
+**Kontroler w RC34.** [Kod kontrolera](../../host/klippy/extras/m300_print_control.py)
 i [makra](../../host/config/m300_operations.cfg) określają kolejność startu
 oraz parametry ruchu.
 
@@ -95,7 +95,7 @@ własne nastawy mogą skrócić odcinki.
 | RESUME | Przywrócenie celów, dogrzanie, bezpieczny powrót i odtworzenie stanu tego samego pliku; brak automatycznego G28 nad modelem |
 | CANCEL_PRINT | Przerwanie operacji i wyłączenie celów grzania; zamknięcie zatrzymanego pliku i usunięcie pauzy **nie czekają na parkowanie**; parkowanie jest etapem warunkowym |
 | END_PRINT | Po ostatnim ruchu modelu stół opuszcza się o 300 mm lub do limitu Z. Po zakończeniu tego ruchu głowica parkuje w prawym tylnym rogu przy dostatecznym prześwicie. Następuje wyłączenie grzania i nawiewu modelu, odczyt końca pliku i komunikat PRINTING DONE. |
-| M600 / ZORTRAX_CHANGE | Po odsunięciu stołu głowica parkuje w miejscu serwisowym. Przy wymianie wybranej podczas zwykłej pauzy dojeżdża tam na już osiągniętej wysokości. Po wymianie potwierdź wypływ i wybierz RESUME. |
+| M600 / M300_CHANGE | Po odsunięciu stołu głowica parkuje w miejscu serwisowym. Przy wymianie wybranej podczas zwykłej pauzy dojeżdża tam na już osiągniętej wysokości. Po wymianie potwierdź wypływ i wybierz RESUME. |
 
 W pauzie poczekaj, aż drukarka zakończy ruch. Przy zmianie koloru poczekaj na pytanie o wypływ. W panelu **Narzędzie** we Fluidd lub w zakładce **Device** w OrcaSlicerze ustaw długość i prędkość filamentu. **Extrude** podaje go, a **Retract** cofa. Możesz powtarzać ruchy przed potwierdzeniem wypływu. Wydruk wznowisz osobno przyciskiem **Resume**.
 
