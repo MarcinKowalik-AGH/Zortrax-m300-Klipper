@@ -369,6 +369,18 @@
             "artifact": "docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md",
             "quote": "CANCEL_PRINT zadziałał: głowica zaparkowała"
           }
+        },
+        {
+          "date": "2026-11-21",
+          "version": "Host 1.0.1 / MCU 1.0.8",
+          "version_basis": "cancel_descent_software_regression_2026-11-21; no printer version readback",
+          "status": "AWAITING_TEST",
+          "test": "Cancel z druku i pauzy: wyłączenie grzania, zamknięcie pliku, zjazd stołu jak po END, następnie park XY w granicach prześwitu.",
+          "result": "Regresje sprawdzają zjazd do 300 mm, ograniczenie do limitu Z i wolną oś. Oczekuje na obserwację fizycznego zjazdu na wersji 1.0.1.",
+          "problem": "Wymaga potwierdzenia końcowej pozycji stołu i możliwości usunięcia modelu.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
         }
       ]
     },

@@ -27,7 +27,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | START i cztery linie 2Y+2X | 0.13.16.38 / test 11.11.2026 | Ponowny start po korekcie -0,5 / 6,5 | Obserwacja częściowa: Użytkownik potwierdził nagrzanie, homing i rozpoczęcie druku. | Nie potwierdza ukończenia Benchy, jakości pierwszej warstwy ani osobnej obserwacji wszystkich czterech linii. |
 | PAUSE i parkowanie | Host 1.0.0 / MCU 1.0.8 | Pauza i parkowanie na finalnym hoście; odrzucone żądanie wymiany zachowuje ważny kontekst pauzy. | Oczekuje na test: Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii. | Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce. |
 | RESUME | Host 1.0.0 / MCU 1.0.8 | Dogrzanie, ręczne podanie/cofnięcie, potwierdzenie wypływu i powrót do tego samego miejsca po pauzie. | Oczekuje na test: Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii. | Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce. |
-| CANCEL w druku, przygotowaniu i pauzie | 0.13.16.38 / test 11.11.2026 | CANCEL_PRINT po nieudanym starcie | Obserwacja częściowa: Głowica zaparkowała; STATUS Ready, PRINT_CONTROL_STATUS IDLE i busy=false. | Pozostałe fazy anulowania i RESUME wymagają osobnego testu. |
+| CANCEL w druku, przygotowaniu i pauzie | Host 1.0.1 / MCU 1.0.8 | Cancel z druku i pauzy: wyłączenie grzania, zamknięcie pliku, zjazd stołu jak po END, następnie park XY w granicach prześwitu. | Oczekuje na test: Regresje sprawdzają zjazd do 300 mm, ograniczenie do limitu Z i wolną oś. Oczekuje na obserwację fizycznego zjazdu na wersji 1.0.1. | Wymaga potwierdzenia końcowej pozycji stołu i możliwości usunięcia modelu. |
 | END i ponowne zadanie | Wersja hosta podczas obserwacji nieodczytana | Obserwacja normalnego końca wydruku. | Obserwacja częściowa: Po ukończeniu wydruku stół zjechał, a głowica zaparkowała. | Odległości i ponownego startu z tego ekranu nie zmierzono. |
 | Zmiana filamentu w pauzie | Host 1.0.0 / MCU 1.0.8 | Zmiana materiału, schłodzenie, dogrzanie, potwierdzenie, retrakcja i ponowne potwierdzenie przed Resume. | Oczekuje na test: Regresje programowe przechodzą. Brak nowego wyniku sprzętowego dla finalnej wersji; wcześniejsze obserwacje pozostają w historii. | Wymaga odczytu wersji i obserwacji rzeczywistego przebiegu na drukarce. |
 | Stabilność dłuższego wydruku | Wersja hosta podczas wydruku nieodczytana | 3DBenchy_M300_0p4_0p28.gcode | Obserwacja częściowa: Użytkownik ukończył wydruk. Fluidd pokazał Actual 30 h 37 min 4 s. | Odbiór dotyczy ukończenia tego zadania. |
@@ -227,6 +227,12 @@ Zapis użytkownika / treść przesłanego zrzutu: „CANCEL_PRINT zadziałał: g
 Materiał źródłowy: `docs/evidence/M300_FIRST_PRINT_USER_REPORT_2026-11-11.md`.
 
 Podstawa wersji: `user_note_controller_revision_not_release_readback`.
+
+**2026-11-21 · Host 1.0.1 / MCU 1.0.8 · Oczekuje na test**
+
+Regresje sprawdzają zjazd do 300 mm, ograniczenie do limitu Z i wolną oś. Oczekuje na obserwację fizycznego zjazdu na wersji 1.0.1.
+
+Podstawa wersji: `cancel_descent_software_regression_2026-11-21; no printer version readback`.
 
 ### PRINT_END — END i ponowne zadanie
 

@@ -457,7 +457,9 @@ def main():
                 assert result['position'][:3]==[0.,0.,0.],result
             elif name.endswith('cancel'):
                 assert result['state']=='cancelled' and result['marks']==['STARTED'],result
-                assert result['position'][:2]==[300.,305.],result
+                expected_z = min(cp.getfloat('stepper_z', 'position_max'),
+                                 result['pause_positions']['STARTED'][2] + 300.)
+                assert result['position'][:3]==[300.,305.,expected_z],result
             else:
                 assert result['position'][:2]==[300.,305.],result
                 assert result['state']=='complete',result

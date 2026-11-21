@@ -18,7 +18,7 @@ from .m300_native_motion import CONTACT_RETRACT_MM
 from .m300_job_state import bounded_park
 from .m300_native_service import NativeServiceLease, lock_command
 
-REVISION = '0.13.16.45-MATERIAL-PREFLIGHT'
+REVISION = '0.13.16.46-CANCEL-DROP'
 PERIOD = .25
 END_BED_DROP_MM = 300.
 
@@ -336,7 +336,7 @@ class M300PrintControl:
         self._guard(token)
         self.waiting=True
         self.deadline=self.reactor.monotonic()+self.move_timeout
-        if self.state == 'ENDING':
+        if self.state in ('ENDING', 'CANCELLING'):
             self._allow_queued_travel()
 
     def _allow_queued_travel(self):
@@ -691,7 +691,7 @@ class M300PrintControl:
             try:
                 self.board.require_motion()
                 self.board.require_heating()
-                plan=self._plan()
+                plan=self._plan(hop=END_BED_DROP_MM)
             except Exception:
                 plan=None
             if plan:

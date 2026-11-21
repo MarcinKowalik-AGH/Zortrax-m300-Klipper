@@ -93,7 +93,7 @@ własne nastawy mogą skrócić odcinki.
 |---|---|
 | PAUSE / M25 / M601 / przycisk Fluidd lub OLED | Dokończenie zaplanowanych ruchów, zapamiętanie pozycji i pozostawienie głowicy w bieżącym XY. Stół opuszcza się domyślnie o 5 mm, silniki trzymają pozycję. |
 | RESUME | Przywrócenie celów, dogrzanie, bezpieczny powrót i odtworzenie stanu tego samego pliku; brak automatycznego G28 nad modelem |
-| CANCEL_PRINT | Przerwanie operacji i wyłączenie celów grzania; zamknięcie zatrzymanego pliku i usunięcie pauzy **nie czekają na parkowanie**; parkowanie jest etapem warunkowym |
+| CANCEL_PRINT | Wyłączenie grzania, zamknięcie zatrzymanego pliku i usunięcie pauzy; po opróżnieniu kolejki opuszczenie stołu o maksymalnie 300 mm w granicach Z, następnie park X300 Y305 przy dostępnym prześwicie. Zamknięcie pliku **nie czeka na parkowanie**; ruch wymaga ważnego XYZ i gotowości zabezpieczeń |
 | END_PRINT | Po ostatnim ruchu modelu stół opuszcza się o 300 mm lub do limitu Z. Po zakończeniu tego ruchu głowica parkuje w prawym tylnym rogu przy dostatecznym prześwicie. Następuje wyłączenie grzania i nawiewu modelu, odczyt końca pliku i komunikat PRINTING DONE. |
 | M600 / M300_CHANGE | Po odsunięciu stołu głowica parkuje w miejscu serwisowym. Przy wymianie wybranej podczas zwykłej pauzy dojeżdża tam na już osiągniętej wysokości. Po wymianie potwierdź wypływ i wybierz RESUME. |
 

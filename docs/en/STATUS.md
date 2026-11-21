@@ -1,10 +1,10 @@
 # Release status and hardware acceptance
 
-The current M300 Classic final source release (21 November 2026) pairs Klipper host **1.0.0** with **MCU 1.0.8**. Use `ZORTRAX_INFO REFRESH=0` to read both versions from a running printer. [Final audit](FINAL_AUDIT_2026-11-21.md) · [Operator handbook](USER_GUIDE.md) · [Installation and update](INSTALL.md).
+The current M300 Classic final source release (21 November 2026) pairs Klipper host **1.0.1** with **MCU 1.0.8**. Use `ZORTRAX_INFO REFRESH=0` to read both versions from a running printer. [Final audit](FINAL_AUDIT_2026-11-21.md) · [Operator handbook](USER_GUIDE.md) · [Installation and update](INSTALL.md).
 
-The operator reported a completed Benchy and separately observed bed lowering and head parking at print completion. A normal power cycle preserved the verified MCU print-time total on the tested RC19/MCU 1.0.6 combination. The 20 November screenshot shows an ongoing flow-test print, an OLED preview and an active named mesh. It does not identify the installed firmware version. The [hardware register](../pl/ACCEPTANCE_REGISTER.md) records each observation and the outstanding checks, including full 1.0.0 manual purge and resume on hardware, contact repeatability and first-layer coverage.
+The operator reported a completed Benchy and separately observed bed lowering and head parking at print completion. A normal power cycle preserved the verified MCU print-time total on the tested RC19/MCU 1.0.6 combination. The 20 November screenshot shows an ongoing flow-test print, an OLED preview and an active named mesh. It does not identify the installed firmware version. The [hardware register](../pl/ACCEPTANCE_REGISTER.md) records each observation and the outstanding checks, including full 1.0.1 manual purge and resume on hardware, contact repeatability and first-layer coverage.
 
-The operator also observed Fluidd reload and its buttons work after a Klipper restart. Physical acceptance of the 1.0.0 standby and post-retraction flow checks remains open.
+The operator also observed Fluidd reload and its buttons work after a Klipper restart. Physical acceptance of the 1.0.1 standby and post-retraction flow checks remains open.
 
 ## Historical SD and display changes
 

@@ -13,7 +13,7 @@ clearance already reached. [Print control settings](../pl/PRINT_CONTROL.md)
 | Klipper status during printing | Short press to open the menu. Hold the knob for 10 seconds to pause. | PAUSE stops the native virtual SD worker and saves the pause state. Fluidd Pause leads to the same menu. |
 | PAUSE MENU | Resume the print | RESUME restores the saved position and resumes the same file. |
 | PAUSE MENU | Change the material | The existing CHANGE wizard owns the screen until the change ends. Confirm material flow, then explicitly Resume. A standby or cold nozzle offers Reheat to check flow. Reheating keeps the file paused. An accepted manual retract invalidates a previous flow check. |
-| PAUSE MENU | Stop the print → Yes, stop the print | CANCEL_PRINT turns off the heaters and delegates cancellation to native Klipper. Fluidd Cancel uses the same command. |
+| PAUSE MENU | Stop the print → Yes, stop the print | CANCEL_PRINT turns off the heaters, cancels the native file and drains queued motion, then lowers the bed by up to 300 mm within Z travel and parks XY when clearance permits. Fluidd Cancel uses the same command. |
 | PRINTING DONE | Remove the model, then hold for 10 seconds to reprint | Starts the retained copy as a new native job. A short press closes the OLED notice. |
 
 `END_PRINT` lowers the bed by up to 300 mm from the last print position,

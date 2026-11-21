@@ -721,6 +721,65 @@ class PrintControlTests(unittest.TestCase):
         self.assertEqual(h.print_state, 'cancelled')
         self.assertNotIn(('native_resume',), h.events)
 
+    def test_cancel_printing_or_paused_lowers_bed_before_xy_like_end_print(self):
+        for paused in (False, True):
+            with self.subTest(paused=paused):
+                h = Harness()
+                self.addCleanup(h.close)
+                if paused:
+                    h.pause_print()
+                start = list(h.position)
+                h.events.clear()
+                h.run('CANCEL_PRINT')
+                self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
+                h.stop_worker()
+                h.control_until('IDLE')
+                expected_z = min(start[2] + 300., 315.)
+                moves = [e[1][:3] for e in h.events if e[0] == 'move']
+                self.assertEqual(moves, [(start[0], start[1], expected_z),
+                                         (300., 305., expected_z)])
+                cancel = next(i for i, e in enumerate(h.events) if e[0] == 'native_cancel')
+                first_move = next(i for i, e in enumerate(h.events) if e[0] == 'move')
+                self.assertLess(cancel, first_move)
+                self.assertIsNone(h.sd.current_file)
+                self.assertEqual(h.position[3], start[3])
+                self.assertEqual(h.print_state, 'cancelled')
+                self.assertNotIn(('native_resume',), h.events)
+
+    def test_cancel_clamps_bed_drop_and_respects_xy_clearance_near_z_limit(self):
+        for start_z, xy in ((200., [300., 305.]), (310., [300., 305.]),
+                            (313., [100., 110.]), (315., [100., 110.])):
+            with self.subTest(z=start_z):
+                h = Harness()
+                self.addCleanup(h.close)
+                h.position[2] = start_z
+                h.gmove.reset_last_position()
+                h.run('CANCEL_PRINT')
+                h.stop_worker()
+                h.control_until('IDLE')
+                self.assertEqual(h.position[:3], [*xy, 315.])
+                self.assertTrue(all(start_z <= e[1][2] <= 315.
+                                    for e in h.events if e[0] == 'move'))
+                self.assertEqual(h.print_state, 'cancelled')
+
+    def test_cancel_waits_for_slow_full_descent_before_parking_xy(self):
+        h = self.h
+        h.c.z_speed = 1.
+        h.run('CANCEL_PRINT')
+        h.stop_worker()
+        h.control_until('CANCELLING', 'CANCEL_PARK')
+        h.step_control()
+        self.assertEqual(h.position[:3], [100., 110., 310.])
+        self.assertIsNone(h.sd.current_file)
+        h.step_control(150.)
+        self.assertEqual(h.c.state, 'CANCELLING')
+        self.assertEqual(h.position[:2], [100., 110.])
+        self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
+        h.step_control(151.)
+        self.assertEqual(h.position[:3], [300., 305., 310.])
+        h.control_until('IDLE')
+        self.assertEqual(h.print_state, 'cancelled')
+
     def test_unhomed_z_refuses_end_motion_and_eof(self):
         h = self.h
         h.homed = 'xy'

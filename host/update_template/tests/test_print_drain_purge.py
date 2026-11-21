@@ -128,7 +128,7 @@ class PrintDrainPurgeTests(unittest.TestCase):
         self.assertIsNone(h.sd.current_file)
         self.assertFalse(h.pause.is_paused)
         self.assertEqual(h.print_state, 'cancelled')
-        self.assertEqual(h.position[:2], [300., 305.])
+        self.assertEqual(h.position[:3], [300., 305., 310.])
         self.assertNotIn(('native_resume',), h.events)
 
     def test_fluidd_cancel_during_parking_is_not_a_second_pause(self):
@@ -158,11 +158,13 @@ class PrintDrainPurgeTests(unittest.TestCase):
         h = self.h
         h.pause_print()
         h.homed = ''
+        before = list(h.position)
         h.run('CANCEL_PRINT')
         h.control_until('IDLE')
         self.assertEqual(h.print_state, 'cancelled')
         self.assertFalse(h.pause.is_paused)
         self.assertEqual((h.hotend.target, h.bed.target), (0., 0.))
+        self.assertEqual(h.position, before)
 
     def test_end_does_not_stall_in_idle_clock_drain(self):
         h = self.h
