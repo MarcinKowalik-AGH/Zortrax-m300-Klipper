@@ -27,6 +27,34 @@ BLOCKED = ('G0','G1','G28','G90','G91','G92','M18','M84','M82','M83','M204','M22
            'SET_PRESSURE_ADVANCE','SDCARD_PRINT_FILE','M23','M24','PAUSE','RESUME','CLEAR_PAUSE')
 
 
+def park_calibration(owner, move, check, endstop, minimum, maximum):
+    """Park in the normal frame after a successful measurement, E unchanged."""
+    toolhead = owner.toolhead
+    toolhead.wait_moves()
+    check()
+    control = owner.printer.lookup_object('m300_print_control', None)
+    xy = getattr(control, 'park_xy', (300., 305.))
+    position = list(toolhead.get_position())
+    target_z = max(position[2], 5.)
+    if (not set('xyz') <= set(toolhead.get_kinematics().get_status(
+            owner.reactor.monotonic())['homed_axes'])
+            or not minimum[2] <= target_z <= maximum[2]
+            or not all(minimum[i] <= xy[i] <= maximum[i] for i in (0, 1))):
+        raise owner._error('calibration park outside homed native travel')
+    if target_z != position[2]:
+        position[2] = target_z
+        move(position[:], min(5., getattr(control, 'z_speed', 5.)))
+        toolhead.wait_moves()
+        check()
+    if endstop.query_endstop(toolhead.get_last_move_time()):
+        raise owner._error('PC7 must be open before calibration park')
+    check()
+    position[:2] = xy
+    move(position, getattr(control, 'xy_speed', 100.))
+    toolhead.wait_moves()
+    check()
+
+
 def require_idle_print(printer, now):
     control=printer.lookup_object('m300_print_control',None)
     if control is not None and control.busy:
