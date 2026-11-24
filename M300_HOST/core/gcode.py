@@ -357,6 +357,9 @@ class GCodeDispatch:
         if not did_ack:
             gcmd.respond_info(msg)
     def request_restart(self, result):
+        board = self.printer.lookup_object('m300_mcu', None)
+        if board is not None:
+            result = board.prepare_restart(result)
         if self.is_printer_ready:
             toolhead = self.printer.lookup_object('toolhead')
             print_time = toolhead.get_last_move_time()

@@ -179,8 +179,9 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
     parser = root / 'klippy/gcode.py'
     parser_data = (HERE / 'core/gcode.py').read_bytes()
     original = snapshot(parser)
-    if original != parser_data and (original is None or digest(original) !=
-            'a2bcd6949b4263f608eaa71ba1cdfb713553542b7b90de739241b624f06415ae'):
+    if original != parser_data and (original is None or digest(original) not in (
+            'a2bcd6949b4263f608eaa71ba1cdfb713553542b7b90de739241b624f06415ae',
+            *baselines.get('gcode.py', []))):
         raise ValueError('Unrecognized Klipper G-code parser: ' + str(parser))
     desired[parser] = parser_data
     settings = config.parent / 'm300_display.cfg'
