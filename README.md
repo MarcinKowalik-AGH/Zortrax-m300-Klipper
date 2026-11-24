@@ -8,6 +8,8 @@ For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --
 The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.
 With MCU 1.0.8, Klipper automatically synchronizes print time to the board while idle. Install the MCU image from SD only if the board still requires the firmware update.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/ed4995e34984c52f60a2be350a2306fa45b13a6c/docs/en/INSTALL.md)
+Optional USB camera (disabled by default): `python3 install-camera.py --enable --apply`. Edit `~/printer_data/config/m300_camera.conf` and run `python3 install-camera.py --apply` to change it or disable streaming. See CAMERA_PL.md / CAMERA_EN.md.
 
-Source commit: `ed4995e34984c52f60a2be350a2306fa45b13a6c`
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/20115e6b171c74a12a9578a3c95ec488c8ff6dd8/docs/en/INSTALL.md)
+
+Source commit: `20115e6b171c74a12a9578a3c95ec488c8ff6dd8`
