@@ -32,3 +32,5 @@ wymaga ponownego flashowania. Próba sprzętowa: mesh → SAVE_CONFIG → Ready,
 a następnie Cancel → zakończenie parkowania → start nowego pliku. Zachowaj log.
 
 Osobna naprawa Fluidd: `python3 install-orange-pi.py --update-fluidd --port 4480`.
+
+Pełny pakiet zachowuje `M300_SD.zip` z MCU 1.0.8 dla drukarek wymagających aktualizacji firmware. Ilustracje OLED w podręczniku zachowują oznaczoną historyczną bazę beta.20.

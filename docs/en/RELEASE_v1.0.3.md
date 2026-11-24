@@ -44,3 +44,5 @@ heater assembly, validate mesh → SAVE_CONFIG → Ready and Cancel → complete
 park → new file on the physical machine. Retain the resulting log.
 
 Separate Fluidd repair: `python3 install-orange-pi.py --update-fluidd --port 4480`.
+
+The full package retains `M300_SD.zip` with MCU 1.0.8 for printers requiring a firmware update. The illustrated OLED manual retains its explicitly labeled historical beta.20 baseline.
