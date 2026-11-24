@@ -53,6 +53,7 @@ class CameraTests(unittest.TestCase):
         self.assertFalse((self.root/'missing-data').exists())
 
     def test_config_validation_catches_typos_ports_and_unsupported_formats(self):
+        self.assertEqual(camera.configuration(self.text.replace('fluidd_port: 4480', 'fluidd_port: 80'))['fluidd_port'], 80)
         for old, new in (('enabled: False', 'enable: False'), ('fps: 10', 'fps: 0'),
                          ('format: auto', 'format: H264'), ('port: 8088', 'port: 4480'),
                          ('resolution: 640x480', 'resolution: 0x480'),

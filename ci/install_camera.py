@@ -63,8 +63,8 @@ def configuration(text):
         value[key] = section.getint(key)
     if not 1 <= value['fps'] <= 60:
         raise ValueError('fps must be between 1 and 60')
-    if not all(1024 <= value[k] <= 65535 for k in ('port', 'fluidd_port')):
-        raise ValueError('Camera and Fluidd ports must be between 1024 and 65535')
+    if not 1024 <= value['port'] <= 65535 or not 1 <= value['fluidd_port'] <= 65535:
+        raise ValueError('Camera port must be 1024..65535; Fluidd port must be 1..65535')
     if value['port'] in (value['fluidd_port'], 7125):
         raise ValueError('Camera port must differ from Fluidd and Moonraker')
     size = re.fullmatch(r'([0-9]+)x([0-9]+)', value['resolution'])
