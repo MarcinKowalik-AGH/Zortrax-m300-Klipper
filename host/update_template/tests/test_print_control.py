@@ -1080,4 +1080,37 @@ class PrintControlTests(unittest.TestCase):
         self.assertEqual(h.c.state,'FAILED');self.assertEqual(h.bed.target,0.)
 
 
+class MeshCancelHandoffTests(unittest.TestCase):
+    def test_fluidd_cancel_revokes_mesh_before_waiting_for_gcode_mutex(self):
+        h=Harness()
+        try:
+            h.sd.work_timer=None
+            mesh=NS(busy=True)
+            def stop(reason):
+                mesh.busy=False
+                h.events.append(('mesh_cancel',reason))
+            mesh._stop=stop
+            h.objects['m300_pad_mesh']=mesh
+            h.web._endpoints['pause_resume/cancel'](None)
+            self.assertFalse(mesh.busy)
+            self.assertEqual(h.c.state,'CANCELLING')
+            self.assertEqual(h.hotend.target,0.)
+            self.assertEqual(h.bed.target,0.)
+            with self.assertRaises(Exception):h.run('M24')
+            h.control_until('IDLE')
+            self.assertIsNone(h.c.lease)
+            self.assertIsNone(h.sd.current_file)
+            h.hotend.set_temp(210.)
+            self.assertEqual(h.hotend.target,210.)
+            # A replacement file can prepare once cancellation and park drain.
+            h.sd.current_file=(Path(h.temp.name)/'test.gcode').open()
+            h.sd.file_position=0;h.sd.work_timer='native'
+            h.file_command('ZORTRAX_PRINT_START EXTRUDER_TEMP=240 BED_TEMP=60 MESH=NONE')
+            h.stop_worker();h.control_until('IDLE')
+            self.assertTrue(h.c.model_print_ready)
+            h.hotend.set_temp(215.)  # No stale OEM service heater lock.
+            self.assertEqual(h.hotend.target,215.)
+        finally:h.close()
+
+
 if __name__=='__main__':unittest.main()

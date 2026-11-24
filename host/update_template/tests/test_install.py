@@ -14,6 +14,21 @@ import install
 
 
 class InstallerTests(unittest.TestCase):
+    def test_upgrade_and_rollback_previous_published_gcode_parser(self):
+        current=(ROOT/'core/gcode.py').read_text()
+        previous=current.replace(
+            "        board = self.printer.lookup_object('m300_mcu', None)\n"
+            "        if board is not None:\n"
+            "            result = board.prepare_restart(result)\n", "")
+        self.assertNotEqual(previous,current)
+        parser=self.root/'klippy/gcode.py'
+        parser.write_text(previous)
+        receipt=install.apply(self.root,self.config,install.plan(self.root,self.config))
+        self.assertEqual(parser.read_text(),current)
+        self.assertEqual(install.plan(self.root,self.config),[])
+        install.rollback(receipt,self.root,self.config)
+        self.assertEqual(parser.read_text(),previous)
+
     def test_existing_fluidd_choices_are_migrated_inside_includes(self):
         source = '[mcu]\nserial: /dev/ttyS1\n[include m300_operations.cfg]\n'
         macros = (

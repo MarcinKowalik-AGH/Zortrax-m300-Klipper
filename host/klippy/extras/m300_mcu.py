@@ -507,22 +507,34 @@ class M300MCU:
             except Exception:
                 logging.exception('M300 could not read latched guard after shutdown')
 
+    def prepare_restart(self, result):
+        # SAVE_CONFIG requests a host-only restart. An armed M300 must also
+        # reset its MCU so the next host never inherits a live old session.
+        return 'firmware_restart' if result == 'restart' else result
+
     def _handle_restart(self, *args):
-        # Native request_restart drains moves and dwells for 0.5 seconds.
-        # Start that drain with one fresh heartbeat while still healthy; do
-        # not leave it depending on the phase of the previous 0.25 s tick.
-        # No periodic heartbeat, ARM or fault clear survives this callback.
-        try:
-            if (not self.printer.is_shutdown()
-                    and self._healthy(self.reactor.monotonic(), armed=bool(self.state.get('armed')))):
-                self._heartbeat_cmd.send()
-        except Exception:
-            logging.exception('M300 final heartbeat before native restart failed')
-        finally:
+        # Native G-code drains motion AFTER this event. Keep supervision alive
+        # through that bounded drain; disconnect/shutdown still stops it.
+        if (self.printer.is_shutdown() or not self._healthy(
+                self.reactor.monotonic(), armed=bool(self.state.get('armed')))):
             self._handle_stop()
+            return
+        if getattr(self, '_restart_deadline', None) is None:
+            self._restart_deadline = self.reactor.monotonic() + 120.
+            try:
+                self._heartbeat_cmd.send()
+            except Exception:
+                self._handle_stop()
+                logging.exception('M300 restart heartbeat failed')
+                self.printer.invoke_shutdown('M300 restart heartbeat failed')
 
     def _tick(self, eventtime):
         if not self.ready or self.local_stop:
+            return self.reactor.NEVER
+        deadline = getattr(self, '_restart_deadline', None)
+        if deadline is not None and eventtime >= deadline:
+            self._handle_stop()
+            self.printer.invoke_shutdown('M300 planned restart drain timed out')
             return self.reactor.NEVER
         if (self.arm_requested_at is not None and not self.arm_session_confirmed
                 and eventtime - self.arm_requested_at > STATUS_TIMEOUT):
@@ -611,12 +623,16 @@ class M300MCU:
         return True
 
     def require_motion(self):
+        if getattr(self, '_restart_deadline', None) is not None:
+            raise self.printer.command_error('M300 restart in progress')
         if not self.allow_actuators or not self.allow_motion:
             raise self.printer.command_error('M300 motion is not qualified/enabled')
         if not self._healthy(self.reactor.monotonic(), armed=True):
             raise self.printer.command_error('M300 requires fresh armed fault-free MCU status for motion')
 
     def require_heating(self):
+        if getattr(self, '_restart_deadline', None) is not None:
+            raise self.printer.command_error('M300 restart in progress')
         if not self.allow_actuators or not self.allow_heating:
             raise self.printer.command_error('M300 heating is not qualified/enabled')
         if not self._healthy(self.reactor.monotonic(), armed=True):

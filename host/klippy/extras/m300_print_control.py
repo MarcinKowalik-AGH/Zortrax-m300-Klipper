@@ -159,7 +159,8 @@ class M300PrintControl:
                 if getattr(old,'__self__',None) is not self.pause:
                     raise self.config.error('M300 print control requires the native pause endpoint: '+path)
                 def endpoint(req, action=action):
-                    if action=='cancel' and self.busy:
+                    if action=='cancel' and (self.busy or getattr(
+                            self.printer.lookup_object('m300_pad_mesh', None), 'busy', False)):
                         self._request_cancel('Fluidd cancel')
                     else:
                         self.gcode.run_script({'pause':'PAUSE','resume':'RESUME','cancel':'CANCEL_PRINT'}[action])
@@ -655,10 +656,13 @@ class M300PrintControl:
 
     def _request_cancel(self,reason):
         if self.state=='CANCELLING':return
+        mesh = self.printer.lookup_object('m300_pad_mesh', None)
+        mesh_active = mesh is not None and mesh.busy
         self._prepared_stream = None
-        self._cancel_park=self.context is not None or self.operation is not None or self.sd.current_file is not None
+        self._cancel_park=mesh_active or self.context is not None or self.operation is not None or self.sd.current_file is not None
         self.generation += 1;self.steps.clear();self.waiting=False
         self._release()
+        if mesh_active:mesh._stop(reason)
         material=self._material()
         if material is not None:material.parent_cancel(reason)
         motion=self.printer.lookup_object('m300_motion',None)

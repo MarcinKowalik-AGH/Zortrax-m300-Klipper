@@ -1,12 +1,12 @@
-# Zortrax M300 Classic — Klipper 1.0.2
+# Zortrax M300 Classic — Klipper 1.0.3
 
 [![Test przepływu na M300 Classic w zakładce Device OrcaSlicera. Fluidd pokazuje temperatury i podgląd OLED drukarki.](docs/img/m300-orcaslicer-fluidd-printing.png)](docs/img/m300-orcaslicer-fluidd-printing.png?raw=true)
 
 *Wydruk na M300 Classic, 20 listopada 2026 r. W konsoli oraz na podglądzie OLED widać aktywną siatkę `m300_pads`. Kliknij obraz, aby otworzyć oryginał.*
 
-[English](README.md) · [Podręcznik obsługi](docs/pl/USER_GUIDE.md) · [Pobierz 1.0.2](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.2)
+[English](README.md) · [Podręcznik obsługi](docs/pl/USER_GUIDE.md) · [Pobierz 1.0.3](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.3)
 
-Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.2** i MCU **1.0.8**. Fluidd działa na porcie **4480**. W 1.0.2 nazwy 36 makr operatorskich zaczynają się od `M300_`. Zapisane pliki G-code nadal mogą wywoływać poprzednie nazwy `ZORTRAX_`.
+Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.3** i MCU **1.0.8**. Fluidd działa na porcie **4480**. W 1.0.3 nazwy 36 makr operatorskich zaczynają się od `M300_`. Zapisane pliki G-code nadal mogą wywoływać poprzednie nazwy `ZORTRAX_`.
 
 ## Instalacja i obsługa
 
@@ -52,8 +52,8 @@ python3 install-orange-pi.py
 
 W konsoli Fluidd wpisz `ZORTRAX_INFO REFRESH=0`, aby odczytać wersję hosta oraz MCU. Polecenie instalatora aktualizuje hosta. Osobne ścieżki dla pierwszego klonowania, uszkodzonego repozytorium i naprawy strony na porcie 4480 podaje instrukcja aktualizacji.
 
-## Wydanie finalne z 21.11.2026
+## Wydanie finalne z 24.11.2026
 
-1.0.2 jest finalnym wydaniem źródeł z 21.11.2026. Operator potwierdził ukończenie Benchy, opuszczenie stołu i parkowanie po zakończeniu wydruku oraz obsługę filamentu z OLED i Fluidd. Rejestr podaje zakres każdej obserwacji. Do odbioru na maszynie pozostają m.in. powtarzalność kontaktowego Z, pierwsza warstwa na całej płycie oraz ręczne przepłukanie i wznowienie na 1.0.2.
+1.0.3 zawiera poprawki restartu po meshu i anulowania procedur z 24.11.2026. Walidacja tej zmiany jest programowa; próby sprzętowe wcześniejszych wersji nie stanowią odbioru 1.0.3. Na drukarce pozostaje sprawdzenie sekwencji mesh → SAVE_CONFIG → Ready oraz Cancel → parkowanie → nowy plik, a także przyczyny osobnego błędu grzania ekstrudera z dostarczonego logu.
 
-[Audyt końcowy](docs/pl/AUDYT_FINAL_2026-11-21.md) · [Opis 1.0.2](docs/pl/RELEASE_v1.0.2.md) · [Wyniki kompilacji i testów](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md) · [Źródła i licencje](THIRD_PARTY_NOTICES.md)
+[Audyt końcowy](docs/pl/AUDYT_FINAL_2026-11-21.md) · [Opis 1.0.3](docs/pl/RELEASE_v1.0.3.md) · [Wyniki kompilacji i testów](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Rejestr odbiorów](docs/pl/ACCEPTANCE_REGISTER.md) · [Źródła i licencje](THIRD_PARTY_NOTICES.md)

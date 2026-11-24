@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.2 — first installation
+# Zortrax M300 Classic v1.0.3 — first installation
 
 If Klipper for M300 is already running on this host, follow the [update guide](INSTALL.md).
 
@@ -34,7 +34,7 @@ create a normal user with sudo. Use that same user for KIAUH and this installer.
 The current Git first-install helper supports Python **3.10–3.13**, including
 Trixie's Python 3.13. CI loads the complete public production configuration on
 Python 3.12 and 3.13 without an MCU; UART and board operation need physical
-acceptance. The original immutable v1.0.2 ZIP has the older 3.12 version gate;
+acceptance. The original immutable v1.0.3 ZIP has the older 3.12 version gate;
 use the Git path below on Trixie to obtain the updated installer.
 
 | Host | UART setup |
@@ -124,7 +124,7 @@ flashing, homing or heating is performed. Continue at step 6. Machine-specific
 calibration is created while commissioning a new printer and can be migrated
 separately when replacing its host.
 
-The immutable v1.0.2 ZIP alternative below remains for Python 3.10–3.12.
+The immutable v1.0.3 ZIP alternative below remains for Python 3.10–3.12.
 
 The versioned ZIP is an ordinary public Release download; a GitHub login and
 local MCU/Fluidd build tools are unnecessary.
@@ -132,11 +132,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.2/Zortrax_M300_Klipper_v1.0.2.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.2/SHA256SUMS-v1.0.2.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.2.zip$' SHA256SUMS-v1.0.2.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.2.zip &&
-cd Zortrax_M300_Klipper_v1.0.2 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/Zortrax_M300_Klipper_v1.0.3.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/SHA256SUMS-v1.0.3.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.3.zip$' SHA256SUMS-v1.0.3.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.3.zip &&
+cd Zortrax_M300_Klipper_v1.0.3 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -237,7 +237,7 @@ no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.8.md#read-the-counter).
 
 ## Updates and acceptance scope
 
-The fixed `v1.0.2` package installs this candidate. The `orange-pi` branch
+The fixed `v1.0.3` package installs this candidate. The `orange-pi` branch
 serves later project updates. See the [update guide](INSTALL.md) to clone that
 branch and update Klipper. The guide also gives the separate Fluidd
 update or repair command for the existing site on 4480. Back up the Moonraker and operating-system
