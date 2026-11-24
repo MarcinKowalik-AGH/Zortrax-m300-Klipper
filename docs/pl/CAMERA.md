@@ -76,6 +76,23 @@ wybrać jawnie. Tryby kamery sprawdzisz poleceniem:
 v4l2-ctl --device /dev/video0 --list-formats-ext
 ```
 
+## Kamera we Firefoxie i OrcaSlicerze
+
+Nowe kamery są dodawane z typem wyświetlania **UV4L-MJPEG Stream**
+(`uv4l-mjpeg`). Ten tryb odtwarza strumień ustreamera bez workera używanego
+przez zwykły **MJPEG Stream**. Wyświetlanie kamery M300 w tym trybie zostało
+potwierdzone w OrcaSlicerze 2.5.2, po błędzie zwykłego MJPEG w zakładce Device.
+
+Jeżeli kamera została już dodana ze zwykłym MJPEG, otwórz we Fluidd
+**Ustawienia → Kamery → M300 USB**, wybierz **UV4L-MJPEG Stream**, zapisz
+i odśwież Device. Zachowaj adresy `/m300-camera/stream` oraz
+`/m300-camera/snapshot`. To ustawienie sposobu wyświetlania, obsługiwane przez
+dotychczasowy serwer ustreamer.
+
+Ponowne `python3 install-camera.py --apply` zachowuje typ wybrany we Fluidd,
+w tym UV4L-MJPEG, MJPEG Adaptive i zwykły MJPEG. Istniejące kamery zachowują
+dotychczasowy wybór; instalator nie przełącza ich automatycznie na nowy typ.
+
 ## Podgląd i diagnostyka
 
 Instalator dodaje wpis kamery przez API Moonrakera bez jego restartu. Usługa

@@ -45,6 +45,17 @@ Start with 640×480 at 10 fps; use 1280×720 if supported by your camera.
 `MJPEG` and `YUYV` are supported. Check formats with
 `v4l2-ctl --device /dev/video0 --list-formats-ext`.
 
+New cameras default to **UV4L-MJPEG Stream** (`uv4l-mjpeg`), which displays
+the existing ustreamer feed without the regular MJPEG Stream worker. This
+display mode was confirmed working with the M300 camera in OrcaSlicer 2.5.2
+after regular MJPEG failed in the Device tab.
+
+For an existing camera, select **Settings → Cameras → M300 USB → UV4L-MJPEG
+Stream** in Fluidd, save and refresh Device. Keep `/m300-camera/stream` and
+`/m300-camera/snapshot` unchanged. Subsequent `install-camera.py --apply`
+preserves the selected display type, including UV4L-MJPEG, MJPEG Adaptive
+and regular MJPEG. Existing cameras are not automatically migrated.
+
 The local backend binds to 127.0.0.1:8088. A managed nginx block on the
 existing Fluidd port exposes `/m300-camera/stream`, `/m300-camera/snapshot`
 and `/m300-camera/state`. No Klipper/MCU changes or restarts are required;

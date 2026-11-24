@@ -212,9 +212,23 @@ class CameraTests(unittest.TestCase):
         self.assertTrue(camera.configuration(self.config.read_text())['enabled'])
         self.assertIn('/dev/v4l/by-id/usb-Test-video-index0', self.config.read_text())
         self.assertTrue(self.webcams[0]['enabled'])
+        self.assertEqual(self.webcams[0]['service'], 'uv4l-mjpeg')
         self.verifier.assert_called_once()
         self.assertTrue(Path(result['backup']).is_dir())
         self.assertFalse(any('klipper.service' in call or 'moonraker.service' in call for call in self.commands))
+
+    def test_reapply_preserves_the_display_type_selected_in_fluidd(self):
+        self.fixture()
+        camera.apply(self.value, self.config, self.text)
+        uid = self.webcams[0]['uid']
+        for service in ('uv4l-mjpeg', 'mjpegstreamer-adaptive', 'mjpegstreamer'):
+            with self.subTest(service=service):
+                self.webcams[0].update(service=service, rotation=180)
+                camera.apply(self.value, self.config, self.config.read_text())
+                self.assertEqual(len(self.webcams), 1)
+                self.assertEqual(self.webcams[0]['uid'], uid)
+                self.assertEqual(self.webcams[0]['service'], service)
+                self.assertEqual(self.webcams[0]['rotation'], 180)
 
     def test_nginx_failure_restores_config_and_removes_new_service(self):
         self.fixture(fail_check=True)

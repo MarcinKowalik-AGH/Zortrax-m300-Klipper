@@ -225,7 +225,10 @@ def existing_webcam(cameras):
 def webcam_payload(value, old=None):
     width, height = map(int, value['resolution'].split('x'))
     divisor = math.gcd(width, height)
-    payload = dict(name=NAME, enabled=value['enabled'], service='mjpegstreamer',
+    # Native MJPEG display works in OrcaSlicer's embedded browser. Preserve
+    # the user's selected display service when applying capture settings again.
+    display_service = (old or {}).get('service') or 'uv4l-mjpeg'
+    payload = dict(name=NAME, enabled=value['enabled'], service=display_service,
                    stream_url=ROUTE+'stream', snapshot_url=ROUTE+'snapshot',
                    target_fps=value['fps'], target_fps_idle=min(5, value['fps']),
                    aspect_ratio=str(width//divisor)+':'+str(height//divisor))
