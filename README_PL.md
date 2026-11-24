@@ -10,6 +10,24 @@ Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokr
 
 ## Instalacja i obsługa
 
+Na **nowym hoście z KIAUH** pobierz repozytorium i uruchom instalator poniżej
+jako użytkownik użyty do KIAUH. Wdraża pełnego Klippera, konfigurację M300,
+makra i gotowe Fluidd. Stare Pi ani prywatna kopia konfiguracji nie są potrzebne.
+Ta ścieżka obsługuje Debian 13 Trixie z Pythonem 3.13.
+Przykład dotyczy UART2 w Orange Pi Zero 4; dla innej płytki wybierz jej włączony
+UART oraz baud zgodny z bootloaderem/MCU drukarki.
+
+```bash
+git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+cd "$HOME/m300-src" &&
+python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --apply
+```
+
+KIAUH musi wcześniej przygotować po jednej instancji Klippera, Moonrakera i
+Fluidd. Instalator używa ostatniej sprawdzonej publikacji `orange-pi`, weryfikuje
+rdzeń, sprawdza pełną konfigurację offline i zachowuje kopię zastępowanego
+szablonu. Pełna instrukcja poniżej opisuje wgranie MCU i kalibrację drukarki.
+
 | Co chcesz zrobić | Instrukcja |
 |---|---|
 | Przygotować nowy Orange Pi lub Raspberry Pi | [Pierwsza instalacja, UART, pełny ZIP i pierwsze uruchomienie](docs/pl/FIRST_INSTALL.md) |

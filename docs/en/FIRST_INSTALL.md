@@ -27,15 +27,15 @@ helper is compiled locally for the SBC's CPU, not copied from the x86 CI runner.
 
 ## 1. Install Linux and enable SSH/UART
 
-For Raspberry Pi select the Lite Bookworm/Debian 12 image with Python 3.11;
-for Orange Pi select a supported Debian 12 or Ubuntu 24.04 board image.
+For Raspberry Pi select a supported Raspberry Pi OS Lite image;
+for Orange Pi select a supported Debian 13 Trixie, Debian 12 or Ubuntu 24.04 board image.
 Use the image for the exact board model, enable SSH, configure the network and
 create a normal user with sudo. Use that same user for KIAUH and this installer.
-Run the first-install helper with Python **3.10–3.12**; Debian 12 with Python
-3.11 or Ubuntu 24.04 with Python 3.12 are suitable software baselines when
-available for your board. CI exercises Python 3.12; a fresh OS installation on
-each SBC is still a physical acceptance step. An image with Python 3.13 needs a
-compatible 3.10–3.12 environment; do not force the helper past its version check.
+The current Git first-install helper supports Python **3.10–3.13**, including
+Trixie's Python 3.13. CI loads the complete public production configuration on
+Python 3.12 and 3.13 without an MCU; UART and board operation need physical
+acceptance. The original immutable v1.0.2 ZIP has the older 3.12 version gate;
+use the Git path below on Trixie to obtain the updated installer.
 
 | Host | UART setup |
 |---|---|
@@ -104,6 +104,27 @@ curl --fail --silent --show-error http://127.0.0.1:4480/ | grep -io '<title>flui
 ```
 
 ## 3. Download the fixed release package
+
+**On Trixie use the Git installer.** After preparing KIAUH and the compatible
+MCU (step 4), run as the KIAUH account:
+
+```bash
+git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+cd "$HOME/m300-src" &&
+python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --port 4480 --apply
+```
+
+This replaces the manual ZIP download and step 5. Select your board's enabled
+UART and the printer baud; `/dev/ttyS2` is the Zero 4 example. The entry point
+also works from an `orange-pi` clone. It obtains the full pinned core and
+installs current M300 modules, public configuration and compiled Fluidd from
+the successful project deployment. A previous host or personal backup is not
+needed. The complete config is tested offline before replacing KIAUH; no MCU
+flashing, homing or heating is performed. Continue at step 6. Machine-specific
+calibration is created while commissioning a new printer and can be migrated
+separately when replacing its host.
+
+The immutable v1.0.2 ZIP alternative below remains for Python 3.10–3.12.
 
 The versioned ZIP is an ordinary public Release download; a GitHub login and
 local MCU/Fluidd build tools are unnecessary.

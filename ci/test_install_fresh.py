@@ -18,6 +18,8 @@ from project import ROOT, manifest, stage_host_update
 
 class FirstInstallTest(unittest.TestCase):
     def setUp(self):
+        self.runtime_check=patch.object(fresh,'validate_runtime').start()
+        self.addCleanup(patch.stopall)
         self.temp=tempfile.TemporaryDirectory()
         self.base=Path(self.temp.name)
         self.root=self.base/'klipper';(self.root/'klippy/extras').mkdir(parents=True)
@@ -143,6 +145,18 @@ class FirstInstallTest(unittest.TestCase):
         pip = next(args for args in calls if args[1:4] == ('-m', 'pip', 'install'))
         self.assertEqual(pip[4], '--target')
         self.assertEqual(pip[5].name, 'dependencies')
+        self.runtime_check.assert_called_once()
+
+    def test_offline_config_failure_preserves_stock_runtime_and_config(self):
+        self.prepare_runtime()
+        self.runtime_check.side_effect=ValueError('Invalid production configuration')
+        calls=[]
+        with self.assertRaisesRegex(ValueError,'Invalid production configuration'):
+            fresh.install(self.package,self.root,self.data,Path('/python'),Path('/dev/ttyS2'),750000,
+                          self.web,execute=lambda *a,**kw:self.execute(calls,*a,**kw))
+        self.assertEqual((self.root/'klippy/klippy.py').read_text(),'stock')
+        self.assertEqual(self.config.read_text(),'[include fluidd.cfg]\n')
+        self.assertFalse(any(a[:3]==('sudo','systemctl','stop') for a in calls))
 
     def test_failed_web_deploy_restores_entire_previous_setup(self):
         self.prepare_runtime();old_moon=self.moon.read_text();calls=[]

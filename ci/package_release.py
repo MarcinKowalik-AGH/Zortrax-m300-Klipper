@@ -135,6 +135,7 @@ def main():
         shutil.copy2(ROOT/'host/config'/name,first/name)
     shutil.copy2(ROOT/'host/requirements-m300.txt',first/'requirements-m300.txt')
     shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
+    shutil.copy2(ROOT/'install-new-host.py',release/'install-new-host.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT / name, release / name)
     (release / 'README.txt').write_text(

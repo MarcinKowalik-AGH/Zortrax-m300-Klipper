@@ -9,6 +9,7 @@ on:
       - '.github/workflows/**'
       - 'PORT.json'
       - 'ci/**'
+      - 'install-new-host.py'
       - 'mcu/**'
       - 'host/**'
       - 'frontend/**'
@@ -26,8 +27,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  bootstrap-python:
+    name: Public new-host installer / Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install exact M300 host requirements
+        run: python -m pip install -r host/requirements-m300.txt
+      - name: Test public installer composition and production configuration
+        run: |
+          python ci/test_new_host_bootstrap.py
+          python ci/validate_bootstrap_runtime.py
+
   build:
     name: Build and verify MCU, host and Fluidd
+    needs: bootstrap-python
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:

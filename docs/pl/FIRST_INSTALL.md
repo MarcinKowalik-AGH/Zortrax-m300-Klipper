@@ -33,17 +33,17 @@ nie są częścią zamrożonej kompilacji MCU/Fluidd.
 
 ## 1. System, sieć i UART
 
-Na Raspberry Pi wybierz Raspberry Pi OS Lite Bookworm/Debian 12 z Pythonem 3.11,
-a na Orange Pi wspierany obraz Debian 12 lub Ubuntu 24.04 dla
+Na Raspberry Pi wybierz wspierany Raspberry Pi OS Lite,
+a na Orange Pi wspierany obraz Debian 13 Trixie, Debian 12 lub Ubuntu 24.04 dla
 **dokładnego modelu płytki**. Włącz SSH,
 ustaw sieć i utwórz zwykłego użytkownika z sudo. Wszystkie dalsze polecenia
 wykonuj jako ten użytkownik.
 
-Instalator pierwszego uruchomienia obsługuje Python **3.10–3.12**. Dobrym punktem
-wyjścia jest Debian 12 z Pythonem 3.11 albo Ubuntu 24.04 z Pythonem 3.12,
-jeżeli taki obraz jest dostępny dla płytki. CI sprawdza Python 3.12; instalacja
-całego systemu na każdym modelu SBC pozostaje osobnym testem sprzętowym.
-System z Pythonem 3.13 wymaga zgodnego środowiska 3.10–3.12.
+Aktualny instalator z Git obsługuje Python **3.10–3.13**, także Python 3.13
+dostarczany przez Trixie. CI uruchamia publiczną konfigurację pełnym Klipperem
+na Pythonie 3.12 i 3.13, bez MCU. Odbiór UART i sprzętu wykonuje się na płytce.
+Pierwotny, niezmienny ZIP v1.0.2 zawiera wcześniejszy instalator z ograniczeniem
+do 3.12; na Trixie użyj opisanej niżej ścieżki Git, która dostarcza nowy instalator.
 
 | Host | Ustawienie portu |
 |---|---|
@@ -112,6 +112,27 @@ curl --fail --silent --show-error http://127.0.0.1:4480/ | grep -io '<title>flui
 ```
 
 ## 3. Pobranie wersjonowanej paczki
+
+**Na Trixie wybierz instalację z Git.** Po przygotowaniu KIAUH i zgodnego
+MCU (punkt 4) wykonaj jako jego zwykły użytkownik:
+
+```bash
+git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+cd "$HOME/m300-src" &&
+python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --port 4480 --apply
+```
+
+To zastępuje ręczne pobranie ZIP i punkt 5. Port i baud muszą odpowiadać Twojej
+płytce oraz ustawieniu drukarki; `/dev/ttyS2` jest przykładem dla Zero 4.
+Instalator działa także z klonu `orange-pi`, pobiera brakujący pełny rdzeń,
+weryfikuje sumy i wdraża aktualne moduły, konfigurację i Fluidd z udanej
+kompilacji projektu. Nie potrzebuje starego hosta ani jego zrzutu.
+Pierwsza instalacja sprawdza konfigurację offline przed zastąpieniem KIAUH;
+nie wgrywa MCU, nie wykonuje homingu ani nie grzeje.
+Po instalacji przejdź do punktu 6. Dane indywidualnej kalibracji powstają
+podczas uruchomienia nowej drukarki i mogą być osobno przeniesione przy migracji.
+
+Poniżej pozostaje alternatywa z niezmiennym ZIP v1.0.2 dla Pythona 3.10–3.12.
 
 Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 

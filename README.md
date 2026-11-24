@@ -10,6 +10,24 @@ This port runs Klipper on the original **Zortrax M300 Classic** controller with 
 
 ## Install and operate
 
+For a **new KIAUH host**, clone this repository and run the first-install entry
+point below as the KIAUH account. It installs the complete matching Klipper,
+M300 configuration/macros and compiled Fluidd. A previous Pi or personal backup
+is not required. Debian 13 Trixie with Python 3.13 is supported by this path.
+The example selects Orange Pi Zero 4 UART2; use your board's enabled UART and
+the baud configured in the printer's existing compatible bootloader/MCU.
+
+```bash
+git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+cd "$HOME/m300-src" &&
+python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --apply
+```
+
+KIAUH must already provide one Klipper/Moonraker/Fluidd instance. The installer
+uses the latest successful `orange-pi` deployment, verifies the pinned core,
+tests the production configuration offline, and backs up the replaced stock
+setup. See the full first-install guide for MCU flashing and calibration.
+
 | What you want to do | Where to start |
 |---|---|
 | Install on a new Orange Pi or Raspberry Pi | [First installation, wiring, full ZIP and commissioning](docs/en/FIRST_INSTALL.md) |

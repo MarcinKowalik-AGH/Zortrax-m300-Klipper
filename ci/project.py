@@ -20,7 +20,7 @@ def digest(path):
 
 
 def source_digest():
-    inputs = [ROOT / 'PORT.json']
+    inputs = [ROOT / 'PORT.json', ROOT / 'install-new-host.py']
     for directory in ('ci', 'host', 'mcu/SOURCE_MCU', 'mcu/tests', 'tests'):
         inputs.extend(path for path in (ROOT / directory).rglob('*')
                       if path.is_file() and '__pycache__' not in path.parts

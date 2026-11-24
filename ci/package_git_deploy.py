@@ -30,12 +30,18 @@ def package(release, output, commit):
 
     (output / 'MCU').mkdir()
     for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_SD.zip',
+                 'MCU/klipper.dict', 'install-fresh.py', 'install-new-host.py',
                  'install-orange-pi.py', 'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
+    shutil.copytree(release/'FIRST_INSTALL',output/'FIRST_INSTALL')
     (output / 'README.md').write_text(
         '# M300 Classic ' + provenance['distribution_version'] + ' — Orange Pi\n\n'
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
+        'For a NEW KIAUH host (including Debian 13 / Python 3.13), run '
+        '`python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --apply`.\n'
+        'Substitute the actual enabled UART and bootloader baud for your board. '
+        'No previous Pi or personal configuration archive is needed.\n'
         'Run `python3 install-orange-pi.py` as the Klipper user while idle and Ready to update the host.\n'
         'For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --update-fluidd --port 4480`.\n'
         'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'

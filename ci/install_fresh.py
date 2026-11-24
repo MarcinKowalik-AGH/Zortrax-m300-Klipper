@@ -25,9 +25,9 @@ PACKAGE = Path(__file__).resolve().parent
 BAUDS = (115200, 250000, 500000, 750000, 1000000, 1500000)
 
 
-def run(*args, capture=False, cwd=None):
+def run(*args, capture=False, cwd=None, timeout=None):
     result = subprocess.run([str(a) for a in args], check=True, text=True,
-                            stdout=subprocess.PIPE if capture else None, cwd=cwd)
+                            stdout=subprocess.PIPE if capture else None, cwd=cwd, timeout=timeout)
     return result.stdout
 
 
@@ -152,6 +152,30 @@ def require_unused_klipper(printer):
         raise ValueError('First install expects an unused, unconfigured KIAUH instance')
 
 
+def validate_runtime(python, root, config, dictionary, *, execute=run):
+    """Load the real production config offline before replacing any active file."""
+    with tempfile.TemporaryDirectory(prefix='m300-fileoutput-', dir=config.parent) as temporary:
+        directory = Path(temporary)
+        isolated = directory/'config'
+        shutil.copytree(config, isolated)
+        services = isolated/'m300_services.cfg'
+        text = re.sub(r'(?m)^path: .*m300_settings\.json$',
+                      'path: '+str(isolated/'m300_settings.json'), services.read_text())
+        services.write_text(text)
+        source = directory/'input.gcode'
+        source.write_text('ZORTRAX_NATIVE_STATUS\nZORTRAX_SETTINGS_STATUS\n'
+                          'ZORTRAX_PAD_MESH_STATUS\nPRINT_CONTROL_STATUS\n')
+        log = directory/'klippy.log'
+        output=execute(python, root/'klippy/klippy.py', isolated/'printer.cfg',
+                '-i', source, '-o', directory/'protocol.bin', '-d', dictionary, '-l', log,
+                timeout=45,capture=True)
+        text = output+log.read_text()
+        markers=('Configured MCU','M300_NATIVE ','M300_PAD_MESH ','M300_PRINT_CONTROL ')
+        if (not all(marker in text for marker in markers) or 'Traceback' in text
+                or 'Error loading printer config' in text or 'Config error' in text):
+            raise ValueError('Production Klippy FILEOUTPUT failed:\n'+text[-5000:])
+
+
 def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=None, web_hosts=None, execute=run):
     config = data/'config/printer.cfg'
     refuse_existing(config, root)
@@ -188,6 +212,7 @@ def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=
                 raise ValueError('Python dependency conflicts with Klipper: '+dependency.name)
             dependency.rename(target)
         execute(python,'-c','import chelper; chelper.get_ffi()',cwd=source/'klippy')
+        validate_runtime(python, source, dest, package/'MCU/klipper.dict', execute=execute)
         deploy = module('m300_first_deploy',package/'install-orange-pi.py')
         archive = package/'M300_FLUIDD.zip'
         web = deploy.extract_web(archive, stage/'web')
@@ -235,7 +260,7 @@ def install(package, root, data, python, serial, baud, web_root, *, fluidd_port=
         shutil.rmtree(stage)
 
 
-def main():
+def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--serial',required=True,type=Path,help='Enabled Linux UART, e.g. /dev/ttyS1 or /dev/serial0')
     parser.add_argument('--baud',type=int,choices=BAUDS,default=750000,help='Must match the printer bootloader setting')
@@ -245,10 +270,10 @@ def main():
     parser.add_argument('--port',type=int,default=None,help='Existing Fluidd port; prefer 4480, else unambiguous nginx detection')
     parser.add_argument('--fluidd-root',type=Path)
     parser.add_argument('--apply',action='store_true')
-    args=parser.parse_args()
+    args=parser.parse_args(argv)
     try:
         if os.geteuid()==0:raise ValueError('Run as the KIAUH account, not root')
-        if not (3,10)<=sys.version_info[:2]<=(3,12):raise ValueError('First install supports Python 3.10-3.12')
+        if not (3,10)<=sys.version_info[:2]<=(3,13):raise ValueError('First install supports Python 3.10-3.13')
         provenance=verify(PACKAGE)
         root,data,python=args.klipper_root.absolute(),args.data.absolute(),args.python.absolute()
         for path in (root,data,python,args.serial):
@@ -257,6 +282,9 @@ def main():
             raise ValueError('Select an existing UART character device')
         if not os.access(args.serial,os.R_OK|os.W_OK):raise ValueError('Current account needs read/write access to the UART')
         if not python.is_file():raise ValueError('Install Klipper with KIAUH first')
+        runtime=json.loads(run(python,'-c','import json,sys;print(json.dumps(list(sys.version_info[:3])))',capture=True))
+        if not (3,10)<=tuple(runtime[:2])<=(3,13):
+            raise ValueError('Klipper service Python must be 3.10-3.13: '+str(runtime))
         refuse_existing(data/'config/printer.cfg',root)
         if not (data/'config/moonraker.conf').is_file():raise ValueError('Install Moonraker with KIAUH first')
         moonraker_config((data/'config/moonraker.conf').read_text())
@@ -270,6 +298,7 @@ def main():
         plan=dict(status='PLAN_FIRST_M300_INSTALL',source_commit=provenance['github_commit'],
                   serial=str(args.serial),baud=args.baud,klipper=str(root),data=str(data),
                   fluidd_root=str(web),fluidd_port=fluidd_port,selection=selection,
+                  python=runtime,
                   mcu_flashed=False,motion_or_heating_sent=False)
         if args.apply:
             plan['backup']=str(install(PACKAGE,root,data,python,args.serial,args.baud,web,
@@ -277,7 +306,7 @@ def main():
                                        web_hosts=deploy.nginx_probe_hosts(nginx_config,fluidd_port,web)))
             plan['status']='INSTALLED_FIRST_M300_CHECK_READY'
         print(json.dumps(plan,indent=2))
-    except (ValueError,OSError,KeyError,subprocess.CalledProcessError) as exc:
+    except (ValueError,OSError,KeyError,subprocess.CalledProcessError,subprocess.TimeoutExpired) as exc:
         parser.exit(1,'M300 first install stopped: '+str(exc)+'\n')
 
 
