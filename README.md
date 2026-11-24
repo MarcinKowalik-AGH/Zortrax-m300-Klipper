@@ -10,6 +10,6 @@ With MCU 1.0.8, Klipper automatically synchronizes print time to the board while
 
 Optional USB camera (disabled by default): `python3 install-camera.py --enable --apply`. Edit `~/printer_data/config/m300_camera.conf` and run `python3 install-camera.py --apply` to change it or disable streaming. See CAMERA_PL.md / CAMERA_EN.md.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/20115e6b171c74a12a9578a3c95ec488c8ff6dd8/docs/en/INSTALL.md)
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/b52cd9e8aafc21eee30c4baa177cf34084e8341f/docs/en/INSTALL.md)
 
-Source commit: `20115e6b171c74a12a9578a3c95ec488c8ff6dd8`
+Source commit: `b52cd9e8aafc21eee30c4baa177cf34084e8341f`
