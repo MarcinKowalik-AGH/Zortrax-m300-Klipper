@@ -34,7 +34,8 @@ def main():
         current=base/'deployment';current.mkdir()
         stage_host_update(current/'M300_HOST')
         first=current/'FIRST_INSTALL';first.mkdir()
-        for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
+        for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg',
+                     'm300_camera.conf'):
             shutil.copy2(ROOT/'host/config'/name,first/name)
         shutil.copy2(ROOT/'host/requirements-m300.txt',first/'requirements-m300.txt')
         shutil.copytree(release/'MCU',current/'MCU')
@@ -42,6 +43,9 @@ def main():
         shutil.copy2(release/'BUILD_PROVENANCE.json',current/'BUILD_PROVENANCE.json')
         shutil.copy2(ROOT/'ci/install_fresh.py',current/'install-fresh.py')
         shutil.copy2(ROOT/'ci/install_orange_pi.py',current/'install-orange-pi.py')
+        shutil.copy2(ROOT/'ci/install_camera.py',current/'install-camera.py')
+        for language in ('en', 'pl'):
+            shutil.copy2(ROOT/'docs'/language/'CAMERA.md', current/('CAMERA_'+language.upper()+'.md'))
         shutil.copy2(ROOT/'install-new-host.py',current/'install-new-host.py')
         (current/'SHA256SUMS').write_text(''.join(digest(p)+'  '+p.relative_to(current).as_posix()+'\n'
             for p in sorted(current.rglob('*')) if p.is_file()))
@@ -88,6 +92,7 @@ def main():
         assert 'kinematics: cartesian' in text
         assert 'serial: /dev/ttyS2' in text
         assert '[gcode_macro M300_HOME_ALL]' in text
+        assert '[camera]\nenabled: False' in (config/'m300_camera.conf').read_text()
         assert 'm300-test01' not in text and 'TEST01_UNQUALIFIED' not in text
         report=dict(status='PASS_PUBLIC_GIT_FIRST_INSTALL_FILEOUTPUT',python=sys.version.split()[0],
                     config_source='PUBLIC_FIRST_INSTALL_TEMPLATES',previous_printer_required=False,

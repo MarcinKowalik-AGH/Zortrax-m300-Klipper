@@ -30,11 +30,14 @@ class BootstrapTests(unittest.TestCase):
         self.files={'BUILD_PROVENANCE.json':json.dumps(latest),
             'install-fresh.py':'new installer','install-orange-pi.py':'updater',
             'install-new-host.py':'bootstrap','M300_FLUIDD.zip':'new frontend',
+            'install-camera.py':'optional camera installer','CAMERA_PL.md':'camera instructions',
+            'CAMERA_EN.md':'camera instructions',
             'MCU/klipper.dict':'new dictionary',
             'FIRST_INSTALL/m300_classic_base.cfg':'public base config',
             'FIRST_INSTALL/m300_classic_services.cfg':'public services',
             'FIRST_INSTALL/m300_classic_sensors.cfg':'public sensors',
             'FIRST_INSTALL/requirements-m300.txt':'exact requirements',
+            'FIRST_INSTALL/m300_camera.conf':'[camera]\nenabled: False\n',
             'M300_HOST/core/gcode.py':'current parser',
             'M300_HOST/payload/m300_current.py':'current module'}
         self.write_current()
@@ -64,6 +67,8 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual((result/'MCU/klipper.dict').read_text(),'new dictionary')
         self.assertEqual((result/'FIRST_INSTALL/m300_classic_base.cfg').read_text(),'public base config')
         self.assertFalse((result/'FIRST_INSTALL/old.cfg').exists())
+        self.assertEqual((result/'install-camera.py').read_text(),'optional camera installer')
+        self.assertIn('enabled: False', (result/'FIRST_INSTALL/m300_camera.conf').read_text())
         self.assertEqual(json.loads((result/'BOOTSTRAP_PROVENANCE.json').read_text())['deployment_commit'],'c'*40)
         bootstrap.manifest(result)
 

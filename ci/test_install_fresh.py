@@ -33,7 +33,8 @@ class FirstInstallTest(unittest.TestCase):
             '[update_manager fluidd]\nrepo: fluidd-core/fluidd\n')
         self.package=self.base/'package';self.package.mkdir()
         first=self.package/'FIRST_INSTALL';first.mkdir()
-        for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
+        for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg',
+                     'm300_camera.conf'):
             shutil.copy2(ROOT/'host/config'/name,first/name)
         (first/'requirements-m300.txt').write_text('cffi==2.1.1\n')
         stage_host_update(self.package/'M300_HOST')
@@ -59,6 +60,17 @@ class FirstInstallTest(unittest.TestCase):
     def test_existing_m300_requires_updater(self):
         (self.root/'klippy/extras/m300_mcu.py').write_text('existing')
         with self.assertRaisesRegex(ValueError,'already installed'):fresh.refuse_existing(self.config,self.root)
+
+    def test_optional_camera_starts_disabled_and_existing_config_is_preserved(self):
+        dest = self.base/'rendered';dest.mkdir()
+        fresh.render_config(self.package,dest,self.data,Path('/dev/ttyS2'),750000,'test')
+        self.assertIn('enabled: False', (dest/'m300_camera.conf').read_text())
+        (dest/'m300_camera.conf').unlink()
+        existing = self.data/'config/m300_camera.conf'
+        existing.write_text('keep custom camera settings')
+        fresh.render_config(self.package,dest,self.data,Path('/dev/ttyS2'),750000,'test')
+        self.assertFalse((dest/'m300_camera.conf').exists())
+        self.assertEqual(existing.read_text(),'keep custom camera settings')
 
     def test_actual_kiauh_placeholder_is_accepted_real_mcu_is_refused(self):
         text='[mcu]\nserial: /dev/serial/by-id/<your-mcu-id>\n\n[virtual_sdcard]\npath: '+str(self.data/'gcodes')+'\non_error_gcode: CANCEL_PRINT\n\n[printer]\nkinematics: none\nmax_velocity: 1000\nmax_accel: 1000\n'

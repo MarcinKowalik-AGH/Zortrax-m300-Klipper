@@ -131,6 +131,7 @@ def compose_package(base_archive, current, directory):
     for name in files:
         if (name.startswith(('M300_HOST/','FIRST_INSTALL/','MCU/'))
                 or name in ('install-fresh.py','install-new-host.py','install-orange-pi.py',
+                            'install-camera.py','CAMERA_PL.md','CAMERA_EN.md',
                             'M300_FLUIDD.zip','BUILD_PROVENANCE.json')):
             target = package/name
             target.parent.mkdir(parents=True, exist_ok=True)

@@ -8,6 +8,8 @@
 
 This port runs Klipper on the original **Zortrax M300 Classic** controller with its OLED, encoder and contact plate. The supported pair is host **1.0.2** and MCU **1.0.8**. Fluidd runs on port **4480**. The 36 printer-specific operator macros now start with `M300_`. Existing files can still call the previous `ZORTRAX_` names.
 
+[Optional USB camera](docs/en/CAMERA.md): disabled by default, with a separate host configuration and Fluidd view.
+
 ## Install and operate
 
 For a **new KIAUH host**, clone this repository and run the first-install entry

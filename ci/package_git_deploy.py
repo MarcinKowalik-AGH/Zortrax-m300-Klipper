@@ -31,7 +31,8 @@ def package(release, output, commit):
     (output / 'MCU').mkdir()
     for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_SD.zip',
                  'MCU/klipper.dict', 'install-fresh.py', 'install-new-host.py',
-                 'install-orange-pi.py', 'BUILD_PROVENANCE.json', 'LICENSE',
+                 'install-orange-pi.py', 'install-camera.py', 'CAMERA_PL.md', 'CAMERA_EN.md',
+                 'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
     shutil.copytree(release/'FIRST_INSTALL',output/'FIRST_INSTALL')
@@ -47,6 +48,11 @@ def package(release, output, commit):
         'The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.\n'
         'With MCU 1.0.8, Klipper automatically synchronizes print time to the board while idle. '
         'Install the MCU image from SD only if the board still requires the firmware update.\n\n'
+        'Optional USB camera (disabled by default): '
+        '`python3 install-camera.py --enable --apply`. '
+        'Edit `~/printer_data/config/m300_camera.conf` and run '
+        '`python3 install-camera.py --apply` to change it or disable streaming. '
+        'See CAMERA_PL.md / CAMERA_EN.md.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')

@@ -36,6 +36,7 @@ szablonu. Pełna instrukcja poniżej opisuje wgranie MCU i kalibrację drukarki.
 | Przygotować płytę i wydruk z OrcaSlicera | [Poziomowanie i mesh](docs/pl/BED_MESH_AND_LEVELING.md) · [Komendy START i END](docs/pl/PRINT_CONTROL.md) · [Profile OrcaSlicera](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer) |
 | Zrobić pauzę, zmienić kolor i wznowić | [Podręcznik operatora](docs/pl/USER_GUIDE.md) · [Filament i przepłukiwanie dyszy](docs/pl/MAINTENANCE_MATERIAL.md) |
 | Obsługiwać OLED i makra we Fluidd | [Sterowanie](docs/pl/RC1_UI.md) · [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [65 ilustrowanych ekranów](docs/pl/OLED_FUNCTIONS.md) |
+| Dodać opcjonalną kamerę USB | [Włączenie, wyłączenie i konfiguracja kamery w Fluidd](docs/pl/CAMERA.md) |
 | Sprawdzić parametry, błędy i stan odbioru | [Parametry techniczne](docs/pl/TECHNICAL_REFERENCE.md) · [Diagnostyka](docs/pl/USER_GUIDE.md#9-rozpoznawanie-problemów) · [Rejestr prób sprzętowych](docs/pl/ACCEPTANCE_REGISTER.md) |
 
 ## Aktualizacja działającego Orange Pi

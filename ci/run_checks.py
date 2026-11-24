@@ -65,6 +65,7 @@ def main():
     run('temperature_editor_rasters', [sys.executable, ROOT/'ci/render_temperature_editors.py', '--check'])
     run('approved_menu_animation', [sys.executable, ROOT/'ci/check_menu_animation.py', '--check'])
     run('orange_pi_installer', [sys.executable, ROOT / 'ci/test_install_orange_pi.py'])
+    run('optional_usb_camera', [sys.executable, ROOT / 'ci/test_install_camera.py'])
     run('first_install', [sys.executable, ROOT / 'ci/test_install_fresh.py'])
     run('maintenance_performance', [sys.executable, ROOT/'ci/benchmark_maintenance.py',
         '--package',host,'--output',report/'MAINTENANCE_PERFORMANCE.json'])

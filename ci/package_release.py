@@ -134,6 +134,10 @@ def main():
     for name in ('m300_classic_base.cfg','m300_classic_services.cfg','m300_classic_sensors.cfg'):
         shutil.copy2(ROOT/'host/config'/name,first/name)
     shutil.copy2(ROOT/'host/requirements-m300.txt',first/'requirements-m300.txt')
+    shutil.copy2(ROOT/'host/config/m300_camera.conf',first/'m300_camera.conf')
+    shutil.copy2(ROOT/'ci/install_camera.py',release/'install-camera.py')
+    for language in ('en', 'pl'):
+        export_guide(ROOT/'docs'/language/'CAMERA.md', release/('CAMERA_'+language.upper()+'.md'))
     shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
     shutil.copy2(ROOT/'install-new-host.py',release/'install-new-host.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
