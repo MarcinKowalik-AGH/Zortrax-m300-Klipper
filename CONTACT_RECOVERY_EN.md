@@ -1,6 +1,6 @@
 # No nozzle contact during homing or bed measurement
 
-Host R16.16, 26 November 2026. Existing MCU firmware 1.0.9 is sufficient.
+Host R16.17, 26 November 2026. Existing MCU firmware 1.0.9 is sufficient.
 
 A recognized missing or unstable PC7 contact aborts measurement and turns off
 the heater targets. With a known native Z position, the host lowers the bed
@@ -54,12 +54,48 @@ Software regression tests cover the native contact failure, 100 mm clearance,
 Z limits, stuck PC7, invalidated Z, a subsequent home and refusal of recovery
 after a controller fault. Physical printer acceptance remains required.
 
-## Separate heating failure
+## Warm reheat after a restart
 
-The supplied log first shows unstable PC7 contact with a stable 260°C nozzle.
-After the restart, a warm reheat starts near 231°C, initially cools to around
-226°C despite a 100% PWM request, and then starts rising. Native heater
-verification stops that attempt. This change removes forced shutdown for
-recognized contact failures. It does not change PID, `verify_heater`,
-temperature limits or MCU guards, and does not establish that the delayed
-heater response has been resolved.
+Two operator logs show delayed temperature response when reheating a hot nozzle.
+With a 230°C target, the reading initially falls from about 192°C to 189°C
+despite a 100% PWM request. It starts recovering near the end of the native
+20-second verification window and rises to about 195°C even after the shutdown
+cuts power. The preceding cold warmup showed a steady temperature rise.
+
+R16.17 uses the following native configuration for new installations and adds
+it during upgrades only when no verification section already exists:
+
+```ini
+[verify_heater extruder]
+check_gain_time: 40
+```
+
+For an existing installation, add this section before the `SAVE_CONFIG` block
+in `printer.cfg`, then issue `FIRMWARE_RESTART`. If an include already defines
+it, edit that section instead of adding a duplicate. Existing operator choices
+are preserved by the installer. Native `heating_gain=2`, `hysteresis=5` and
+`max_error=120` remain the defaults; PID, temperature limits and MCU guards
+remain active.
+
+Replaying the measured initial observations reproduces the 20-second shutdown;
+the 40-second configuration keeps waiting within that observed interval. This
+does not establish that the physical nozzle reaches its target. Before printing,
+observe a supervised nozzle-only 230°C warmup. If normal heating does not recover,
+check the heater, sensor mounting and wiring instead of increasing further limits.
+
+## Tune navigation
+
+`START_PRINT ... MESH=AUTO` loads a saved profile without running a new mesh.
+The independent mesh observer owns automatic Tune navigation. R16.17 blocks
+that navigation during printing, pausing or an active virtual SD file. Independent
+operator mesh measurements retain their normal Tune navigation. Update only
+Fluidd, including while Klipper is shut down, with:
+
+```bash
+cd "$HOME/m300-orange-pi" &&
+git pull --ff-only &&
+sha256sum -c --quiet SHA256SUMS &&
+python3 install-orange-pi.py --update-fluidd --port 4480
+```
+
+Reload Fluidd after updating.

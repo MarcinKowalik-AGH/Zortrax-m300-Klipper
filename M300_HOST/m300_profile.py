@@ -40,6 +40,9 @@ CHOICE_MACROS = {
 }
 PINS = {'extruder': ('heater_pin', 'PC8'), 'heater_bed': ('heater_pin', 'PC9'),
         'fan': ('pin', 'PE13'), 'heater_fan hotend': ('pin', 'PE14')}
+EXTRUDER_VERIFY = ('\n[verify_heater extruder]\n'
+    '# Measured M300 warm-reheat lag; retain native gain/range/error limits.\n'
+    'check_gain_time: 40\n')
 LEGACY_PAD_MESH_FIELDS = ('PROFILE PREVIEW CORNER_PAD_WIDTH CENTER_PAD_WIDTH EDGE_MARGIN '
     'FRONT_RIGHT_X FRONT_RIGHT_Y FRONT_LEFT_X FRONT_LEFT_Y CENTER_X CENTER_Y '
     'REAR_RIGHT_X REAR_RIGHT_Y REAR_LEFT_X REAR_LEFT_Y FIT_TRAVEL TRAVEL_MARGIN HOTEND_TEMP BED_TEMP').split()
