@@ -17,6 +17,8 @@ The new-host installer copies both optional temperature configs, disabled by def
 
 Contact recovery lowers the bed by 100 mm within the Z travel after a recognized nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/5de3a99b7a89e28fbb7975111a1c8f0711ec0919/docs/en/INSTALL.md)
+OLED menu audit and shared macro bindings (R16.18): see OLED_MENU_PL.md / OLED_MENU_EN.md and OLED_MENU_AUDIT.json. Use the host updater for OLED fixes; updating Fluidd alone does not install them. Software validation does not replace hardware acceptance.
 
-Source commit: `5de3a99b7a89e28fbb7975111a1c8f0711ec0919`
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/en/INSTALL.md)
+
+Source commit: `7686081e457a6868d6730ddf1087f077d21e81ca`

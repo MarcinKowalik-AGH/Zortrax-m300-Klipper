@@ -268,16 +268,22 @@ class M300Menu:
         self._procedure_launch = None
         return hint['origin']
 
-    def present_procedure(self, view, page, selection=0):
+    def present_procedure(self, view, page, selection=0, *, explicit=False):
         """Temporarily show this owner/session, retaining its invoking screen."""
         oled = self.printer.lookup_object('m300_oled', None)
         if oled is None:
             return False
         session = view['owner'], view['token']
+        if explicit and session == getattr(self, '_procedure_dismissed', None):
+            self._procedure_dismissed = None
         if session == getattr(self, '_procedure_dismissed', None):
             return False
         context = getattr(self, '_procedure_return', None)
         route = self._panel_route()
+        if explicit and context is not None and context['shown'] != route:
+            # A deliberate Current procedure request may borrow the new
+            # invoking screen. Only navigation is reopened, never the owner.
+            context = None
         if context is None or context['session'] != session:
             origin = self._launch_origin(view)
             if origin is None:
@@ -297,6 +303,37 @@ class M300Menu:
         oled.message = None
         self._refresh_panel(oled)
         return True
+
+    def show_current_procedure(self, view):
+        oled = self.printer.lookup_object('m300_oled', None)
+        status = view['snapshots'].get(view['owner'], {})
+        if (oled is None or not oled.connected or self.printer.is_shutdown()
+                or status.get('platform_panel_local')):
+            return False  # Never replace the row authorizing a held platform.
+        if view['owner'] is None:
+            self._navigate('procedure')
+            oled.page, oled.selection, oled.message = 'm04', 0, None
+            self._refresh_panel(oled)
+            return True
+        page = ('bed_mesh' if view['owner'] == 'm300_pad_mesh' else
+                'fan_test' if (view.get('maintenance_screen') or {}).get('kind') == 'fan_menu'
+                else 'procedure')
+        return self.present_procedure(view, page, explicit=True)
+
+    def _procedure_rows(self, service, now, back):
+        view = service.view(now)
+        title, rows = service.rows(now)
+        if (view.get('maintenance_screen') or {}).get('kind') == 'fan_menu':
+            return title, rows  # Back ends the fan owner through its live token.
+        context = getattr(self, '_procedure_return', None)
+        if (not view['busy'] and context is not None
+                and context['session'] == (view['owner'], view['token'])):
+            back = [('Back', ('procedure_return', view['owner'], view['token']))]
+        if rows and rows[0][0] == 'Back':
+            rows = back + rows[1:]
+        elif not view['busy']:
+            rows = back + rows
+        return title, self._notice(rows)
 
     def _refresh_panel(self, oled):
         oled._input_epoch = getattr(oled, '_input_epoch', 0)+1
@@ -511,7 +548,7 @@ class M300Menu:
             title, rows = self.oem_rows(self.page)
             return title, self._notice(rows)
         if native and self.page == 'fan_test':
-            return self._service('m300_procedures').rows(now)
+            return self._procedure_rows(self._service('m300_procedures'), now, back)
         if native:
             from .m300_settings import PAGES
             if self.page in PAGES:
@@ -535,9 +572,9 @@ class M300Menu:
             def command(script):
                 return None if busy else ('native_gcode', script)
             return 'PID calibration', back + [
-                ('Hotend PID 200C', command('PID_CALIBRATE HEATER=extruder TARGET=200')),
-                ('Bed PID 60C', command('PID_CALIBRATE HEATER=heater_bed TARGET=60')),
-                ('Save calibration', command('SAVE_CONFIG'))]
+                ('Hotend PID 200C', command('PID_HOTEND TARGET=200')),
+                ('Bed PID 60C', command('PID_BED TARGET=60')),
+                ('Save calibration', command('PID_SAVE'))]
         if native and self.page == 'native_job':
             stats = self.printer.lookup_object('print_stats', None)
             view = stats.get_status(now) if stats is not None else {}
@@ -575,10 +612,7 @@ class M300Menu:
             service = self.printer.lookup_object('m300_procedures', None)
             if service is None:
                 return 'Current procedure', back + [('Procedure view unavailable', None)]
-            title, rows = service.rows(now)
-            if rows and rows[0][0] == 'Back':
-                rows = back + rows[1:]
-            return title, self._notice(rows)
+            return self._procedure_rows(service, now, back)
         if self.page == 'fans':
             service = self.printer.lookup_object('m300_fans', None)
             if service is None:
