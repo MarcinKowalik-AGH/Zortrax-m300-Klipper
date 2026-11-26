@@ -36,7 +36,7 @@ choices are preserved by the updater.
 
 ## Install or update
 
-For a new host use [FIRST_INSTALL](FIRST_INSTALL.md). The public release includes
+For a new host use [FIRST_INSTALL](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/en/FIRST_INSTALL.md). The public release includes
 `Zortrax_M300_Klipper_v1.0.4.zip`, its external SHA-256 file and separate PL/EN
 first-install guides. The ZIP contains the complete patched Klipper runtime,
 MCU SD image, built Fluidd, configuration, installers and reports.
@@ -53,17 +53,17 @@ python3 install-orange-pi.py
 Update the web interface separately with
 `python3 install-orange-pi.py --update-fluidd --port 4480` and reload Fluidd.
 MCU **1.0.9 needs no reflash**. Upgrade an older MCU before enabling its internal
-temperature option. [MCU instructions](MCU_FIRMWARE_1.0.9.md).
+temperature option. [MCU instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/en/MCU_FIRMWARE_1.0.9.md).
 
 ## Verification and hardware scope
 
 The software suite includes 1055 host tests, actual Klippy FILEOUTPUT,
 upgrade/rollback, complete first installation on Python 3.12 and 3.13 and frontend
-tests. The [OLED audit](OLED_MENU_AUDIT.md) covers 44 views, 582 rows and 26 command
+tests. The [OLED audit](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/en/OLED_MENU_AUDIT.md) covers 44 views, 582 rows and 26 command
 bindings. These tests do not actuate a physical printer.
 
 The new screenshot confirms visible camera and Host/MCU graph UI on the operator's
 printer. It is not a blanket acceptance of every procedure or sensor accuracy.
-The [hardware register](../pl/ACCEPTANCE_REGISTER.md) retains reported failures
+The [hardware register](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/en/../pl/ACCEPTANCE_REGISTER.md) retains reported failures
 and pending tests. The illustrated OLED atlas keeps its historical **beta.20**
 baseline. Existing 1.0.3 assets and tag remain unchanged.

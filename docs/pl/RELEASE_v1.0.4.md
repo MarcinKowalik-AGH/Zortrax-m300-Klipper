@@ -36,7 +36,7 @@ ustawienia Z, UART i istniejące wybory konfiguracji.
 
 ## Instalacja i aktualizacja
 
-Nowy host przygotuj według [pełnej instrukcji](FIRST_INSTALL.md). Publiczne
+Nowy host przygotuj według [pełnej instrukcji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/pl/FIRST_INSTALL.md). Publiczne
 wydanie zawiera `Zortrax_M300_Klipper_v1.0.4.zip`, plik zewnętrznych sum SHA-256
 oraz instrukcje pierwszej instalacji PL/EN. ZIP zawiera pełny zmodyfikowany
 rdzeń Klippera, aplikację MCU na SD, gotowe Fluidd, konfigurację, instalatory i raporty.
@@ -53,16 +53,16 @@ python3 install-orange-pi.py
 Osobno zaktualizuj interfejs przez
 `python3 install-orange-pi.py --update-fluidd --port 4480` i odśwież Fluidd.
 **MCU 1.0.9 nie wymaga ponownego wgrywania.** Starszą wersję zaktualizuj przed
-włączeniem temperatury wewnętrznej. [Instrukcja MCU](MCU_FIRMWARE_1.0.9.md).
+włączeniem temperatury wewnętrznej. [Instrukcja MCU](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/pl/MCU_FIRMWARE_1.0.9.md).
 
 ## Walidacja i odbiory
 
 Walidacja programu obejmuje 1055 testów hosta, prawdziwy proces Klippy FILEOUTPUT,
 migracje i wycofanie zmian, pełną nową instalację na Pythonie 3.12 i 3.13 oraz
-testy Fluidd. [Audyt OLED](OLED_MENU_AUDIT.md) obejmuje 44 widoki, 582 wiersze
+testy Fluidd. [Audyt OLED](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/pl/OLED_MENU_AUDIT.md) obejmuje 44 widoki, 582 wiersze
 i powiązania 26 komend. Testy nie sterują fizyczną drukarką.
 
 Nowy zrzut potwierdza widoczny obraz kamery i wykresy Host/MCU u operatora.
-Nie jest odbiorem każdej procedury ani dokładności czujników. [Rejestr sprzętowy](ACCEPTANCE_REGISTER.md)
+Nie jest odbiorem każdej procedury ani dokładności czujników. [Rejestr sprzętowy](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/v1.0.4/docs/pl/ACCEPTANCE_REGISTER.md)
 zachowuje zgłoszone błędy i próby oczekujące. Atlas ilustracji OLED ma historyczny
 punkt odniesienia **beta.20**. Pliki i tag poprzedniego wydania 1.0.3 pozostają niezmienione.
