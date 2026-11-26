@@ -103,7 +103,7 @@ def main():
         check(ImageChops.difference(b,expected).getbbox() is None, 'square-3x:'+s['id'])
         native_pixels += a.width*a.height
     screenshots = json.loads((ROOT/'docs/reports/IMAGE_PROVENANCE.json').read_text())
-    cover = 'docs/img/m300-orcaslicer-fluidd-printing.png'
+    cover = 'docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png'
     check(sum(item['file'] == cover for item in screenshots) == 1, 'cover-provenance')
     for s in screenshots:
         p = ROOT/s['file']

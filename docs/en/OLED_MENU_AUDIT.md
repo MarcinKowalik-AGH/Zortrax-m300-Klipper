@@ -1,5 +1,6 @@
 # OLED menu audit — R16.18
 
+The R16.18 functional audit is included in release **1.0.4 / R16.19**.
 [Installation](INSTALL.md) · [Hardware acceptance](../pl/ACCEPTANCE_REGISTER.md) · [Complete view and command inventory](../reports/OLED_MENU_AUDIT.json)
 
 Scope: **M300 Classic, MCU 1.0.9, host R16.18**. Software checks cover production

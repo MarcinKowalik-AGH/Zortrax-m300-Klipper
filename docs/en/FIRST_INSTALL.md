@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.3 — first installation
+# Zortrax M300 Classic v1.0.4 — first installation
 
 If Klipper for M300 is already running on this host, follow the [update guide](INSTALL.md).
 
@@ -34,8 +34,7 @@ create a normal user with sudo. Use that same user for KIAUH and this installer.
 The current Git first-install helper supports Python **3.10–3.13**, including
 Trixie's Python 3.13. CI loads the complete public production configuration on
 Python 3.12 and 3.13 without an MCU; UART and board operation need physical
-acceptance. The original immutable v1.0.3 ZIP has the older 3.12 version gate;
-use the Git path below on Trixie to obtain the updated installer.
+acceptance. The full 1.0.4 ZIP and Git checkout both include the current Python 3.10–3.13 installer.
 
 | Host | UART setup |
 |---|---|
@@ -125,7 +124,7 @@ flashing, homing or heating is performed. Continue at step 6. Machine-specific
 calibration is created while commissioning a new printer and can be migrated
 separately when replacing its host.
 
-The immutable v1.0.3 ZIP alternative below remains for Python 3.10–3.12.
+The full v1.0.4 ZIP alternative below also supports Python 3.10–3.13.
 
 The versioned ZIP is an ordinary public Release download; a GitHub login and
 local MCU/Fluidd build tools are unnecessary.
@@ -133,11 +132,11 @@ local MCU/Fluidd build tools are unnecessary.
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/Zortrax_M300_Klipper_v1.0.3.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/SHA256SUMS-v1.0.3.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.3.zip$' SHA256SUMS-v1.0.3.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.3.zip &&
-cd Zortrax_M300_Klipper_v1.0.3 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.4/Zortrax_M300_Klipper_v1.0.4.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.4/SHA256SUMS-v1.0.4.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.4.zip$' SHA256SUMS-v1.0.4.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.4.zip &&
+cd Zortrax_M300_Klipper_v1.0.4 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -231,14 +230,14 @@ See the [workflow and pause/M600 parameters](../pl/PRINT_CONTROL.md).
 ## MCU print-time synchronization
 
 Klipper keeps print time on the host and automatically sends pending whole
-minutes to MCU 1.0.8 when the printer is idle and can safely write. The MCU
+minutes to MCU 1.0.8 or newer when the printer is idle and can safely write. The MCU
 updates the factory ID0 record in its own Flash and Klipper reads the result
 back. This works with the standard first-install configuration and requires
 no Flash dump. [Counter status checks](MCU_FIRMWARE_1.0.8.md#read-the-counter).
 
 ## Updates and acceptance scope
 
-The fixed `v1.0.3` package installs this candidate. The `orange-pi` branch
+The fixed `v1.0.4` package installs this candidate. The `orange-pi` branch
 serves later project updates. See the [update guide](INSTALL.md) to clone that
 branch and update Klipper. The guide also gives the separate Fluidd
 update or repair command for the existing site on 4480. Back up the Moonraker and operating-system
@@ -279,3 +278,12 @@ With the printer idle, run `FIRMWARE_RESTART`. After a few seconds,
 `M300_MCU_TEMPERATURE` reads the STM32 diagnostic. Each active include adds
 its Host or MCU curve; disabled includes do not block startup.
 See the [temperature guide](HOST_TEMPERATURE.md).
+
+
+## Optional USB camera
+
+The normal install does not start a camera. In the `orange-pi` checkout, enable it
+with `python3 install-camera.py --enable --apply` and disable it with `--disable --apply`.
+Its settings live in `m300_camera.conf`, separately from printer.cfg. Apply edits
+with `python3 install-camera.py --apply`. The [camera guide](CAMERA.md) covers
+selection, resolution and the UV4L-MJPEG Stream mode used in the tested OrcaSlicer.

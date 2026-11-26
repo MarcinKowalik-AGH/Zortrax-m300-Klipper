@@ -1,4 +1,4 @@
-# Zortrax M300 Classic v1.0.3 — instalacja od początku
+# Zortrax M300 Classic v1.0.4 — instalacja od początku
 
 Jeśli na tym hoście działa już Klipper dla M300, użyj [instrukcji aktualizacji](INSTALL.md).
 
@@ -42,8 +42,7 @@ wykonuj jako ten użytkownik.
 Aktualny instalator z Git obsługuje Python **3.10–3.13**, także Python 3.13
 dostarczany przez Trixie. CI uruchamia publiczną konfigurację pełnym Klipperem
 na Pythonie 3.12 i 3.13, bez MCU. Odbiór UART i sprzętu wykonuje się na płytce.
-Pierwotny, niezmienny ZIP v1.0.3 zawiera wcześniejszy instalator z ograniczeniem
-do 3.12; na Trixie użyj opisanej niżej ścieżki Git, która dostarcza nowy instalator.
+Pełny ZIP 1.0.4 i gałąź Git dostarczają aktualny instalator z obsługą Pythona 3.10–3.13.
 
 | Host | Ustawienie portu |
 |---|---|
@@ -133,18 +132,18 @@ nie wgrywa MCU, nie wykonuje homingu ani nie grzeje.
 Po instalacji przejdź do punktu 6. Dane indywidualnej kalibracji powstają
 podczas uruchomienia nowej drukarki i mogą być osobno przeniesione przy migracji.
 
-Poniżej pozostaje alternatywa z niezmiennym ZIP v1.0.3 dla Pythona 3.10–3.12.
+Alternatywnie użyj pełnego ZIP v1.0.4, również z obsługą Pythona 3.10–3.13.
 
 Paczka Release jest dostępna publicznie, bez logowania do GitHuba.
 
 ```bash
 mkdir -p "$HOME/m300-releases" &&
 cd "$HOME/m300-releases" &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/Zortrax_M300_Klipper_v1.0.3.zip &&
-curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.3/SHA256SUMS-v1.0.3.txt &&
-grep '  Zortrax_M300_Klipper_v1.0.3.zip$' SHA256SUMS-v1.0.3.txt | sha256sum -c - &&
-unzip Zortrax_M300_Klipper_v1.0.3.zip &&
-cd Zortrax_M300_Klipper_v1.0.3 &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.4/Zortrax_M300_Klipper_v1.0.4.zip &&
+curl -fLO https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.4/SHA256SUMS-v1.0.4.txt &&
+grep '  Zortrax_M300_Klipper_v1.0.4.zip$' SHA256SUMS-v1.0.4.txt | sha256sum -c - &&
+unzip Zortrax_M300_Klipper_v1.0.4.zip &&
+cd Zortrax_M300_Klipper_v1.0.4 &&
 sha256sum -c --quiet SHA256SUMS
 ```
 
@@ -238,14 +237,14 @@ END_PRINT
 ## Synchronizacja czasu druku z MCU
 
 Klipper zapisuje czas druku na hoście i automatycznie przekazuje oczekujące
-pełne minuty do MCU 1.0.8, gdy drukarka jest bezczynna i spełnia warunki
+pełne minuty do MCU 1.0.8 lub nowszego, gdy drukarka jest bezczynna i spełnia warunki
 zapisu. MCU aktualizuje fabryczny rekord ID0 we własnej pamięci Flash, a
 Klipper odczytuje wynik. Wystarcza standardowa konfiguracja pierwszej
 instalacji. [Odczyt stanu licznika](MCU_FIRMWARE_1.0.8.md#odczyt-licznika).
 
 ## Aktualizacje i zakres potwierdzenia
 
-Wersjonowana paczka instaluje `v1.0.3`. Gałąź `orange-pi` dostarcza
+Wersjonowana paczka instaluje `v1.0.4`. Gałąź `orange-pi` dostarcza
 późniejsze aktualizacje projektu. [Instrukcja aktualizacji](INSTALL.md) opisuje
 klonowanie gałęzi i aktualizację Klippera. Zawiera także osobne polecenie
 aktualizacji lub naprawy działającego Fluidd na porcie 4480. Przed osobną aktualizacją systemu lub Moonrakera
@@ -284,3 +283,12 @@ Po wgraniu dołączonego MCU 1.0.9 odkomentuj wybrane include w printer.cfg:
 Przy bezczynnej drukarce wykonaj `FIRMWARE_RESTART`. Po kilku sekundach
 `M300_MCU_TEMPERATURE` pokaże diagnostyczny odczyt STM32. Host oraz MCU mają
 niezależne serie na wykresie; wyłączony include nie blokuje uruchomienia. Szczegóły: [temperatury](HOST_TEMPERATURE.md).
+
+
+## Opcjonalna kamera USB
+
+Kamera nie jest uruchamiana przy zwykłej instalacji. W klonie `orange-pi` włącz ją
+przez `python3 install-camera.py --enable --apply`; wyłącz przez `--disable --apply`.
+Ustawienia znajdują się w `m300_camera.conf`, osobno od printer.cfg. Zmiany stosuje
+`python3 install-camera.py --apply`. [Pełna instrukcja](CAMERA.md) opisuje wybór
+urządzenia, rozdzielczości i trybu UV4L-MJPEG Stream działającego w OrcaSlicerze.

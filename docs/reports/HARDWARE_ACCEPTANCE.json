@@ -784,6 +784,44 @@
           }
         }
       ]
+    },
+    {
+      "id": "OPTIONAL_THERMALS_UI",
+      "function": "Opcjonalne wykresy temperatur Host i MCU",
+      "events": [
+        {
+          "date": "2026-11-26",
+          "version": "MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana",
+          "version_basis": "Zrzut operatora z 26.11.2026, sprzed publikacji 1.0.4; bez przypisania nowemu wydaniu.",
+          "test": "Ocena widocznych elementów Fluidd na dostarczonym zrzucie.",
+          "status": "CONFIRMED_UI",
+          "result": "Na oryginalnym zrzucie są krzywe Host i MCU oraz odczyty 40.9 C i 35.6 C.",
+          "problem": "Zrzut potwierdza prezentację; nie sprawdza kalibracji czujników ani wszystkich wariantów hosta.",
+          "evidence": {
+            "kind": "user_screenshot",
+            "artifact": "docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "USB_CAMERA_UI",
+      "function": "Opcjonalny podgląd kamery USB we Fluidd",
+      "events": [
+        {
+          "date": "2026-11-26",
+          "version": "MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana",
+          "version_basis": "Zrzut operatora z 26.11.2026, sprzed publikacji 1.0.4; bez przypisania nowemu wydaniu.",
+          "test": "Ocena widocznych elementów Fluidd na dostarczonym zrzucie.",
+          "status": "CONFIRMED_UI",
+          "result": "Na oryginalnym zrzucie widoczny jest obraz stołu w panelu M300 USB.",
+          "problem": "Pojedynczy zrzut nie mierzy płynności ani stabilności długiej transmisji.",
+          "evidence": {
+            "kind": "user_screenshot",
+            "artifact": "docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png"
+          }
+        }
+      ]
     }
   ]
 }

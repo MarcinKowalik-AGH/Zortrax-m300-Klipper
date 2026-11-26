@@ -62,19 +62,13 @@ Install [MCU 1.0.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/bl
 updated `orange-pi` checkout:
 
 ```bash
-cp M300_HOST/payload/m300_mcu_temperature.py "$HOME/klipper/klippy/extras/" &&
-cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+python3 install-orange-pi.py &&
 cp -n FIRST_INSTALL/m300_mcu_temperature.cfg "$HOME/printer_data/config/"
 ```
 
 Add `[include m300_mcu_temperature.cfg]` to `printer.cfg` above `SAVE_CONFIG`.
-Replacing Python addons requires a full Klipper process restart. Over SSH run:
-
-```bash
-sudo systemctl restart klipper.service
-```
-
-When Fluidd reconnects to the host, run `FIRMWARE_RESTART` in its console to
+The installer performs the full process restart required by Python addon changes.
+After saving the include and reconnecting Fluidd, run `FIRMWARE_RESTART` in its console to
 start a new MCU session. Wait for Ready and about 5 seconds for a sample, then run
 `M300_MCU_TEMPERATURE` to read the diagnostic. The same object is available at
 `http://127.0.0.1:7125/printer/objects/query?m300_mcu_temperature`.

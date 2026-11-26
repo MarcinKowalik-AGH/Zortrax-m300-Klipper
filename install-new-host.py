@@ -139,7 +139,7 @@ def compose_package(base_archive, current, directory):
                             'install-camera.py','CAMERA_PL.md','CAMERA_EN.md',
                             'read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
                             'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md',
-                            'OLED_MENU_PL.md','OLED_MENU_EN.md','OLED_MENU_AUDIT.json',
+                            'OLED_MENU_PL.md','OLED_MENU_EN.md','OLED_MENU_AUDIT.json','M300_OVERVIEW.png',
                             'M300_FLUIDD.zip','BUILD_PROVENANCE.json')):
             target = package/name
             target.parent.mkdir(parents=True, exist_ok=True)

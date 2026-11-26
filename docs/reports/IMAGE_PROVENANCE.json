@@ -54,5 +54,19 @@
     "capture_date": "2026-11-20",
     "caption_pl": "Fluidd w OrcaSlicerze podczas wydruku testu przepływu na M300 Classic, z podglądem OLED i profilem m300_pads.",
     "processing": "Original uploaded PNG bytes"
+  },
+  {
+    "file": "docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png",
+    "original_filename": "Zrzut ekranu 2026-11-26 o 21.17.17.png",
+    "original_sha256": "e5126dcc90847fcd3b9e6ca5f22d9d9f8a950bd50bbc7fea0ca9dbc3f44e0a2a",
+    "published_sha256": "e5126dcc90847fcd3b9e6ca5f22d9d9f8a950bd50bbc7fea0ca9dbc3f44e0a2a",
+    "dimensions": [
+      1360,
+      1228
+    ],
+    "source": "Operator screenshot supplied with explicit permission to replace the project home-page cover",
+    "capture_date": "2026-11-26",
+    "caption_pl": "Fluidd podczas przygotowania pomiaru 25 punktów: kamera USB, wykresy Host i MCU oraz podgląd OLED.",
+    "processing": "Original uploaded PNG bytes; no cropping, scaling or reconstruction"
   }
 ]

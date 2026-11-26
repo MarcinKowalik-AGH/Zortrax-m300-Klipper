@@ -1,4 +1,4 @@
-# Menu OLED, Fluidd i makra Klippera w 1.0.3
+# Menu OLED, Fluidd i makra Klippera w 1.0.4
 
 [Audyt menu i poprawki hosta R16.18](OLED_MENU_AUDIT.md) zawiera bieżące powiązania
 makr, zachowanie Fan test i Current procedure oraz granice odbioru sprzętowego.

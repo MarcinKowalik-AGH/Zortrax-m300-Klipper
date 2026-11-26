@@ -74,6 +74,7 @@ def main():
     if validation['compiled_dictionary_sha256'] != digest(build / 'klipper.dict'):
         raise ValueError('Dictionary differs from the one exercised by real Klippy')
     release = fresh_directory(ROOT / 'dist/release')
+    shutil.copy2(ROOT / META['overview_image'], release / 'M300_OVERVIEW.png')
     mcu = release / 'MCU'
     mcu.mkdir()
     for source in build.iterdir():

@@ -11,7 +11,7 @@ import shutil
 import sys
 import tempfile
 
-from project import ROOT, digest, stage_host_update
+from project import ROOT, META, digest, stage_host_update
 from test_install_orange_pi import OrangePiInstallerTest
 from package_git_deploy import package as package_git_deployment
 
@@ -54,6 +54,7 @@ def main():
             shutil.copy2(ROOT/'docs'/language/'OLED_MENU_AUDIT.md',
                          current/('OLED_MENU_'+language.upper()+'.md'))
         shutil.copy2(ROOT/'docs/reports/OLED_MENU_AUDIT.json', current/'OLED_MENU_AUDIT.json')
+        shutil.copy2(ROOT/META['overview_image'], current/'M300_OVERVIEW.png')
         shutil.copy2(ROOT/'install-new-host.py',current/'install-new-host.py')
         (current/'SHA256SUMS').write_text(''.join(digest(p)+'  '+p.relative_to(current).as_posix()+'\n'
             for p in sorted(current.rglob('*')) if p.is_file()))
@@ -113,7 +114,7 @@ def main():
         assert '\n[include m300_mcu_temperature.cfg]' not in printer_text
         for name in ('read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
                      'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md',
-                     'OLED_MENU_PL.md','OLED_MENU_EN.md','OLED_MENU_AUDIT.json'):
+                     'OLED_MENU_PL.md','OLED_MENU_EN.md','OLED_MENU_AUDIT.json','M300_OVERVIEW.png'):
             assert (git_deployment/name).is_file()
             assert (package/name).is_file()
         assert 'm300-test01' not in text and 'TEST01_UNQUALIFIED' not in text

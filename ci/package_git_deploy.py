@@ -34,13 +34,18 @@ def package(release, output, commit):
                  'install-orange-pi.py', 'install-camera.py', 'CAMERA_PL.md', 'CAMERA_EN.md',
                  'read-host-temperatures.py', 'HOST_TEMPERATURE_PL.md', 'HOST_TEMPERATURE_EN.md',
                  'CONTACT_RECOVERY_PL.md', 'CONTACT_RECOVERY_EN.md',
-                 'OLED_MENU_PL.md', 'OLED_MENU_EN.md', 'OLED_MENU_AUDIT.json',
+                 'OLED_MENU_PL.md', 'OLED_MENU_EN.md', 'OLED_MENU_AUDIT.json', 'M300_OVERVIEW.png',
                  'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
     shutil.copytree(release/'FIRST_INSTALL',output/'FIRST_INSTALL')
     (output / 'README.md').write_text(
         '# M300 Classic ' + provenance['distribution_version'] + ' — Orange Pi\n\n'
+        '![Fluidd with USB camera, Host/MCU thermal graphs and live OLED](M300_OVERVIEW.png)\n\n'
+        'Operator screenshot, 26 November 2026, during preparation of a 25-point bed mesh.\n\n'
+        '[Download the complete release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/'
+        + provenance['distribution_version'] + ') · '
+        '[Current features and instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper)\n\n'
         'This checkout contains the tested host, prebuilt Fluidd and MCU image.\n'
         'The matching SD application is `MCU/M300APP.M3B` (MCU '
         + provenance['mcu_release'] + '). Install it through your existing M300 bootloader.\n'

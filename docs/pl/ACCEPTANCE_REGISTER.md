@@ -40,6 +40,8 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Zachowanie fabrycznego licznika ID0 po wyłączeniu i ponownym włączeniu drukarki. | Potwierdzone na sprzęcie: Przed wyłączeniem i po ponownym włączeniu MCU zgłosiło 289224 min (4820 h 24 min), bank B, NORMALIZED, CURRENT, pending=false i 149520 rozliczonych sekund. Wartość przetrwała cykl zasilania bez ponownego doliczenia czasu. | Test dotyczył zakończonego zapisu. Przerwanie zasilania w trakcie programowania banku sprawdzono dotąd w symulacji. |
 | Przeładowanie strony i przyciski Fluidd po restarcie Klippera | Wersja interfejsu nieodczytana | Restart Klippera i próba użycia przycisków Fluidd. | Potwierdzone UI: Strona odświeżyła się i przyciski działały. | — |
 | Fan test na OLED — przełączniki i powrót do wywołującego ekranu | Host R16.18 / MCU 1.0.9 | Ponowna próba przełączania obu wentylatorów oraz Back po instalacji aktualizacji hosta. | Oczekuje na test: Aktywny Fan test zachowuje właściciela widoku, także przy żądaniu statusu i spóźnionym wyniku innej procedury. Długi klik korzysta z Back. Odbiór sprzętowy pozostaje otwarty. | Wymagane potwierdzenie zachowania po przełączeniu na rzeczywistym OLED. |
+| Opcjonalne wykresy temperatur Host i MCU | MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana | Ocena widocznych elementów Fluidd na dostarczonym zrzucie. | Potwierdzone UI: Na oryginalnym zrzucie są krzywe Host i MCU oraz odczyty 40.9 C i 35.6 C. | Zrzut potwierdza prezentację; nie sprawdza kalibracji czujników ani wszystkich wariantów hosta. |
+| Opcjonalny podgląd kamery USB we Fluidd | MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana | Ocena widocznych elementów Fluidd na dostarczonym zrzucie. | Potwierdzone UI: Na oryginalnym zrzucie widoczny jest obraz stołu w panelu M300 USB. | Pojedynczy zrzut nie mierzy płynności ani stabilności długiej transmisji. |
 
 ## Historia i źródła potwierdzeń
 
@@ -442,6 +444,26 @@ Podstawa wersji: `Kontekst rozmowy; rzeczywista wersja zainstalowanych modułów
 Aktywny Fan test zachowuje właściciela widoku, także przy żądaniu statusu i spóźnionym wyniku innej procedury. Długi klik korzysta z Back. Odbiór sprzętowy pozostaje otwarty.
 
 Podstawa wersji: `Nowy kod i testy programu; bez wgrania i próby na urządzeniu.`.
+
+### OPTIONAL_THERMALS_UI — Opcjonalne wykresy temperatur Host i MCU
+
+**2026-11-26 · MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana · Potwierdzone UI**
+
+Na oryginalnym zrzucie są krzywe Host i MCU oraz odczyty 40.9 C i 35.6 C.
+
+Materiał źródłowy: `docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png`.
+
+Podstawa wersji: `Zrzut operatora z 26.11.2026, sprzed publikacji 1.0.4; bez przypisania nowemu wydaniu.`.
+
+### USB_CAMERA_UI — Opcjonalny podgląd kamery USB we Fluidd
+
+**2026-11-26 · MCU 1.0.9 w kontekście rozmowy; wersja hosta nieodczytana · Potwierdzone UI**
+
+Na oryginalnym zrzucie widoczny jest obraz stołu w panelu M300 USB.
+
+Materiał źródłowy: `docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png`.
+
+Podstawa wersji: `Zrzut operatora z 26.11.2026, sprzed publikacji 1.0.4; bez przypisania nowemu wydaniu.`.
 
 ## Jak aktualizować
 

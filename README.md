@@ -1,77 +1,57 @@
-# Zortrax M300 Classic — Klipper 1.0.3
+# Zortrax M300 Classic — Klipper 1.0.4
 
-[![An M300 Classic printing a flow calibration in OrcaSlicer, with Fluidd temperatures and the live OLED preview](docs/img/m300-orcaslicer-fluidd-printing.png)](docs/img/m300-orcaslicer-fluidd-printing.png?raw=true)
+[![Fluidd on M300 Classic with the USB camera, Host and MCU temperature curves and live OLED preview](docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png)](docs/img/m300-fluidd-camera-thermals-oled-2026-11-26.png?raw=true)
 
-*OrcaSlicer’s Device tab during a print on the M300 Classic, 20 November 2026. The console and the OLED preview show the active `m300_pads` mesh. Click the image for the original.*
+*26 November 2026: Fluidd preparing a 25-point bed measurement, with the USB camera, optional Host/MCU temperatures and the live OLED preview. Original operator screenshot; click for full size.*
 
-[Podręcznik po polsku](README_PL.md) · [Operator handbook](docs/en/USER_GUIDE.md) · [Download 1.0.3](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.3)
+[Polski](README_PL.md) · [Download 1.0.4 ZIP](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/download/v1.0.4/Zortrax_M300_Klipper_v1.0.4.zip) · [Release notes](docs/en/RELEASE_v1.0.4.md) · [Operator handbook](docs/en/USER_GUIDE.md)
 
-This port runs Klipper on the original **Zortrax M300 Classic** controller with its OLED, encoder and contact plate. The supported pair is host **1.0.3** and MCU **1.0.9**. Fluidd runs on port **4480**. The 36 printer-specific operator macros now start with `M300_`. Existing files can still call the previous `ZORTRAX_` names.
+Klipper for the original **Zortrax M300 Classic / STM32F103**, retaining its OLED,
+encoder, contact plate and controller. Current package: **host 1.0.4 / R16.19,
+MCU 1.0.9**, Fluidd on **4480** and Moonraker on **7125**.
+It includes a pinned Klipper core and compiled Fluidd extension.
+It does not apply to M300 Plus, M300 Dual or Inventure.
 
-[Optional USB camera](docs/en/CAMERA.md): disabled by default, with a separate host configuration and Fluidd view.
+## What is included
 
-[Optional host temperature](docs/en/HOST_TEMPERATURE.md): independent Host and MCU includes and graph curves; other Orange Pi zones are read on demand.
+| Area | Current behavior |
+|---|---|
+| OLED and Fluidd | Shared procedure owners, phase-bound confirmations, OEM artwork, live OLED preview and adjustable display timers |
+| Operator macros | 36 M300-specific macros use `M300_`; existing `ZORTRAX_` aliases remain compatible |
+| Menu corrections | Fan test retains its screen while switching fans; Current procedure reopens OLED; Back restores the invoking screen; PID uses the public macros |
+| Leveling and mesh | OEM screw adjustment plus a separate 25-point / 75-contact measurement; `MESH=AUTO` loads a saved mesh at print start |
+| Contact recovery | Recognized missing/unstable contact lowers the bed by up to 100 mm within known Z travel, invalidates Z and asks for nozzle cleaning |
+| Status lighting | A completed verified Z home resolves its preceding contact notice; unrelated faults remain active |
+| Restart and cancellation | Supervision during planned motion drain, mesh cancellation and controlled handoff before accepting a replacement file |
+| Thermal startup | A 40-second native extruder gain-check window for delayed warm reheating; other native and MCU thermal guards remain active |
+| Runtime counters | MCU print-time synchronization while idle, with existing host journals retained |
 
-[Nozzle contact recovery](docs/en/CONTACT_RECOVERY.md): a recognized probing failure lowers the bed by 100 mm within the Z travel, asks for nozzle cleaning and invalidates Z without forcing a firmware restart.
+[Full change list](docs/en/RELEASE_v1.0.4.md) · [OLED audit and bindings](docs/en/OLED_MENU_AUDIT.md) · [44-macro catalogue](docs/pl/MACRO_REFERENCE.md) · [Historical 65-screen illustrated guide](docs/pl/OLED_FUNCTIONS.md)
 
-[OLED menu audit — host R16.18](docs/en/OLED_MENU_AUDIT.md): shared macro bindings,
-interactive fan-test navigation, Current procedure and return paths. Ready files
-are published on the [orange-pi branch](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/tree/orange-pi);
-the tagged 1.0.3 download above is the earlier release snapshot.
+## Install on a new host
 
-## Install and operate
-
-For a **new KIAUH host**, clone this repository and run the first-install entry
-point below as the KIAUH account. It installs the complete matching Klipper,
-M300 configuration/macros and compiled Fluidd. A previous Pi or personal backup
-is not required. Debian 13 Trixie with Python 3.13 is supported by this path.
-The example selects Orange Pi Zero 4 UART2; use your board's enabled UART and
-the baud configured in the printer's existing compatible bootloader/MCU.
+Prepare one Klipper, Moonraker and Fluidd instance with KIAUH, then run as that
+account. The installer deploys the complete matching runtime, configuration,
+macros and built Fluidd, checks the configuration offline and backs up the
+replaced setup. Debian 13 Trixie / Python 3.13 is supported; no previous Pi or
+private configuration archive is required.
 
 ```bash
 git clone --branch orange-pi --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
 cd "$HOME/m300-src" &&
 sha256sum -c --quiet SHA256SUMS &&
-python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --apply
+python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --port 4480 --apply
 ```
 
-KIAUH must already provide one Klipper/Moonraker/Fluidd instance. The installer
-uses the latest successful `orange-pi` deployment, verifies the pinned core,
-tests the production configuration offline, and backs up the replaced stock
-setup. See the full first-install guide for MCU flashing and calibration.
-
-| What you want to do | Where to start |
-|---|---|
-| Install on a new Orange Pi or Raspberry Pi | [First installation, wiring, full ZIP and commissioning](docs/en/FIRST_INSTALL.md) |
-| Update a running printer or recover a blank Fluidd page | [Host update, Fluidd repair and rollback](docs/en/INSTALL.md) |
-| Update the printer MCU with the installed SD bootloader | [Application and verification](docs/en/MCU_FIRMWARE_1.0.9.md) · [MCU SD archive](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.9) |
-| Prepare the plate and print from OrcaSlicer or SD | [Operator handbook](docs/en/USER_GUIDE.md) · [OrcaSlicer profiles](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer) · [Models and SD](docs/en/MODELS_SD.md) |
-| Pause, change colour, purge and resume | [Print controls](docs/en/PRINT_CONTEXT.md) · [Material procedures](docs/en/MAINTENANCE_MATERIAL.md) |
-| Use the encoder, menus and Fluidd controls | [Controls and macros](docs/en/RC1_UI.md) · [Display settings](docs/en/SETTINGS_INFORMATION.md) · [Illustrated OLED reference (PL)](docs/pl/OLED_FUNCTIONS.md) |
-| Diagnose a fault or qualify hardware | [Error catalogue](docs/en/ERRORS.md) · [Board identification](docs/en/HARDWARE_VARIANTS.md) · [Hardware acceptance register (PL)](docs/pl/ACCEPTANCE_REGISTER.md) |
-
-## Optional temperatures
-
-The new-host installer installs the diagnostic modules and both config files.
-They start disabled; no additional file copying or ZIP patch is required.
-Install the matching `MCU/M300APP.M3B` through the existing SD bootloader before
-enabling STM32 diagnostics. In `printer.cfg`, uncomment the options you want:
-
-```ini
-[include m300_host_temperature.cfg]
-[include m300_mcu_temperature.cfg]
-```
-
-Run `FIRMWARE_RESTART`. Each active include adds its **Host** or **MCU** curve.
-Read the STM32 die temperature with `M300_MCU_TEMPERATURE` in Fluidd, and other Orange Pi
-zones over SSH with `python3 read-host-temperatures.py` from the checkout.
-Comment the relevant include again to disable it. See the
-[temperature guide](docs/en/HOST_TEMPERATURE.md) for paths and calibration.
-MCU 1.0.9 has passed software verification; a physical temperature check remains.
+`/dev/ttyS2` is the Orange Pi Zero 4 UART2 example. Select the enabled UART and
+baud matching your board and the printer's existing bootloader/MCU.
+The [first-install guide](docs/en/FIRST_INSTALL.md) also covers the public full
+ZIP, wiring, MCU SD installation and commissioning. An existing MCU **1.0.9**
+does not need to be flashed again for this host update.
 
 ## Update an existing Orange Pi
 
-Finish the print or procedure, wait for Ready and turn both heater targets off. Run the following in your existing checkout of the `orange-pi` branch. The path below is the default.
+Finish the print or procedure, wait for Ready and set both heater targets to zero:
 
 ```bash
 cd "$HOME/m300-orange-pi" &&
@@ -80,10 +60,54 @@ sha256sum -c --quiet SHA256SUMS &&
 python3 install-orange-pi.py
 ```
 
-In the Fluidd console run `ZORTRAX_INFO REFRESH=0` to read the host and MCU versions. The default installer updates the host. The update guide covers first-time cloning, a damaged Git checkout, and the separate Fluidd repair on port 4480.
+The default command updates host modules and macros while preserving operator
+PID, saved mesh, qualified Z, UART and existing configuration choices.
+For the separate Fluidd update, use
+`python3 install-orange-pi.py --update-fluidd --port 4480`, then reload the page.
+That web-only command does not install OLED Python fixes.
+[Update and rollback instructions](docs/en/INSTALL.md).
 
-## Verification and release status
+## Optional camera and temperatures
 
-1.0.3 contains planned-restart and mesh-cancellation fixes dated 24 November 2026. Validation of this change is software-only; earlier physical reports do not qualify 1.0.3. Hardware acceptance remains open for mesh → SAVE_CONFIG → Ready, Cancel → completed park → replacement file, and the separate extruder-heating failure in the supplied log.
+All three options start **disabled** and can be enabled independently.
 
-[Final audit](docs/en/FINAL_AUDIT_2026-11-21.md) · [1.0.3 notes](docs/en/RELEASE_v1.0.3.md) · [Build and software tests](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Hardware register](docs/pl/ACCEPTANCE_REGISTER.md) · [Source and licences](THIRD_PARTY_NOTICES.md)
+| Option | Enable | Configuration / guide |
+|---|---|---|
+| USB camera | `python3 install-camera.py --enable --apply` | Separate `m300_camera.conf`; [camera guide](docs/en/CAMERA.md) |
+| Host CPU curve | Uncomment `[include m300_host_temperature.cfg]` in `printer.cfg` | [Temperature guide](docs/en/HOST_TEMPERATURE.md) |
+| STM32 MCU curve | Uncomment `[include m300_mcu_temperature.cfg]` in `printer.cfg` | Requires MCU 1.0.9; [temperature guide](docs/en/HOST_TEMPERATURE.md) |
+
+After changing a temperature include, run `FIRMWARE_RESTART` while idle.
+Comment the relevant include again to disable it; disabled options do not
+prevent startup. The new-host installer supplies both templates and the MCU
+diagnostic module. `M300_MCU_TEMPERATURE` reads the same approximate STM32 die
+measurement used by the MCU graph. Other Orange Pi zones are read on demand
+with `python3 read-host-temperatures.py`; they do not add more graph curves.
+
+Camera changes are applied with `python3 install-camera.py --apply`.
+Disable streaming with `--disable --apply` or `enabled: False` in its config
+followed by `--apply`. The camera config belongs to its installer and is not
+included in `printer.cfg`. **UV4L-MJPEG Stream** works in the tested OrcaSlicer
+2.5.2 Device view. The screenshot above shows the camera and both temperature
+curves on the operator's printer.
+
+## Documentation and validation
+
+| Task | Guide |
+|---|---|
+| New host or full ZIP installation | [First installation](docs/en/FIRST_INSTALL.md) |
+| Existing printer, Fluidd repair or rollback | [Update](docs/en/INSTALL.md) |
+| MCU image and version | [MCU 1.0.9](docs/en/MCU_FIRMWARE_1.0.9.md) |
+| Printing, pause, material change and stop | [Operator handbook](docs/en/USER_GUIDE.md) · [Print controls](docs/en/PRINT_CONTEXT.md) |
+| Leveling, contact and mesh | [Contact leveling](docs/en/LEVELING.md) · [Contact recovery](docs/en/CONTACT_RECOVERY.md) |
+| Profiles and models | [OrcaSlicer profiles](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer) · [SD/model support](docs/en/MODELS_SD.md) |
+| Menus, settings and diagnostics | [OLED audit](docs/en/OLED_MENU_AUDIT.md) · [Controls](docs/en/RC1_UI.md) · [Errors](docs/en/ERRORS.md) |
+
+Software checks include **1055 host tests**, actual Klippy FILEOUTPUT,
+upgrade/rollback, fresh installation on Python 3.12/3.13 and Fluidd tests.
+The menu inventory covers **44 views, 582 rows and 26 registered commands**.
+Physical acceptance remains separate: see the [hardware register](docs/pl/ACCEPTANCE_REGISTER.md).
+The screenshot confirms visible UI features; it does not qualify every
+procedure or the calibration accuracy of the temperature sensors.
+
+[Release 1.0.4](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.4) · [Ready Git deployment](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/tree/orange-pi) · [Build and tests](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/actions/workflows/build-m300.yml) · [Changelog](CHANGELOG.md) · [Sources and licences](THIRD_PARTY_NOTICES.md)

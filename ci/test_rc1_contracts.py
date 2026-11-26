@@ -168,7 +168,7 @@ class Rc1Contracts(unittest.TestCase):
         for lang in ('pl','en'):
             text=(ROOT/'docs'/lang/('RELEASE_'+VERSION+'.md')).read_text()
             self.assertIn('--port 4480',text)
-            self.assertIn('1.0.8',text)
+            self.assertIn(json.loads((ROOT/'PORT.json').read_text())['mcu_release'],text)
 
     def test_obsolete_generators_and_duplicate_publish_workflow_removed(self):
         for path in ('tools/build_305105.py','tools/m300_thermal_config.py','tools/test_thermal_305105.py',

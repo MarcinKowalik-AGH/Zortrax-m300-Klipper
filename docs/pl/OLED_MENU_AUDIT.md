@@ -1,5 +1,6 @@
 # Audyt menu OLED — R16.18
 
+Audyt funkcjonalny R16.18 jest włączony do wydania **1.0.4 / R16.19**.
 [Instalacja](INSTALL.md) · [Makra](MACRO_REFERENCE.md) · [Odbiory sprzętowe](ACCEPTANCE_REGISTER.md) · [Pełny wykaz widoków i komend](../reports/OLED_MENU_AUDIT.json)
 
 Zakres: **M300 Classic, MCU 1.0.9, host R16.18**. Sprawdzono dostępne gałęzie
