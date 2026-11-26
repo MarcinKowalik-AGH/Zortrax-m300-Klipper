@@ -1,6 +1,6 @@
 # Brak styku dyszy podczas bazowania lub pomiaru stołu
 
-Host R16.15, 26.11.2026. Firmware MCU 1.0.9 pozostaje wystarczający.
+Host R16.16, 26.11.2026. Firmware MCU 1.0.9 pozostaje wystarczający.
 
 Rozpoznany brak lub niestabilność styku PC7 przerywa pomiar i wyłącza cele
 grzałek. Gdy natywne położenie Z jest znane, host opuszcza stół o **100 mm**,
@@ -13,6 +13,16 @@ Następnie unieważnia odniesienie Z i wyświetla komunikat
 Nie zapisuje nieudanego meshu. Po wyczyszczeniu dyszy i pól kontaktowych
 ponów bazowanie, a następnie pomiar; ten błąd styku nie wymaga
 `FIRMWARE_RESTART`. Potwierdź komunikat błędu, jeśli zasłania panel procedur.
+
+Po pełnym, udanym bazowaniu Z z pięcioma odniesieniami zwarcie/rozwarcie
+wcześniejszy komunikat błędu styku wygasa automatycznie. LED wraca do koloru
+bieżącego stanu drukarki zamiast nadal cyklicznie zmieniać RGB. Historia błędu
+pozostaje dostępna. Samo bazowanie X/Y ani nieudana próba Z nie wygaszają
+alarmu. Nowy błąd zgłoszony w czasie bazowania oraz alarmy grzania i MCU
+zachowują swój stan. Brak wyzwolenia `m300_z_reference` jest oznaczany kodem
+kontaktu #042, również gdy komunikat zawiera instrukcję czyszczenia.
+Poprzedni nieudany mesh zachowuje wynik `FAILED` i odczyty diagnostyczne;
+potwierdzony powrót styku zwalnia jedynie jego alarm i zajętość zasobów.
 
 Jeżeli pierwsze bazowanie nie ustaliło Z, host nie wykonuje dodatkowego
 ruchu w nieznanym układzie. Informuje o braku odniesienia. Stale zwarty PC7
@@ -30,8 +40,8 @@ git pull --ff-only &&
 sha256sum -c --quiet SHA256SUMS &&
 backup_dir="$HOME/m300-contact-backup-$(date +%Y%m%d-%H%M%S)" &&
 mkdir -p "$backup_dir" &&
-cp -p "$HOME/klipper/klippy/extras/"{m300_native_probe.py,m300_native_motion.py,m300_pad_mesh.py} "$backup_dir/" &&
-cp M300_HOST/payload/{m300_native_probe.py,m300_native_motion.py,m300_pad_mesh.py} "$HOME/klipper/klippy/extras/" &&
+cp -p "$HOME/klipper/klippy/extras/"{m300_native_probe.py,m300_native_motion.py,m300_pad_mesh.py,m300_errors.py,m300_error_codes.py} "$backup_dir/" &&
+cp M300_HOST/payload/{m300_native_probe.py,m300_native_motion.py,m300_pad_mesh.py,m300_errors.py,m300_error_codes.py} "$HOME/klipper/klippy/extras/" &&
 sudo systemctl restart klipper.service
 ```
 

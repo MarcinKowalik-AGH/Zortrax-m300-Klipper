@@ -88,6 +88,7 @@ def classify(reason, source='', fatal=False):
         if not any(s in text for s in ('stepper z', 'probe', 'pc7')):
             return 34, NONE
     if any(s in text for s in ('probing failed', 'probe failed', 'no trigger on probe',
+                                'no trigger on m300 z reference',
                                 'pc7', 'no release', 'contact remained', 'nozzle contact',
                                 'no trigger on stepper z', 'endstop stepper z still triggered',
                                 'native probe returned an invalid position',

@@ -171,8 +171,8 @@ def main():
         'host/config/m300_classic_base.cfg': '92f573e8dc418851544f8bc66f6a9638afe960c6c893c4e371168737c2a8eddf',
         'host/config/m300_operations.cfg': 'acf1f2de2d43479f895af856f8f32b8cdab5b02bfa082a27c5b487c19c198274',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
-        # R16.15 adds the reviewed contact cleaning drop and invalidates failed Z.
-        'host/klippy/extras/m300_pad_mesh.py': '21acc87e62a0dd2536f3530548cb431eef14db646aff3d42b396f1a1bbe43323',
+        # R16.16 retains failed mesh diagnostics while releasing a recovered contact notice.
+        'host/klippy/extras/m300_pad_mesh.py': '7855182de6cfce67a462b9145e7ba299d3ed1106513221c9ac12df0755c11816',
         'host/klippy/extras/m300_activity_graphics.py': '51b7f4992070ccd5363ce7a74237c4a6a320c365ce7dadd059ba20bef3429037',
         'host/klippy/extras/m300_settings_ui.py': 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd',
         'host/klippy/extras/m300_klipper_status.py': '6bde411f82ee2f1a86e53b40b967000d715bc4f10ee656521493a7a2e8ae45c1',

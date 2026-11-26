@@ -391,6 +391,9 @@ class M300NativeMotion:
         elif job_token is not None:
             raise self.printer.command_error('M300 job token without an owner')
         self._check(self.token)
+        errors = self.printer.lookup_object('m300_errors', None)
+        notice = getattr(errors, 'contact_notice_id', None)
+        contact_notice = notice() if notice is not None else None
         kin = self.toolhead.get_kinematics()
         homed = kin.get_status(self.reactor.monotonic())['homed_axes']
         if 'z' in axes and any(a not in axes and a not in homed for a in 'xy'):
@@ -528,6 +531,14 @@ class M300NativeMotion:
                 if current_target == owned_target:
                     restored = previous_target if self.state == 'COMPLETE' else 0.
                     self.heaters.set_temperature(self.hotend, restored, wait=False)
+        if (reference and reference.get('method') == 'FIVE_SUCCESSIVE_RELEASE_REFERENCES'
+                and reference.get('contacts') == 5 and not self.board.mcu.is_fileoutput()):
+            resolve = getattr(errors, 'resolve_contact_notice', None)
+            if resolve is not None:
+                try:
+                    resolve(contact_notice)
+                except Exception:
+                    logging.exception('M300 completed Z home could not dismiss contact notice')
         return self.get_status(self.reactor.monotonic())
 
     def cancel(self, reason='operator cancel', **kwargs):

@@ -66,13 +66,13 @@ class Rc1Contracts(unittest.TestCase):
             'host/klippy/extras/m300_print_control.py': (
                 'd8ac4c4aaea27dd233b8b96648f5765b048c5ce799f50ed0b7376b5dbd7ac933',
                 'e35f0fe91c187a9c220a98ec81fe0b17b83927377cd3dd4d7d5d4771748fd3ba'),
-            # R16.15 adds bounded contact cleaning recovery; native motion stays pinned.
+            # R16.16 also resolves the preceding contact notice after verified Z homing.
             'host/klippy/extras/m300_native_motion.py': (
                 '8c524623956d66ef407b2d89d7ddba033f04d761bd42861cc18aa6914c17f72e',
-                '905899ce7aae946d8e64c2ea88489393fcc9d3cfff2ea3002d74ceb414170530'),
+                'c31cfb46deab896ed74315202a94735caef0f98f23e44d8f422e58611bb6c9cc'),
             'host/klippy/extras/m300_pad_mesh.py': (
                 'd7b5c68bf490d8dc2f8c53c9b45e3ae45c2420a9446d94acf9ad771e8304c836',
-                '21acc87e62a0dd2536f3530548cb431eef14db646aff3d42b396f1a1bbe43323'),
+                '7855182de6cfce67a462b9145e7ba299d3ed1106513221c9ac12df0755c11816'),
         }
         for path, expected in report['protected_sha256'].items():
             with self.subTest(path=path):
@@ -96,7 +96,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],1027)
+        self.assertEqual(meta['self_contained_host_tests'],1038)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):
