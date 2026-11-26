@@ -19,7 +19,7 @@ class Rc1Contracts(unittest.TestCase):
         self.assertEqual(meta['distribution_version'],VERSION)
         self.assertEqual(meta['public_host_version'],VERSION[1:])
         self.assertEqual(meta['menu_revision'],VERSION[1:])
-        self.assertEqual(meta['mcu_release'],'1.0.8')
+        self.assertEqual(meta['mcu_release'],'1.0.9')
         self.assertIn('m300_release.py',meta['host_update_files'])
         source=(ROOT/'host/klippy/extras/m300_settings.py').read_text()
         self.assertIn('display_mcu_version',source)
@@ -38,6 +38,10 @@ class Rc1Contracts(unittest.TestCase):
         native_service = 'host/klippy/extras/m300_native_service.py'
         # Reviewed startup, print lighting, pause/end and 1.0.0 preflight updates.
         updated_runtime = {
+            # One exact optional internal ADC owner; external wiring guards remain intact.
+            'host/klippy/extras/m300_resources.py': (
+                '1ee2d29895bd3f1cc104baa0733cf6b6fdb60e0cca81806d527b189491024180',
+                '6c8fab36e0e1255f790ab580b9a46453aefec943b13f57f4ac52d3a2f07389bd'),
             # RC34 updates the macro keys used to select the same OLED artwork.
             'host/klippy/extras/m300_oem_graphics.py': (
                 'a86e6483e2f96e82f91183f3a1f4e8e6a14bd7438466b9c831f5cebe074e45d1',
@@ -52,9 +56,10 @@ class Rc1Contracts(unittest.TestCase):
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '7a7c6557c2b8b4861fdc693eaab8d878e7443ab5e58d95e804a38b33a498b735'),
+            # Optional temperature includes are comments; hardware values are unchanged.
             'host/config/m300_classic_base.cfg': (
                 '1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a',
-                'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64'),
+                '92f573e8dc418851544f8bc66f6a9638afe960c6c893c4e371168737c2a8eddf'),
             'host/klippy/extras/m300_settings_ui.py': (
                 '27985dd4e51f7a688e060ad37adb278dd26ca50c085ca18f3487bcd484c21bcb',
                 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd'),
@@ -90,7 +95,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],999)
+        self.assertEqual(meta['self_contained_host_tests'],1010)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

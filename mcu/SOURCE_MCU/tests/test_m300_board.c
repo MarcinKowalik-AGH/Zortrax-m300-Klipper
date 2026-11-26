@@ -449,6 +449,18 @@ int main(void)
     struct gpio_adc hot=gpio_adc_setup(GPIO('B',1));
     struct gpio_adc bed=gpio_adc_setup(GPIO('B',0));
     assert(hot.adc==ADC1 && hot.chan==9 && bed.adc==ADC1 && bed.chan==8);
+    // Internal temperature has a long acquisition time, without changing
+    // the hotend/bed sampling fields or the independent ADC2 thermostat.
+    adc1.SMPR1=0x24924924; adc1.SMPR2=0x12492492;
+    uint32_t before_smpr1=adc1.SMPR1, before_smpr2=adc1.SMPR2;
+    adc2.SMPR1=0x55aa55aa;
+    struct gpio_adc die=gpio_adc_setup(ADC_TEMPERATURE_PIN);
+    assert(die.adc==ADC1 && die.chan==16);
+    assert(((adc1.SMPR1 >> 18) & 7u)==7u);
+    assert((adc1.SMPR1 & ~(7u << 18))==(before_smpr1 & ~(7u << 18)));
+    assert(adc1.SMPR2==before_smpr2 && adc2.SMPR1==0x55aa55aa);
+    adc1.SQR3=16; adc1.SR=ADC_SR_STRT|ADC_SR_EOC; adc1.DR=1775;
+    assert(gpio_adc_read(die)==1775 && adc_seen==0);
     adc1.SQR3=9; adc1.SR=ADC_SR_STRT; adc1.DR=156;
     gpio_adc_cancel_sample(hot); assert(adc_seen==0);
     adc1.SQR3=8; adc1.SR=ADC_SR_STRT|ADC_SR_EOC;

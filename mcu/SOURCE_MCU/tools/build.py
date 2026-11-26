@@ -23,7 +23,7 @@ ARCHIVE_SHA256 = 'fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2b
 APP_START = 0x08008000
 NVM_START = 0x0803A000
 APP_LINKER_BYTES = 0x11000
-MCU_RELEASE = '1.0.8'
+MCU_RELEASE = '1.0.9'
 REQUIRED_COMMANDS = ('m300_config ', 'm300_heartbeat', 'm300_arm ',
                      'm300_disarm', 'm300_query', 'm300_error_set ', 'm300_error_query', 'm300_oled_',
                      'm300_factory_query', 'm300_factory_info_query', 'm300_factory_counter_query',
@@ -130,6 +130,7 @@ def validate(work, output, env, log):
                           'M300_FACTORY_INFO_ABI': 1, 'M300_FACTORY_COUNTER_ABI': 1,
                           'M300_FACTORY_COUNTER_RUNTIME_ABI': 1,
                           'M300_SOFTWARE_PWM_ONLY': 1, 'M300_FAN_POLICY': 3,
+                          'M300_MCU_TEMPERATURE_ABI': 1,
                           'M300_LOCAL_COOLING_ABI': 1, 'M300_LOCAL_COOLING_ON_RAW': 314,
                           'M300_LOCAL_COOLING_OFF_RAW': 281,
                           'M300_STATUS_LED_ABI': 1, 'M300_STATUS_LED_ERROR_STEP_US': 5000000,

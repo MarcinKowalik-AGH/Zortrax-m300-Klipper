@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = '1.0.8'
+EXPECTED = '1.0.9'
 
 
 def require(condition, message):
@@ -33,6 +33,8 @@ def check(dictionary_path, binary_path=None, m3b_path=None):
             'MCU firmware release constant differs from dictionary version')
     require(data['config']['M300_MODEL'] == 'M300_CLASSIC', 'MCU model mismatch')
     require(data['config']['M300_ABI'] == 1, 'MCU ABI mismatch')
+    require(data['config'].get('M300_MCU_TEMPERATURE_ABI') == 1,
+            'Internal temperature sampling capability missing')
     require(data['config']['M300_FACTORY_COUNTER_ABI'] == 1,
             'Factory counter ABI missing')
     require(data['config']['M300_FACTORY_COUNTER_RUNTIME_ABI'] == 1,

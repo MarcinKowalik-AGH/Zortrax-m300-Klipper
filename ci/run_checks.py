@@ -140,6 +140,9 @@ def main():
         run('actual_first_install_fileoutput', [sys.executable, ROOT/'ci/validate_fresh_install.py',
             '--root',host_tree,'--dictionary',args.dictionary.resolve(),
             '--output',ROOT/'.ci/first-install-fileoutput'])
+        run('optional_mcu_temperature_fileoutput', [sys.executable, ROOT / 'ci/validate_fresh_install.py',
+            '--root', host_tree, '--dictionary', args.dictionary.resolve(),
+            '--output', ROOT / '.ci/mcu-temperature-fileoutput', '--mcu-temperature'])
     summary = {'status': 'PASS_M300_PUBLIC_SOFTWARE_CHECKS', 'checks': rows,
                'source_sha256': source_digest(),
                'compiled_dictionary_sha256': digest(args.dictionary) if args.dictionary else None,

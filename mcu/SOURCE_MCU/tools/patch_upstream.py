@@ -18,7 +18,7 @@ import subprocess
 PIN = "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51"
 KIT = Path(__file__).resolve().parents[1]
 ARCHIVE_SHA256 = "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0"
-VERSION = "M300_CLASSIC-1.0.8"
+VERSION = "M300_CLASSIC-1.0.9"
 MARKER = ".m300-p01-patch.json"
 EXPECTED = {
     "scripts/buildcommands.py": "b67abb120a4d283af722dd1fc28c1317836510cc426cda4d917ad2548c645b44",
@@ -298,6 +298,15 @@ struct gpio_in
 #include "m300.h"
 #endif
 ''', key + ":include")
+    # DS5792 specifies up to 17.1 us for the internal temperature sample.
+    # 239.5 cycles at the M300 ADC clock (4.5 MHz) provides 53.2 us.
+    # Only channel 16 changes; external hotend/bed sample times stay intact.
+    anchor = "    if (pin == ADC_TEMPERATURE_PIN) {\n"
+    f[key] = replace(f[key], anchor, anchor + '''#if CONFIG_M300_CLASSIC
+        adc->SMPR1 = (adc->SMPR1 & ~(7u << 18)) | (7u << 18);
+        udelay(10); // Allow TSVREFE startup before any temperature conversion.
+#endif
+''', key + ":mcu-temperature-sample")
     anchor = "    adc->SR = ~ADC_SR_STRT;\n    return adc->DR;\n"
     f[key] = replace(f[key], anchor, '''#if CONFIG_M300_CLASSIC
     uint32_t valid = (adc->SR & ADC_SR_EOC) && adc->SQR3 == g.chan;
@@ -552,7 +561,7 @@ ASSERT(_bss_end <= _stack_start, "M300 static data overlaps reserved stack")
     anchor = "    return version + extra\n"
     f[key] = replace(f[key], anchor, '''    fixed = os.environ.get("M300_FIRMWARE_VERSION")
     if fixed:
-        if fixed != "1.0.8":
+        if fixed != "1.0.9":
             error("Unsupported M300 firmware version")
         return fixed
     return version + extra

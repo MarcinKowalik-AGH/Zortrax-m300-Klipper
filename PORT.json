@@ -4,8 +4,8 @@
   "upstream_commit": "ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
   "upstream_archive_sha256": "fe4c6a25c370c32f519a008e46e14612ddb116a5ac135146afeee7d0bc4c2bf0",
   "upstream_archive_url": "https://codeload.github.com/Klipper3d/klipper/zip/ee2c6fb6b00b2b5d097ef70d0868df7d74943b51",
-  "mcu_release": "1.0.8",
-  "host_update": "R16.12",
+  "mcu_release": "1.0.9",
+  "host_update": "R16.13",
   "menu_revision": "1.0.3",
   "display_revision": "0.5.1-M300-OLED-TIMERS",
   "mcu_application_base": "0x08008000",
@@ -83,9 +83,10 @@
     "m300_job_state.py",
     "m300_temperature_policy.py",
     "m300_release.py",
-    "m300_oled_idle.py"
+    "m300_oled_idle.py",
+    "m300_mcu_temperature.py"
   ],
-  "self_contained_host_tests": 999,
+  "self_contained_host_tests": 1010,
   "factory_identity_abi": 1,
   "normal_motion": true,
   "xy_velocity_profile": 300,

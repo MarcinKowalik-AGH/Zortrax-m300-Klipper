@@ -178,6 +178,14 @@ class M300Resources:
             raise self.config.error('M300 full profile requires m300_oled (single OLED/encoder owner)')
         expected = set(ADC_PINS.values()) | {item[0] for item in OUTPUTS.values()}
         expected |= {pin for assignments in WIRING.values() for pin in assignments.values()}
+        die = self.printer.lookup_object('m300_mcu_temperature', None)
+        if die is not None:
+            from .m300_mcu_temperature import M300MCUTemperature
+            if (type(die) is not M300MCUTemperature or die.mcu is not self.board.mcu
+                    or die.adc.get_mcu() is not self.board.mcu
+                    or die.adc._pin != 'ADC_TEMPERATURE'):
+                raise self.config.error('M300 internal temperature ADC owner mismatch')
+            expected.add('ADC_TEMPERATURE')
         if set(active) != expected:
             raise self.config.error('M300 unexpected/missing host GPIO owners: ' +
                                     ','.join(sorted(set(active) ^ expected)))
@@ -188,11 +196,14 @@ class M300Resources:
             'kinematics': 'cartesian', 'adc_physical_count': 2,
             'adc_owner': 'native_heater_sensors', 'adc_diagnostics': 'same_objects_read_only',
             'adc_pins': ADC_PINS, 'heater_count': 2, 'fan_count': 2,
+            'adc_internal_count': int(die is not None),
+            'adc_internal_owner': 'm300_mcu_temperature' if die is not None else None,
             'software_pwm_count': 4 + rgb_pwm_count, 'hardware_pwm_count': 0,
             'physical_steppers': sorted(physical),
             'enable': 'PD14 active-HIGH, ONE shared native object',
             'z_endstop': 'probe:z_virtual_endstop -> one active-LOW PC7 object',
-            'host_physical_pin_count': len(active), 'host_physical_pins': sorted(active),
+            'host_physical_pin_count': len(set(active) - {'ADC_TEMPERATURE'}),
+            'host_physical_pins': sorted(set(active) - {'ADC_TEMPERATURE'}),
             'mcu_owned_pins': dict(MCU_ONLY, **PRIVATE_SD),
             'excluded_pins': {k: v for k, v in EXCLUDED.items() if k not in PRIVATE_SD},
             'sd_owner': 'M04 private read-only SPI1 driver; generic SPI remains unavailable',

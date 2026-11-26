@@ -48,6 +48,7 @@ NAMES += ('m300_print_ui.py', 'm300_print_hold.py', 'm300_print_control.py', 'm3
 NAMES += ('m300_activity_graphics.py', 'm300_cartesian_graphics.py', 'm300_klipper_logo.py', 'm300_activity_sprites.json')
 NAMES += ('m300_menu_sprites.json', 'm300_temperature_policy.py', 'm300_release.py')
 NAMES += ('m300_errors.py', 'm300_error_codes.py', 'm300_error_codes.json')
+NAMES += ('m300_mcu_temperature.py',)
 CONFIG_FILES = ('klipper_calibration.cfg', 'm300_operations.cfg')
 
 
