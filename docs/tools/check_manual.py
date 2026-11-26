@@ -168,7 +168,7 @@ def main():
         'host/klippy/extras/m300_print_ui.py': '5082c05b90ba40183784097bcc87dd381bcd9831cba6df505f3d30ded32b8e87',
         'host/config/m300_classic_services.cfg': '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505',
         'host/klippy/extras/m300_menu.py': 'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743',
-        'host/config/m300_classic_base.cfg': '92f573e8dc418851544f8bc66f6a9638afe960c6c893c4e371168737c2a8eddf',
+        'host/config/m300_classic_base.cfg': '61b0aeb1b8a0fdc5221b2f3bad928da0c8cc393f6acf6a78a2bed2ae89d2386d',
         'host/config/m300_operations.cfg': 'acf1f2de2d43479f895af856f8f32b8cdab5b02bfa082a27c5b487c19c198274',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         # R16.16 retains failed mesh diagnostics while releasing a recovered contact notice.

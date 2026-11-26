@@ -44,6 +44,16 @@ check('same max_error catches loss after reaching target',
       run(40.,[(220.,220.)]*5+[(190.,220.)]*20),9)
 check('target OFF has no heating-demand fault',run(40.,[(25.,0.)]*90),None)
 check('steady near target remains valid',run(40.,[(219.,220.)]*90),None)
+# One-second observations around the operator's 18:17:53 warm restart.
+# The first temperature is the last sample available as demand starts.
+# Stop at the reported shutdown; no future heating trace is invented.
+observed=[192.1,191.6,192.1,192.2,190.6,191.0,190.2,190.4,189.9,
+          189.6,188.8,189.0,189.2,189.1,189.8,189.4,190.0,190.1,
+          189.5,190.7,190.6,190.6]
+check('observed warm-start prefix reproduces default20 shutdown',
+      run(20.,[(temp,230.) for temp in observed]),21)
+check('configured40 keeps waiting during observed warm-start prefix',
+      run(40.,[(temp,230.) for temp in observed]),None)
 (B/'evidence/VERIFY_GAIN.json').write_text(json.dumps({'status':'PASS','cases':rows,
     'checker':'unchanged native verify_heater.py','physical_hardware':False,
     'synthetic_continuation_is_not_physical_validation':True,

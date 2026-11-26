@@ -56,10 +56,10 @@ class Rc1Contracts(unittest.TestCase):
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '7a7c6557c2b8b4861fdc693eaab8d878e7443ab5e58d95e804a38b33a498b735'),
-            # Optional temperature includes are comments; hardware values are unchanged.
+            # Native warm-reheat gain window is 40 s; hardware values are unchanged.
             'host/config/m300_classic_base.cfg': (
                 '1e073f111a228e0c8bb1521382004c69633d670ad7df9ea2a3960f100080b57a',
-                '92f573e8dc418851544f8bc66f6a9638afe960c6c893c4e371168737c2a8eddf'),
+                '61b0aeb1b8a0fdc5221b2f3bad928da0c8cc393f6acf6a78a2bed2ae89d2386d'),
             'host/klippy/extras/m300_settings_ui.py': (
                 '27985dd4e51f7a688e060ad37adb278dd26ca50c085ca18f3487bcd484c21bcb',
                 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd'),
@@ -96,7 +96,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],1038)
+        self.assertEqual(meta['self_contained_host_tests'],1042)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

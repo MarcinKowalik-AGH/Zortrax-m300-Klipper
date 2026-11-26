@@ -475,8 +475,11 @@ class InstallerTests(unittest.TestCase):
     def test_wildcard_include_does_not_get_duplicate_explicit_include(self):
         self.config.write_text('[include *.cfg]\n')
         changes = install.plan(self.root, self.config)
-        self.assertEqual(len(changes), len(install.NAMES) + len(install.CONFIG_FILES) + 1)
-        self.assertFalse(any(p == self.config for p, _, _ in changes))
+        # The root also receives the native warm-reheat verification window.
+        self.assertEqual(len(changes), len(install.NAMES) + len(install.CONFIG_FILES) + 2)
+        root_change = next(data for p, _, data in changes if p == self.config)
+        self.assertIn(b'[verify_heater extruder]', root_change)
+        self.assertNotIn(b'[include m300_display.cfg]', root_change)
 
     def test_included_inline_section_refuses_duplicate(self):
         self.config.write_text('[include other.cfg]\n')

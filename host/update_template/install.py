@@ -237,6 +237,8 @@ def plan(root, config, *, organize_config=False, thermal_305105=False, qualified
         additions.append('[include m300_display.cfg]\n')
     if 'm300_motion' in existing and 'idle_timeout' not in existing:
         additions.append('\n[idle_timeout]\n' + profile.IDLE_GCODE)
+    if 'verify_heater extruder' not in existing:
+        additions.append(profile.EXTRUDER_VERIFY)
     if additions:
         addition = '\n# M300 Classic host configuration\n' + ''.join(additions) + '\n'
         marker = re.search(r'(?m)^#\*#.*SAVE_CONFIG', text)
