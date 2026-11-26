@@ -35,6 +35,8 @@ class BootstrapTests(unittest.TestCase):
             'read-host-temperatures.py':'read-only thermal diagnostic',
             'HOST_TEMPERATURE_PL.md':'temperature instructions',
             'HOST_TEMPERATURE_EN.md':'temperature instructions',
+            'CONTACT_RECOVERY_PL.md':'cleaning instructions',
+            'CONTACT_RECOVERY_EN.md':'cleaning instructions',
             'MCU/klipper.dict':'new dictionary',
             'FIRST_INSTALL/m300_classic_base.cfg':'public base config',
             'FIRST_INSTALL/m300_classic_services.cfg':'public services',
@@ -80,6 +82,8 @@ class BootstrapTests(unittest.TestCase):
         self.assertTrue((result/'FIRST_INSTALL/m300_host_temperature.cfg').is_file())
         self.assertTrue((result/'FIRST_INSTALL/m300_mcu_temperature.cfg').is_file())
         self.assertTrue((result/'read-host-temperatures.py').is_file())
+        self.assertEqual((result/'CONTACT_RECOVERY_PL.md').read_text(),'cleaning instructions')
+        self.assertEqual((result/'CONTACT_RECOVERY_EN.md').read_text(),'cleaning instructions')
         self.assertEqual(json.loads((result/'BOOTSTRAP_PROVENANCE.json').read_text())['deployment_commit'],'c'*40)
         bootstrap.manifest(result)
 

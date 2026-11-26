@@ -113,6 +113,7 @@ def compose_package(base_archive, current, directory):
                 'FIRST_INSTALL/m300_mcu_temperature.cfg',
                 'M300_HOST/payload/m300_mcu_temperature.py',
                 'read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
+                'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md',
                 'FIRST_INSTALL/requirements-m300.txt')
     if any(name not in files for name in required):
         raise ValueError('The orange-pi deployment lacks the new-host installer. '
@@ -137,6 +138,7 @@ def compose_package(base_archive, current, directory):
                 or name in ('install-fresh.py','install-new-host.py','install-orange-pi.py',
                             'install-camera.py','CAMERA_PL.md','CAMERA_EN.md',
                             'read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
+                            'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md',
                             'M300_FLUIDD.zip','BUILD_PROVENANCE.json')):
             target = package/name
             target.parent.mkdir(parents=True, exist_ok=True)

@@ -49,6 +49,8 @@ def main():
             shutil.copy2(ROOT/'docs'/language/'CAMERA.md', current/('CAMERA_'+language.upper()+'.md'))
             shutil.copy2(ROOT/'docs'/language/'HOST_TEMPERATURE.md',
                          current/('HOST_TEMPERATURE_'+language.upper()+'.md'))
+            shutil.copy2(ROOT/'docs'/language/'CONTACT_RECOVERY.md',
+                         current/('CONTACT_RECOVERY_'+language.upper()+'.md'))
         shutil.copy2(ROOT/'install-new-host.py',current/'install-new-host.py')
         (current/'SHA256SUMS').write_text(''.join(digest(p)+'  '+p.relative_to(current).as_posix()+'\n'
             for p in sorted(current.rglob('*')) if p.is_file()))
@@ -106,8 +108,10 @@ def main():
         assert '# [include m300_mcu_temperature.cfg]' in printer_text
         assert '\n[include m300_host_temperature.cfg]' not in printer_text
         assert '\n[include m300_mcu_temperature.cfg]' not in printer_text
-        for name in ('read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md'):
+        for name in ('read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
+                     'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md'):
             assert (git_deployment/name).is_file()
+            assert (package/name).is_file()
         assert 'm300-test01' not in text and 'TEST01_UNQUALIFIED' not in text
         report=dict(status='PASS_PUBLIC_GIT_FIRST_INSTALL_FILEOUTPUT',python=sys.version.split()[0],
                     config_source='PUBLIC_FIRST_INSTALL_TEMPLATES',previous_printer_required=False,
