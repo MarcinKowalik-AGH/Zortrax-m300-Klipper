@@ -40,6 +40,7 @@ szablonu. Pełna instrukcja poniżej opisuje wgranie MCU i kalibrację drukarki.
 | Zrobić pauzę, zmienić kolor i wznowić | [Podręcznik operatora](docs/pl/USER_GUIDE.md) · [Filament i przepłukiwanie dyszy](docs/pl/MAINTENANCE_MATERIAL.md) |
 | Obsługiwać OLED i makra we Fluidd | [Sterowanie](docs/pl/RC1_UI.md) · [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [65 ilustrowanych ekranów](docs/pl/OLED_FUNCTIONS.md) |
 | Dodać opcjonalną kamerę USB | [Włączenie, wyłączenie i konfiguracja kamery w Fluidd](docs/pl/CAMERA.md) |
+| Wyczyścić dyszę po błędzie styku przy bazowaniu lub meshu | [Opuszczenie stołu o 100 mm i aktualizacja istniejącego hosta](docs/pl/CONTACT_RECOVERY.md) |
 | Sprawdzić parametry, błędy i stan odbioru | [Parametry techniczne](docs/pl/TECHNICAL_REFERENCE.md) · [Diagnostyka](docs/pl/USER_GUIDE.md#9-rozpoznawanie-problemów) · [Rejestr prób sprzętowych](docs/pl/ACCEPTANCE_REGISTER.md) |
 
 ## Opcjonalne temperatury

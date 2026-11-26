@@ -35,6 +35,7 @@ def motion_fixture():
         heater.target = target
         motion.events.append(('heat', target, wait))
     motion.heaters = NS(set_temperature=set_temperature)
+    motion.heaters.turn_off_all_heaters = lambda: set_temperature(hotend, 0.)
     rail = NS(get_range=lambda: (0., 315.), get_homing_info=lambda: NS(positive_dir=False))
     kin = NS(get_status=lambda now: {'homed_axes': ''.join(a for a in 'xyz' if a in motion.homed)},
              rails=[None, None, rail],

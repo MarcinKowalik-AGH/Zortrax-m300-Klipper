@@ -13,6 +13,7 @@ import math
 
 
 CONTACT_RETRACT_MM = 10.
+CONTACT_CLEANING_DROP_MM = 100.
 
 
 class M300NativeMotion:
@@ -44,6 +45,7 @@ class M300NativeMotion:
         self.reason, self.result = '', None
         self.failure_phase = None
         self.native_z_checks = []
+        self.contact_recovery = None
         self.ready = False
         self.precision = self.homing_speeds = None
         self._z_target = None
@@ -240,6 +242,45 @@ class M300NativeMotion:
             raise self.printer.command_error(
                 'M300 homing NO_RELEASE: PC7 closed again after the initial Z clearance; motion stopped')
 
+    def recover_contact_failure(self, check):
+        """One Z-only retreat in a known frame; never publish a failed datum."""
+        kin = self.toolhead.get_kinematics()
+        self._xy_clearance_position = None
+        self.contact_recovery = None
+        try:
+            self.toolhead.wait_moves()
+            check()
+            self.board.require_motion()
+            if 'z' not in kin.get_status(self.reactor.monotonic())['homed_axes']:
+                self.contact_recovery = dict(status='UNREFERENCED', distance_mm=0.,
+                                             pc7_open=None)
+                return self.contact_recovery
+            rail = kin.rails[2]
+            lower, upper = rail.get_range()
+            position = self.toolhead.get_position()
+            if (rail.get_homing_info().positive_dir
+                    or len(position) != 4 or not all(math.isfinite(v) for v in position)
+                    or not lower <= position[2] <= upper):
+                raise self.printer.command_error('M300 contact retreat has no valid native Z frame')
+            # Increasing native Z lowers the M300 bed. A clipped retreat may
+            # reach the real Z maximum, but never extends its configured range.
+            target = min(upper, position[2] + CONTACT_CLEANING_DROP_MM)
+            if target > position[2]:
+                check()
+                self.board.require_motion()
+                self.toolhead.manual_move([None, None, target], min(self.lift_speed, 5.))
+                self.toolhead.wait_moves()
+                check()
+                self.board.require_motion()
+            active = self.precision.endstop.query_endstop(self.toolhead.get_last_move_time())
+            check()
+            self.board.require_motion()
+            self.contact_recovery = dict(status='RETRACTED', distance_mm=target-position[2],
+                                         pc7_open=not bool(active))
+            return self.contact_recovery
+        finally:
+            kin.clear_homing_state('z')
+
     def _native_probe_begin(self, hmove):
         # The pinned native probe home has two passes. Its ordinary retract
         # does not verify electrical release before starting the second pass.
@@ -372,6 +413,7 @@ class M300NativeMotion:
         self.state, self.reason, self.result = 'HOMING', '', None
         self.failure_phase = None
         self.native_z_checks = []
+        self.contact_recovery = None
         previous_target, owned_target = None, None
         reference = None
         prepare_filament = ('z' in axes and owner_job is None and not oem_leveling
@@ -433,7 +475,8 @@ class M300NativeMotion:
                         try:
                             reference = self.precision.run(token)
                         except Exception as exc:
-                            if not self.printer.is_shutdown():
+                            from .m300_native_probe import is_contact_failure
+                            if not is_contact_failure(exc) and not self.printer.is_shutdown():
                                 self.printer.invoke_shutdown(
                                     'M300 precision Z reference failed: '+str(exc))
                             raise
@@ -458,6 +501,18 @@ class M300NativeMotion:
         except Exception as exc:
             # Never reuse XY clearance after a rejected/failed homing.
             self._xy_clearance_position = None
+            from .m300_native_probe import is_contact_failure, contact_failure_message
+            if (not self.printer.is_shutdown() and self.state == 'HOMING'
+                    and self.phase in ('Z_CHECK_CONTACT', 'HOME_Z_NATIVE_PROBE',
+                                       'Z_FIVE_CONTACT_REFERENCES')
+                    and is_contact_failure(exc)):
+                try:
+                    self.heaters.turn_off_all_heaters()
+                    recovery = self.recover_contact_failure(lambda: self._check(token))
+                    exc = self.printer.command_error(contact_failure_message(exc, recovery))
+                except Exception as retreat_error:
+                    if not self.printer.is_shutdown():
+                        self.printer.invoke_shutdown('M300 contact retreat failed: '+str(retreat_error))
             self.reason = str(exc)
             from .m300_error_codes import report
             report(self.printer, exc, source='m300_motion', fatal=self.printer.is_shutdown())
@@ -465,7 +520,7 @@ class M300NativeMotion:
                 self.failure_phase = self.phase
                 self.state = 'FAULT'
                 self._phase('FAULT')
-            raise
+            raise exc
         finally:
             self._z_target = None
             if owned_target is not None and not self.printer.is_shutdown():
@@ -495,10 +550,11 @@ class M300NativeMotion:
         kin_status = (self.toolhead.get_kinematics().get_status(eventtime)
                       if self.toolhead is not None else {})
         hardware = self.board.hardware.get_status()
-        return {'version': '0.13.16.24-QUALIFIED-Z-CLEARANCE', 'model': 'M300_CLASSIC',
+        return {'version': '0.13.16.25-CONTACT-CLEANING', 'model': 'M300_CLASSIC',
                 'normal_control': True, 'installed': True, 'ready': self.ready,
                 'state': self.state, 'busy': self.is_busy(), 'phase': self.phase,
                 'operation': self.operator_homing,
+                'contact_recovery': getattr(self, 'contact_recovery', None),
                 'phase_id': self.phase_id, 'session_token': self.token,
                 'homed_axes': kin_status.get('homed_axes', ''),
                 'position_valid': kin_status.get('homed_axes') == 'xyz',

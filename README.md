@@ -12,6 +12,8 @@ This port runs Klipper on the original **Zortrax M300 Classic** controller with 
 
 [Optional host temperature](docs/en/HOST_TEMPERATURE.md): independent Host and MCU includes and graph curves; other Orange Pi zones are read on demand.
 
+[Nozzle contact recovery](docs/en/CONTACT_RECOVERY.md): a recognized probing failure lowers the bed by 100 mm within the Z travel, asks for nozzle cleaning and invalidates Z without forcing a firmware restart.
+
 ## Install and operate
 
 For a **new KIAUH host**, clone this repository and run the first-install entry

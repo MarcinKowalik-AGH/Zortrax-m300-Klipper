@@ -33,6 +33,7 @@ def package(release, output, commit):
                  'MCU/klipper.dict', 'install-fresh.py', 'install-new-host.py',
                  'install-orange-pi.py', 'install-camera.py', 'CAMERA_PL.md', 'CAMERA_EN.md',
                  'read-host-temperatures.py', 'HOST_TEMPERATURE_PL.md', 'HOST_TEMPERATURE_EN.md',
+                 'CONTACT_RECOVERY_PL.md', 'CONTACT_RECOVERY_EN.md',
                  'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
@@ -64,6 +65,9 @@ def package(release, output, commit):
         '(MCU 1.0.9 or newer), run `FIRMWARE_RESTART`, then `M300_MCU_TEMPERATURE`. '
         'The MCU include adds a read-only MCU graph curve using the existing ADC. '
         'Comment either temperature include in printer.cfg to disable that option.\n\n'
+        'Contact recovery lowers the bed by 100 mm within the Z travel after a recognized '
+        'nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. '
+        'See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')

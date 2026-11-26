@@ -568,6 +568,7 @@ class M300PadMesh:
         self.run_id = os.urandom(12).hex()
         token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
+        self.contact_recovery = None
         self.measurements = []
         self.rejected_contact = None
         self.samples = None
@@ -614,12 +615,22 @@ class M300PadMesh:
                 self.last_attempt = dict(self.last_attempt, accepted=True)
             completed = True
         except Exception as exc:
+            self._turn_off()
+            from .m300_native_probe import is_contact_failure, contact_failure_message
+            if (self.phase == 'PROBING' and not self.printer.is_shutdown()
+                    and not self.cancelled and is_contact_failure(exc)):
+                try:
+                    self.contact_recovery = self.motion.recover_contact_failure(
+                        lambda: self._check_session(token))
+                    exc = self._error(contact_failure_message(exc, self.contact_recovery))
+                except Exception as retreat_error:
+                    if not self.printer.is_shutdown():
+                        self.printer.invoke_shutdown('M300 pad contact retreat failed: '+str(retreat_error))
             self.last_error = str(exc)
             from .m300_error_codes import report
             report(self.printer, exc, source='m300_pad_mesh',
                    fatal=self.printer.is_shutdown())
-            self._turn_off()
-            raise
+            raise exc
         finally:
             try:
                 if shifted and not self.printer.is_shutdown():
@@ -686,11 +697,12 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(self.get_panel_status(eventtime), revision='0.13.16.26-SAVED-MESH-VIEW',
+        return dict(self.get_panel_status(eventtime), revision='0.13.16.27-CONTACT-CLEANING',
                     result=self.report, run_id=getattr(self,'run_id',None),
                     plan_matches_run=getattr(self,'run_points',None) == self.points,
                     measurements=[list(point) for point in getattr(self,'measurements',())],
                     rejected_contact=getattr(self,'rejected_contact',None),
+                    contact_recovery=getattr(self,'contact_recovery',None),
                     native_contact_window=[-SEARCH_MARGIN,CLEARANCE],
                     total_points=len(self.points),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.8),

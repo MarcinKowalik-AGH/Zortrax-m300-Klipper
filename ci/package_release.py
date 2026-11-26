@@ -145,6 +145,8 @@ def main():
         export_guide(ROOT/'docs'/language/'CAMERA.md', release/('CAMERA_'+language.upper()+'.md'))
         export_guide(ROOT/'docs'/language/'HOST_TEMPERATURE.md',
                      release/('HOST_TEMPERATURE_'+language.upper()+'.md'))
+        export_guide(ROOT/'docs'/language/'CONTACT_RECOVERY.md',
+                     release/('CONTACT_RECOVERY_'+language.upper()+'.md'))
     shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
     shutil.copy2(ROOT/'install-new-host.py',release/'install-new-host.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
