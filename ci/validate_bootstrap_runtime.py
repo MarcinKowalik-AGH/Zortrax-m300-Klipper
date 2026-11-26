@@ -51,6 +51,9 @@ def main():
                          current/('HOST_TEMPERATURE_'+language.upper()+'.md'))
             shutil.copy2(ROOT/'docs'/language/'CONTACT_RECOVERY.md',
                          current/('CONTACT_RECOVERY_'+language.upper()+'.md'))
+            shutil.copy2(ROOT/'docs'/language/'OLED_MENU_AUDIT.md',
+                         current/('OLED_MENU_'+language.upper()+'.md'))
+        shutil.copy2(ROOT/'docs/reports/OLED_MENU_AUDIT.json', current/'OLED_MENU_AUDIT.json')
         shutil.copy2(ROOT/'install-new-host.py',current/'install-new-host.py')
         (current/'SHA256SUMS').write_text(''.join(digest(p)+'  '+p.relative_to(current).as_posix()+'\n'
             for p in sorted(current.rglob('*')) if p.is_file()))
@@ -109,7 +112,8 @@ def main():
         assert '\n[include m300_host_temperature.cfg]' not in printer_text
         assert '\n[include m300_mcu_temperature.cfg]' not in printer_text
         for name in ('read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
-                     'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md'):
+                     'CONTACT_RECOVERY_PL.md','CONTACT_RECOVERY_EN.md',
+                     'OLED_MENU_PL.md','OLED_MENU_EN.md','OLED_MENU_AUDIT.json'):
             assert (git_deployment/name).is_file()
             assert (package/name).is_file()
         assert 'm300-test01' not in text and 'TEST01_UNQUALIFIED' not in text
