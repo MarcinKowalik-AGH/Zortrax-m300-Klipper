@@ -1,17 +1,20 @@
 # M300 Classic v1.0.3 — Orange Pi
 
 This checkout contains the tested host, prebuilt Fluidd and MCU image.
+The matching SD application is `MCU/M300APP.M3B` (MCU 1.0.9). Install it through your existing M300 bootloader.
 For a NEW KIAUH host (including Debian 13 / Python 3.13), run `python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --apply`.
 Substitute the actual enabled UART and bootloader baud for your board. No previous Pi or personal configuration archive is needed.
 Run `python3 install-orange-pi.py` as the Klipper user while idle and Ready to update the host.
 For an explicit Fluidd repair on port 4480, run `python3 install-orange-pi.py --update-fluidd --port 4480`.
 The updater preserves qualified Z, mesh and PID. Host print-time accounting works on compatible older MCU firmware.
-With MCU 1.0.8, Klipper automatically synchronizes print time to the board while idle. Install the MCU image from SD only if the board still requires the firmware update.
+With MCU 1.0.8 or newer, Klipper automatically synchronizes print time to the board while idle. Install the MCU image from SD only if the board still requires the firmware update.
 
 Optional USB camera (disabled by default): `python3 install-camera.py --enable --apply`. Edit `~/printer_data/config/m300_camera.conf` and run `python3 install-camera.py --apply` to change it or disable streaming. See CAMERA_PL.md / CAMERA_EN.md.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/89aede3cc176361f315a91633468a4ac400e1580/docs/en/INSTALL.md)
-
-Source commit: `89aede3cc176361f315a91633468a4ac400e1580`
-
 Optional host CPU temperature: one Host graph series, enabled with `[include m300_host_temperature.cfg]`. Other readings: `python3 read-host-temperatures.py`. See HOST_TEMPERATURE_PL.md / HOST_TEMPERATURE_EN.md.
+
+The new-host installer copies both optional temperature configs, disabled by default. Enable STM32 diagnostics with `[include m300_mcu_temperature.cfg]` (MCU 1.0.9 or newer), run `FIRMWARE_RESTART`, then `M300_MCU_TEMPERATURE`. This adds a diagnostic object and no extra graph series.
+
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/c459354de9446c2d9bf77ab2ffd08c0fdd199022/docs/en/INSTALL.md)
+
+Source commit: `c459354de9446c2d9bf77ab2ffd08c0fdd199022`

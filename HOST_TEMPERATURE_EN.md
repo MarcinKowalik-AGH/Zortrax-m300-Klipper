@@ -50,5 +50,31 @@ On other boards or after changes to thermal zone numbering, identify the CPU
 zone with the command and adjust `sensor_path` before enabling the include.
 The file must exist and be readable by the Klipper account.
 
-This option does not enable the STM32 temperature sensor; support in the
-custom M300 MCU firmware needs separate verification.
+## Optional STM32 temperature diagnostics
+
+MCU 1.0.9 provides `M300_MCU_TEMPERATURE_ABI=1` and a long ADC16 sample time.
+The optional `m300_mcu_temperature.py` reads the internal sensor every 5 seconds
+through the native ADC queue without enabling debug memory reads. It registers
+no heater and no additional graph series.
+
+Install [MCU 1.0.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/en/MCU_FIRMWARE_1.0.9.md) first. On an idle printer, from the
+updated `orange-pi` checkout:
+
+```bash
+cp M300_HOST/payload/m300_mcu_temperature.py "$HOME/klipper/klippy/extras/" &&
+cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+cp -n FIRST_INSTALL/m300_mcu_temperature.cfg "$HOME/printer_data/config/"
+```
+
+Add `[include m300_mcu_temperature.cfg]` to `printer.cfg` above `SAVE_CONFIG`.
+Run `FIRMWARE_RESTART` in Fluidd. After a few seconds, run
+`M300_MCU_TEMPERATURE` to read the diagnostic. The same object is available at
+`http://127.0.0.1:7125/printer/objects/query?m300_mcu_temperature`.
+
+The temperature is the die temperature, using nominal STM32F103 conversion
+parameters. It is approximate; `adc_voltage` and `temperature_offset` allow
+adjustment. ADC fractions/raw readings and sample age are reported as well.
+Stale, disconnected or shutdown measurements return a null temperature.
+To disable, comment out the include and run `FIRMWARE_RESTART`. Disable this
+include before reverting to MCU 1.0.8; the addon rejects that older capability.

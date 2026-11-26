@@ -57,3 +57,51 @@ Na innej płytce lub po zmianie mapowania stref sprawdź wynik polecenia i dopas
 jeśli wskazany plik nie istnieje lub nie jest czytelny dla użytkownika Klippera.
 MCU nie jest dodawane przez tę opcję: odczyt wewnętrznego czujnika STM32 wymaga
 osobnego sprawdzenia obsługi w firmware M300.
+
+## Temperatura STM32 — opcjonalny odczyt diagnostyczny
+
+MCU 1.0.9 dodaje potwierdzoną przez protokół obsługę wewnętrznego kanału ADC16.
+Dodatek Klippera `m300_mcu_temperature.py` korzysta z tego kanału co 5 sekund,
+bez komend odczytu pamięci debug. Nie rejestruje grzałki ani dodatkowej serii
+wykresu temperatur.
+
+Po wgraniu MCU 1.0.9 według [instrukcji firmware](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/pl/MCU_FIRMWARE_1.0.9.md),
+na bezczynnej drukarce skopiuj pliki z aktualnej gałęzi `orange-pi`:
+
+```bash
+cd "$HOME/m300-orange-pi" &&
+git pull --ff-only &&
+sha256sum -c --quiet SHA256SUMS &&
+cp M300_HOST/payload/m300_mcu_temperature.py "$HOME/klipper/klippy/extras/" &&
+cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+cp -n FIRST_INSTALL/m300_mcu_temperature.cfg "$HOME/printer_data/config/"
+```
+
+W `printer.cfg`, przed `SAVE_CONFIG`, dodaj:
+
+```ini
+[include m300_mcu_temperature.cfg]
+```
+
+Wykonaj w konsoli Fluidd `FIRMWARE_RESTART`, a po kilku sekundach:
+
+```gcode
+M300_MCU_TEMPERATURE
+```
+
+Odczyt jest także dostępny przez Moonraker:
+
+```bash
+curl -sS 'http://127.0.0.1:7125/printer/objects/query?m300_mcu_temperature'
+```
+
+Wartości `temperature`, `adc_fraction`, `adc_raw` i `sample_age` opisują bieżący
+pomiar. Przy braku świeżych danych temperatura ma wartość `null`, a pole `state`
+wyjaśnia przyczynę. Czujnik mierzy temperaturę struktury STM32, nie całej płyty.
+Przeliczenie wykorzystuje nominalne parametry STM32F103; jest orientacyjne.
+W pliku dodatku można ustawić rzeczywiste `adc_voltage` i `temperature_offset`.
+
+Wyłączenie: zakomentuj `[include m300_mcu_temperature.cfg]` i wykonaj
+`FIRMWARE_RESTART`. Przed powrotem do MCU 1.0.8 także wyłącz ten include.
+Na starszym firmware dodatek zgłasza potrzebę aktualizacji zamiast pozorować pomiar.
