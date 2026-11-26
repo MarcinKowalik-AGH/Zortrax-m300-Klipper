@@ -800,5 +800,8 @@
   ],
   "gcode.py": [
     "8cfb812d7aadd0bc3c876edadfe1d2f1edb97095b2ed74a302e0946c00ddd75c"
+  ],
+  "m300_mcu_temperature.py": [
+    "f73b5471f410391f6db1d375c7b5f69695b166d4bb0991033fcdc605e759bedc"
   ]
 }
