@@ -8,6 +8,8 @@
 
 Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.3** i MCU **1.0.8**. Fluidd działa na porcie **4480**. W 1.0.3 nazwy 36 makr operatorskich zaczynają się od `M300_`. Zapisane pliki G-code nadal mogą wywoływać poprzednie nazwy `ZORTRAX_`.
 
+[Opcjonalna temperatura hosta](docs/pl/HOST_TEMPERATURE.md): jedna seria Host na wykresie, włączana przez include; pozostałe temperatury odczytywane na żądanie.
+
 ## Instalacja i obsługa
 
 Na **nowym hoście z KIAUH** pobierz repozytorium i uruchom instalator poniżej

@@ -112,9 +112,10 @@ def render_config(package, dest, data, serial, baud, machine):
         (dest/output).write_text(text)
     for name in ('m300_operations.cfg', 'klipper_calibration.cfg', 'm300_display.cfg'):
         shutil.copy2(host/'payload'/name, dest/name)
-    camera = package/'FIRST_INSTALL/m300_camera.conf'
-    if camera.is_file() and not (data/'config'/camera.name).exists():
-        shutil.copy2(camera, dest/camera.name)
+    for name in ('m300_camera.conf', 'm300_host_temperature.cfg'):
+        optional = package/'FIRST_INSTALL'/name
+        if optional.is_file() and not (data/'config'/name).exists():
+            shutil.copy2(optional, dest/name)
 
 
 def moonraker_config(text):

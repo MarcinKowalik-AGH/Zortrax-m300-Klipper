@@ -32,6 +32,7 @@ def package(release, output, commit):
     for name in (FLUIDD, 'MCU/M300APP.M3B', 'MCU/M300_SD.zip',
                  'MCU/klipper.dict', 'install-fresh.py', 'install-new-host.py',
                  'install-orange-pi.py', 'install-camera.py', 'CAMERA_PL.md', 'CAMERA_EN.md',
+                 'read-host-temperatures.py', 'HOST_TEMPERATURE_PL.md', 'HOST_TEMPERATURE_EN.md',
                  'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
@@ -53,6 +54,9 @@ def package(release, output, commit):
         'Edit `~/printer_data/config/m300_camera.conf` and run '
         '`python3 install-camera.py --apply` to change it or disable streaming. '
         'See CAMERA_PL.md / CAMERA_EN.md.\n\n'
+        'Optional host CPU temperature: one Host graph series, enabled with '
+        '`[include m300_host_temperature.cfg]`. Other readings: '
+        '`python3 read-host-temperatures.py`. See HOST_TEMPERATURE_PL.md / HOST_TEMPERATURE_EN.md.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')

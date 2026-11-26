@@ -10,6 +10,8 @@ This port runs Klipper on the original **Zortrax M300 Classic** controller with 
 
 [Optional USB camera](docs/en/CAMERA.md): disabled by default, with a separate host configuration and Fluidd view.
 
+[Optional host temperature](docs/en/HOST_TEMPERATURE.md): one Host graph series, enabled with an include; other thermal zones are read on demand.
+
 ## Install and operate
 
 For a **new KIAUH host**, clone this repository and run the first-install entry

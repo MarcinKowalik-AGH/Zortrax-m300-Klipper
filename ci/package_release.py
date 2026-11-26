@@ -135,9 +135,13 @@ def main():
         shutil.copy2(ROOT/'host/config'/name,first/name)
     shutil.copy2(ROOT/'host/requirements-m300.txt',first/'requirements-m300.txt')
     shutil.copy2(ROOT/'host/config/m300_camera.conf',first/'m300_camera.conf')
+    shutil.copy2(ROOT/'host/config/m300_host_temperature.cfg',first/'m300_host_temperature.cfg')
+    shutil.copy2(ROOT/'ci/read_host_temperatures.py',release/'read-host-temperatures.py')
     shutil.copy2(ROOT/'ci/install_camera.py',release/'install-camera.py')
     for language in ('en', 'pl'):
         export_guide(ROOT/'docs'/language/'CAMERA.md', release/('CAMERA_'+language.upper()+'.md'))
+        export_guide(ROOT/'docs'/language/'HOST_TEMPERATURE.md',
+                     release/('HOST_TEMPERATURE_'+language.upper()+'.md'))
     shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
     shutil.copy2(ROOT/'install-new-host.py',release/'install-new-host.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
