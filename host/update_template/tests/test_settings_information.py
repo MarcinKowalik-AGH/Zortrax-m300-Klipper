@@ -701,7 +701,8 @@ class SettingsTreeTests(unittest.TestCase):
     def test_existing_calibration_instruction_is_not_dropped_by_menu_adapter(self):
         with session() as h:
             h.menu.page='procedure'
-            h.objects['m300_procedures']=NS(rows=lambda now:('Calibration',[('Tighten all three knobs',None),('Continue',('procedure_action','view','CONFIRM'))]))
+            h.objects['m300_procedures']=NS(view=lambda now:dict(busy=True),
+                rows=lambda now:('Calibration',[('Tighten all three knobs',None),('Continue',('procedure_action','view','CONFIRM'))]))
             self.assertEqual(h.menu.rows(h.now)[1][0][0],'Tighten all three knobs')
 
 

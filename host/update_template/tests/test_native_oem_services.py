@@ -138,7 +138,7 @@ class Harness:
         self.objects['m300_procedures']=self.p
         for name,body in templates().items():
             if name in ('M300_LEVEL','M300_HEAT','M300_HEAT_PLATFORM','M300_HOME_X','M300_HOME_Y','M300_HOME_XY','M300_HOME_Z','M300_HOME_ALL','M300_PLATFORM_UP',
-                        'M300_PLATFORM_DOWN','M300_LOAD','M300_UNLOAD','M300_CHANGE'):
+                        'M300_PLATFORM_DOWN','M300_LOAD','M300_UNLOAD','M300_CHANGE','M300_PROCEDURE'):
                 template=ENV.from_string(body)
                 self.gcode.register_command(name,lambda cmd,t=template:self.gcode.run_script_from_command(
                     t.render(params=cmd.get_command_parameters())))

@@ -753,6 +753,37 @@
           }
         }
       ]
+    },
+    {
+      "id": "OLED_FAN_RETURN",
+      "function": "Fan test na OLED — przełączniki i powrót do wywołującego ekranu",
+      "events": [
+        {
+          "date": "2026-11-26",
+          "version": "MCU 1.0.9; host w kontekście R16.17",
+          "version_basis": "Kontekst rozmowy; rzeczywista wersja zainstalowanych modułów menu nie została odczytana.",
+          "test": "Fan test na fizycznym OLED; przełączenie wentylatora pokrętłem.",
+          "status": "FAILED_HARDWARE",
+          "result": "Użytkownik zgłosił wyrzucenie do głównego ekranu po przełączeniu wentylatora.",
+          "problem": "Dokładna ścieżka wywołania na urządzeniu wymaga diagnostyki; zgłoszenie nie jest testem długiego przytrzymania.",
+          "evidence": {
+            "kind": "user_message",
+            "quote": "Po przełączeniu wentylatora; Pokrętłem na OLED"
+          }
+        },
+        {
+          "date": "2026-11-26",
+          "version": "Host R16.18 / MCU 1.0.9",
+          "version_basis": "Nowy kod i testy programu; bez wgrania i próby na urządzeniu.",
+          "test": "Ponowna próba przełączania obu wentylatorów oraz Back po instalacji aktualizacji hosta.",
+          "status": "AWAITING_TEST",
+          "result": "Aktywny Fan test zachowuje właściciela widoku, także przy żądaniu statusu i spóźnionym wyniku innej procedury. Długi klik korzysta z Back. Odbiór sprzętowy pozostaje otwarty.",
+          "problem": "Wymagane potwierdzenie zachowania po przełączeniu na rzeczywistym OLED.",
+          "evidence": {
+            "kind": "no_hardware_confirmation"
+          }
+        }
+      ]
     }
   ]
 }

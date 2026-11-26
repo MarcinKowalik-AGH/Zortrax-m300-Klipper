@@ -133,6 +133,9 @@ def main():
         run('actual_klippy_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', fixture, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/fileoutput'])
+        menu_audit = json.loads((ROOT / '.ci/fileoutput/OLED_MENU_AUDIT.json').read_text())
+        assert menu_audit['status'] == 'PASS_OLED_MENU_BINDINGS'
+        (report / 'OLED_MENU_AUDIT.json').write_text(json.dumps(menu_audit, indent=2) + '\n')
         run('actual_qualified_first_print_fileoutput', [sys.executable, ROOT / 'ci/validate_native_process.py',
             '--root', host_tree, '--config', ROOT / '.ci/installed-qualified-first-print/printer.cfg',
             '--dictionary', args.dictionary.resolve(), '--case', 'native_models_zcode_mesh',

@@ -140,6 +140,7 @@ def main():
         'BED_MESH_CALIBRATE\n')
     cases=[
         ('native_early_moonraker_status','ZORTRAX_NATIVE_STATUS\nZORTRAX_MAINTENANCE_STATUS\n',False,None),
+        ('native_oled_menu_audit','ZORTRAX_NATIVE_STATUS\nZORTRAX_CI_OLED_MENU_AUDIT\n',False,None),
         ('native_oem_error_catalog',
          'ZORTRAX_NATIVE_STATUS\nZORTRAX_UI_SHOW PAGE=errors\n'
          'ZORTRAX_UI_SHOW PAGE=error_catalog\n' + ''.join(
@@ -237,7 +238,7 @@ def main():
         # or late writes from an earlier process using the same output root.
         state_dir=Path(tempfile.mkdtemp(prefix='nvm-',dir=dest))
         cp.set('m300_nvm','path',str(state_dir/'settings.json'))
-        if name in ('native_pad_mesh','native_pad_mesh_zero_margin','native_pad_mesh_bounds'):
+        if name in ('native_pad_mesh','native_pad_mesh_zero_margin','native_pad_mesh_bounds','native_oled_menu_audit'):
             cp.set('stepper_x', 'position_max', '300')
             cp.set('stepper_y', 'position_max', '305')
             cp.read_dict({'bed_mesh': {'mesh_min': '10, 10', 'mesh_max': '299, 304',
@@ -307,6 +308,12 @@ def main():
                             'synthetic_factory_record': True, 'physical_hardware': False})
             continue
         assert 'M300_DISPLAY ' in text, (name, process.returncode, text[-4000:])
+        if name == 'native_oled_menu_audit':
+            audit = next(json.loads(line.split('M300_CI_OLED_MENU_AUDIT ', 1)[1])
+                         for line in text.splitlines() if 'M300_CI_OLED_MENU_AUDIT ' in line)
+            assert audit['status'] == 'PASS_OLED_MENU_BINDINGS'
+            assert not audit['actions_executed'] and not audit['physical_hardware']
+            (args.output / 'OLED_MENU_AUDIT.json').write_text(json.dumps(audit, indent=2) + '\n')
         if name=='native_early_moonraker_status':
             snapshots=[json.loads(line.split('M300_CI_EARLY_STATUS ',1)[1])
                        for line in text.splitlines() if 'M300_CI_EARLY_STATUS ' in line]

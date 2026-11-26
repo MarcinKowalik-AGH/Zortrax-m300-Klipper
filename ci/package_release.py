@@ -101,6 +101,7 @@ def main():
     shutil.copytree(ROOT / '.ci/reports', release / 'REPORTS',
                     ignore=shutil.ignore_patterns('timer-test', 'factory-test', 'factory-counter-test',
                                                   'sd-card-test', 'panel-test', '*.log'))
+    shutil.copy2(ROOT / '.ci/reports/OLED_MENU_AUDIT.json', release / 'OLED_MENU_AUDIT.json')
     if (ROOT / '.ci/fileoutput/REPORT.json').exists():
         shutil.copy2(ROOT / '.ci/fileoutput/REPORT.json', release / 'REPORTS/KLIPPY_FILEOUTPUT.json')
     provenance = {'model': META['model'], 'upstream_commit': META['upstream_commit'],
@@ -147,6 +148,8 @@ def main():
                      release/('HOST_TEMPERATURE_'+language.upper()+'.md'))
         export_guide(ROOT/'docs'/language/'CONTACT_RECOVERY.md',
                      release/('CONTACT_RECOVERY_'+language.upper()+'.md'))
+        export_guide(ROOT/'docs'/language/'OLED_MENU_AUDIT.md',
+                     release/('OLED_MENU_'+language.upper()+'.md'))
     shutil.copy2(ROOT/'ci/install_fresh.py',release/'install-fresh.py')
     shutil.copy2(ROOT/'install-new-host.py',release/'install-new-host.py')
     for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):

@@ -37,6 +37,8 @@ class BootstrapTests(unittest.TestCase):
             'HOST_TEMPERATURE_EN.md':'temperature instructions',
             'CONTACT_RECOVERY_PL.md':'cleaning instructions',
             'CONTACT_RECOVERY_EN.md':'cleaning instructions',
+            'OLED_MENU_PL.md':'OLED menu audit','OLED_MENU_EN.md':'OLED menu audit',
+            'OLED_MENU_AUDIT.json':'{"status":"PASS_OLED_MENU_BINDINGS"}',
             'MCU/klipper.dict':'new dictionary',
             'FIRST_INSTALL/m300_classic_base.cfg':'public base config',
             'FIRST_INSTALL/m300_classic_services.cfg':'public services',
@@ -84,6 +86,10 @@ class BootstrapTests(unittest.TestCase):
         self.assertTrue((result/'read-host-temperatures.py').is_file())
         self.assertEqual((result/'CONTACT_RECOVERY_PL.md').read_text(),'cleaning instructions')
         self.assertEqual((result/'CONTACT_RECOVERY_EN.md').read_text(),'cleaning instructions')
+        self.assertEqual((result/'OLED_MENU_PL.md').read_text(),'OLED menu audit')
+        self.assertEqual((result/'OLED_MENU_EN.md').read_text(),'OLED menu audit')
+        self.assertEqual(json.loads((result/'OLED_MENU_AUDIT.json').read_text())['status'],
+                         'PASS_OLED_MENU_BINDINGS')
         self.assertEqual(json.loads((result/'BOOTSTRAP_PROVENANCE.json').read_text())['deployment_commit'],'c'*40)
         bootstrap.manifest(result)
 

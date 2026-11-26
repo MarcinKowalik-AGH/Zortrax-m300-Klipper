@@ -52,7 +52,7 @@ class Rc1Contracts(unittest.TestCase):
                 '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505'),
             'host/klippy/extras/m300_menu.py': (
                 '36d87ea55349a74610d1dd978cb1eb69f5420bcf0a6dbd09d0b6c0a370b11320',
-                'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743'),
+                '79d97154d13f32617f4a6af338e01d10a76cf923e2af33bffd432cabecf4cdbd'),
             'host/klippy/extras/m300_calibration.py': (
                 '922ec1342dd30c5e7dd6284001dfcaf3d203fb1f618e1ab1e25418e27e7b9fcf',
                 '7a7c6557c2b8b4861fdc693eaab8d878e7443ab5e58d95e804a38b33a498b735'),
@@ -86,7 +86,7 @@ class Rc1Contracts(unittest.TestCase):
                     # AST contract separately checks the production OLED methods.
                     # RC23 also preserves the invoking menu row after Back.
                     self.assertEqual(expected, 'e4575a52869ad6cf2937da8ba19f9a09c83338e0bff4326900c0c84a03c0bb9a')
-                    expected = 'a77e63b610b5bf73955959ff94d4caf1796103e3038230acb4e807aaf2aee666'
+                    expected = 'b9b6adea5d0c2a92263ed465215780cf55fc03a56386b6cb052c12f8d8a6ce61'
                 if path == native_service:
                     # RC13 allows active native Bed Mesh for E-only filament moves.
                     # Preserve the RC6 reference and pin the reviewed RC13 code.
@@ -96,7 +96,7 @@ class Rc1Contracts(unittest.TestCase):
 
     def test_regression_suite_not_replaced_with_ui_only_tests(self):
         meta=json.loads((ROOT/'PORT.json').read_text())
-        self.assertEqual(meta['self_contained_host_tests'],1042)
+        self.assertEqual(meta['self_contained_host_tests'],1055)
         check=(ROOT/'ci/run_checks.py').read_text()
         for name in ('native_heater_checks','real_installer_migration','qualified_first_print_migration',
                      'host_tests','native_klippy_process'):

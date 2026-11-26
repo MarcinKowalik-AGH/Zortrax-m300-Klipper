@@ -185,6 +185,12 @@ class M300Procedures:
             owner = recent
         else:
             owner = active[0] if active else recent
+        if (snapshots['m300_fans'].get('state') == 'FAN_TEST'
+                and snapshots['m300_fans'].get('busy') is True):
+            # Switching a fan changes its view token, not its screen owner.
+            # A late completion report from an older procedure cannot take
+            # the interactive menu while this test still owns the outputs.
+            owner = 'm300_fans'
         if snapshots['m300_pad_mesh'].get('busy') is True:
             # Native G28 is a child of the measurement. Its phase/completion
             # must not steal the OLED or consume the parent's return context.
@@ -504,7 +510,12 @@ class M300Procedures:
             self.get_status(self.reactor.monotonic()), sort_keys=True))
 
     def cmd_show(self, gcmd):
-        self._prompt(self.view(self.reactor.monotonic()))
+        view = self.view(self.reactor.monotonic())
+        self._prompt(view)
+        menu = self.printer.lookup_object('m300_menu', None)
+        present = getattr(menu, 'show_current_procedure', None)
+        if present is not None:
+            present(view)
         self.cmd_status(gcmd)
 
     def cmd_action(self, gcmd):

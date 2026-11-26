@@ -14,6 +14,11 @@ This port runs Klipper on the original **Zortrax M300 Classic** controller with 
 
 [Nozzle contact recovery](docs/en/CONTACT_RECOVERY.md): a recognized probing failure lowers the bed by 100 mm within the Z travel, asks for nozzle cleaning and invalidates Z without forcing a firmware restart.
 
+[OLED menu audit — host R16.18](docs/en/OLED_MENU_AUDIT.md): shared macro bindings,
+interactive fan-test navigation, Current procedure and return paths. Ready files
+are published on the [orange-pi branch](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/tree/orange-pi);
+the tagged 1.0.3 download above is the earlier release snapshot.
+
 ## Install and operate
 
 For a **new KIAUH host**, clone this repository and run the first-install entry

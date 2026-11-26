@@ -38,7 +38,7 @@ szablonu. Pełna instrukcja poniżej opisuje wgranie MCU i kalibrację drukarki.
 | Wgrać MCU przez posiadany bootloader | [Aplikacja na SD i kontrola wersji](docs/pl/MCU_FIRMWARE_1.0.9.md) · [Paczka MCU](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/mcu-v1.0.9) |
 | Przygotować płytę i wydruk z OrcaSlicera | [Poziomowanie i mesh](docs/pl/BED_MESH_AND_LEVELING.md) · [Komendy START i END](docs/pl/PRINT_CONTROL.md) · [Profile OrcaSlicera](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Orca-Slicer) |
 | Zrobić pauzę, zmienić kolor i wznowić | [Podręcznik operatora](docs/pl/USER_GUIDE.md) · [Filament i przepłukiwanie dyszy](docs/pl/MAINTENANCE_MATERIAL.md) |
-| Obsługiwać OLED i makra we Fluidd | [Sterowanie](docs/pl/RC1_UI.md) · [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [65 ilustrowanych ekranów](docs/pl/OLED_FUNCTIONS.md) |
+| Obsługiwać OLED i makra we Fluidd | [Audyt menu R16.18 i poprawki](docs/pl/OLED_MENU_AUDIT.md) · [Sterowanie](docs/pl/RC1_UI.md) · [Katalog makr](docs/pl/MACRO_REFERENCE.md) · [Historyczny atlas ekranów](docs/pl/OLED_FUNCTIONS.md) |
 | Dodać opcjonalną kamerę USB | [Włączenie, wyłączenie i konfiguracja kamery w Fluidd](docs/pl/CAMERA.md) |
 | Wyczyścić dyszę po błędzie styku przy bazowaniu lub meshu | [Opuszczenie stołu o 100 mm i aktualizacja istniejącego hosta](docs/pl/CONTACT_RECOVERY.md) |
 | Sprawdzić parametry, błędy i stan odbioru | [Parametry techniczne](docs/pl/TECHNICAL_REFERENCE.md) · [Diagnostyka](docs/pl/USER_GUIDE.md#9-rozpoznawanie-problemów) · [Rejestr prób sprzętowych](docs/pl/ACCEPTANCE_REGISTER.md) |

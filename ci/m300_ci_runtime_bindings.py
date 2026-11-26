@@ -28,6 +28,113 @@ class RuntimeBindings:
         self.printer.register_event_handler('klippy:ready', self.check)
         self.printer.lookup_object('gcode').register_command(
             'ZORTRAX_CI_DEPOSITION', self.check_deposition)
+        self.printer.lookup_object('gcode').register_command(
+            'ZORTRAX_CI_OLED_MENU_AUDIT', self.check_menu)
+
+    def check_menu(self, gcmd):
+        """Read every reachable native menu and check actual command bindings.
+
+        This fixture cannot run with a physical MCU. It does not select rows,
+        execute their actions, change targets, or authorize a procedure.
+        """
+        from .m300_settings import PAGES
+        from .m300_ui_m11_state import require_rows
+
+        printer = self.printer
+        menu = printer.lookup_object('m300_menu')
+        oled = printer.lookup_object('m300_oled')
+        handlers = printer.lookup_object('gcode').ready_gcode_handlers
+        toolhead = printer.lookup_object('toolhead')
+        heaters = [printer.lookup_object(name) for name in ('extruder', 'heater_bed')]
+        heaters = [getattr(obj, 'heater', obj) for obj in heaters]
+        before = (tuple(toolhead.get_position()), tuple(h.target_temp for h in heaters))
+        old = menu.page, oled.page, menu._return_page, oled.selection
+        # Include the idle fallbacks of views otherwise entered by a live
+        # procedure/import. Their active phases are exercised by host tests.
+        pending = [('m04', page) for page in ('main', 'procedure', 'fan_test', 'model_file')]
+        visited, pages, commands = set(), [], set()
+        home_commands = {
+            'motion_home_x': 'M300_HOME_X', 'motion_home_y': 'M300_HOME_Y',
+            'motion_home_z': 'M300_HOME_Z', 'motion_home_xy': 'M300_HOME_XY',
+            'motion_home_xyz': 'M300_HOME_ALL',
+        }
+        owners = {
+            'setting': 'm300_settings', 'set': 'm300_settings',
+            'temperatures': 'm300_menu', 'temp': 'heaters',
+            'fan_set': 'fan', 'platform_hold': 'm300_maintenance',
+            'procedure_action': 'm300_procedures', 'procedure_return': 'm300_menu',
+            'model_start': 'm300_models', 'model_cancel': 'm300_models',
+            'browse': 'm300_browser', 'directory': 'm300_browser', 'file': 'm300_models',
+            'ui_back': 'm300_menu_ui', 'page': 'm300_menu', 'oled': 'm300_oled',
+        }
+        try:
+            while pending:
+                panel, page = pending.pop(0)
+                if (panel, page) in visited:
+                    continue
+                assert len(visited) < 80, 'OLED page graph must be bounded'
+                visited.add((panel, page))
+                menu.page, oled.page, oled.selection = page, panel, 0
+                title, rows = oled._rows(printer.get_reactor().monotonic())
+                if panel == 'm04':
+                    require_rows(rows)
+                found = []
+                for index, (label, action) in enumerate(rows):
+                    entry = dict(index=index, label=label, action=action)
+                    bound = []
+                    if isinstance(action, tuple):
+                        kind = action[0]
+                        assert kind not in ('atlas_item', 'atlas_open', 'motion_xy_arm',
+                                            'motion_home', 'cal_start', 'service_stop'), (page, action)
+                        if kind == 'native_gcode':
+                            bound = [line.strip().split()[0].upper()
+                                     for line in action[1].splitlines() if line.strip()]
+                        elif kind in home_commands:
+                            bound = [home_commands[kind]]
+                        elif kind == 'platform_hold':
+                            bound = ['M300_PLATFORM_UP' if action[1] < 0 else 'M300_PLATFORM_DOWN']
+                        elif kind == 'service':
+                            assert action[1] in ('HOTEND', 'BED'), action
+                            bound = ['SET_HEATER_TEMPERATURE']
+                        elif kind == 'fan_set':
+                            bound = ['M106']
+                        elif kind == 'temp':
+                            bound = ['SET_HEATER_TEMPERATURE']
+                        elif kind == 'set':
+                            bound = ['ZORTRAX_UI_SETTING']
+                        elif kind == 'procedure_action':
+                            bound = ['ZORTRAX_PROCEDURE_ACTION']
+                        entry['owner'] = owners.get(kind, 'm300_motion' if kind in home_commands else None)
+                        if kind == 'page':
+                            pending.append(('m04', action[1]))
+                        elif kind == 'setting':
+                            pending.append(('m04', 'setting_' + action[1]))
+                        elif kind == 'temperatures':
+                            menu._return_page = action[2]
+                            pending.append(('m04', 'temperature_' + action[1]))
+                        elif kind == 'oled' and action[1] != 'status':
+                            pending.append((action[1], page))
+                        elif kind == 'browse':
+                            pending.append(('m04', 'browser'))
+                    if bound:
+                        for name in bound:
+                            assert name in handlers, (page, label, 'unbound command', name)
+                            commands.add(name)
+                        entry['commands'] = bound
+                    found.append(entry)
+                pages.append(dict(panel=panel, page=page, title=title, rows=found))
+            logical = {page for panel, page in visited if panel == 'm04'}
+            assert PAGES <= logical, sorted(PAGES - logical)
+            assert {'main', 'klipper', 'zortrax', 'maintenance', 'material', 'models',
+                    'fans', 'native_pid', 'native_moves', 'native_job', 'diagnostics'} <= logical
+            assert 'tests' not in logical and 'stock_atlas' not in logical
+            assert (tuple(toolhead.get_position()), tuple(h.target_temp for h in heaters)) == before
+        finally:
+            menu.page, oled.page, menu._return_page, oled.selection = old
+        report = dict(status='PASS_OLED_MENU_BINDINGS', FILEOUTPUT=True, physical_hardware=False,
+                      actions_executed=False, pages=pages, page_count=len(pages),
+                      commands=sorted(commands), command_count=len(commands))
+        logging.info('M300_CI_OLED_MENU_AUDIT %s', json.dumps(report, sort_keys=True))
 
     def check_deposition(self, gcmd):
         models = self.printer.lookup_object('m300_models')

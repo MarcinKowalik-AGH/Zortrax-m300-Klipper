@@ -252,7 +252,10 @@ class RepositoryContracts(unittest.TestCase):
         # _select additionally preserves the interactive OEM fan-menu cursor.
         # _reinitialize deliberately fixes cancelled-ACK/native-queue ordering;
         # test_oled_reclaim reproduces the old failure and checks the boundary.
-        for name in old.keys()-{'_render','_panel','_select','_reinitialize'}:
+        # R16.18 also keeps an active fan-test screen from being released by
+        # the generic status shortcut. Its navigation contract is exercised
+        # in test_oled_menu_audit; SPI/background methods remain identical.
+        for name in old.keys()-{'_render','_panel','_select','_reinitialize','_show_status'}:
             self.assertEqual(old[name],new[name],name)
 
     def test_published_host_and_mcu_sources_exclude_factory_dump_images(self):

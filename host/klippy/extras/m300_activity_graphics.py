@@ -201,9 +201,9 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
                 return Symbol(HOMING_ICONS[homing], True)
             if name in ('BED_MESH', 'ZORTRAX_BED_MESH', 'M300_PAD_MESH_CALIBRATE', 'BED_MESH_CALIBRATE'):
                 return symbol('bed_mesh', True)
-            if name in ('M300_HEAT', 'M104', 'M109'):
+            if name in ('M300_HEAT', 'M104', 'M109', 'PID_HOTEND'):
                 return symbol('heat_nozzle', True)
-            if name in ('M300_HEAT_PLATFORM', 'M300_FULL_PLATFORM_PREHEAT', 'M140', 'M190') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
+            if name in ('M300_HEAT_PLATFORM', 'M300_FULL_PLATFORM_PREHEAT', 'M140', 'M190', 'PID_BED') or name == 'PID_CALIBRATE' and 'HEATER=HEATER_BED' in command:
                 return symbol('heat_bed', True)
             if name == 'PID_CALIBRATE':
                 return symbol('heat_nozzle', True)
@@ -213,7 +213,7 @@ def menu_symbol(page, panel_page, rows=(), selected=0, *, fan=None, browser=None
                 return symbol('fan_upper', True)
             if name == 'M300_FAN_LOWER':
                 return symbol('fan_lower', True)
-            if name in ('FIRMWARE_RESTART', 'RESTART', 'SAVE_CONFIG'):
+            if name in ('FIRMWARE_RESTART', 'RESTART', 'SAVE_CONFIG', 'PID_SAVE'):
                 return symbol('firmware_update', True)
             if name == 'M112':
                 return symbol('emergency_stop', True)

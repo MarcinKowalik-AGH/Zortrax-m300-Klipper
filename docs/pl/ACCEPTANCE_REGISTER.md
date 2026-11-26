@@ -39,6 +39,7 @@ Nie usuwaj poprzednich wyników. Wcześniejszego „zaakceptowano” nie zamieni
 | Uruchomienie fabrycznego firmware’u 1.3.1 przez posiadany bootloader | Fabryczne 1.3.1 | Wgranie aplikacji i uruchomienie drukarki | Potwierdzone na sprzęcie: Użytkownik potwierdził udane wgranie i uruchomienie aplikacji fabrycznej. | Potwierdzenie dotyczy zwykłego uruchomienia aplikacji. |
 | Automatyczny zapis licznika ID0 w MCU | RC19 / MCU 1.0.6 | Zachowanie fabrycznego licznika ID0 po wyłączeniu i ponownym włączeniu drukarki. | Potwierdzone na sprzęcie: Przed wyłączeniem i po ponownym włączeniu MCU zgłosiło 289224 min (4820 h 24 min), bank B, NORMALIZED, CURRENT, pending=false i 149520 rozliczonych sekund. Wartość przetrwała cykl zasilania bez ponownego doliczenia czasu. | Test dotyczył zakończonego zapisu. Przerwanie zasilania w trakcie programowania banku sprawdzono dotąd w symulacji. |
 | Przeładowanie strony i przyciski Fluidd po restarcie Klippera | Wersja interfejsu nieodczytana | Restart Klippera i próba użycia przycisków Fluidd. | Potwierdzone UI: Strona odświeżyła się i przyciski działały. | — |
+| Fan test na OLED — przełączniki i powrót do wywołującego ekranu | Host R16.18 / MCU 1.0.9 | Ponowna próba przełączania obu wentylatorów oraz Back po instalacji aktualizacji hosta. | Oczekuje na test: Aktywny Fan test zachowuje właściciela widoku, także przy żądaniu statusu i spóźnionym wyniku innej procedury. Długi klik korzysta z Back. Odbiór sprzętowy pozostaje otwarty. | Wymagane potwierdzenie zachowania po przełączeniu na rzeczywistym OLED. |
 
 ## Historia i źródła potwierdzeń
 
@@ -425,6 +426,22 @@ Strona odświeżyła się i przyciski działały.
 Zapis użytkownika / treść przesłanego zrzutu: „tak po restarcie klipera , cała strona się odświerzyła i przyciski działają .”.
 
 Podstawa wersji: `user_report_after_host_update_no_frontend_readback`.
+
+### OLED_FAN_RETURN — Fan test na OLED — przełączniki i powrót do wywołującego ekranu
+
+**2026-11-26 · MCU 1.0.9; host w kontekście R16.17 · Błąd na sprzęcie**
+
+Użytkownik zgłosił wyrzucenie do głównego ekranu po przełączeniu wentylatora.
+
+Zapis użytkownika / treść przesłanego zrzutu: „Po przełączeniu wentylatora; Pokrętłem na OLED”.
+
+Podstawa wersji: `Kontekst rozmowy; rzeczywista wersja zainstalowanych modułów menu nie została odczytana.`.
+
+**2026-11-26 · Host R16.18 / MCU 1.0.9 · Oczekuje na test**
+
+Aktywny Fan test zachowuje właściciela widoku, także przy żądaniu statusu i spóźnionym wyniku innej procedury. Długi klik korzysta z Back. Odbiór sprzętowy pozostaje otwarty.
+
+Podstawa wersji: `Nowy kod i testy programu; bez wgrania i próby na urządzeniu.`.
 
 ## Jak aktualizować
 

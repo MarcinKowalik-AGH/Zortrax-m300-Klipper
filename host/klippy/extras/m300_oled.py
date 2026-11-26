@@ -416,7 +416,23 @@ class M300OLED:
             temperature = (self.page == 'm04' and menu is not None and
                            menu.page in ('temperature_HOTEND', 'temperature_BED'))
             if events['longs']:
-                if temperature:
+                if self.page == 'm04' and menu is not None and menu.page == 'fan_test':
+                    if (not self.message and current_view and presented_actions
+                            and isinstance(presented_actions[0], tuple)
+                            and (presented_actions[0][0] in ('procedure_return', 'ui_back', 'page')
+                                 or presented_actions[0][0] == 'procedure_action'
+                                 and presented_actions[0][-1] == 'BACK')):
+                        # OEM Back owns restoration and the invoking row.
+                        # Keep its current view token instead of the shortcut.
+                        self.selection = 0
+                        self._select(now, presented_actions=presented_actions)
+                elif (self.page == 'm04' and menu is not None and menu.page == 'procedure'
+                      and not self.message and current_view and presented_actions
+                      and isinstance(presented_actions[0], tuple)
+                      and presented_actions[0][0] == 'procedure_return'):
+                    self.selection = 0
+                    self._select(now, presented_actions=presented_actions)
+                elif temperature:
                     child = menu.page
                     menu._navigate(menu._return_page, remember=False)
                     self.selection = received_ui.return_position(menu.page, child, now)
@@ -975,9 +991,17 @@ class M300OLED:
             ('Obrót: wybór; klik: wejście', None), ('Przytrzymanie: menu główne', None)]
 
     def _show_status(self):
+        menu = self.printer.lookup_object('m300_menu', None)
+        fans = self.printer.lookup_object('m300_fans', None)
+        if (menu is not None and menu.page == 'fan_test' and fans is not None
+                and fans.test is not None and not self.printer.is_shutdown()):
+            # Only the test's Back/cancel/timeout/fault may release its view.
+            # An unrelated status repaint must not silently end the test.
+            logging.info('M300_FAN_VIEW_RETAINED token=%s phase=%s', fans.token, fans.phase)
+            self.render_at = 0.
+            return
         self._input_epoch += 1
         self.page, self.selection, self.message = 'status', 0, None
-        menu = self.printer.lookup_object('m300_menu', None)
         if menu is not None:
             menu.home()  # also releases an owned jog view; never cancels print
         self._clear_job_view()

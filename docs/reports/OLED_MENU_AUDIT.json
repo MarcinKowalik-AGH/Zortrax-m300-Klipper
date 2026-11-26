@@ -1,0 +1,6931 @@
+{
+  "FILEOUTPUT": true,
+  "actions_executed": false,
+  "command_count": 26,
+  "commands": [
+    "BED_MESH",
+    "G1",
+    "G91",
+    "M106",
+    "M300_FAN_TEST_START",
+    "M300_HEAT",
+    "M300_HEAT_PLATFORM",
+    "M300_HOME_ALL",
+    "M300_HOME_X",
+    "M300_HOME_XY",
+    "M300_HOME_Y",
+    "M300_HOME_Z",
+    "M300_LEVEL",
+    "M300_LOAD",
+    "M300_PLATFORM_DOWN",
+    "M300_PLATFORM_UP",
+    "M300_PROCEDURE",
+    "M300_UNLOAD",
+    "PID_BED",
+    "PID_HOTEND",
+    "PID_SAVE",
+    "SAVE_GCODE_STATE",
+    "SET_HEATER_TEMPERATURE",
+    "TURN_OFF_HEATERS",
+    "ZORTRAX_ERROR_SHOW",
+    "ZORTRAX_UI_SETTING"
+  ],
+  "page_count": 44,
+  "pages": [
+    {
+      "page": "main",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "oled",
+            "status"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_oled"
+        },
+        {
+          "action": [
+            "page",
+            "klipper"
+          ],
+          "index": 1,
+          "label": "Klipper",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 2,
+          "label": "Zortrax M300",
+          "owner": "m300_menu"
+        }
+      ],
+      "title": "M300"
+    },
+    {
+      "page": "procedure",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "ZORTRAX M300: IDLE"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Idle"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Session: None / Phase: None"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Elapsed: 0:00"
+        }
+      ],
+      "title": "Current procedure"
+    },
+    {
+      "page": "fan_test",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "ZORTRAX M300: IDLE"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Idle"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Session: None / Phase: None"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Elapsed: 0:00"
+        }
+      ],
+      "title": "Current procedure"
+    },
+    {
+      "page": "model_file",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "model_cancel",
+            null
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_models"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Model selection unavailable"
+        }
+      ],
+      "title": "Model information"
+    },
+    {
+      "page": "klipper",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "temperatures",
+            "HOTEND",
+            "klipper"
+          ],
+          "index": 1,
+          "label": "Hotend TEMP: OFF",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "temperatures",
+            "BED",
+            "klipper"
+          ],
+          "index": 2,
+          "label": "Bed TEMP: OFF",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "service",
+            "HOTEND"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 3,
+          "label": "Heat hotend",
+          "owner": null
+        },
+        {
+          "action": [
+            "service",
+            "BED"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 4,
+          "label": "Heat bed",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "TURN_OFF_HEATERS"
+          ],
+          "commands": [
+            "TURN_OFF_HEATERS"
+          ],
+          "index": 5,
+          "label": "Turn off heaters",
+          "owner": null
+        },
+        {
+          "action": [
+            "motion_home_x"
+          ],
+          "commands": [
+            "M300_HOME_X"
+          ],
+          "index": 6,
+          "label": "Home X",
+          "owner": "m300_motion"
+        },
+        {
+          "action": [
+            "motion_home_y"
+          ],
+          "commands": [
+            "M300_HOME_Y"
+          ],
+          "index": 7,
+          "label": "Home Y",
+          "owner": "m300_motion"
+        },
+        {
+          "action": [
+            "motion_home_z"
+          ],
+          "commands": [
+            "M300_HOME_Z"
+          ],
+          "index": 8,
+          "label": "Home Z",
+          "owner": "m300_motion"
+        },
+        {
+          "action": [
+            "motion_home_xy"
+          ],
+          "commands": [
+            "M300_HOME_XY"
+          ],
+          "index": 9,
+          "label": "Home XY",
+          "owner": "m300_motion"
+        },
+        {
+          "action": [
+            "motion_home_xyz"
+          ],
+          "commands": [
+            "M300_HOME_ALL"
+          ],
+          "index": 10,
+          "label": "Home XYZ",
+          "owner": "m300_motion"
+        },
+        {
+          "action": [
+            "page",
+            "bed_mesh"
+          ],
+          "index": 11,
+          "label": "Bed mesh (25 points)",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "native_moves"
+          ],
+          "index": 12,
+          "label": "Move axes",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "fans"
+          ],
+          "index": 13,
+          "label": "Fans",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "native_pid"
+          ],
+          "index": 14,
+          "label": "PID calibration",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "native_job"
+          ],
+          "index": 15,
+          "label": "Print status",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "diagnostics"
+          ],
+          "index": 16,
+          "label": "Diagnostics",
+          "owner": "m300_menu"
+        }
+      ],
+      "title": "Klipper"
+    },
+    {
+      "page": "zortrax",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "main"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "models"
+          ],
+          "index": 1,
+          "label": "Models",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "maintenance"
+          ],
+          "index": 2,
+          "label": "Maintenance",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "material"
+          ],
+          "index": 3,
+          "label": "Material",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 4,
+          "label": "Settings",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "information"
+          ],
+          "index": 5,
+          "label": "Information",
+          "owner": "m300_menu"
+        }
+      ],
+      "title": "Zortrax M300"
+    },
+    {
+      "page": "temperature_HOTEND",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "klipper"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            170,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 1,
+          "label": "170\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            171,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 2,
+          "label": "171\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            172,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 3,
+          "label": "172\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            173,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 4,
+          "label": "173\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            174,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 5,
+          "label": "174\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            175,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 6,
+          "label": "175\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            176,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 7,
+          "label": "176\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            177,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 8,
+          "label": "177\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            178,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 9,
+          "label": "178\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            179,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 10,
+          "label": "179\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            180,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 11,
+          "label": "180\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            181,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 12,
+          "label": "181\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            182,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 13,
+          "label": "182\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            183,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 14,
+          "label": "183\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            184,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 15,
+          "label": "184\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            185,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 16,
+          "label": "185\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            186,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 17,
+          "label": "186\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            187,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 18,
+          "label": "187\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            188,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 19,
+          "label": "188\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            189,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 20,
+          "label": "189\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            190,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 21,
+          "label": "190\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            191,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 22,
+          "label": "191\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            192,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 23,
+          "label": "192\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            193,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 24,
+          "label": "193\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            194,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 25,
+          "label": "194\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            195,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 26,
+          "label": "195\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            196,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 27,
+          "label": "196\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            197,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 28,
+          "label": "197\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            198,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 29,
+          "label": "198\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            199,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 30,
+          "label": "199\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            200,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 31,
+          "label": "200\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            201,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 32,
+          "label": "201\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            202,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 33,
+          "label": "202\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            203,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 34,
+          "label": "203\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            204,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 35,
+          "label": "204\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            205,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 36,
+          "label": "205\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            206,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 37,
+          "label": "206\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            207,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 38,
+          "label": "207\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            208,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 39,
+          "label": "208\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            209,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 40,
+          "label": "209\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            210,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 41,
+          "label": "210\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            211,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 42,
+          "label": "211\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            212,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 43,
+          "label": "212\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            213,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 44,
+          "label": "213\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            214,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 45,
+          "label": "214\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            215,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 46,
+          "label": "215\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            216,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 47,
+          "label": "216\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            217,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 48,
+          "label": "217\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            218,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 49,
+          "label": "218\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            219,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 50,
+          "label": "219\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            220,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 51,
+          "label": "220\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            221,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 52,
+          "label": "221\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            222,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 53,
+          "label": "222\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            223,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 54,
+          "label": "223\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            224,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 55,
+          "label": "224\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            225,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 56,
+          "label": "225\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            226,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 57,
+          "label": "226\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            227,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 58,
+          "label": "227\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            228,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 59,
+          "label": "228\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            229,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 60,
+          "label": "229\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            230,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 61,
+          "label": "230\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            231,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 62,
+          "label": "231\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            232,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 63,
+          "label": "232\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            233,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 64,
+          "label": "233\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            234,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 65,
+          "label": "234\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            235,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 66,
+          "label": "235\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            236,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 67,
+          "label": "236\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            237,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 68,
+          "label": "237\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            238,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 69,
+          "label": "238\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            239,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 70,
+          "label": "239\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            240,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 71,
+          "label": "240\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            241,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 72,
+          "label": "241\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            242,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 73,
+          "label": "242\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            243,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 74,
+          "label": "243\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            244,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 75,
+          "label": "244\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            245,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 76,
+          "label": "245\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            246,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 77,
+          "label": "246\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            247,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 78,
+          "label": "247\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            248,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 79,
+          "label": "248\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            249,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 80,
+          "label": "249\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            250,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 81,
+          "label": "250\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            251,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 82,
+          "label": "251\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            252,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 83,
+          "label": "252\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            253,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 84,
+          "label": "253\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            254,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 85,
+          "label": "254\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            255,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 86,
+          "label": "255\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            256,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 87,
+          "label": "256\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            257,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 88,
+          "label": "257\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            258,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 89,
+          "label": "258\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            259,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 90,
+          "label": "259\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            260,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 91,
+          "label": "260\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            261,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 92,
+          "label": "261\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            262,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 93,
+          "label": "262\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            263,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 94,
+          "label": "263\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            264,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 95,
+          "label": "264\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            265,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 96,
+          "label": "265\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            266,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 97,
+          "label": "266\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            267,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 98,
+          "label": "267\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            268,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 99,
+          "label": "268\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            269,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 100,
+          "label": "269\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "HOTEND",
+            270,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 101,
+          "label": "270\u00b0C",
+          "owner": "heaters"
+        }
+      ],
+      "title": "Select HOTEND TEMP"
+    },
+    {
+      "page": "temperature_BED",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "klipper"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            40,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 1,
+          "label": "40\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            41,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 2,
+          "label": "41\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            42,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 3,
+          "label": "42\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            43,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 4,
+          "label": "43\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            44,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 5,
+          "label": "44\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            45,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 6,
+          "label": "45\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            46,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 7,
+          "label": "46\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            47,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 8,
+          "label": "47\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            48,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 9,
+          "label": "48\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            49,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 10,
+          "label": "49\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            50,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 11,
+          "label": "50\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            51,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 12,
+          "label": "51\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            52,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 13,
+          "label": "52\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            53,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 14,
+          "label": "53\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            54,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 15,
+          "label": "54\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            55,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 16,
+          "label": "55\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            56,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 17,
+          "label": "56\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            57,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 18,
+          "label": "57\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            58,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 19,
+          "label": "58\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            59,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 20,
+          "label": "59\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            60,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 21,
+          "label": "60\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            61,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 22,
+          "label": "61\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            62,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 23,
+          "label": "62\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            63,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 24,
+          "label": "63\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            64,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 25,
+          "label": "64\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            65,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 26,
+          "label": "65\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            66,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 27,
+          "label": "66\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            67,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 28,
+          "label": "67\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            68,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 29,
+          "label": "68\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            69,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 30,
+          "label": "69\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            70,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 31,
+          "label": "70\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            71,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 32,
+          "label": "71\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            72,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 33,
+          "label": "72\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            73,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 34,
+          "label": "73\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            74,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 35,
+          "label": "74\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            75,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 36,
+          "label": "75\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            76,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 37,
+          "label": "76\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            77,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 38,
+          "label": "77\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            78,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 39,
+          "label": "78\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            79,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 40,
+          "label": "79\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            80,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 41,
+          "label": "80\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            81,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 42,
+          "label": "81\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            82,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 43,
+          "label": "82\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            83,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 44,
+          "label": "83\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            84,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 45,
+          "label": "84\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            85,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 46,
+          "label": "85\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            86,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 47,
+          "label": "86\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            87,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 48,
+          "label": "87\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            88,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 49,
+          "label": "88\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            89,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 50,
+          "label": "89\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            90,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 51,
+          "label": "90\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            91,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 52,
+          "label": "91\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            92,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 53,
+          "label": "92\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            93,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 54,
+          "label": "93\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            94,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 55,
+          "label": "94\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            95,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 56,
+          "label": "95\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            96,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 57,
+          "label": "96\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            97,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 58,
+          "label": "97\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            98,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 59,
+          "label": "98\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            99,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 60,
+          "label": "99\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            100,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 61,
+          "label": "100\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            101,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 62,
+          "label": "101\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            102,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 63,
+          "label": "102\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            103,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 64,
+          "label": "103\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            104,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 65,
+          "label": "104\u00b0C",
+          "owner": "heaters"
+        },
+        {
+          "action": [
+            "temp",
+            "BED",
+            105,
+            "klipper"
+          ],
+          "commands": [
+            "SET_HEATER_TEMPERATURE"
+          ],
+          "index": 66,
+          "label": "105\u00b0C",
+          "owner": "heaters"
+        }
+      ],
+      "title": "Select BED TEMP"
+    },
+    {
+      "page": "bed_mesh",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "klipper"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Ready to measure"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "BED_MESH"
+          ],
+          "commands": [
+            "BED_MESH"
+          ],
+          "index": 2,
+          "label": "Measure 25 pad points",
+          "owner": null
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "25 points / 75 contacts"
+        }
+      ],
+      "title": "Bed mesh"
+    },
+    {
+      "page": "native_moves",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "page",
+            "native_move_x"
+          ],
+          "index": 1,
+          "label": "Move X",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "native_move_y"
+          ],
+          "index": 2,
+          "label": "Move Y",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "native_move_z"
+          ],
+          "index": 3,
+          "label": "Move Z",
+          "owner": "m300_menu"
+        }
+      ],
+      "title": "Move axes"
+    },
+    {
+      "page": "fans",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Fan status: IDLE"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Print PE13: unknown"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Requested: 0%"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Hotend PE14: unknown"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "Requested: 0%"
+        },
+        {
+          "action": null,
+          "index": 6,
+          "label": "MCU status stale: control unavailable"
+        },
+        {
+          "action": null,
+          "index": 7,
+          "label": "Hotend: native automatic cooling"
+        },
+        {
+          "action": [
+            "fan_set",
+            0
+          ],
+          "commands": [
+            "M106"
+          ],
+          "index": 8,
+          "label": "Print speed: 0%",
+          "owner": "fan"
+        },
+        {
+          "action": [
+            "fan_set",
+            25
+          ],
+          "commands": [
+            "M106"
+          ],
+          "index": 9,
+          "label": "Print speed: 25%",
+          "owner": "fan"
+        },
+        {
+          "action": [
+            "fan_set",
+            50
+          ],
+          "commands": [
+            "M106"
+          ],
+          "index": 10,
+          "label": "Print speed: 50%",
+          "owner": "fan"
+        },
+        {
+          "action": [
+            "fan_set",
+            75
+          ],
+          "commands": [
+            "M106"
+          ],
+          "index": 11,
+          "label": "Print speed: 75%",
+          "owner": "fan"
+        },
+        {
+          "action": [
+            "fan_set",
+            100
+          ],
+          "commands": [
+            "M106"
+          ],
+          "index": 12,
+          "label": "Print speed: 100%",
+          "owner": "fan"
+        },
+        {
+          "action": null,
+          "index": 13,
+          "label": "RPM: no verified tachometer input"
+        }
+      ],
+      "title": "Fans"
+    },
+    {
+      "page": "native_pid",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "PID_HOTEND TARGET=200"
+          ],
+          "commands": [
+            "PID_HOTEND"
+          ],
+          "index": 1,
+          "label": "Hotend PID 200C",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "PID_BED TARGET=60"
+          ],
+          "commands": [
+            "PID_BED"
+          ],
+          "index": 2,
+          "label": "Bed PID 60C",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "PID_SAVE"
+          ],
+          "commands": [
+            "PID_SAVE"
+          ],
+          "index": 3,
+          "label": "Save calibration",
+          "owner": null
+        }
+      ],
+      "title": "PID calibration"
+    },
+    {
+      "page": "native_job",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "State: standby"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "File: "
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Print time: 0 s"
+        }
+      ],
+      "title": "Print status"
+    },
+    {
+      "page": "diagnostics",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "oled",
+            "board"
+          ],
+          "index": 1,
+          "label": "Board",
+          "owner": "m300_oled"
+        },
+        {
+          "action": [
+            "oled",
+            "temps"
+          ],
+          "index": 2,
+          "label": "Temperatures",
+          "owner": "m300_oled"
+        },
+        {
+          "action": [
+            "oled",
+            "inputs"
+          ],
+          "index": 3,
+          "label": "Inputs",
+          "owner": "m300_oled"
+        },
+        {
+          "action": [
+            "page",
+            "sd_status"
+          ],
+          "index": 4,
+          "label": "SD status",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "service_status"
+          ],
+          "index": 5,
+          "label": "Service status",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "oled",
+            "oled_link"
+          ],
+          "index": 6,
+          "label": "OLED link / M10",
+          "owner": "m300_oled"
+        }
+      ],
+      "title": "Diagnostics"
+    },
+    {
+      "page": "models",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "SD card access is disabled"
+        },
+        {
+          "action": [
+            "browse",
+            "host",
+            ""
+          ],
+          "index": 2,
+          "label": "Host files",
+          "owner": "m300_browser"
+        }
+      ],
+      "title": "Models"
+    },
+    {
+      "page": "maintenance",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_LEVEL"
+          ],
+          "commands": [
+            "M300_LEVEL"
+          ],
+          "index": 1,
+          "label": "Autocalibration",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HOME_X"
+          ],
+          "commands": [
+            "M300_HOME_X"
+          ],
+          "index": 2,
+          "label": "Home X",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HOME_Y"
+          ],
+          "commands": [
+            "M300_HOME_Y"
+          ],
+          "index": 3,
+          "label": "Home Y",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HOME_Z"
+          ],
+          "commands": [
+            "M300_HOME_Z"
+          ],
+          "index": 4,
+          "label": "Home Z",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HOME_XY"
+          ],
+          "commands": [
+            "M300_HOME_XY"
+          ],
+          "index": 5,
+          "label": "Home XY",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HOME_ALL"
+          ],
+          "commands": [
+            "M300_HOME_ALL"
+          ],
+          "index": 6,
+          "label": "Home XYZ",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HEAT"
+          ],
+          "commands": [
+            "M300_HEAT"
+          ],
+          "index": 7,
+          "label": "Heat the extruder",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_HEAT_PLATFORM"
+          ],
+          "commands": [
+            "M300_HEAT_PLATFORM"
+          ],
+          "index": 8,
+          "label": "Heat the platform",
+          "owner": null
+        },
+        {
+          "action": [
+            "platform_hold",
+            -1
+          ],
+          "commands": [
+            "M300_PLATFORM_UP"
+          ],
+          "index": 9,
+          "label": "Move the platform up",
+          "owner": "m300_maintenance"
+        },
+        {
+          "action": [
+            "platform_hold",
+            1
+          ],
+          "commands": [
+            "M300_PLATFORM_DOWN"
+          ],
+          "index": 10,
+          "label": "Move the platform down",
+          "owner": "m300_maintenance"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_FAN_TEST_START"
+          ],
+          "commands": [
+            "M300_FAN_TEST_START"
+          ],
+          "index": 11,
+          "label": "Fan test",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_PROCEDURE"
+          ],
+          "commands": [
+            "M300_PROCEDURE"
+          ],
+          "index": 12,
+          "label": "Current procedure",
+          "owner": null
+        }
+      ],
+      "title": "Maintenance"
+    },
+    {
+      "page": "material",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_UNLOAD"
+          ],
+          "commands": [
+            "M300_UNLOAD"
+          ],
+          "index": 1,
+          "label": "Unload the material",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "M300_LOAD"
+          ],
+          "commands": [
+            "M300_LOAD"
+          ],
+          "index": 2,
+          "label": "Load the material",
+          "owner": null
+        }
+      ],
+      "title": "Material"
+    },
+    {
+      "page": "settings",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "setting",
+            "light_mode"
+          ],
+          "index": 1,
+          "label": "Light",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "sound"
+          ],
+          "index": 2,
+          "label": "Buzzer",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "sleep_mode"
+          ],
+          "index": 3,
+          "label": "Sleep mode",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "language"
+          ],
+          "index": 4,
+          "label": "Language",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "sort_mode"
+          ],
+          "index": 5,
+          "label": "Models sorting",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "full_platform_preheat"
+          ],
+          "index": 6,
+          "label": "Full platform preheating",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "oled_brightness"
+          ],
+          "index": 7,
+          "label": "OLED brightness",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "led_brightness"
+          ],
+          "index": 8,
+          "label": "LED brightness",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "oled_dim_minutes"
+          ],
+          "index": 9,
+          "label": "OLED dim time",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "setting",
+            "oled_sleep_minutes"
+          ],
+          "index": 10,
+          "label": "OLED sleep time",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Settings"
+    },
+    {
+      "page": "information",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "info_firmware"
+          ],
+          "index": 1,
+          "label": "Firmware version",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "info_printer"
+          ],
+          "index": 2,
+          "label": "Printer information",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "help"
+          ],
+          "index": 3,
+          "label": "Help",
+          "owner": "m300_menu"
+        }
+      ],
+      "title": "Information"
+    },
+    {
+      "page": "native_move_x",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X-10 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 1,
+          "label": "X -10.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X-1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 2,
+          "label": "X -1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X-0.1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 3,
+          "label": "X -0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X0.1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 4,
+          "label": "X +0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 5,
+          "label": "X +1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 X10 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 6,
+          "label": "X +10.0 mm",
+          "owner": null
+        }
+      ],
+      "title": "Move X"
+    },
+    {
+      "page": "native_move_y",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-10 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 1,
+          "label": "Y -10.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 2,
+          "label": "Y -1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y-0.1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 3,
+          "label": "Y -0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y0.1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 4,
+          "label": "Y +0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y1 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 5,
+          "label": "Y +1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Y10 F3000"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 6,
+          "label": "Y +10.0 mm",
+          "owner": null
+        }
+      ],
+      "title": "Move Y"
+    },
+    {
+      "page": "native_move_z",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z-10 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 1,
+          "label": "Z -10.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z-1 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 2,
+          "label": "Z -1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z-0.1 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 3,
+          "label": "Z -0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z0.1 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 4,
+          "label": "Z +0.1 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z1 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 5,
+          "label": "Z +1.0 mm",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "SAVE_GCODE_STATE NAME=M300_UI_NATIVE\nG91\nG1 Z10 F300"
+          ],
+          "commands": [
+            "SAVE_GCODE_STATE",
+            "G91",
+            "G1"
+          ],
+          "index": 6,
+          "label": "Z +10.0 mm",
+          "owner": null
+        }
+      ],
+      "title": "Move Z"
+    },
+    {
+      "page": "diagnostics",
+      "panel": "board",
+      "rows": [
+        {
+          "action": "home",
+          "index": 0,
+          "label": "Back"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "M300_CLASSIC / ABI1"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Uzbrojona: False"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "B\u0142\u0105d: None"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Etap: P01 LAB"
+        }
+      ],
+      "title": "Stan p\u0142yty"
+    },
+    {
+      "page": "diagnostics",
+      "panel": "temps",
+      "rows": [
+        {
+          "action": "home",
+          "index": 0,
+          "label": "Back"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Dysza: ---"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "St\u00f3\u0142: ---"
+        }
+      ],
+      "title": "Odczyt temperatur"
+    },
+    {
+      "page": "diagnostics",
+      "panel": "inputs",
+      "rows": [
+        {
+          "action": "home",
+          "index": 0,
+          "label": "Back"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "PC5: BRAK ODCZYTU"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Enkoder: ?"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "B\u0142\u0119dy przej\u015b\u0107: ?"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "filament_module_present: None"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "filament_runout: None"
+        },
+        {
+          "action": null,
+          "index": 6,
+          "label": "platform_connector_fault: None"
+        },
+        {
+          "action": null,
+          "index": 7,
+          "label": "status_fresh: False"
+        }
+      ],
+      "title": "Wej\u015bcia M300"
+    },
+    {
+      "page": "sd_status",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "available: True"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "connected: True"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "busy: False"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "sd_qualified: False"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "state: idle"
+        },
+        {
+          "action": null,
+          "index": 6,
+          "label": "last_error: None"
+        },
+        {
+          "action": null,
+          "index": 7,
+          "label": "card: {}"
+        },
+        {
+          "action": null,
+          "index": 8,
+          "label": "bytes_copied: 0"
+        },
+        {
+          "action": null,
+          "index": 9,
+          "label": "ignored_responses: 0"
+        },
+        {
+          "action": null,
+          "index": 10,
+          "label": "read_only: True"
+        },
+        {
+          "action": null,
+          "index": 11,
+          "label": "physical_hardware_tests: False"
+        }
+      ],
+      "title": "sd_status"
+    },
+    {
+      "page": "service_status",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "ui_back",
+            0
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu_ui"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "state: IDLE"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "busy: False"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "ready: True"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "wake_on_motion: True"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "wake_on_control: True"
+        },
+        {
+          "action": null,
+          "index": 6,
+          "label": "qualified: True"
+        },
+        {
+          "action": null,
+          "index": 7,
+          "label": "hardware_qualified: False"
+        },
+        {
+          "action": null,
+          "index": 8,
+          "label": "session_token: 0"
+        },
+        {
+          "action": null,
+          "index": 9,
+          "label": "operation: None"
+        },
+        {
+          "action": null,
+          "index": 10,
+          "label": "reason:"
+        },
+        {
+          "action": null,
+          "index": 11,
+          "label": "deadline: None"
+        },
+        {
+          "action": null,
+          "index": 12,
+          "label": "sleep: False"
+        },
+        {
+          "action": null,
+          "index": 13,
+          "label": "status_led: {'revision': '0.13.16.21-STATUS-LED', 'state': 'READY', 'rgb': None, 'error_step_seconds': 5.0, 'error_since': None}"
+        },
+        {
+          "action": null,
+          "index": 14,
+          "label": "wake_heats: False"
+        },
+        {
+          "action": null,
+          "index": 15,
+          "label": "wake_restores_position: False"
+        },
+        {
+          "action": null,
+          "index": 16,
+          "label": "phase_id: 0"
+        },
+        {
+          "action": null,
+          "index": 17,
+          "label": "installed: True"
+        },
+        {
+          "action": null,
+          "index": 18,
+          "label": "native_control: True"
+        },
+        {
+          "action": null,
+          "index": 19,
+          "label": "target: 0.0"
+        },
+        {
+          "action": null,
+          "index": 20,
+          "label": "target_hotend: 0.0"
+        },
+        {
+          "action": null,
+          "index": 21,
+          "label": "target_bed: 0.0"
+        },
+        {
+          "action": null,
+          "index": 22,
+          "label": "can_confirm: False"
+        },
+        {
+          "action": null,
+          "index": 23,
+          "label": "can_cancel: False"
+        },
+        {
+          "action": null,
+          "index": 24,
+          "label": "platform_held: False"
+        },
+        {
+          "action": null,
+          "index": 25,
+          "label": "platform_panel_local: False"
+        },
+        {
+          "action": null,
+          "index": 26,
+          "label": "platform_speed_mm_s: 10.0"
+        },
+        {
+          "action": null,
+          "index": 27,
+          "label": "revision: 0.13.16.30-SERVICE-STARTUP"
+        }
+      ],
+      "title": "service_status"
+    },
+    {
+      "page": "diagnostics",
+      "panel": "oled_link",
+      "rows": [
+        {
+          "action": "oled_link_back",
+          "index": 0,
+          "label": "Back"
+        },
+        {
+          "action": "oled_link_reinit",
+          "index": 1,
+          "label": "Reinitialize full display"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "State: initializing"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Frame ready: False"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "ACK pending: False"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "Retries: 0/2"
+        },
+        {
+          "action": null,
+          "index": 6,
+          "label": "Frames: 0"
+        },
+        {
+          "action": null,
+          "index": 7,
+          "label": "Error: -"
+        }
+      ],
+      "title": "M10: OLED link"
+    },
+    {
+      "page": "browser",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "zortrax"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "No models"
+        }
+      ],
+      "title": "Host:/"
+    },
+    {
+      "page": "setting_light_mode",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "light_mode",
+            "DYNAMIC"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "Dynamic",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "light_mode",
+            "WHITE"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "White",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "light_mode",
+            "DISABLE"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "Disabled",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Light"
+    },
+    {
+      "page": "setting_sound",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "sound",
+            true
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "Enabled",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "sound",
+            false
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "Disabled",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Buzzer"
+    },
+    {
+      "page": "setting_sleep_mode",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "sleep_mode",
+            "15MIN"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "Enabled",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "sleep_mode",
+            "OFF"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "Disabled",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Sleep mode"
+    },
+    {
+      "page": "setting_language",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "language",
+            "EN"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "English",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Language"
+    },
+    {
+      "page": "setting_sort_mode",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "sort_mode",
+            "DATE"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "Date",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "sort_mode",
+            "NAME"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "Name",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "sort_mode",
+            "NAME_CASE"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "Case-sensitive name",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "sort_mode",
+            "SIZE"
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 4,
+          "label": "File size",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Models sorting"
+    },
+    {
+      "page": "setting_full_platform_preheat",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "full_platform_preheat",
+            true
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "Enabled",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "full_platform_preheat",
+            false
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "Disabled",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "Full platform preheating"
+    },
+    {
+      "page": "setting_oled_brightness",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            1
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "1",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            2
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "2",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            3
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "3",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            4
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 4,
+          "label": "4",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            5
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 5,
+          "label": "5",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            6
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 6,
+          "label": "6",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            7
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 7,
+          "label": "7",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            8
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 8,
+          "label": "8",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            9
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 9,
+          "label": "9",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            10
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 10,
+          "label": "10",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            11
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 11,
+          "label": "11",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            12
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 12,
+          "label": "12",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            13
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 13,
+          "label": "13",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            14
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 14,
+          "label": "14",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            15
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 15,
+          "label": "15",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_brightness",
+            16
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 16,
+          "label": "16",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "OLED brightness"
+    },
+    {
+      "page": "setting_led_brightness",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            1
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "1",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            2
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "2",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            3
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "3",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            4
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 4,
+          "label": "4",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            5
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 5,
+          "label": "5",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            6
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 6,
+          "label": "6",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            7
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 7,
+          "label": "7",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            8
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 8,
+          "label": "8",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            9
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 9,
+          "label": "9",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            10
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 10,
+          "label": "10",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            11
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 11,
+          "label": "11",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            12
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 12,
+          "label": "12",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            13
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 13,
+          "label": "13",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            14
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 14,
+          "label": "14",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            15
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 15,
+          "label": "15",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "led_brightness",
+            16
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 16,
+          "label": "16",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "LED brightness"
+    },
+    {
+      "page": "setting_oled_dim_minutes",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            1
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "1",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            2
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "2",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            3
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "3",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            4
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 4,
+          "label": "4",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            5
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 5,
+          "label": "5",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            6
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 6,
+          "label": "6",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            7
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 7,
+          "label": "7",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            8
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 8,
+          "label": "8",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            9
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 9,
+          "label": "9",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            10
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 10,
+          "label": "10",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            11
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 11,
+          "label": "11",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            12
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 12,
+          "label": "12",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            13
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 13,
+          "label": "13",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            14
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 14,
+          "label": "14",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            15
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 15,
+          "label": "15",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            16
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 16,
+          "label": "16",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            17
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 17,
+          "label": "17",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            18
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 18,
+          "label": "18",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            19
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 19,
+          "label": "19",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            20
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 20,
+          "label": "20",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            21
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 21,
+          "label": "21",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            22
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 22,
+          "label": "22",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            23
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 23,
+          "label": "23",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            24
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 24,
+          "label": "24",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            25
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 25,
+          "label": "25",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            26
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 26,
+          "label": "26",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            27
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 27,
+          "label": "27",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            28
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 28,
+          "label": "28",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            29
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 29,
+          "label": "29",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            30
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 30,
+          "label": "30",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            31
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 31,
+          "label": "31",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            32
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 32,
+          "label": "32",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            33
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 33,
+          "label": "33",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            34
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 34,
+          "label": "34",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            35
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 35,
+          "label": "35",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            36
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 36,
+          "label": "36",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            37
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 37,
+          "label": "37",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            38
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 38,
+          "label": "38",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            39
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 39,
+          "label": "39",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            40
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 40,
+          "label": "40",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            41
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 41,
+          "label": "41",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            42
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 42,
+          "label": "42",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            43
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 43,
+          "label": "43",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            44
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 44,
+          "label": "44",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            45
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 45,
+          "label": "45",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            46
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 46,
+          "label": "46",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            47
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 47,
+          "label": "47",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            48
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 48,
+          "label": "48",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            49
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 49,
+          "label": "49",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            50
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 50,
+          "label": "50",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            51
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 51,
+          "label": "51",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            52
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 52,
+          "label": "52",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            53
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 53,
+          "label": "53",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            54
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 54,
+          "label": "54",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            55
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 55,
+          "label": "55",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            56
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 56,
+          "label": "56",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            57
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 57,
+          "label": "57",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            58
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 58,
+          "label": "58",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            59
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 59,
+          "label": "59",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_dim_minutes",
+            60
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 60,
+          "label": "60",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "OLED dim time"
+    },
+    {
+      "page": "setting_oled_sleep_minutes",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "settings"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            1
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 1,
+          "label": "1",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            2
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 2,
+          "label": "2",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            3
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 3,
+          "label": "3",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            4
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 4,
+          "label": "4",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            5
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 5,
+          "label": "5",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            6
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 6,
+          "label": "6",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            7
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 7,
+          "label": "7",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            8
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 8,
+          "label": "8",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            9
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 9,
+          "label": "9",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            10
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 10,
+          "label": "10",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            11
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 11,
+          "label": "11",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            12
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 12,
+          "label": "12",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            13
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 13,
+          "label": "13",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            14
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 14,
+          "label": "14",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            15
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 15,
+          "label": "15",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            16
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 16,
+          "label": "16",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            17
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 17,
+          "label": "17",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            18
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 18,
+          "label": "18",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            19
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 19,
+          "label": "19",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            20
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 20,
+          "label": "20",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            21
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 21,
+          "label": "21",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            22
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 22,
+          "label": "22",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            23
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 23,
+          "label": "23",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            24
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 24,
+          "label": "24",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            25
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 25,
+          "label": "25",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            26
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 26,
+          "label": "26",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            27
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 27,
+          "label": "27",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            28
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 28,
+          "label": "28",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            29
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 29,
+          "label": "29",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            30
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 30,
+          "label": "30",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            31
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 31,
+          "label": "31",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            32
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 32,
+          "label": "32",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            33
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 33,
+          "label": "33",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            34
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 34,
+          "label": "34",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            35
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 35,
+          "label": "35",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            36
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 36,
+          "label": "36",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            37
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 37,
+          "label": "37",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            38
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 38,
+          "label": "38",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            39
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 39,
+          "label": "39",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            40
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 40,
+          "label": "40",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            41
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 41,
+          "label": "41",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            42
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 42,
+          "label": "42",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            43
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 43,
+          "label": "43",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            44
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 44,
+          "label": "44",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            45
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 45,
+          "label": "45",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            46
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 46,
+          "label": "46",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            47
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 47,
+          "label": "47",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            48
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 48,
+          "label": "48",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            49
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 49,
+          "label": "49",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            50
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 50,
+          "label": "50",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            51
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 51,
+          "label": "51",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            52
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 52,
+          "label": "52",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            53
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 53,
+          "label": "53",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            54
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 54,
+          "label": "54",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            55
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 55,
+          "label": "55",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            56
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 56,
+          "label": "56",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            57
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 57,
+          "label": "57",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            58
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 58,
+          "label": "58",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            59
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 59,
+          "label": "59",
+          "owner": "m300_settings"
+        },
+        {
+          "action": [
+            "set",
+            "oled_sleep_minutes",
+            60
+          ],
+          "commands": [
+            "ZORTRAX_UI_SETTING"
+          ],
+          "index": 60,
+          "label": "60",
+          "owner": "m300_settings"
+        }
+      ],
+      "title": "OLED sleep time"
+    },
+    {
+      "page": "info_firmware",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "information"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Host 1.0.3"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "MCU 1.0.9"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Klipper ee2c6fb6b00b"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "OEM reference 1.3.1"
+        }
+      ],
+      "title": "Firmware version"
+    },
+    {
+      "page": "info_printer",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "information"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 1,
+          "label": "Model: Zortrax M300 Classic"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "Hardware version: Unavailable"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "Serial number: Unavailable"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Total printing time: Unavailable"
+        }
+      ],
+      "title": "Printer information"
+    },
+    {
+      "page": "help",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "information"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "errors"
+          ],
+          "index": 1,
+          "label": "Errors",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "github.com/"
+        },
+        {
+          "action": null,
+          "index": 3,
+          "label": "MarcinKowalik-AGH/"
+        },
+        {
+          "action": null,
+          "index": 4,
+          "label": "Zortrax-m300-Klipper"
+        },
+        {
+          "action": null,
+          "index": 5,
+          "label": "Project documentation and issues"
+        }
+      ],
+      "title": "Help"
+    },
+    {
+      "page": "errors",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "help"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "page",
+            "error_catalog"
+          ],
+          "index": 1,
+          "label": "Code catalogue",
+          "owner": "m300_menu"
+        },
+        {
+          "action": null,
+          "index": 2,
+          "label": "No active error"
+        }
+      ],
+      "title": "Errors"
+    },
+    {
+      "page": "error_catalog",
+      "panel": "m04",
+      "rows": [
+        {
+          "action": [
+            "page",
+            "errors"
+          ],
+          "index": 0,
+          "label": "Back",
+          "owner": "m300_menu"
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=2"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 1,
+          "label": "#002 SD card read error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=3"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 2,
+          "label": "#003 Invalid model file",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=4"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 3,
+          "label": "#004 File read interrupted",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=10"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 4,
+          "label": "#010 Hotend heating failed",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=11"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 5,
+          "label": "#011 Hotend too hot",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=12"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 6,
+          "label": "#012 Bed too hot",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=13"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 7,
+          "label": "#013 Hotend temperature drop",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=14"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 8,
+          "label": "#014 Bed sensor error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=15"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 9,
+          "label": "#015 Hotend sensor error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=30"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 10,
+          "label": "#030 Small platform cable",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=31"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 11,
+          "label": "#031 Large platform cable",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=32"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 12,
+          "label": "#032 Extruder cable error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=33"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 13,
+          "label": "#033 Plate contacts error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=34"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 14,
+          "label": "#034 XY endstop error",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=35"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 15,
+          "label": "#035 Check extruder gear",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=40"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 16,
+          "label": "#040 Firmware update needed",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=41"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 17,
+          "label": "#041 Calibration failed",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=42"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 18,
+          "label": "#042 Pad probing failed",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=75"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 19,
+          "label": "#075 Check Z-Suite version",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=76"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 20,
+          "label": "#076 Wrong printer model",
+          "owner": null
+        },
+        {
+          "action": [
+            "native_gcode",
+            "ZORTRAX_ERROR_SHOW CODE=101"
+          ],
+          "commands": [
+            "ZORTRAX_ERROR_SHOW"
+          ],
+          "index": 21,
+          "label": "#101 No models on SD card",
+          "owner": null
+        }
+      ],
+      "title": "OEM error codes"
+    }
+  ],
+  "physical_hardware": false,
+  "status": "PASS_OLED_MENU_BINDINGS"
+}

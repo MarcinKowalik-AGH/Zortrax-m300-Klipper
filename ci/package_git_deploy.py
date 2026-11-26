@@ -34,6 +34,7 @@ def package(release, output, commit):
                  'install-orange-pi.py', 'install-camera.py', 'CAMERA_PL.md', 'CAMERA_EN.md',
                  'read-host-temperatures.py', 'HOST_TEMPERATURE_PL.md', 'HOST_TEMPERATURE_EN.md',
                  'CONTACT_RECOVERY_PL.md', 'CONTACT_RECOVERY_EN.md',
+                 'OLED_MENU_PL.md', 'OLED_MENU_EN.md', 'OLED_MENU_AUDIT.json',
                  'BUILD_PROVENANCE.json', 'LICENSE',
                  'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(release / name, output / name)
@@ -68,6 +69,10 @@ def package(release, output, commit):
         'Contact recovery lowers the bed by 100 mm within the Z travel after a recognized '
         'nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. '
         'See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.\n\n'
+        'OLED menu audit and shared macro bindings (' + provenance['host_update'] + '): '
+        'see OLED_MENU_PL.md / OLED_MENU_EN.md and OLED_MENU_AUDIT.json. '
+        'Use the host updater for OLED fixes; updating Fluidd alone does not install them. '
+        'Software validation does not replace hardware acceptance.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')

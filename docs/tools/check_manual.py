@@ -167,13 +167,13 @@ def main():
         # RC33 names the OLED reheat action before material flow verification.
         'host/klippy/extras/m300_print_ui.py': '5082c05b90ba40183784097bcc87dd381bcd9831cba6df505f3d30ded32b8e87',
         'host/config/m300_classic_services.cfg': '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505',
-        'host/klippy/extras/m300_menu.py': 'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743',
+        'host/klippy/extras/m300_menu.py': '79d97154d13f32617f4a6af338e01d10a76cf923e2af33bffd432cabecf4cdbd',
         'host/config/m300_classic_base.cfg': '61b0aeb1b8a0fdc5221b2f3bad928da0c8cc393f6acf6a78a2bed2ae89d2386d',
         'host/config/m300_operations.cfg': 'acf1f2de2d43479f895af856f8f32b8cdab5b02bfa082a27c5b487c19c198274',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         # R16.16 retains failed mesh diagnostics while releasing a recovered contact notice.
         'host/klippy/extras/m300_pad_mesh.py': '7855182de6cfce67a462b9145e7ba299d3ed1106513221c9ac12df0755c11816',
-        'host/klippy/extras/m300_activity_graphics.py': '51b7f4992070ccd5363ce7a74237c4a6a320c365ce7dadd059ba20bef3429037',
+        'host/klippy/extras/m300_activity_graphics.py': 'b6dc7dfbf4704a9579d260bc44a0bc3d1bd2150fc22721b53d36791bb2f43961',
         'host/klippy/extras/m300_settings_ui.py': 'cad2ac3c9fea594a5e8701f35936681857ec0f6e341697768940cba6a8d3dafd',
         'host/klippy/extras/m300_klipper_status.py': '6bde411f82ee2f1a86e53b40b967000d715bc4f10ee656521493a7a2e8ae45c1',
     }

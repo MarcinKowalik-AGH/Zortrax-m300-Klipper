@@ -1,4 +1,7 @@
-# Menu OLED, Fluidd i makra Klippera w 1.0.2
+# Menu OLED, Fluidd i makra Klippera w 1.0.3
+
+[Audyt menu i poprawki hosta R16.18](OLED_MENU_AUDIT.md) zawiera bieżące powiązania
+makr, zachowanie Fan test i Current procedure oraz granice odbioru sprzętowego.
 
 We Fluidd i w zakładce Device OrcaSlicera otwórz `M300_MAIN_MENU`. Models, Maintenance, Material, Settings i Information odpowiadają pięciu pozycjom menu Zortrax na OLED. Dla przykładu **Material → Unload the material** prowadzi do tej samej procedury z obu urządzeń, a potwierdzenie dotyczy aktualnej fazy. Przy zmianie koloru w pauzie przyciski Extrude/Retract działają przed potwierdzeniem wypływu. [Codzienna obsługa](USER_GUIDE.md).
 
