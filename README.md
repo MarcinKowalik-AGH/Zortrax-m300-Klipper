@@ -13,3 +13,5 @@ Optional USB camera (disabled by default): `python3 install-camera.py --enable -
 [Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/89aede3cc176361f315a91633468a4ac400e1580/docs/en/INSTALL.md)
 
 Source commit: `89aede3cc176361f315a91633468a4ac400e1580`
+
+Optional host CPU temperature: one Host graph series, enabled with `[include m300_host_temperature.cfg]`. Other readings: `python3 read-host-temperatures.py`. See HOST_TEMPERATURE_PL.md / HOST_TEMPERATURE_EN.md.
