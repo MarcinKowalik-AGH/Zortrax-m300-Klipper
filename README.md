@@ -17,6 +17,6 @@ The new-host installer copies both optional temperature configs, disabled by def
 
 Contact recovery lowers the bed by 100 mm within the Z travel after a recognized nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/fe71b61222ed1b1d0b1f96cfaf1d19e623cb502b/docs/en/INSTALL.md)
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/234c3c896033e96bff238d38974be589090eb4ef/docs/en/INSTALL.md)
 
-Source commit: `fe71b61222ed1b1d0b1f96cfaf1d19e623cb502b`
+Source commit: `234c3c896033e96bff238d38974be589090eb4ef`

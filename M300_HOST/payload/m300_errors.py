@@ -14,7 +14,7 @@ import os
 from .m300_error_codes import (CATALOG, CODES, KINDS, NONE, SHUTDOWN, GUARD,
                                classify, clean, descriptor, identity)
 
-REVISION = '0.13.16.27-SD-NOTICE'
+REVISION = '0.13.16.28-CONTACT-NOTICE'
 STATE_FORMAT = ('m300_error_state code=%hu kind=%c fatal=%c source=%c'
                 ' native_id=%hu revision=%u')
 
@@ -26,6 +26,7 @@ class M300Errors:
         self.gcode = self.printer.lookup_object('gcode')
         self.mcu = self.printer.lookup_object(config.get('mcu', 'mcu'))
         self.current = None
+        self._acknowledged_contact = None
         self.history = deque(maxlen=32)
         self.epoch = os.urandom(8).hex()
         self.sequence = 0
@@ -231,11 +232,50 @@ class M300Errors:
         meta = self._oled_meta
         return menu_frame(('Back', title, meta['oled'], *meta['hint']), (), 0, frame_type, sprite)
 
+    def _contact_notice(self):
+        current = self.current
+        if current is None or current.get('severity') == 'info' and not current['fatal']:
+            current = self._acknowledged_contact
+        if (current is None or current['fatal']
+                or current['source'] not in ('m300_motion', 'm300_pad_mesh')):
+            return None
+        contact = current['code'] == 42 and current['kind'] == NONE
+        # R16.15 classified the native precision probe's missing trigger as
+        # an unnumbered notice. Recognize its exact owner-generated message.
+        legacy = (current['code'] == 0 and current['kind'] == SHUTDOWN
+                  and current['reason'].startswith(
+                      'No contact - please clean nozzle and pad contacts, then repeat homing. Cause: '))
+        return current if contact or legacy else None
+
+    def contact_notice_id(self):
+        """Identify an owned contact notice, including one already acknowledged."""
+        current = self._contact_notice()
+        return current['id'] if current else None
+
+    def resolve_contact_notice(self, token):
+        """A completed physical Z home may dismiss its preceding UI notice."""
+        if (token is None or not self.live or self.printer.is_shutdown()
+                or token != self.contact_notice_id()):
+            return False
+        record = self._contact_notice()
+        if self.current is not None and self.current['id'] == token:
+            self.acknowledge(token)
+        if record.get('surface') == 'pad_mesh':
+            pad = self.printer.lookup_object('m300_pad_mesh', None)
+            resolved = getattr(pad, 'resolve_contact_notice', None)
+            if resolved is not None:
+                resolved(record.get('run_id'))
+        self._acknowledged_contact = None
+        logging.info('M300_CONTACT_NOTICE_RESOLVED id=%s after verified Z homing', token)
+        return True
+
     def acknowledge(self, token):
         if self.current is None or token != self.current['id']:
             raise self.printer.command_error('Expired error notice; refresh before acknowledging')
         if self.current['fatal'] or self.printer.is_shutdown():
             raise self.printer.command_error('Safety latch remains active; fix the cause, then FIRMWARE_RESTART')
+        if self.contact_notice_id() == token:
+            self._acknowledged_contact = dict(self.current)
         self.current = None
         self._oled_notice = self._oled_meta = None
         self._sync(0, NONE, False)

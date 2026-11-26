@@ -569,6 +569,7 @@ class M300PadMesh:
         token = self.run_id
         self.points_measured, self.last_error, self.last_attempt = 0, '', None
         self.contact_recovery = None
+        self.contact_error_resolved = False
         self.measurements = []
         self.rejected_contact = None
         self.samples = None
@@ -675,8 +676,20 @@ class M300PadMesh:
                 result['suggested_edge_margin'] = margin
         return result
 
+    def resolve_contact_notice(self, run_id):
+        if (run_id is None or run_id != getattr(self, 'run_id', None)
+                or self.busy or self.state != 'FAILED'):
+            return False
+        self.contact_error_resolved = True
+        self._notify_view()
+        return True
+
     def get_ownership_status(self, eventtime):
-        return dict(state=self.state, busy=self.busy)
+        # Keep the failed measurement and its diagnostics, while a verified
+        # subsequent home releases this acknowledged historical contact fault.
+        resolved = (self.state == 'FAILED' and not self.busy
+                    and getattr(self, 'contact_error_resolved', False))
+        return dict(state='IDLE' if resolved else self.state, busy=self.busy)
 
     def get_panel_status(self, eventtime):
         return dict(state=self.state, busy=self.busy, operation='BED_MESH',
@@ -697,12 +710,13 @@ class M300PadMesh:
                         bounds=[*nominal[index*5+1],*nominal[index*5+3]],
                         explicit=BOUNDS_FIELDS[index] in self.geometry)
                    for index,name in enumerate(PAD_NAMES)]
-        return dict(self.get_panel_status(eventtime), revision='0.13.16.27-CONTACT-CLEANING',
+        return dict(self.get_panel_status(eventtime), revision='0.13.16.28-CONTACT-NOTICE',
                     result=self.report, run_id=getattr(self,'run_id',None),
                     plan_matches_run=getattr(self,'run_points',None) == self.points,
                     measurements=[list(point) for point in getattr(self,'measurements',())],
                     rejected_contact=getattr(self,'rejected_contact',None),
                     contact_recovery=getattr(self,'contact_recovery',None),
+                    contact_error_resolved=getattr(self,'contact_error_resolved',False),
                     native_contact_window=[-SEARCH_MARGIN,CLEARANCE],
                     total_points=len(self.points),
                     last_attempt=getattr(self,'last_attempt',None), max_bed_span=getattr(self,'max_bed_span',.8),
