@@ -15,6 +15,8 @@ Optional host CPU temperature: one Host graph series, enabled with `[include m30
 
 The new-host installer copies both optional temperature configs, disabled by default. Enable STM32 diagnostics with `[include m300_mcu_temperature.cfg]` (MCU 1.0.9 or newer), run `FIRMWARE_RESTART`, then `M300_MCU_TEMPERATURE`. The MCU include adds a read-only MCU graph curve using the existing ADC. Comment either temperature include in printer.cfg to disable that option.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/a6eb6bd7c3c74ee2417b3176238cfa09d6dd1810/docs/en/INSTALL.md)
+Contact recovery lowers the bed by 100 mm within the Z travel after a recognized nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.
 
-Source commit: `a6eb6bd7c3c74ee2417b3176238cfa09d6dd1810`
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/fe71b61222ed1b1d0b1f96cfaf1d19e623cb502b/docs/en/INSTALL.md)
+
+Source commit: `fe71b61222ed1b1d0b1f96cfaf1d19e623cb502b`

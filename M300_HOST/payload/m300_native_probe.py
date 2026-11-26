@@ -5,6 +5,33 @@
 import math
 
 
+def is_contact_failure(error):
+    """Recognize only contact outcomes from our pinned native probe owners."""
+    text = str(error)
+    if text.startswith('M300 precision Z: '):
+        text = text[len('M300 precision Z: '):]
+        return text.startswith(('PC7 contact was not stable after approach',
+                                'PC7 transition occurred without movement',
+                                'INITIAL_ACTIVE:', 'NO_RELEASE:'))
+    return text.startswith(('No trigger on m300_z_reference after full movement',
+                            'No trigger on probe after full movement',
+                            'No trigger on stepper_z after full movement',
+                            'Probe triggered prior to movement',
+                            'Endstop stepper_z still triggered after retract',
+                            'Probe samples exceed samples_tolerance',
+                            'M300 homing NO_RELEASE:'))
+
+
+def contact_failure_message(error, recovery):
+    message = ('No contact - please clean nozzle and pad contacts, '
+               'then repeat homing.')
+    if recovery['status'] == 'UNREFERENCED':
+        message += ' Z is not referenced; no further move was attempted.'
+    elif not recovery['pc7_open']:
+        message += ' PC7 remains closed; check the contact wiring.'
+    return message + ' Cause: ' + str(error)
+
+
 def boundary_z(value, bounds, error):
     lo, hi = bounds
     if type(value) not in (int, float) or not math.isfinite(value):
