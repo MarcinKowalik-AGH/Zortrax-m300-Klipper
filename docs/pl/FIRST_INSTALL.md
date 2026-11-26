@@ -19,7 +19,7 @@ Nie trzeba ręcznie kopiować patchy ani kompilować firmware drukarki lub Fluid
 |---|---|
 | System Linux | Obraz dobrany do konkretnego Raspberry Pi lub Orange Pi; nie ma jednego obrazu pasującego do obu rodzin |
 | Klipper host | Pełne źródła przypiętej wersji z kompletem zmian M300, nie same moduły extras |
-| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.8, do posiadanego bootloadera SD |
+| MCU | Gotowy `MCU/M300APP.M3B`, 1.0.9, do posiadanego bootloadera SD |
 | Fluidd | Gotowa kompilacja 1.37.7 z menu i wizualizacją M300 |
 | Konfiguracja | Oddzielne pliki sprzętu, termiki, procedur i makr; ścieżki i UART ustawia instalator |
 | Kontrola wydania | Sumy SHA-256, identyfikator źródeł, raporty testów i licencje |
@@ -117,8 +117,9 @@ curl --fail --silent --show-error http://127.0.0.1:4480/ | grep -io '<title>flui
 MCU (punkt 4) wykonaj jako jego zwykły użytkownik:
 
 ```bash
-git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+git clone --branch orange-pi --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
 cd "$HOME/m300-src" &&
+sha256sum -c --quiet SHA256SUMS &&
 python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --port 4480 --apply
 ```
 
@@ -204,7 +205,7 @@ QUERY_PROBE
 M105
 ```
 
-Sprawdź stan Ready, zgodność prędkości UART z punktem 5, MCU `1.0.8`,
+Sprawdź stan Ready, zgodność prędkości UART z punktem 5, MCU `1.0.9`,
 zerowe cele temperatur i odczyty zbliżone do temperatury otoczenia.
 Sprawdź reakcje krańcówek i styku dyszy.
 [Profil fabrycznej rewizji i osi Z](../en/HARDWARE_VARIANTS.md)
@@ -265,3 +266,21 @@ Dokumentacja instalacji systemowej
 ## Dokumentacja po uruchomieniu
 
 [Obsługa](USER_GUIDE.md) · [Menu OLED i makra](RC1_UI.md) · [Instrukcja ilustrowana](OLED_FUNCTIONS.md) · [Mesh](BED_MESH_AND_LEVELING.md) · [Parametry i termika](TECHNICAL_REFERENCE.md)
+
+## Opcjonalne odczyty temperatury hosta i STM32
+
+Nowa instalacja z Git zawiera moduł `m300_mcu_temperature.py`, audyt jego zasobu
+ADC, pliki `m300_host_temperature.cfg` i `m300_mcu_temperature.cfg` oraz polecenie
+`read-host-temperatures.py`. Instalator kopiuje oba pliki konfiguracji, a ich
+include w printer.cfg pozostają zakomentowane. Nie jest potrzebna osobna łatka ZIP.
+
+Po wgraniu dołączonego MCU 1.0.9 odkomentuj wybrane include w printer.cfg:
+
+```ini
+[include m300_host_temperature.cfg]
+[include m300_mcu_temperature.cfg]
+```
+
+Przy bezczynnej drukarce wykonaj `FIRMWARE_RESTART`. Po kilku sekundach
+`M300_MCU_TEMPERATURE` pokaże diagnostyczny odczyt STM32. Tylko Host dodaje serię
+na wykresie. Szczegóły: [temperatury](HOST_TEMPERATURE.md).

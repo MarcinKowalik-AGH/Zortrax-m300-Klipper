@@ -109,6 +109,10 @@ def compose_package(base_archive, current, directory):
                 'FIRST_INSTALL/m300_classic_base.cfg',
                 'FIRST_INSTALL/m300_classic_services.cfg',
                 'FIRST_INSTALL/m300_classic_sensors.cfg',
+                'FIRST_INSTALL/m300_host_temperature.cfg',
+                'FIRST_INSTALL/m300_mcu_temperature.cfg',
+                'M300_HOST/payload/m300_mcu_temperature.py',
+                'read-host-temperatures.py','HOST_TEMPERATURE_PL.md','HOST_TEMPERATURE_EN.md',
                 'FIRST_INSTALL/requirements-m300.txt')
     if any(name not in files for name in required):
         raise ValueError('The orange-pi deployment lacks the new-host installer. '

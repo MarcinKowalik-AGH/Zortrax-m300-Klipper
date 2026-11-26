@@ -23,7 +23,9 @@ GUIDE_LINK = re.compile(r'(!?\[[^\]\n]*\]\()([^\s)]+)')
 
 
 def export_guide(source, output):
-    tag = META['distribution_version']
+    # A moving deployment can contain additions beyond the immutable release
+    # tag. Link to the exact source build, including its new optional guides.
+    tag = os.environ.get('GITHUB_SHA') or META['distribution_version']
 
     def replace(match):
         target = match[2]

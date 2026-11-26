@@ -32,13 +32,19 @@ class BootstrapTests(unittest.TestCase):
             'install-new-host.py':'bootstrap','M300_FLUIDD.zip':'new frontend',
             'install-camera.py':'optional camera installer','CAMERA_PL.md':'camera instructions',
             'CAMERA_EN.md':'camera instructions',
+            'read-host-temperatures.py':'read-only thermal diagnostic',
+            'HOST_TEMPERATURE_PL.md':'temperature instructions',
+            'HOST_TEMPERATURE_EN.md':'temperature instructions',
             'MCU/klipper.dict':'new dictionary',
             'FIRST_INSTALL/m300_classic_base.cfg':'public base config',
             'FIRST_INSTALL/m300_classic_services.cfg':'public services',
             'FIRST_INSTALL/m300_classic_sensors.cfg':'public sensors',
             'FIRST_INSTALL/requirements-m300.txt':'exact requirements',
             'FIRST_INSTALL/m300_camera.conf':'[camera]\nenabled: False\n',
+            'FIRST_INSTALL/m300_host_temperature.cfg':'[temperature_sensor Host]\n',
+            'FIRST_INSTALL/m300_mcu_temperature.cfg':'[m300_mcu_temperature]\n',
             'M300_HOST/core/gcode.py':'current parser',
+            'M300_HOST/payload/m300_mcu_temperature.py':'current MCU diagnostic',
             'M300_HOST/payload/m300_current.py':'current module'}
         self.write_current()
 
@@ -69,6 +75,11 @@ class BootstrapTests(unittest.TestCase):
         self.assertFalse((result/'FIRST_INSTALL/old.cfg').exists())
         self.assertEqual((result/'install-camera.py').read_text(),'optional camera installer')
         self.assertIn('enabled: False', (result/'FIRST_INSTALL/m300_camera.conf').read_text())
+        self.assertEqual((result/'KLIPPER_HOST/klippy/extras/m300_mcu_temperature.py').read_text(),
+                         'current MCU diagnostic')
+        self.assertTrue((result/'FIRST_INSTALL/m300_host_temperature.cfg').is_file())
+        self.assertTrue((result/'FIRST_INSTALL/m300_mcu_temperature.cfg').is_file())
+        self.assertTrue((result/'read-host-temperatures.py').is_file())
         self.assertEqual(json.loads((result/'BOOTSTRAP_PROVENANCE.json').read_text())['deployment_commit'],'c'*40)
         bootstrap.manifest(result)
 

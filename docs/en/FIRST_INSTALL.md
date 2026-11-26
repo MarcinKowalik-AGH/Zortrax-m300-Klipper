@@ -14,7 +14,7 @@ plate, hotend and 0.4 mm nozzle. It is not an M300 Plus, Dual or Inventure image
 | Linux | Board-specific Raspberry Pi OS Lite, or a supported Armbian/Debian/Ubuntu server image |
 | Services, Python environment, nginx, Moonraker | One Klipper + Moonraker + Fluidd instance installed with KIAUH |
 | Klipper actually used for M300 | The complete pinned and patched `KLIPPER_HOST` tree in this release |
-| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.8, for the already installed SD bootloader |
+| Printer MCU | Ready `MCU/M300APP.M3B`, 1.0.9, for the already installed SD bootloader |
 | Fluidd actually used for M300 | Our precompiled Fluidd 1.37.7 extension in the same release |
 | Machine configuration | First-install templates, with local paths/UART rendered by the installer |
 
@@ -109,8 +109,9 @@ curl --fail --silent --show-error http://127.0.0.1:4480/ | grep -io '<title>flui
 MCU (step 4), run as the KIAUH account:
 
 ```bash
-git clone https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
+git clone --branch orange-pi --single-branch https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper.git "$HOME/m300-src" &&
 cd "$HOME/m300-src" &&
+sha256sum -c --quiet SHA256SUMS &&
 python3 install-new-host.py --serial /dev/ttyS2 --baud 750000 --port 4480 --apply
 ```
 
@@ -198,7 +199,7 @@ QUERY_PROBE
 M105
 ```
 
-Expect Ready, the UART baud rate selected in step 5, MCU `1.0.8`, zero heater
+Expect Ready, the UART baud rate selected in step 5, MCU `1.0.9`, zero heater
 targets and temperatures consistent with the room. Confirm that endstop and
 probe states change when operated.
 The [factory hardware/Z profile](HARDWARE_VARIANTS.md)
@@ -259,3 +260,21 @@ System setup references
 ## After setup
 
 [OLED and Fluidd controls](RC1_UI.md) · [Illustrated OLED reference](../pl/OLED_FUNCTIONS.md) · [Print workflow](PRINT_CONTEXT.md)
+
+## Optional host and STM32 temperatures
+
+The Git first installer includes the MCU temperature addon and its resource
+audit, `m300_host_temperature.cfg`, `m300_mcu_temperature.cfg`, and the
+`read-host-temperatures.py` utility. It copies both config files with their
+includes commented out in printer.cfg. No separate ZIP patch is needed.
+
+After installing the bundled MCU 1.0.9, uncomment the desired includes:
+
+```ini
+[include m300_host_temperature.cfg]
+[include m300_mcu_temperature.cfg]
+```
+
+With the printer idle, run `FIRMWARE_RESTART`. After a few seconds,
+`M300_MCU_TEMPERATURE` reads the STM32 diagnostic. Only Host adds a graph series.
+See the [temperature guide](HOST_TEMPERATURE.md).

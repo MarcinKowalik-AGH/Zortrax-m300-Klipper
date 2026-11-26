@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / 'ci'))
 from historical_source import source_sha
 
 CURRENT_RELEASE = json.loads((ROOT/'PORT.json').read_text())['distribution_version']
-CURRENT_MCU = '1.0.8'
+CURRENT_MCU = json.loads((ROOT/'PORT.json').read_text())['mcu_release']
 VISUAL_BASELINE = 'v1.0.0-beta.20'
 CHAPTERS = ('OVERVIEW_PL.md', 'FIRST_INSTALL.md', 'INSTALL.md', 'USER_GUIDE.md',
             'OLED_MENU_REFERENCE.md', 'BED_MESH_AND_LEVELING.md',
@@ -168,7 +168,7 @@ def main():
         'host/klippy/extras/m300_print_ui.py': '5082c05b90ba40183784097bcc87dd381bcd9831cba6df505f3d30ded32b8e87',
         'host/config/m300_classic_services.cfg': '541a4b8434cfa784ab07172d630f93ad18b57d147b6adf75c9ca4dabbe867505',
         'host/klippy/extras/m300_menu.py': 'f8b550fc3064404efba210b2fdb86a3a3bdae9eaa40fae3d2a41ac980540e743',
-        'host/config/m300_classic_base.cfg': 'bcc673a7be643a9f637fd22ffc02f912063b3af26509d7cc861dce650cdc9e64',
+        'host/config/m300_classic_base.cfg': '92f573e8dc418851544f8bc66f6a9638afe960c6c893c4e371168737c2a8eddf',
         'host/config/m300_operations.cfg': 'acf1f2de2d43479f895af856f8f32b8cdab5b02bfa082a27c5b487c19c198274',
         'host/config/m300_display.cfg': 'e29c157538dec062c7b9e3f4f37c93613a5b54d91bc231c9bee15d1b84ffd284',
         'host/klippy/extras/m300_pad_mesh.py': '443f47a524e792f29b946afba00c27c963878d2f0f0081a72b9db48732be7f12',
@@ -191,7 +191,8 @@ def main():
         install = (ROOT/'docs'/lang/'FIRST_INSTALL.md').read_text()
         check('releases/download/'+CURRENT_RELEASE+'/' in install, 'first-install-release:'+lang)
         supplement = (ROOT/'docs'/lang/('RELEASE_'+CURRENT_RELEASE+'.md')).read_text()
-        check(port['mcu_release'] in supplement and 'M300_SD.zip' in supplement,
+        current_mcu = (ROOT/'docs'/lang/f'MCU_FIRMWARE_{CURRENT_MCU}.md').read_text()
+        check(port['mcu_release'] in current_mcu and 'M300APP.M3B' in current_mcu,
               'current-MCU-update-instructions:'+lang)
         check('beta.20' in supplement, 'historical-illustration-baseline-disclosed:'+lang)
     for name in ('README.md','README_PL.md'):
