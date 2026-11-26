@@ -55,8 +55,7 @@ systemowe; działa także przy wyłączonym include, bez restartu i bez zapisu h
 Na innej płytce lub po zmianie mapowania stref sprawdź wynik polecenia i dopasuj
 `sensor_path` w `m300_host_temperature.cfg` do strefy CPU. Nie włączaj include,
 jeśli wskazany plik nie istnieje lub nie jest czytelny dla użytkownika Klippera.
-MCU nie jest dodawane przez tę opcję: odczyt wewnętrznego czujnika STM32 wymaga
-osobnego sprawdzenia obsługi w firmware M300.
+Temperaturę STM32 włącza osobny dodatek opisany poniżej.
 
 ## Temperatura STM32 — opcjonalny odczyt diagnostyczny
 
@@ -74,7 +73,6 @@ git pull --ff-only &&
 sha256sum -c --quiet SHA256SUMS &&
 cp M300_HOST/payload/m300_mcu_temperature.py "$HOME/klipper/klippy/extras/" &&
 cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
-cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
 cp -n FIRST_INSTALL/m300_mcu_temperature.cfg "$HOME/printer_data/config/"
 ```
 
@@ -84,7 +82,16 @@ W `printer.cfg`, przed `SAVE_CONFIG`, dodaj:
 [include m300_mcu_temperature.cfg]
 ```
 
-Wykonaj w konsoli Fluidd `FIRMWARE_RESTART`, a po kilku sekundach:
+Po podmianie plików Python wymagany jest pełny restart procesu Klippera.
+Przez SSH wykonaj:
+
+```bash
+sudo systemctl restart klipper.service
+```
+
+Gdy Fluidd ponownie połączy się z hostem, wykonaj w jego konsoli
+`FIRMWARE_RESTART`, aby rozpocząć nową sesję MCU. Poczekaj na `Ready`
+i około 5 sekund na próbkę, a następnie odczytaj:
 
 ```gcode
 M300_MCU_TEMPERATURE
