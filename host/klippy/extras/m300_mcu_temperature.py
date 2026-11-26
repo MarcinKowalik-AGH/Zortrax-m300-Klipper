@@ -1,10 +1,30 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Optional STM32F103 die temperature telemetry; no heater or graph series."""
+"""STM32F103 die telemetry with an optional read-only Fluidd graph view."""
 import json
 import math
 
 SAMPLE_TIME = 0.001
 SAMPLE_COUNT = 8
+GRAPH_SENSOR = 'temperature_sensor MCU'
+
+
+class MCUTemperatureGraph:
+    """Expose the existing ADC reading under Klipper's standard sensor name."""
+    def __init__(self, source):
+        self.source = source
+
+    def get_status(self, eventtime):
+        state = self.source.get_status(eventtime)
+        return {'temperature': state['temperature'],
+                'measured_min_temp': self.source.measured_min,
+                'measured_max_temp': self.source.measured_max,
+                'state': state['state']}
+
+    def get_temp(self, eventtime):
+        value = self.source.get_status(eventtime)['temperature']
+        if value is None:
+            raise self.source.printer.command_error('MCU temperature has no fresh sample')
+        return value, 0.
 
 
 def temperature_from_adc(value, voltage, offset):
@@ -23,6 +43,8 @@ class M300MCUTemperature:
             raise config.error('MCU temperature settings must be finite')
         self.temperature = self.fraction = self.received = None
         self.state = 'STARTING'
+        self.measured_min = self.measured_max = None
+        self.show_on_graph = config.getboolean('show_on_graph', True)
         pins = self.printer.lookup_object('pins')
         self.adc = pins.setup_pin('adc', 'mcu:ADC_TEMPERATURE')
         self.mcu = self.adc.get_mcu()
@@ -34,7 +56,16 @@ class M300MCUTemperature:
         self.printer.register_event_handler('klippy:shutdown', self._shutdown)
         self.printer.lookup_object('gcode').register_command(
             'M300_MCU_TEMPERATURE', self.cmd_temperature, when_not_ready=True,
-            desc='Read STM32 die temperature diagnostics without adding a graph series')
+            desc='Read STM32 die temperature diagnostics')
+        if self.show_on_graph:
+            if self.printer.lookup_object(GRAPH_SENSOR, None) is not None:
+                raise config.error('MCU graph sensor name is already in use: ' + GRAPH_SENSOR)
+            # This is a view of this object's one ADC, not another sensor
+            # acquisition. Fluidd and Moonraker discover the standard prefix.
+            view = MCUTemperatureGraph(self)
+            self.printer.add_object(GRAPH_SENSOR, view)
+            heaters = self.printer.load_object(config, 'heaters')
+            heaters.register_sensor(config.getsection(GRAPH_SENSOR), view)
 
     def _identify(self):
         constants = self.mcu.get_constants()
@@ -68,6 +99,10 @@ class M300MCUTemperature:
             self.state = 'INVALID_ADC'
             return
         self.temperature = temperature_from_adc(value, self.voltage, self.offset)
+        self.measured_min = (self.temperature if self.measured_min is None
+                             else min(self.measured_min, self.temperature))
+        self.measured_max = (self.temperature if self.measured_max is None
+                             else max(self.measured_max, self.temperature))
         self.fraction = value
         self.received = self.reactor.monotonic() - max(0., age)
         self.state = 'READY'
@@ -82,7 +117,7 @@ class M300MCUTemperature:
                 'adc_raw': self.fraction * 4095. if fresh else None,
                 'adc_voltage': self.voltage, 'temperature_offset': self.offset,
                 'report_time': self.report_time, 'sample_age': age,
-                'approximate': True, 'graph_series': False}
+                'approximate': True, 'graph_series': self.show_on_graph}
 
     def cmd_temperature(self, gcmd):
         gcmd.respond_info('M300_MCU_TEMPERATURE ' + json.dumps(

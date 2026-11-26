@@ -8,7 +8,7 @@
 
 Port wykorzystuje oryginalny sterownik **Zortrax M300 Classic**, jego OLED, pokrętło i płytę kontaktową. Bieżąca para to host **1.0.3** i MCU **1.0.9**. Fluidd działa na porcie **4480**. W 1.0.3 nazwy 36 makr operatorskich zaczynają się od `M300_`. Zapisane pliki G-code nadal mogą wywoływać poprzednie nazwy `ZORTRAX_`.
 
-[Opcjonalna temperatura hosta](docs/pl/HOST_TEMPERATURE.md): jedna seria Host na wykresie, włączana przez include; pozostałe temperatury odczytywane na żądanie.
+[Opcjonalna temperatura hosta](docs/pl/HOST_TEMPERATURE.md): niezależne include i wykresy Host oraz MCU; pozostałe strefy Orange Pi odczytywane na żądanie.
 
 ## Instalacja i obsługa
 
@@ -54,8 +54,8 @@ posiadany bootloader SD. W `printer.cfg` odkomentuj wybrane opcje:
 [include m300_mcu_temperature.cfg]
 ```
 
-W konsoli Fluidd wykonaj `FIRMWARE_RESTART`. **Host** będzie jedyną dodatkową
-serią wykresu. Temperaturę STM32 odczytasz poleceniem `M300_MCU_TEMPERATURE`,
+W konsoli Fluidd wykonaj `FIRMWARE_RESTART`. Każdy aktywny include dodaje
+wykres **Host** lub **MCU**. Temperaturę STM32 odczytasz też poleceniem `M300_MCU_TEMPERATURE`,
 a pozostałe strefy Orange Pi przez SSH: `python3 read-host-temperatures.py`
 z katalogu klonu. Wyłączenie: ponownie zakomentuj odpowiedni include.
 [Instrukcja temperatur](docs/pl/HOST_TEMPERATURE.md) opisuje ścieżki i korektę pomiaru.

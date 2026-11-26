@@ -3,7 +3,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import Mock
 
-from payload.m300_mcu_temperature import M300MCUTemperature, temperature_from_adc
+from payload.m300_mcu_temperature import M300MCUTemperature, temperature_from_adc, GRAPH_SENSOR
 
 
 def fixture(constants=None, **settings):
@@ -16,10 +16,17 @@ def fixture(constants=None, **settings):
     pins = NS(setup_pin=Mock(return_value=adc))
     gcode = NS(register_command=Mock())
     objects = {'pins': pins, 'gcode': gcode}
-    printer = NS(get_reactor=lambda: reactor, lookup_object=lambda n: objects[n],
-                 register_event_handler=Mock(), config_error=RuntimeError)
+    if settings.pop('existing_graph', False):
+        objects[GRAPH_SENSOR] = object()
+    heaters = NS(register_sensor=Mock())
+    printer = NS(get_reactor=lambda: reactor, lookup_object=lambda n, default=None: objects.get(n, default),
+                 add_object=lambda n, obj: objects.__setitem__(n, obj),
+                 load_object=lambda cfg, n: objects.setdefault(n, heaters),
+                 register_event_handler=Mock(), config_error=RuntimeError, command_error=RuntimeError)
     config = NS(get_printer=lambda: printer, error=RuntimeError,
-                getfloat=lambda n, default, **kw: settings.get(n, default))
+                getfloat=lambda n, default, **kw: settings.get(n, default),
+                getboolean=lambda n, default: settings.get(n, default),
+                getsection=lambda n: NS(get_name=lambda: n))
     module = M300MCUTemperature(config)
     return module, clock, adc, pins, objects
 
@@ -30,7 +37,7 @@ class MCUTemperatureTest(unittest.TestCase):
         self.assertAlmostEqual(temperature_from_adc((1.43-.0043*50)/3.3, 3.3, 0.), 75.)
 
     def test_only_internal_native_adc_no_heater_or_extra_series(self):
-        module, clock, adc, pins, objects = fixture()
+        module, clock, adc, pins, objects = fixture(show_on_graph=False)
         pins.setup_pin.assert_called_once_with('adc', 'mcu:ADC_TEMPERATURE')
         adc.setup_adc_sample.assert_called_once_with(5., .001, 8,
                                                     minval=0., maxval=1., range_check_count=0)
@@ -90,6 +97,39 @@ class MCUTemperatureTest(unittest.TestCase):
         module._identify();module._receive([(90., 1.43/3.3)])
         self.assertEqual(module.get_status(100.)['sample_age'], 10.)
         self.assertIsNone(module.get_status(106.)['temperature'])
+
+    def test_graph_uses_one_adc_and_standard_sensor_name(self):
+        module, clock, adc, pins, objects = fixture()
+        self.assertEqual(pins.setup_pin.call_count, 1)
+        self.assertIn(GRAPH_SENSOR, objects)
+        section, view = objects['heaters'].register_sensor.call_args[0]
+        self.assertEqual(section.get_name(), GRAPH_SENSOR)
+        self.assertIs(view.source, module)
+        self.assertTrue(module.get_status(100.)['graph_series'])
+
+    def test_graph_returns_same_reading_and_extrema(self):
+        module, clock, adc, pins, objects = fixture()
+        view = objects[GRAPH_SENSOR]
+        module._identify();module._receive([(100., 1.43/3.3)])
+        self.assertAlmostEqual(view.get_temp(100.)[0], 25.)
+        self.assertEqual(view.get_status(100.)['temperature'], module.get_status(100.)['temperature'])
+        clock[0]=105.;module._receive([(105., (1.43-.0043*10)/3.3)])
+        self.assertAlmostEqual(view.get_status(105.)['measured_max_temp'], 35.)
+        self.assertAlmostEqual(view.get_status(105.)['measured_min_temp'], 25.)
+
+    def test_graph_does_not_publish_stale_or_shutdown_temperature(self):
+        module, clock, adc, pins, objects = fixture()
+        view = objects[GRAPH_SENSOR]
+        module._identify();module._receive([(100., 1.43/3.3)])
+        self.assertIsNone(view.get_status(116.)['temperature'])
+        with self.assertRaisesRegex(RuntimeError, 'fresh sample'):
+            view.get_temp(116.)
+        module._shutdown()
+        self.assertIsNone(view.get_status(100.)['temperature'])
+
+    def test_graph_name_collision_is_explicit(self):
+        with self.assertRaisesRegex(RuntimeError, 'already in use'):
+            fixture(existing_graph=True)
 
 
 if __name__ == '__main__':

@@ -62,7 +62,8 @@ def package(release, output, commit):
         'The new-host installer copies both optional temperature configs, disabled by default. '
         'Enable STM32 diagnostics with `[include m300_mcu_temperature.cfg]` '
         '(MCU 1.0.9 or newer), run `FIRMWARE_RESTART`, then `M300_MCU_TEMPERATURE`. '
-        'This adds a diagnostic object and no extra graph series.\n\n'
+        'The MCU include adds a read-only MCU graph curve using the existing ADC. '
+        'Comment either temperature include in printer.cfg to disable that option.\n\n'
         '[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/'
         + commit + '/docs/en/INSTALL.md)\n\n'
         'Source commit: `' + commit + '`\n')

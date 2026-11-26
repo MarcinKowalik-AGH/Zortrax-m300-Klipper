@@ -276,5 +276,6 @@ After installing the bundled MCU 1.0.9, uncomment the desired includes:
 ```
 
 With the printer idle, run `FIRMWARE_RESTART`. After a few seconds,
-`M300_MCU_TEMPERATURE` reads the STM32 diagnostic. Only Host adds a graph series.
+`M300_MCU_TEMPERATURE` reads the STM32 diagnostic. Each active include adds
+its Host or MCU curve; disabled includes do not block startup.
 See the [temperature guide](HOST_TEMPERATURE.md).

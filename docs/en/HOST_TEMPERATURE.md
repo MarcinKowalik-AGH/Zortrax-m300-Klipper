@@ -1,8 +1,8 @@
 # Optional host temperature
 
-Fluidd gets one additional temperature series, **Host**, for the host CPU.
-Other Linux thermal readings are available on demand over SSH, without adding
-graph series. This feature is disabled by default.
+Fluidd can show independent optional **Host** (CPU) and **MCU** (STM32) curves.
+Other Orange Pi thermal readings remain available on demand over SSH. Both
+includes are commented out by default.
 
 ## Existing installation
 
@@ -55,7 +55,8 @@ The file must exist and be readable by the Klipper account.
 MCU 1.0.9 provides `M300_MCU_TEMPERATURE_ABI=1` and a long ADC16 sample time.
 The optional `m300_mcu_temperature.py` reads the internal sensor every 5 seconds
 through the native ADC queue without enabling debug memory reads. It registers
-no heater and no additional graph series.
+no heater. When its include is enabled, it exposes `temperature_sensor MCU`
+for Fluidd using the existing reading, without another ADC acquisition.
 
 Install [MCU 1.0.9](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/main/docs/en/MCU_FIRMWARE_1.0.9.md) first. On an idle printer, from the
 updated `orange-pi` checkout:
@@ -84,3 +85,20 @@ adjustment. ADC fractions/raw readings and sample age are reported as well.
 Stale, disconnected or shutdown measurements return a null temperature.
 To disable, comment out the include and run `FIRMWARE_RESTART`. Disable this
 include before reverting to MCU 1.0.8; the addon rejects that older capability.
+
+## Independent includes in printer.cfg
+
+Enable either or both options by uncommenting their main-config includes:
+
+```ini
+[include m300_host_temperature.cfg]
+[include m300_mcu_temperature.cfg]
+```
+
+Disable an option by commenting out its include, then run `FIRMWARE_RESTART`.
+A disabled include loads neither its file nor its sensor; it does not require
+that hardware capability. Klipper can therefore start with MCU diagnostics
+disabled on older firmware, or with both optional files absent.
+The MCU graph is enabled by default when the MCU include is active.
+Use `show_on_graph: False` inside its separate config only for diagnostic-only
+operation. Stale or invalid readings produce missing graph data, not an old value.

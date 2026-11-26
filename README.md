@@ -10,7 +10,7 @@ This port runs Klipper on the original **Zortrax M300 Classic** controller with 
 
 [Optional USB camera](docs/en/CAMERA.md): disabled by default, with a separate host configuration and Fluidd view.
 
-[Optional host temperature](docs/en/HOST_TEMPERATURE.md): one Host graph series, enabled with an include; other thermal zones are read on demand.
+[Optional host temperature](docs/en/HOST_TEMPERATURE.md): independent Host and MCU includes and graph curves; other Orange Pi zones are read on demand.
 
 ## Install and operate
 
@@ -55,8 +55,8 @@ enabling STM32 diagnostics. In `printer.cfg`, uncomment the options you want:
 [include m300_mcu_temperature.cfg]
 ```
 
-Run `FIRMWARE_RESTART`. **Host** is the only added graph series. Read the
-STM32 die temperature with `M300_MCU_TEMPERATURE` in Fluidd, and other Orange Pi
+Run `FIRMWARE_RESTART`. Each active include adds its **Host** or **MCU** curve.
+Read the STM32 die temperature with `M300_MCU_TEMPERATURE` in Fluidd, and other Orange Pi
 zones over SSH with `python3 read-host-temperatures.py` from the checkout.
 Comment the relevant include again to disable it. See the
 [temperature guide](docs/en/HOST_TEMPERATURE.md) for paths and calibration.

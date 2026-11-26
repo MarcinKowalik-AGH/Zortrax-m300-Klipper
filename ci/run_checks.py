@@ -143,6 +143,12 @@ def main():
         run('optional_mcu_temperature_fileoutput', [sys.executable, ROOT / 'ci/validate_fresh_install.py',
             '--root', host_tree, '--dictionary', args.dictionary.resolve(),
             '--output', ROOT / '.ci/mcu-temperature-fileoutput', '--mcu-temperature'])
+        run('optional_mcu_graph_fileoutput', [sys.executable, ROOT / 'ci/validate_fresh_install.py',
+            '--root', host_tree, '--dictionary', args.dictionary.resolve(),
+            '--output', ROOT / '.ci/mcu-graph-fileoutput', '--mcu-temperature-graph'])
+        run('disabled_temperature_options_fileoutput', [sys.executable, ROOT / 'ci/validate_fresh_install.py',
+            '--root', host_tree, '--dictionary', args.dictionary.resolve(),
+            '--output', ROOT / '.ci/temperatures-disabled-fileoutput', '--without-temperature-files'])
     summary = {'status': 'PASS_M300_PUBLIC_SOFTWARE_CHECKS', 'checks': rows,
                'source_sha256': source_digest(),
                'compiled_dictionary_sha256': digest(args.dictionary) if args.dictionary else None,

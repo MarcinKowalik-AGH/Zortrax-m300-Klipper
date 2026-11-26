@@ -282,5 +282,5 @@ Po wgraniu dołączonego MCU 1.0.9 odkomentuj wybrane include w printer.cfg:
 ```
 
 Przy bezczynnej drukarce wykonaj `FIRMWARE_RESTART`. Po kilku sekundach
-`M300_MCU_TEMPERATURE` pokaże diagnostyczny odczyt STM32. Tylko Host dodaje serię
-na wykresie. Szczegóły: [temperatury](HOST_TEMPERATURE.md).
+`M300_MCU_TEMPERATURE` pokaże diagnostyczny odczyt STM32. Host oraz MCU mają
+niezależne serie na wykresie; wyłączony include nie blokuje uruchomienia. Szczegóły: [temperatury](HOST_TEMPERATURE.md).
