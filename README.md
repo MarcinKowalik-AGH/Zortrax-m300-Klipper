@@ -15,6 +15,6 @@ Optional host CPU temperature: one Host graph series, enabled with `[include m30
 
 The new-host installer copies both optional temperature configs, disabled by default. Enable STM32 diagnostics with `[include m300_mcu_temperature.cfg]` (MCU 1.0.9 or newer), run `FIRMWARE_RESTART`, then `M300_MCU_TEMPERATURE`. This adds a diagnostic object and no extra graph series.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/c459354de9446c2d9bf77ab2ffd08c0fdd199022/docs/en/INSTALL.md)
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/80ed1495fb6eeaa7a08d743c5ea95013587b3498/docs/en/INSTALL.md)
 
-Source commit: `c459354de9446c2d9bf77ab2ffd08c0fdd199022`
+Source commit: `80ed1495fb6eeaa7a08d743c5ea95013587b3498`
