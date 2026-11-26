@@ -72,8 +72,7 @@ na bezczynnej drukarce skopiuj pliki z aktualnej gałęzi `orange-pi`:
 cd "$HOME/m300-orange-pi" &&
 git pull --ff-only &&
 sha256sum -c --quiet SHA256SUMS &&
-cp M300_HOST/payload/m300_mcu_temperature.py "$HOME/klipper/klippy/extras/" &&
-cp M300_HOST/payload/m300_resources.py "$HOME/klipper/klippy/extras/" &&
+python3 install-orange-pi.py &&
 cp -n FIRST_INSTALL/m300_mcu_temperature.cfg "$HOME/printer_data/config/"
 ```
 
@@ -83,14 +82,8 @@ W `printer.cfg`, przed `SAVE_CONFIG`, dodaj:
 [include m300_mcu_temperature.cfg]
 ```
 
-Po podmianie plików Python wymagany jest pełny restart procesu Klippera.
-Przez SSH wykonaj:
-
-```bash
-sudo systemctl restart klipper.service
-```
-
-Gdy Fluidd ponownie połączy się z hostem, wykonaj w jego konsoli
+Instalator wykonuje pełny restart procesu potrzebny po zmianie modułów Python.
+Po zapisaniu include i ponownym połączeniu Fluidd wykonaj w jego konsoli
 `FIRMWARE_RESTART`, aby rozpocząć nową sesję MCU. Poczekaj na `Ready`
 i około 5 sekund na próbkę, a następnie odczytaj:
 

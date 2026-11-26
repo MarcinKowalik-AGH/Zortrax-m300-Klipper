@@ -1,6 +1,7 @@
 # OLED menu audit — R16.18
 
-[Installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/en/INSTALL.md) · [Hardware acceptance](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/ACCEPTANCE_REGISTER.md) · [Complete view and command inventory](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/reports/OLED_MENU_AUDIT.json)
+The R16.18 functional audit is included in release **1.0.4 / R16.19**.
+[Installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/en/INSTALL.md) · [Hardware acceptance](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/ACCEPTANCE_REGISTER.md) · [Complete view and command inventory](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/reports/OLED_MENU_AUDIT.json)
 
 Scope: **M300 Classic, MCU 1.0.9, host R16.18**. Software checks cover production
 menu branches, actual Klippy command registration, shared procedure owners,
@@ -80,5 +81,5 @@ python3 install-orange-pi.py
 
 Use the host updater: `--update-fluidd` alone does not install OLED Python changes.
 MCU 1.0.9 remains sufficient. Existing PID, mesh, qualified Z and optional thermal
-includes are preserved. New users follow [the complete installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/en/FIRST_INSTALL.md);
+includes are preserved. New users follow [the complete installation](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/en/FIRST_INSTALL.md);
 the `orange-pi` branch contains built files and checksums.

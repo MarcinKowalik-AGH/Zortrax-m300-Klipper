@@ -1,4 +1,10 @@
-# M300 Classic v1.0.3 — Orange Pi
+# M300 Classic v1.0.4 — Orange Pi
+
+![Fluidd with USB camera, Host/MCU thermal graphs and live OLED](M300_OVERVIEW.png)
+
+Operator screenshot, 26 November 2026, during preparation of a 25-point bed mesh.
+
+[Download the complete release](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/releases/tag/v1.0.4) · [Current features and instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper)
 
 This checkout contains the tested host, prebuilt Fluidd and MCU image.
 The matching SD application is `MCU/M300APP.M3B` (MCU 1.0.9). Install it through your existing M300 bootloader.
@@ -17,8 +23,8 @@ The new-host installer copies both optional temperature configs, disabled by def
 
 Contact recovery lowers the bed by 100 mm within the Z travel after a recognized nozzle-contact failure, invalidates Z and asks for cleaning. MCU shutdown guards remain active. See CONTACT_RECOVERY_PL.md / CONTACT_RECOVERY_EN.md for the existing-host update.
 
-OLED menu audit and shared macro bindings (R16.18): see OLED_MENU_PL.md / OLED_MENU_EN.md and OLED_MENU_AUDIT.json. Use the host updater for OLED fixes; updating Fluidd alone does not install them. Software validation does not replace hardware acceptance.
+OLED menu audit and shared macro bindings (R16.19): see OLED_MENU_PL.md / OLED_MENU_EN.md and OLED_MENU_AUDIT.json. Use the host updater for OLED fixes; updating Fluidd alone does not install them. Software validation does not replace hardware acceptance.
 
-[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/en/INSTALL.md)
+[Update instructions](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/en/INSTALL.md)
 
-Source commit: `7686081e457a6868d6730ddf1087f077d21e81ca`
+Source commit: `d1616a9e7007b44dda2a737cc0297b7f66a77b63`

@@ -1,12 +1,13 @@
 # Audyt menu OLED — R16.18
 
-[Instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/INSTALL.md) · [Makra](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/MACRO_REFERENCE.md) · [Odbiory sprzętowe](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/ACCEPTANCE_REGISTER.md) · [Pełny wykaz widoków i komend](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/reports/OLED_MENU_AUDIT.json)
+Audyt funkcjonalny R16.18 jest włączony do wydania **1.0.4 / R16.19**.
+[Instalacja](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/INSTALL.md) · [Makra](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/MACRO_REFERENCE.md) · [Odbiory sprzętowe](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/ACCEPTANCE_REGISTER.md) · [Pełny wykaz widoków i komend](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/reports/OLED_MENU_AUDIT.json)
 
 Zakres: **M300 Classic, MCU 1.0.9, host R16.18**. Sprawdzono dostępne gałęzie
 produkcyjnego menu, rejestrację komend w prawdziwym Klippy, uruchamianie procedur
 z OLED, ich potwierdzenia i powroty. Testy nie sterowały fizyczną drukarką.
 Nie wszystkie procedury mają odbiór sprzętowy; bieżący stan i historię podaje
-[rejestr](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/ACCEPTANCE_REGISTER.md). PASS testu programu nie zastępuje tego odbioru.
+[rejestr](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/ACCEPTANCE_REGISTER.md). PASS testu programu nie zastępuje tego odbioru.
 
 ## Wykryte problemy i poprawki
 
@@ -92,5 +93,5 @@ python3 install-orange-pi.py
 To aktualizacja modułów hosta i makr. Samo `--update-fluidd` nie instaluje poprawki
 menu OLED. MCU 1.0.9 pozostaje wystarczające; ta poprawka nie wymaga jego wgrywania.
 Instalator zachowuje istniejące PID, mesh, kwalifikowane ustawienia Z i opcjonalne
-include temperatur. Nowy użytkownik korzysta z [pełnej instalacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/7686081e457a6868d6730ddf1087f077d21e81ca/docs/pl/FIRST_INSTALL.md).
+include temperatur. Nowy użytkownik korzysta z [pełnej instalacji](https://github.com/MarcinKowalik-AGH/Zortrax-m300-Klipper/blob/d1616a9e7007b44dda2a737cc0297b7f66a77b63/docs/pl/FIRST_INSTALL.md).
 Gałąź `orange-pi` zawiera gotowe pliki, zbudowany Fluidd i sumy kontrolne.
